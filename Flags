@@ -1,0 +1,26 @@
+-std=c2x -ftrivial-auto-var-init=zero -fsigned-char
+
+-g3 
+
+-Wall -Wextra -Wpedantic -Werror 
+
+-Wshadow -Wundef -Wnull-dereference 
+
+-Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
+
+-Wconversion -Wno-sign-conversion -Wdouble-promotion
+
+-Warray-bounds -fstrict-flex-arrays 
+
+-Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2 -Wformat-security -Wformat-signedness 
+
+-Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum -Wenum-int-mismatch
+
+-fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error
+
+-fstack-protector-strong -fstack-clash-protection -fPIE -fcf-protection=full
+        
+-D_FORTIFY_SOURCE=3
+
+libwinsane.o
+

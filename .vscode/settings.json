@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "c_defs.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "typeinfo": "cpp"
     }
 }

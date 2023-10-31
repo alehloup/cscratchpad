@@ -19,13 +19,20 @@ typedef i32 b32; //boolean
 //shortcut for typedef struct that allows recursion
 #define tstruct(name) typedef struct name name; struct name
 
+//for shortcuts
+#define loop(var, times) for(isize var = 0; var < times; ++var)
+#define fori(times) loop(i, times)
+#define forj(times) loop(j, times)
+#define for_k(times) loop(k, times)
+#define forrange(var, from, to, inc) for(isize var = from; var != to; var+=inc)
+
 //better static strings -- cstrlength |does not work| in dynamic strings
 tstruct(s8){ isize len; u8 *data; };
 #define s8(s) (s8){ cstrlengthof(s), (u8 *)s }
 
 //TRICK scope that "opens" at start, and "closes" at end (careful, if returns mid scope |end| will never run)
 int MACRO_scoped__;
-#define scoped(start, end) MACRO_scoped__ = 1;for (start; MACRO_scoped__; (--MACRO_scoped__), end)
+#define scoped(start, end) MACRO_scoped__ = 1;for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 //Fast % when the number is a power of 2
 #define MODPWR2(number) ((number) & (align - 1))

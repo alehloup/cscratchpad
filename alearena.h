@@ -27,25 +27,25 @@ void *alloc(arena *a, isize size, isize align, isize count) {
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
 
 #define ARENA_SIZE_ (1 << 28)
+static b32 GETARENA_uninit = 1;
 arena* getarena() { //gets the only Static Arena
     static u8 mem[ARENA_SIZE_];
     static arena r;
-    static b32 uninit = 1;
-    if (uninit) {
+    if (GETARENA_uninit) {
         r = (arena){0};
         r.beg = mem;
         asm ("" : "+r"(r.beg)); //launders pointer
         r.end = r.beg + countof(mem);
 
-        uninit = 0;
+        GETARENA_uninit = 0;
     }
       
     return &r;
 }
-
 u8 *mallo(isize cap) { //malloc implemented using the static arena!
     return (u8 *)alloc(getarena(), sizeof(u8), 16, cap);
 }
+
 arena newarena(isize cap) {
     arena a = {0};
     a.beg = (u8 *)mallo(cap);

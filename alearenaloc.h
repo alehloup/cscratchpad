@@ -4,10 +4,10 @@
 
 #define ARENA_SIZE_ (1 << 28)
 
-static b32 GETARENA_uninit = 1;
-arena* getarena() { //gets the only Static Arena
-    static u8 mem[ARENA_SIZE_];
-    static arena r;
+static __thread b32 GETARENA_uninit = 1;
+arena* getarena() { //gets the thread Static Arena
+    static __thread u8 mem[ARENA_SIZE_];
+    static __thread arena r;
     if (GETARENA_uninit) {
         r = (arena){0};
         r.beg = mem;

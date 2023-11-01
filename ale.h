@@ -43,7 +43,7 @@ int MACRO_scoped__;
 #define MODPWR2(number, modval) ((number) & (modval - 1))
 
 //One liner Pseudo Random generator
-static u64 MACRO_rnd64_seed__;
+static __thread u64 MACRO_rnd64_seed__;
 #define RNDSEED(x) ((MACRO_rnd64_seed__) = (u64)(x) >> 1)
 #define RND64() ((MACRO_rnd64_seed__) = ((MACRO_rnd64_seed__) * 0x3FFFFBFFFFF + 0x7A5662DCDF) >> 1)
 #define RNDN(n) (RND64() % (n))
@@ -58,8 +58,8 @@ tstruct(arena) {
 };
 
 //Implement mem set to zero as a macro
-static isize MACRO_zeromem_len__;
-static u8 *MACRO_zeromem_ptr__;
+static __thread isize MACRO_zeromem_len__;
+static __thread u8 *MACRO_zeromem_ptr__;
 #define ZEROMEM(dest, len)         \
     MACRO_zeromem_ptr__ = (dest);  \
     MACRO_zeromem_len__ = (len);   \

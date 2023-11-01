@@ -15,7 +15,6 @@ typedef i32 b32; //boolean
 #define alignof(x)      ((isize)_Alignof(x))
 #define countof(a)      (sizeof(a) / sizeof(*(a)))
 #define cstrlengthof(s) (countof(s) - 1)
-#define isstaticarr(a)  (countof(a) > 8) //a u8 dynarr count returns ptr_size / 8 == 8
 
 //shortcut for typedef struct that allows recursion
 #define tstruct(name) typedef struct name name; struct name
@@ -26,11 +25,8 @@ typedef i32 b32; //boolean
 #define forj(times) loop(j, times)
 #define for_k(times) loop(k, times)
 #define forrange(var, from, to, inc)          \
-    for(                                      \
-        isize var = (from), var##_TO__ = (to);\
-        var != var##_TO__;                    \
-        var+=inc                              \
-    )                                         \
+    for(isize var = (from), var##_TO__ = (to);\
+        var != var##_TO__; var+=inc)          \
 //end of forrange
 
 //better static strings -- cstrlength |does not work| in dynamic strings
@@ -39,7 +35,9 @@ tstruct(s8){ isize len; u8 *data; };
 
 //TRICK scope that "opens" at start, and "closes" at end (careful, if returns mid scope |end| will never run)
 int MACRO_scoped__;
-#define scoped(start, end) MACRO_scoped__ = 1;for(start; MACRO_scoped__; (--MACRO_scoped__), end)
+#define scoped(start, end) MACRO_scoped__ = 1;         \
+    for(start; MACRO_scoped__; (--MACRO_scoped__), end)\
+//end of scoped
 
 //Fast % when the number is a power of 2
 #define MODPWR2(number, modval) ((number) & (modval - 1))

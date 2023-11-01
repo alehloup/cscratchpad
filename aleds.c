@@ -9,7 +9,7 @@
     struct typ##s {              \
         isize len; isize cap;    \
         isize start; b32 invalid;\
-        typ *arr;                \
+        typ *data;                \
     }                            \
 //end of def_dynarr  
 
@@ -19,11 +19,12 @@
     struct typ##x##count {                      \
         isize len; isize cap;                   \
         isize start; b32 invalid;               \
-        typ arr[(count)];                       \
+        typ data[(count)];                       \
     }                                           \
 //end of def_statarr
 
 #define foridx(var, array) forrange(var, array.start, array.start + array.len, 1)
+#define isstaticarr(a)  (countof(a.data) > 8) //u8 dynarr count == ptr_size / 8 == 8
 
 def_dynarr(i64);
 def_statarr(i64, 10);
@@ -32,17 +33,17 @@ int main() {
     i64x10 s;
     i64s d;
 
-    printf("%d %d\n", isstaticarr(s.arr), isstaticarr(d.arr));
-    printf("%lld %lld\n", countof(s.arr), countof(d.arr));
+    printf("%d %d\n", isstaticarr(s), isstaticarr(d));
+    printf("%lld %lld\n", countof(s.data), countof(d.data));
 
     s.len = 5;
     
     foridx(idx, s) {
-        s.arr[idx] = idx;
+        s.data[idx] = idx;
     }
 
     foridx(idx, s) {
-        printf("%lld ", s.arr[idx]);
+        printf("%lld ", s.data[idx]);
     }
 
     return 0;

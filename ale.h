@@ -10,6 +10,9 @@ typedef long long isize; typedef unsigned long long usize;
 typedef float f32; typedef double f64;
 typedef i32 b32; //boolean
 
+//convenient way to define a function pointer
+#define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__)
+
 //better names for size operations
 #define sizeof(x)       ((isize)sizeof(x))
 #define alignof(x)      ((isize)_Alignof(x))
@@ -21,6 +24,7 @@ typedef i32 b32; //boolean
 #define fori(times) loop(i, times)
 #define forj(times) loop(j, times)
 #define for_k(times) loop(k, times)
+
 #define forrange(var, from, to, inc)          \
     for(isize var = (from), var##_TO__ = (to);\
         var != var##_TO__; var+=inc)          \
@@ -51,16 +55,6 @@ static __thread u64 MACRO_rnd64_seed__;
 
 typedef struct arena{ u8 *beg; u8 *end; }arena;
 
-//Implement mem set to zero as a macro
-static __thread isize MACRO_zeromem_len__;
-static __thread u8 *MACRO_zeromem_ptr__;
-#define ZEROMEM(dest, len)         \
-    MACRO_zeromem_ptr__ = (dest);  \
-    MACRO_zeromem_len__ = (len);   \
-    while(MACRO_zeromem_len__-->0) \
-        *MACRO_zeromem_ptr__++ = 0;\
-//end of memset macro
-
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
 void *alloc(arena *a, isize size, isize align, isize count) {
     isize total = size * count;
@@ -74,11 +68,23 @@ void *alloc(arena *a, isize size, isize align, isize count) {
     u8 *p = a->beg + pad;
     a->beg += pad + total;
     
-    return ZEROMEM(p, total);
+    for(u8 *mptr = p; p != a->beg; ++p) {
+        *p = 0; //zero all bytes
+    }
+    
+    return p;
 }
 
 #define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
+
+def_funcp(void *, MallocFunction, isize cap);
+arena newarena(isize cap, MallocFunction fmalloc) {
+    arena a = {0};
+    a.beg = (u8 *)fmalloc(cap);
+    a.end = a.beg ? a.beg + cap : 0;
+    return a;
+}
 
 /*
     ARRAY defs and operations

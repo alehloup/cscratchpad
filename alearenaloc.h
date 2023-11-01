@@ -20,13 +20,8 @@ arena* getarena() { //gets the thread Static Arena
     asm ("" : "+r"(r.beg)); //launders pointer
     return &r;
 }
-u8 *mallo(isize cap) { //malloc implemented using the static arena
-    return (u8 *)alloc(getarena(), sizeof(u8), 16, cap);
+void *statarena_malloc(isize cap) { //malloc implemented using the static arena
+    return (void *)alloc(getarena(), sizeof(u8), 16, cap);
 }
 
-arena newarena(isize cap) {
-    arena a = {0};
-    a.beg = (u8 *)mallo(cap); //can be replaced by malloc
-    a.end = a.beg ? a.beg + cap : 0;
-    return a;
-}
+#define newstatarena(cap) newarena(cap, statarena_malloc)

@@ -25,7 +25,13 @@ typedef i32 b32; //boolean
 #define fori(times) loop(i, times)
 #define forj(times) loop(j, times)
 #define for_k(times) loop(k, times)
-#define forrange(var, from, to, inc) for(isize var = from; var != to; var+=inc)
+#define forrange(var, from, to, inc)          \
+    for(                                      \
+        isize var = (from), var##_TO__ = (to);\
+        var != var##_TO__;                    \
+        var+=inc                              \
+    )                                         \
+//end of forrange
 
 //better static strings -- cstrlength |does not work| in dynamic strings
 tstruct(s8){ isize len; u8 *data; };

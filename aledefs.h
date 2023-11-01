@@ -15,6 +15,7 @@ typedef i32 b32; //boolean
 #define alignof(x)      ((isize)_Alignof(x))
 #define countof(a)      (sizeof(a) / sizeof(*(a)))
 #define cstrlengthof(s) (countof(s) - 1)
+#define isstaticarr(a)  (countof(a) > 8) //a u8 dynarr count returns ptr_size / 8 == 8
 
 //shortcut for typedef struct that allows recursion
 #define tstruct(name) typedef struct name name; struct name

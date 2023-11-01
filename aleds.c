@@ -1,20 +1,22 @@
 //#pragma once
 #include <stdio.h>
+#include <stdlib.h>
 #include "alearena.h"
 
-
+tstruct(stat) {
+    i64 x[10];
+};
+tstruct(dyna) {
+    i8 *x;
+};
 
 int main() {
-    fori(5) {
-        forj(3) {
-            printf("|%lld %lld|", i, j);
-        }
-      printf("\n");  
-    } 
+    stat s = {0};
+    dyna d = {0};
 
-    forrange(x, 10, 0, -1) {
-        printf("%lld ", x);
-    } printf("\n");
+    d.x = (i8 *)malloc(sizeof(*(d.x)) * 10);
+
+    printf("%d %d", isstaticarr(s.x), isstaticarr(d.x));
 
     return 0;
 }

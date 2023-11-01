@@ -44,7 +44,7 @@ int MACRO_scoped__;
 #define MODPWR2(number, modval) ((number) & (modval - 1))
 
 //One liner Pseudo Random generator
-static __thread u64 MACRO_rnd64_seed__;
+static _Thread_local u64 MACRO_rnd64_seed__;
 #define RNDSEED(x) ((MACRO_rnd64_seed__) = (u64)(x) >> 1)
 #define RND64() ((MACRO_rnd64_seed__) = ((MACRO_rnd64_seed__) * 0x3FFFFBFFFFF + 0x7A5662DCDF) >> 1)
 #define RNDN(n) (RND64() % (n))

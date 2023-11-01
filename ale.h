@@ -16,9 +16,6 @@ typedef i32 b32; //boolean
 #define countof(a)      (sizeof(a) / sizeof(*(a)))
 #define cstrlengthof(s) (countof(s) - 1)
 
-//shortcut for typedef struct that allows recursion
-#define tstruct(name) typedef struct name name; struct name
-
 //for shortcuts
 #define loop(var, times) for(isize var = 0; var < times; ++var)
 #define fori(times) loop(i, times)
@@ -30,7 +27,7 @@ typedef i32 b32; //boolean
 //end of forrange
 
 //better static strings -- cstrlength |does not work| in dynamic strings
-tstruct(s8){ isize len; u8 *data; };
+typedef struct s8{ isize len; u8 *data; }s8;
 #define s8(s) (s8){ cstrlengthof(s), (u8 *)s }
 
 //TRICK scope that "opens" at start, and "closes" at end (careful, if returns mid scope |end| will never run)
@@ -52,10 +49,7 @@ static __thread u64 MACRO_rnd64_seed__;
     ARENA defs and operations that do not do memory allocation
 */
 
-tstruct(arena) {
-    u8 *beg;
-    u8 *end;
-};
+typedef struct arena{ u8 *beg; u8 *end; }arena;
 
 //Implement mem set to zero as a macro
 static __thread isize MACRO_zeromem_len__;
@@ -87,27 +81,25 @@ void *alloc(arena *a, isize size, isize align, isize count) {
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
 
 /*
-    Array defs and operations
+    ARRAY defs and operations
 */
 
 //dynarr have their typename as type##s, i.e: i64s
 #define def_dynarr(typ)          \
-    typedef struct typ##s typ##s;\
-    struct typ##s {              \
+    typedef struct typ##s{       \
         isize len; isize cap;    \
         isize start; b32 invalid;\
-        typ *data;                \
-    }                            \
+        typ *data;               \
+    }typ##s                      \
 //end of def_dynarr  
 
 //statarr have their typename as type##x##count, i.e: i64x10
 #define def_statarr(typ, count)                 \
-    typedef struct typ##x##count typ##x##count; \
-    struct typ##x##count {                      \
+    typedef struct typ##x##count{               \
         isize len; isize cap;                   \
         isize start; b32 invalid;               \
-        typ data[(count)];                       \
-    }                                           \
+        typ data[(count)];                      \
+    }typ##x##count                              \
 //end of def_statarr
 
 #define foridx(var, array) forrange(var, array.start, array.start + array.len, 1)

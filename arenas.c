@@ -2,11 +2,11 @@
 #include <string.h>
 #include "alearenaloc.h"
 
-tstruct(teste) {
+typedef struct teste{
     i32 x;
     i64 y;
     i8 z;
-};
+}teste;
 
 int main(int argc, char **argv) {
     arena perm = newarena(1 << 27);

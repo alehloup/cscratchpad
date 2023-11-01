@@ -48,7 +48,16 @@ static u64 MACRO_rnd64_seed__;
 #define RND64() ((MACRO_rnd64_seed__) = ((MACRO_rnd64_seed__) * 0x3FFFFBFFFFF + 0x7A5662DCDF) >> 1)
 #define RNDN(n) (RND64() % (n))
 
-//Implement memset to zero as a macro
+/*
+    ARENA defs and operations that do not do memory allocation
+*/
+
+tstruct(arena) {
+    u8 *beg;
+    u8 *end;
+};
+
+//Implement mem set to zero as a macro
 static isize MACRO_zeromem_len__;
 static u8 *MACRO_zeromem_ptr__;
 #define ZEROMEM(dest, len)         \
@@ -57,3 +66,49 @@ static u8 *MACRO_zeromem_ptr__;
     while(MACRO_zeromem_len__-->0) \
         *MACRO_zeromem_ptr__++ = 0;\
 //end of memset macro
+
+__attribute((malloc, alloc_size(2, 4), alloc_align(3)))
+void *alloc(arena *a, isize size, isize align, isize count) {
+    isize total = size * count;
+    isize pad = MODPWR2(- (isize)a->beg, align); //mod -x gives n for next align
+    
+    if (count > (a->end - a->beg - pad)/size) {
+        assert(count <= (a->end - a->beg - pad)/size); //ARENA OUT OF MEMORY
+        return 0; //ARENA OUT OF MEMORY
+    }
+
+    u8 *p = a->beg + pad;
+    a->beg += pad + total;
+    
+    return ZEROMEM(p, total);
+}
+
+#define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
+#define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
+
+/*
+    Array defs and operations
+*/
+
+//dynarr have their typename as type##s, i.e: i64s
+#define def_dynarr(typ)          \
+    typedef struct typ##s typ##s;\
+    struct typ##s {              \
+        isize len; isize cap;    \
+        isize start; b32 invalid;\
+        typ *data;                \
+    }                            \
+//end of def_dynarr  
+
+//statarr have their typename as type##x##count, i.e: i64x10
+#define def_statarr(typ, count)                 \
+    typedef struct typ##x##count typ##x##count; \
+    struct typ##x##count {                      \
+        isize len; isize cap;                   \
+        isize start; b32 invalid;               \
+        typ data[(count)];                       \
+    }                                           \
+//end of def_statarr
+
+#define foridx(var, array) forrange(var, array.start, array.start + array.len, 1)
+#define isstaticarr(a)  (countof(a.data) > 8) //u8 dynarr count == ptr_size / 8 == 8

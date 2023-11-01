@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "alearena.h"
+#include "alearenaloc.h"
 
 tstruct(teste) {
     i32 x;

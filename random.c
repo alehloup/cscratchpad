@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "aledefs.h"
+#include "ale.h"
 
 int main() {
     fori(5) {

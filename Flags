@@ -1,6 +1,6 @@
--std=c2x -ftrivial-auto-var-init=zero -fsigned-char
+-std=gnu2x -g3 
 
--g3 
+-ftrivial-auto-var-init=zero -fsigned-char
 
 -Wall -Wextra -Wpedantic -Werror 
 

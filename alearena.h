@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string.h> //for memset
-#include <stdlib.h> //for malloc
 #include "aledefs.h"
 
 tstruct(arena) {
@@ -12,7 +10,7 @@ tstruct(arena) {
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
 void *alloc(arena *a, isize size, isize align, isize count) {
     isize total = size * count;
-    isize pad = MODPWR2(- (isize)a->beg); //mod -x gives n for next align
+    isize pad = MODPWR2(- (isize)a->beg, align); //mod -x gives n for next align
     
     if (count > (a->end - a->beg - pad)/size) {
         assert(count <= (a->end - a->beg - pad)/size); //ARENA OUT OF MEMORY
@@ -22,27 +20,35 @@ void *alloc(arena *a, isize size, isize align, isize count) {
     u8 *p = a->beg + pad;
     a->beg += pad + total;
     
-    return memset(p, 0, total);
+    return ZEROMEM(p, total);
 }
 
 #define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
 
-arena newarena(isize cap) {
-    arena a = {0};
-    a.beg = (u8 *)malloc(cap);
-    a.end = a.beg ? a.beg + cap : 0;
-    return a;
+#define ARENA_SIZE_ (1 << 28)
+arena* getarena() { //gets the only Static Arena
+    static u8 mem[ARENA_SIZE_];
+    static arena r;
+    static b32 uninit = 1;
+    if (uninit) {
+        r = (arena){0};
+        r.beg = mem;
+        asm ("" : "+r"(r.beg)); //launders pointer
+        r.end = r.beg + countof(mem);
+
+        uninit = 0;
+    }
+      
+    return &r;
 }
 
-#define ARENA_SIZE_ (1 << 2) //not being used, could not launder the pointer =p
-arena getarena() {
-    static u8 mem[ARENA_SIZE_];
-    arena r = {0};
-    r.beg = mem;
-    r.end = r.beg + countof(mem);
-
-    //asm ("" : "+r"(r.beg));  // launder the pointer
-    //__builtin_launder(r.beg);
-    return r;
+u8 *mallo(isize cap) { //malloc implemented using the static arena!
+    return (u8 *)alloc(getarena(), sizeof(u8), 16, cap);
+}
+arena newarena(isize cap) {
+    arena a = {0};
+    a.beg = (u8 *)mallo(cap);
+    a.end = a.beg ? a.beg + cap : 0;
+    return a;
 }

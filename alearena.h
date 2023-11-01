@@ -39,7 +39,8 @@ arena* getarena() { //gets the only Static Arena
 
         GETARENA_uninit = 0;
     }
-      
+    
+    asm ("" : "+r"(r.beg)); //launders pointer
     return &r;
 }
 u8 *mallo(isize cap) { //malloc implemented using the static arena!

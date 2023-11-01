@@ -36,3 +36,6 @@ int MACRO_scoped__;
 
 //Fast % when the number is a power of 2
 #define MODPWR2(number) ((number) & (align - 1))
+
+//One liner Pseudo Random generator
+#define RND64(s) ((s) = ((s) * 0x3FFFFBFFFFF + 0x7A5662DCDF))

@@ -110,3 +110,32 @@ arena newarena(isize cap, MallocFunction fmalloc) {
 
 #define foridx(var, array) forrange(var, array.start, array.start + array.len, 1)
 #define isstaticarr(a)  (countof(a.data) > 8) //u8 dynarr count == ptr_size / 8 == 8
+
+typedef struct GROW_voids_arr{
+    isize len; isize cap; isize start; b32 invalid; u8 *data;
+}GROW_erasure_arr;
+void grow(void *slice /*arr struct*/, isize size, isize align, arena *a) {
+    GROW_erasure_arr *sp = (GROW_erasure_arr *)slice;
+    GROW_erasure_arr replica = {sp->len, sp->cap, sp->start, sp->invalid, 0};
+
+    if (!replica.data) { //empty dyn array
+        replica.cap = 32; //start as 64 elements (this 32 will be mult by 2)
+        replica.data = alloc(a, size, align, replica.cap * 2);
+    } else if (a->beg == (replica.data + replica.cap * size)) { //extend array
+        alloc(a, size, 1, replica.cap);
+    } else { // rellocate to a 2*bigger allocation
+        u8 *data = alloc(a, size, align, replica.cap * 2);
+
+        u8 *srcstart = &(sp->data[(sp->start * size)]);
+        u8 *endp = srcstart + (sp->len * size);
+        u8 *dest = data, *src = srcstart;
+        while(src != endp){
+            *dest++ = *src++;
+        }
+        replica.data = data; 
+    }
+
+    sp->len = replica.len; sp->cap = replica.cap * 2; //cap is now 2 times bigger 
+    sp->start = replica.start; sp->invalid = replica.invalid;
+    sp->data = replica.data;
+}

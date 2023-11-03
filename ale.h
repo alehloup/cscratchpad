@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string.h> //memset memcpy
+#include <stdlib.h> //malloc
+#include <stdio.h> //printf
+
 //better assert
 #define assert(c)  while (!(c)) __builtin_unreachable()
 
@@ -68,20 +72,15 @@ void *alloc(arena *a, isize size, isize align, isize count) {
     u8 *p = a->beg + pad;
     a->beg += pad + total;
     
-    for(u8 *mptr = p; p != a->beg; ++p) {
-        *p = 0; //zero all bytes
-    }
-    
-    return p;
+    return memset(p, 0, total);
 }
 
 #define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
 
-def_funcp(void *, MallocFunction, isize cap);
-arena newarena(isize cap, MallocFunction fmalloc) {
+arena newarena(isize cap) {
     arena a = {0};
-    a.beg = (u8 *)fmalloc(cap);
+    a.beg = (u8 *)malloc(cap);
     a.end = a.beg ? a.beg + cap : 0;
     return a;
 }
@@ -111,31 +110,35 @@ arena newarena(isize cap, MallocFunction fmalloc) {
 #define foridx(var, array) forrange(var, array.start, array.start + array.len, 1)
 #define isstaticarr(a)  (countof(a.data) > 8) //u8 dynarr count == ptr_size / 8 == 8
 
-typedef struct GROW_voids_arr{
-    isize len; isize cap; isize start; b32 invalid; u8 *data;
-}GROW_erasure_arr;
+typedef u8 voided;
+def_dynarr(voided);
 void grow(void *slice /*arr struct*/, isize size, isize align, arena *a) {
-    GROW_erasure_arr *sp = (GROW_erasure_arr *)slice;
-    GROW_erasure_arr replica = {sp->len, sp->cap, sp->start, sp->invalid, 0};
+    voideds replica = {0};
+    memcpy(&replica, slice, sizeof(replica));
 
-    if (!replica.data) { //empty dyn array
-        replica.cap = 32; //start as 64 elements (this 32 will be mult by 2)
-        replica.data = alloc(a, size, align, replica.cap * 2);
+    replica.cap *= 2; 
+
+    if (!replica.data) { //empty array
+        replica.cap = 64;
+        replica.data = alloc(a, size, align, replica.cap);
     } else if (a->beg == (replica.data + replica.cap * size)) { //extend array
-        alloc(a, size, 1, replica.cap);
-    } else { // rellocate to a 2*bigger allocation
-        u8 *data = alloc(a, size, align, replica.cap * 2);
-
-        u8 *srcstart = &(sp->data[(sp->start * size)]);
-        u8 *endp = srcstart + (sp->len * size);
-        u8 *dest = data, *src = srcstart;
-        while(src != endp){
-            *dest++ = *src++;
-        }
-        replica.data = data; 
+        alloc(a, size, 1, replica.cap >> 1);
+    } else { // rellocate array
+        u8 *data = alloc(a, size, align, replica.cap);
+        memcpy(data, replica.data + replica.start, size*replica.len);
+        replica.data = data;
     }
 
-    sp->len = replica.len; sp->cap = replica.cap * 2; //cap is now 2 times bigger 
-    sp->start = replica.start; sp->invalid = replica.invalid;
-    sp->data = replica.data;
+    memcpy(slice, &replica, sizeof(replica));
 }
+
+#define push(dynarr, arena) __extension__ ({ \
+    typeof(dynarr) *dynarr_ = &(dynarr); \
+    typeof(arena) *arena_ = &(arena); \
+    \
+    if (dynarr_->len >= dynarr_->cap) { \
+        grow(dynarr_, sizeof(*dynarr_->data), alignof(*dynarr_->data), arena_); \
+    } \
+    dynarr_->data + dynarr_->len++; \
+})
+

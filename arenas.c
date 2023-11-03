@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "alearenaloc.h"
+#include "ale.h"
 
 typedef struct teste{
     i32 x;

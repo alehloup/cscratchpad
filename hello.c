@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "aledefs.h"
+#include "ale.h"
 
 int xisdigit(char c)
 {
@@ -10,7 +10,7 @@ int xisdigit(char c)
 int main(int argc, char **argv) {
     char* arg = argv[argc-1];
     s8 string = s8(arg);
-    printf("%llu %s\n", strlen(arg), string.data);
+    printf("%llu %s\n", string.len, string.data);
     printf("%d\n", xisdigit(string.data[0]));
 
     scoped(i64 x = (printf("inicio\n"), 5), printf("fim\n")) {

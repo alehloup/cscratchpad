@@ -7,6 +7,14 @@
 //better assert
 #define assert(c)  while (!(c)) __builtin_unreachable()
 
+//useful constants
+#define _256MB 268435456
+#define _128MB 134217728
+#define _64MB   67108864
+#define _32MB   33554432
+#define _16MB   16777216
+#define _19_ones 1111111111111111111
+
 //better type names
 typedef long long i64; typedef long i32; typedef short i16; typedef signed char i8;
 typedef unsigned long long u64; typedef unsigned long u32; typedef unsigned short u16; typedef unsigned char u8;
@@ -21,7 +29,10 @@ typedef i32 b32; //boolean
 #define sizeof(x)       ((isize)sizeof(x))
 #define alignof(x)      ((isize)_Alignof(x))
 #define countof(a)      (sizeof(a) / sizeof(*(a)))
-#define cstrlengthof(s) (countof(s) - 1)
+#define cstrlen(s) __extension__ ({   \
+    isize cOunt_ = countof(s) - 1;    \
+    cOunt_ != 7 ? cOunt_ : strlen(s); \
+}) // count returns pointer size for dyn cstr so... hacky fix
 
 //for shortcuts
 #define loop(var, times) for(isize var = 0; var < times; ++var)
@@ -34,9 +45,9 @@ typedef i32 b32; //boolean
         var != var##_TO__; var+=inc)          \
 //end of forrange
 
-//better static strings -- cstrlength |does not work| in dynamic strings
+//better static strings
 typedef struct s8{ isize len; u8 *data; }s8;
-#define s8(s) (s8){ cstrlengthof(s), (u8 *)s }
+#define s8(s) (s8){ cstrlen(s), (u8 *)s }
 
 //TRICK scope that "opens" at start, and "closes" at end (careful, if returns mid scope |end| will never run)
 int MACRO_scoped__;
@@ -48,7 +59,7 @@ int MACRO_scoped__;
 #define MODPWR2(number, modval) ((number) & (modval - 1))
 
 //One liner Pseudo Random generator
-static _Thread_local u64 MACRO_rnd64_seed__;
+static _Thread_local u64 MACRO_rnd64_seed__ = 0;
 #define RNDSEED(x) ((MACRO_rnd64_seed__) = (u64)(x) >> 1)
 #define RND64() ((MACRO_rnd64_seed__) = ((MACRO_rnd64_seed__) * 0x3FFFFBFFFFF + 0x7A5662DCDF) >> 1)
 #define RNDN(n) (RND64() % (n))
@@ -89,31 +100,31 @@ arena newarena(isize cap) {
     ARRAY defs and operations
 */
 
-//dynarr have their typename as type##s, i.e: i64s
-#define def_dynarr(typ)          \
-    typedef struct typ##s{       \
+#define ARR_HEADER_              \
         isize len; isize cap;    \
-        isize start; b32 invalid;\
-        typ *data;               \
-    }typ##s                      \
+        isize start; b32 invalid \
+
+//dynarr have their typename as type##s, i.e: i64s
+#define def_dynarr(typ)    \
+    typedef struct typ##s{ \
+        ARR_HEADER_;       \
+        typ *data;         \
+    }typ##s                \
 //end of def_dynarr  
 
 //statarr have their typename as type##x##count, i.e: i64x10
-#define def_statarr(typ, count)                 \
-    typedef struct typ##x##count{               \
-        isize len; isize cap;                   \
-        isize start; b32 invalid;               \
-        typ data[(count)];                      \
-    }typ##x##count                              \
+#define def_statarr(typ, count)   \
+    typedef struct typ##x##count{ \
+        ARR_HEADER_;              \
+        typ data[(count)];        \
+    }typ##x##count                \
 //end of def_statarr
 
 #define foridx(var, array) forrange(var, array.start, array.start + array.len, 1)
 #define isstaticarr(a)  (countof(a.data) > 8) //u8 dynarr count == ptr_size / 8 == 8
 
-typedef u8 voided;
-def_dynarr(voided);
 void grow(void *slice /*arr struct*/, isize size, isize align, arena *a) {
-    voideds replica = {0};
+    struct{ARR_HEADER_; u8 *data;} replica = {0};
     memcpy(&replica, slice, sizeof(replica));
 
     replica.cap *= 2; 
@@ -142,3 +153,92 @@ void grow(void *slice /*arr struct*/, isize size, isize align, arena *a) {
     dynarr_->data + dynarr_->len++; \
 })
 
+/*
+    HASH and TABLE
+*/
+
+#define _H_max_elems 32768 //2^15
+#define _H_MaSk 32767u //mask for power 15
+#define _H_sTep 49 //shift (64-15) for power 15
+i32 ht15_lookup(u64 hash_, i32 index_) {
+    u32 step = (u32)((hash_ >> _H_sTep) | 1); //odd makes cycle impossible
+    return (index_ + step) | _H_MaSk;
+}
+
+#define HT_HEADER_DATA(_kEy, _vAl)   \
+        isize len; isize cap;        \
+        isize start; b32 invalid;    \
+        struct {_kEy key; _vAl val;} \
+        data[_H_max_elems]           \
+//end of HT_HEADER_
+
+#define SET_HEADER_DATA(_kEy)        \
+        isize len; isize cap;        \
+        isize start; b32 invalid;    \
+        struct {_kEy key;}           \
+        data[_H_max_elems]           \
+//end of HT_HEADER_
+
+// returns index if found, -index where it should be if not found
+#define HT_FIND_IDX(kEy, table, hashfun) __extension__ ({ \
+    assert((table).len <= _H_max_elems-1); \
+    typeof(kEy) key_ = (kEy); \
+    typeof((table).data) data_ = ((table).data); \
+    u64 h_ = hashfun(key_); \
+    i32 idx_ = 0; \
+    while(idx_ >= 0 && data_[idx_].key != key_) { \
+        idx_ = ht15_lookup(h_, idx_) \
+        if(!data_[idx_].key) { \
+            idx_ = -idx_;} \
+    } \
+    idx_; \
+}) \
+// end of HT_FIND_IDX
+
+u64 hash_s8(s8 str) {
+    u64 h = 0x7A5662DCDF;
+    fori(str.len) { 
+        h ^= str.data[i] & 255;
+        h *= _19_ones;
+    }
+    return h ^ h>>32;
+}
+
+u64 hash_int64(u64 x) {
+    x ^= x >> 30;
+    x *= 0xbf58476d1ce4e5b9;
+    x ^= x >> 27;
+    x *= 0x94d049bb133111eb;
+    x ^= x >> 31;
+    return x;
+}
+
+u64 hash_int64_inverse(u64 x) {
+    x ^= x >> 31 ^ x >> 62;
+    x *= 0x319642b2d24d8ec3;
+    x ^= x >> 27 ^ x >> 54;
+    x *= 0x96de1b173f119089;
+    x ^= x >> 30 ^ x >> 60;
+    return x;
+}
+
+u32 hash_int32(u32 x)
+{
+    x ^= x >> 16;
+    x *= 0x7feb352d;
+    x ^= x >> 15;
+    x *= 0x846ca68b;
+    x ^= x >> 16;
+    return x;
+}
+
+
+u32 hash_int32_inverse(u32 x)
+{
+    x ^= x >> 16;
+    x *= 0x43021123;
+    x ^= x >> 15 ^ x >> 30;
+    x *= 0x1d69e2a5;
+    x ^= x >> 16;
+    return x;
+}

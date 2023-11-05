@@ -17,13 +17,21 @@ void test_push(arena scratch) {
 }
 
 typedef struct table{
-    HT_HEADER_DATA(i64, b32);
+    HT_HEADER_DATA(s8, s8);
 }table;
 void test_ht(arena a) {
     table *ht = newht(&a, table, 256);
-    print_ht("Hash Table", (*ht), "%lld %ld");
 
-    i64 x = {0};
+    ht->data[5].key = s8("Teste Chave");
+    ht->data[5].val = s8("Teste Valor");
+
+    ht->data[82].key = s8("Teste Chave 82");
+
+    ht_foridx_print(el, "Hash Table", (*ht), 
+        s8print(el.key);
+        printf(":");
+        s8print(el.val)
+    );
 }
 
 int main() {

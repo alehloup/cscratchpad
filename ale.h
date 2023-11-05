@@ -211,12 +211,12 @@ exp_and_cap find_good_exp_for_ht(i32 i) {
 
 // returns index if found, -index where it should be if not found
 #define HT_FIND_IDX(kEy, table, hashfun, eqfun) __extension__ ({ \
-    assert((table)->len <= (table)->cap);                        \
+    assert((table).len <= (table).cap);                          \
     typeof(kEy) _zero_key__ = {0}                                \
     typeof(kEy) key_ = (kEy);                                    \
-    typeof((table)->data) data_ = ((table)->data);               \
-    i64 shiftstep = (table)->start;                              \
-    i64 capmask = (table)->cap;                                  \
+    typeof((table).data) data_ = ((table).data);                 \
+    i64 shiftstep = (table).start;                               \
+    i64 capmask = (table).cap;                                   \
     u64 h_ = hashfun(key_);                                      \
     i32 idx_ = 0;                                                \
     while(idx_ >= 0 && not eqfun(data_[idx_].key, key_)) {       \
@@ -227,11 +227,20 @@ exp_and_cap find_good_exp_for_ht(i32 i) {
     }                                                            \
     idx_;                                                        \
 })
-
 #define numericequal(_eLeMent__, _Ke_Y_) (_eLeMent__ == _Ke_Y_)
 #define hti32_find(key, table) HT_FIND_IDX(key, table, hash_i32, numericequal)
 #define hti64_find(key, table) HT_FIND_IDX(key, table, hash_i64, numericequal)
 #define hts8_find(s8key, table) HT_FIND_IDX(s8key, table, hash_s8, s8equal)
+
+#define ht_set_at(ht_index__, ht_table__, key__, val__) __extension ({ \
+    i32 ht_index_place_ = abs(ht_index__);                             \
+    if ((ht_index__) < 0) {                                            \
+        (ht_table__)->data[ht_index_place_].key = (key__);             \
+        ++(ht_table__)->len;                                           \
+        assert((ht_table__)->len <= (ht_table__)->cap);                \
+    }                                                                  \
+    (ht_table__)->data[ht_index_place_].value = val__;                 \
+}) 
 
 u64 hash_s8(s8 str) {
     u64 h = 0x7A5662DCDF;
@@ -240,14 +249,12 @@ u64 hash_s8(s8 str) {
     }
     return h ^ h>>32;
 }
-
 u64 hash_i64(i64 x_) {
     u64 x = (u64)x_;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
     x ^= x >> 27; x *= 0x94d049bb133111eb; 
     return x ^ x>>31;
 }
-
 u64 hash_i32(i32 x_)
 {
     u32 x = (u32)x_;
@@ -256,21 +263,24 @@ u64 hash_i32(i32 x_)
     return x ^ x>>16;
 }
 
-#define print_ht(label, _HaSH_tAble__, key_val_format) __extension__ ({  \
-    printf("\n=== %s ===\n", label);                                     \
-    printf("start:%lld len:%lld cap:%lld invalid:%ld\n",                 \
-        (_HaSH_tAble__).start, (_HaSH_tAble__).len,                      \
-        (_HaSH_tAble__).cap, (_HaSH_tAble__).invalid);                   \
-    forrange(_pridx__, 0, (_HaSH_tAble__).cap, 1) {                      \
-        if ((_HaSH_tAble__).data[_pridx__].key == 0) continue;           \
-        printf("|");                                                     \
-        printf(key_val_format,                                           \
-            (_HaSH_tAble__).data[_pridx__].key,                          \
-            (_HaSH_tAble__).data[_pridx__].val);                         \
-        printf("| ");                                                    \
-    }                                                                    \
-    printf("\n----------------\n");                                      \
-    (_HaSH_tAble__).invalid;                                             \
+#define ht_foridx_print(var, label, _HaSH_tAble__, print_statement) __extension__ ({  \
+    typeof((_HaSH_tAble__).data) _data__ = (_HaSH_tAble__).data;                      \
+    typeof(_data__[0].key) _zero_key__ = {0};                                         \
+    typeof(_data__[0]) var = {0};                                                     \
+    printf("\n=== %s ===\n", label);                                                  \
+    printf("start:%lld len:%lld cap:%lld invalid:%ld\n",                              \
+        (_HaSH_tAble__).start, (_HaSH_tAble__).len,                                   \
+        (_HaSH_tAble__).cap, (_HaSH_tAble__).invalid);                                \
+    forrange(_pridx__, 0, (_HaSH_tAble__).cap, 1) {                                   \
+        var = _data__[_pridx__];                                                      \
+        if (not memcmp(&(var.key), &_zero_key__, sizeof(_zero_key__)))                \
+            continue;                                                                 \
+        printf("|");                                                                  \
+        print_statement;                                                              \
+        printf("| ");                                                                 \
+    }                                                                                 \
+    printf("\n----------------\n");                                                   \
+    (_HaSH_tAble__).invalid;                                                          \
 })
 
 

@@ -10,7 +10,7 @@ int xisdigit(char c)
 int main(int argc, char **argv) {
     char* arg = argv[argc-1];
     s8 string = s8(arg);
-    printf("%llu %s\n", string.len, string.data);
+    printf("%lld %s\n", string.len, string.data);
     printf("%d\n", xisdigit(string.data[0]));
 
     scoped(i64 x = (printf("inicio\n"), 5), printf("fim\n")) {
@@ -27,6 +27,11 @@ int main(int argc, char **argv) {
         printf("Meio do arquivo\n");
     }   
 
+
+    printf("cão maçã: %ld\n", s8equal(s8("cão"), s8("maçã")));
+    printf("cão cão: %ld\n", s8equal(s8("cão"), s8("cão")));
+    printf("maçã cão: %ld\n", s8equal(s8("maçã"), s8("cão")));
+    printf("maçã maçã: %ld\n", s8equal(s8("maçã"), s8("maçã")));
 
     return 0;
 }

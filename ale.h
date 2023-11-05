@@ -25,6 +25,13 @@ typedef long long isize; typedef unsigned long long usize;
 typedef float f32; typedef double f64;
 typedef i32 b32; //boolean
 
+//Pythonesque
+#define True 1l
+#define False 0l
+#define and &&
+#define or ||
+#define not !
+
 //convenient way to define a function pointer
 #define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__)
 
@@ -48,11 +55,18 @@ typedef i32 b32; //boolean
         var != var##_TO__; var+=inc)          \
 //end of forrange
 
-//better static strings
+/*
+    STRINGS
+*/
 typedef struct s8{ isize len; u8 *data; }s8;
 #define s8(s) (s8){ cstrlen(s), (u8 *)s }
+#define s8equal(s1, s2) (s1.len != s2.len ? False \
+    : (b32) not memcmp(s1.data, s2.data, (u64)s1.len))
+#define s8substr(s, from, count) \
+    ((s8){ .data = (s.data)+from, .len = count })
 
-//TRICK scope that "opens" at start, and "closes" at end (careful, if returns mid scope |end| will never run)
+//TRICK scope that "opens" at start, and "closes" at end 
+//(careful, if returns mid scope |end| will never run)
 int MACRO_scoped__;
 #define scoped(start, end) MACRO_scoped__ = 1;         \
     for(start; MACRO_scoped__; (--MACRO_scoped__), end)\
@@ -68,7 +82,7 @@ static _Thread_local u64 MACRO_rnd64_seed__ = 0;
 #define RNDN(n) (RND64() % (n))
 
 /*
-    ARENA defs and operations that do not do memory allocation
+    ARENA
 */
 
 typedef struct arena{ u8 *beg; u8 *end; }arena;
@@ -101,7 +115,7 @@ arena newarena(isize cap) {
 }
 
 /*
-    ARRAY defs and operations
+    ARRAY
 */
 
 #define ARR_HEADER_DATA(type)     \
@@ -194,22 +208,28 @@ exp_and_cap find_good_exp_for_ht(i32 i) {
 })
 
 // returns index if found, -index where it should be if not found
-#define HT_FIND_IDX(kEy, table, hashfun) __extension__ ({ \
-    assert((table)->len <= (table)->cap);                 \
-    typeof(kEy) key_ = (kEy);                             \
-    typeof((table)->data) data_ = ((table)->data);        \
-    i64 shiftstep = (table)->start;                       \
-    i64 capmask = (table)->cap;                           \
-    u64 h_ = hashfun(key_);                               \
-    i32 idx_ = 0;                                         \
-    while(idx_ >= 0 && data_[idx_].key != key_) {         \
-        idx_ = ht_lookup(h_, idx_, shiftstep, capmask)    \
-        if(!data_[idx_].key) {                            \
-            idx_ = -idx_;                                 \
-        }                                                 \
-    }                                                     \
-    idx_;                                                 \
+#define HT_FIND_IDX(kEy, table, hashfun, eqfun) __extension__ ({ \
+    assert((table)->len <= (table)->cap);                        \
+    typeof(kEy) _zero_key__ = {0}                                \
+    typeof(kEy) key_ = (kEy);                                    \
+    typeof((table)->data) data_ = ((table)->data);               \
+    i64 shiftstep = (table)->start;                              \
+    i64 capmask = (table)->cap;                                  \
+    u64 h_ = hashfun(key_);                                      \
+    i32 idx_ = 0;                                                \
+    while(idx_ >= 0 && not eqfun(data_[idx_].key, key_)) {       \
+        idx_ = ht_lookup(h_, idx_, shiftstep, capmask)           \
+        if(eqfun(data_[idx_].key, _zero_key__)) {                \
+            idx_ = -idx_;                                        \
+        }                                                        \
+    }                                                            \
+    idx_;                                                        \
 })
+
+#define numericequal(_eLeMent__, _Ke_Y_) (_eLeMent__ == _Ke_Y_)
+#define hti32_find(key, table) HT_FIND_IDX(key, table, hash_i32, numericequal)
+#define hti64_find(key, table) HT_FIND_IDX(key, table, hash_i64, numericequal)
+#define hts8_find(s8key, table) HT_FIND_IDX(s8key, table, hash_s8, s8equal)
 
 u64 hash_s8(s8 str) {
     u64 h = 0x7A5662DCDF;
@@ -219,14 +239,14 @@ u64 hash_s8(s8 str) {
     return h ^ h>>32;
 }
 
-u64 hash_int64(i64 x_) {
+u64 hash_i64(i64 x_) {
     u64 x = (u64)x_;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
     x ^= x >> 27; x *= 0x94d049bb133111eb; 
     return x ^ x>>31;
 }
 
-u64 hash_int32(i32 x_)
+u64 hash_i32(i32 x_)
 {
     u32 x = (u32)x_;
     x ^= x >> 16; x *= 0x7feb352d; 

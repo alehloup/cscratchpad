@@ -22,6 +22,8 @@ typedef struct table{
 void test_ht(arena a) {
     table *ht = newht(&a, table, 256);
     print_ht("Hash Table", (*ht), "%lld %ld");
+
+    i64 x = {0};
 }
 
 int main() {

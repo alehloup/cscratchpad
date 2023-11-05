@@ -49,11 +49,12 @@ typedef i32 b32; //boolean
 #define fori(times) loop(i, times)
 #define forj(times) loop(j, times)
 #define for_k(times) loop(k, times)
-
 #define forrange(var, from, to, inc)          \
     for(isize var = (from), var##_TO__ = (to);\
         var != var##_TO__; var+=inc)          \
 //end of forrange
+
+#define printn printf("\n")
 
 /*
     STRINGS
@@ -64,6 +65,7 @@ typedef struct s8{ isize len; u8 *data; }s8;
     : (b32) not memcmp(s1.data, s2.data, (u64)s1.len))
 #define s8substr(s, from, count) \
     ((s8){ .data = (s.data)+from, .len = count })
+#define s8print(s) printf("%.*s", (int)s.len, s.data)
 
 //TRICK scope that "opens" at start, and "closes" at end 
 //(careful, if returns mid scope |end| will never run)

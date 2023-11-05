@@ -10,8 +10,10 @@ int xisdigit(char c)
 int main(int argc, char **argv) {
     char* arg = argv[argc-1];
     s8 string = s8(arg);
-    printf("%lld %s\n", string.len, string.data);
-    printf("%d\n", xisdigit(string.data[0]));
+    //printf("%lld %s\n", string.len, string.data);
+    //printf("%d\n", xisdigit(string.data[0]));
+
+    s8print(string); printn;
 
     scoped(i64 x = (printf("inicio\n"), 5), printf("fim\n")) {
         printf("Meio! 1\n");

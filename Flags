@@ -1,4 +1,4 @@
--std=gnu2x -g3 -O3 -march=native -mtune=native
+-std=gnu2x -g3 -O3 -march=native -mtune=native -flto
 
 -Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -fsigned-char
 

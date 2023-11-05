@@ -16,7 +16,7 @@
 
 -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum -Wenum-int-mismatch
 
--fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error
+-fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=unreachable
 
 -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
 

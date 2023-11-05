@@ -10,7 +10,7 @@
 
 -Wconversion -Wno-sign-conversion -Wdouble-promotion
 
--Warray-bounds -fstrict-flex-arrays 
+-Warray-bounds -fstrict-flex-arrays -Wvla-larger-than=0
 
 -Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2 -Wformat-security -Wformat-signedness 
 

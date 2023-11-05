@@ -1,4 +1,4 @@
--std=gnu2x -g3 -O3 -march=native -mtune=native -flto
+-std=gnu2x -g3 -O3 -march=native -mtune=native -flto -static-pie
 
 -Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -fsigned-char
 
@@ -18,7 +18,7 @@
 
 -fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error
 
--D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fPIE -fcf-protection=full
+-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
 
 libwinsane.o
 

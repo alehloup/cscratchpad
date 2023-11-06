@@ -32,6 +32,9 @@ typedef i32 b32; //boolean
 #define or ||
 #define not !
 
+//Not null pointer parameter
+#define REF [static 1] /* NOT NULL pointer parameter*/
+
 //convenient way to define a function pointer
 #define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__)
 
@@ -90,7 +93,7 @@ static _Thread_local u64 MACRO_rnd64_seed__ = 0;
 typedef struct arena{ u8 *beg; u8 *end; }arena;
 
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
-void *alloc(arena *a, isize size, isize align, isize count) {
+void *alloc(arena a REF, isize size, isize align, isize count) {
     isize total = size * count;
     isize pad = MODPWR2(- (isize)a->beg, align); //mod -x gives n for next align
 
@@ -172,75 +175,37 @@ void grow(void *slice /*arr struct*/, isize size, isize align, arena *a) {
 })
 
 /*
-    HASH and TABLE
-*/
+    MATRIX alloc (just to remember the VLA matrix ALLOC syntax)
+    i64 (*p_matrix_vla)[m][n] =  malloc(sizeof(*p_matrix_vla));
+
+    To be used as:  (*p_matrix_vla)[i][j]
+
+    As function return type its a pointer to the type: i64 *
+*/ 
+#define NEWMATRIX_VAR(type, var, m, n, arena_) \
+    type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
+
+//to be used as:  (*var)[i][j], has nice type safety
+#define matat(mat, i, j) (*mat)[i][j]
 
 /*
-    Cap needs to be a power of 2, an example for 2^15:
-    capmask = 32767 (2^15 - 1)
-    shiftstep = 49 (that is 64 - 15)
+    HASH'n'TABLE
+*/
+
+/* 
+    mask-step-index (MSI) Hash Table from Null Program 
+    Capacity needs to be a power of 2, an example for 2^15:
+        capmask = 32767 (2^15 - 1)
+        shiftstep = 49 (that is 64 - 15)
 */ 
-i32 ht_lookup(u64 hash_, i32 index_, i64 shiftstep, i64 capmask) {
+i32 ht_lookup(u64 hash_ /* 1st hash, "access" a "list of elements" for it */, 
+              i32 index_ /* 2nd hash, iterates over the "list of elements"*/, 
+              i32 shiftstep /* Fixed, 64 - Exp */, 
+              i32 capmask /* Fixed, 2^Exp - 1*/) 
+{
     u32 step = (u32)((hash_ >> shiftstep) | 1); //odd makes cycle impossible
     return (index_ + step) | capmask; 
 }
-
-#define HT_HEADER_DATA(_kEy, _vAl) ARR_HEADER_DATA(struct {_kEy key; _vAl val;})
-#define SET_HEADER_DATA(_kEy) HT_HEADER_DATA(_kEy, u8)
-
-typedef struct exp_and_cap{ i32 exp; i32 cap; }exp_and_cap;
-exp_and_cap find_good_exp_for_ht(i32 i) {
-    i32 exp = 8, n = 256;
-    while(n < i) {
-        ++exp; n*=2;
-    }
-    return (exp_and_cap){ .exp = exp+1, .cap = (n*2) - 1 };
-}
-
-#define newht(arena_, structname, maxn) __extension__ ({ \
-    structname *ht_loced_ = newx(arena_, structname);    \
-    exp_and_cap expncap = find_good_exp_for_ht(maxn);    \
-    ht_loced_->start = 64 - expncap.exp;                 \
-    ht_loced_->cap = expncap.cap;                        \
-    ht_loced_->data = newxs(arena_,                      \
-        typeof(*(ht_loced_->data)), expncap.cap + 1);    \
-    ht_loced_->len = 0;                                  \
-    ht_loced_->invalid = 0;                              \
-    ht_loced_;                                           \
-})
-
-// returns index if found, -index where it should be if not found
-#define HT_FIND_IDX(kEy, table, hashfun, eqfun) __extension__ ({ \
-    assert((table).len <= (table).cap);                          \
-    typeof(kEy) _zero_key__ = {0}                                \
-    typeof(kEy) key_ = (kEy);                                    \
-    typeof((table).data) data_ = ((table).data);                 \
-    i64 shiftstep = (table).start;                               \
-    i64 capmask = (table).cap;                                   \
-    u64 h_ = hashfun(key_);                                      \
-    i32 idx_ = 0;                                                \
-    while(idx_ >= 0 && not eqfun(data_[idx_].key, key_)) {       \
-        idx_ = ht_lookup(h_, idx_, shiftstep, capmask)           \
-        if(eqfun(data_[idx_].key, _zero_key__)) {                \
-            idx_ = -idx_;                                        \
-        }                                                        \
-    }                                                            \
-    idx_;                                                        \
-})
-#define numericequal(_eLeMent__, _Ke_Y_) (_eLeMent__ == _Ke_Y_)
-#define hti32_find(key, table) HT_FIND_IDX(key, table, hash_i32, numericequal)
-#define hti64_find(key, table) HT_FIND_IDX(key, table, hash_i64, numericequal)
-#define hts8_find(s8key, table) HT_FIND_IDX(s8key, table, hash_s8, s8equal)
-
-#define ht_set_at(ht_index__, ht_table__, key__, val__) __extension ({ \
-    i32 ht_index_place_ = abs(ht_index__);                             \
-    if ((ht_index__) < 0) {                                            \
-        (ht_table__)->data[ht_index_place_].key = (key__);             \
-        ++(ht_table__)->len;                                           \
-        assert((ht_table__)->len <= (ht_table__)->cap);                \
-    }                                                                  \
-    (ht_table__)->data[ht_index_place_].value = val__;                 \
-}) 
 
 u64 hash_s8(s8 str) {
     u64 h = 0x7A5662DCDF;
@@ -263,6 +228,7 @@ u64 hash_i32(i32 x_)
     return x ^ x>>16;
 }
 
+//deprecated, will need to be fixed:
 #define ht_foridx_print(var, label, _HaSH_tAble__, print_statement) __extension__ ({  \
     typeof((_HaSH_tAble__).data) _data__ = (_HaSH_tAble__).data;                      \
     typeof(_data__[0].key) _zero_key__ = {0};                                         \

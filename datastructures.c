@@ -16,28 +16,27 @@ void test_push(arena scratch) {
     print_arr("Vetor dinâmico", d, "%lld");
 }
 
-typedef struct table{
-    HT_HEADER_DATA(s8, s8);
-}table;
-void test_ht(arena a) {
-    table *ht = newht(&a, table, 256);
+void test_vlamatrix(arena a) {
+    NEWMATRIX_VAR(i64, mat, 10, 10, &a);
 
-    ht->data[5].key = s8("Teste Chave");
-    ht->data[5].val = s8("Teste Valor");
+    fori(10) {
+        forj(10) {
+            (*mat)[i][j] = i;
+        }
+    }
 
-    ht->data[82].key = s8("Teste Chave 82");
-
-    ht_foridx_print(el, "Hash Table", (*ht), 
-        s8print(el.key);
-        printf(":");
-        s8print(el.val)
-    );
+    fori(10) {
+        forj(10) {
+            printf("%lld ", matat(mat, i, j));
+        } 
+        printf("\n");
+    }
 }
 
 int main() {
 
     arena scratch = newarena(_8MB);
-    test_ht(scratch);
+    test_vlamatrix(scratch);
 
     return 0;
 }

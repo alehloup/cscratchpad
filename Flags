@@ -6,6 +6,8 @@
 
 -Wshadow -Wundef -Wnull-dereference 
 
+-Wstrict-prototypes -Wold-style-definition
+
 -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 
 -Wconversion -Wno-sign-conversion -Wdouble-promotion

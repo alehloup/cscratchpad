@@ -25,26 +25,35 @@ typedef long long isize; typedef unsigned long long usize;
 typedef float f32; typedef double f64;
 typedef i32 b32; //boolean
 
+#define lendata(type)    i32 len; type *data // slice
+#define caplendata(type) i32 cap; lendata(type) // growable array
+
+// VLA Matrix with Malloc: i64 (*vla_matrix_pointer)[m][n] =  malloc(sizeof(*vla_matrix_pointer))
+#define NEWMATRIX_VAR(type, var, m, n, arena_) \
+    type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
+#define matat(mat, i, j) (*mat)[i][j]
+
 //Pythonesque
 #define True 1l
 #define False 0l
 #define and &&
 #define or ||
 #define not !
-
-//Not null pointer parameter
+#define printn printf("\n")
+#define print(...) printf(__VA_ARGS__); printf("\n");
+ 
+//Lazy defines
 #define REF [static 1] /* NOT NULL pointer parameter*/
-
-//convenient way to define a function pointer
-#define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__)
+#define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__) //define a function pointer
+#define threadlocal static _Thread_local//thread variable
 
 //better names for size operations
 #define sizeof(x)       ((isize)sizeof(x))
 #define alignof(x)      ((isize)_Alignof(x))
 #define countof(a)      (sizeof(a) / sizeof(*(a)))
-#define cstrlen(s) __extension__ ({          \
-    isize cOunt_ = countof(s) - 1;           \
-    cOunt_ != 7 ? cOunt_ : (isize)strlen(s); \
+#define cstrlen(s) __extension__ ({             \
+    isize cOunt_ = countof(s) - 1;              \
+    cOunt_ != 7 ? (i32)cOunt_ : (i32)strlen(s); \
 }) // count returns pointer size for dyn cstr so... hacky fix
 
 //for shortcuts
@@ -54,36 +63,46 @@ typedef i32 b32; //boolean
 #define for_k(times) loop(k, times)
 #define forrange(var, from, to, inc)          \
     for(isize var = (from), var##_TO__ = (to);\
-        var != var##_TO__; var+=inc)          \
-//end of forrange
-
-#define printn printf("\n")
+        var != var##_TO__; var+=inc)
 
 /*
     STRINGS
 */
-typedef struct s8{ isize len; u8 *data; }s8;
-#define s8(s) (s8){ cstrlen(s), (u8 *)s }
-#define s8equal(s1, s2) (s1.len != s2.len ? False \
-    : (b32) not memcmp(s1.data, s2.data, (u64)s1.len))
-#define s8substr(s, from, count) \
-    ((s8){ .data = (s.data)+from, .len = count })
-#define s8print(s) printf("%.*s", (int)s.len, s.data)
+typedef struct s8{ i32 len; u8 *data; }s8;
+#define s8(s) ((s8){ cstrlen(s), (u8 *)s })
+
+s8 s8substr(s8 s, i32 from, i32 count) {
+    return (s8){ .data = (s.data)+from, .len = count };
+}
+b32 s8equal(s8 s1, s8 s2) {
+    return s1.len != s2.len ? False : \
+        (s1.len == 0 ? True : not memcmp(s1.data, s2.data, s1.len));
+}
+void s8print(s8 s) {
+    printf("%.*s", (int)s.len, s.data);
+} 
 
 //TRICK scope that "opens" at start, and "closes" at end 
-//(careful, if returns mid scope |end| will never run)
-int MACRO_scoped__;
+threadlocal b32 MACRO_scoped__;
 #define scoped(start, end) MACRO_scoped__ = 1;         \
-    for(start; MACRO_scoped__; (--MACRO_scoped__), end)\
-//end of scoped
+    for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 //Fast % when the number is a power of 2
 #define MODPWR2(number, modval) ((number) & (modval - 1))
 
+// Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
+i32 fit_pwr2_exp(i64 size) {
+    i32 exp=9; i64 val=512; ++size;
+    while (val < size) {
+        ++exp; val*=2;
+    }
+    return exp;
+}
+
 //One liner Pseudo Random generator
-static _Thread_local u64 MACRO_rnd64_seed__ = 0;
+threadlocal u64 MACRO_rnd64_seed__ = _19_ones;
 #define RNDSEED(x) ((MACRO_rnd64_seed__) = (u64)(x) >> 1)
-#define RND64() ((MACRO_rnd64_seed__) = ((MACRO_rnd64_seed__) * 0x3FFFFBFFFFF + 0x7A5662DCDF) >> 1)
+#define RND64() (MACRO_rnd64_seed__ = hash_i64(MACRO_rnd64_seed__))
 #define RNDN(n) (RND64() % (n))
 
 /*
@@ -120,47 +139,25 @@ arena newarena(isize cap) {
 }
 
 /*
-    ARRAY
+    GROWABLE ARRAY
 */
 
-#define ARR_HEADER_DATA(type)     \
-        isize len; isize cap;     \
-        isize start; b32 invalid; \
-        type *data                \
+void grow(void *slice /*slice struct*/, isize size, isize align, arena *a) {
+    struct{caplendata(u8);} replica = {0};
+    memcpy(&replica, slice, sizeof(replica)); //type prunning
 
-#define foridx(var, array) forrange(var, array.start, array.start + array.len, 1)
-#define isstaticarr(a)  (countof(a.data) > 8) //u8 dynarr count == ptr_size / 8 == 8
-#define print_arr(label, _ArR__, format) __extension__ ({              \
-    printf("\n=== %s ===\n", label);                                   \
-    printf("start:%lld len:%lld cap:%lld invalid:%ld\n",               \
-        (_ArR__).start, (_ArR__).len, (_ArR__).cap, (_ArR__).invalid); \
-    foridx(_pridx__, (_ArR__)) {                                       \
-        printf("|");                                                   \
-        printf(format, (_ArR__).data[_pridx__]);                       \
-        printf("| ");                                                  \
-    }                                                                  \
-    printf("\n----------------\n");                                    \
-    (_ArR__).invalid;                                                  \
-})
-
-void grow(void *slice /*arr struct*/, isize size, isize align, arena *a) {
-    struct{ARR_HEADER_DATA(u8);} replica = {0};
-    memcpy(&replica, slice, sizeof(replica));
-
-    replica.cap *= 2; 
-
-    if (!replica.data) { //empty array
-        replica.cap = 64;
-        replica.data = alloc(a, size, align, replica.cap);
-    } else if (a->beg == (replica.data + replica.cap * size)) { //extend array
-        alloc(a, size, 1, replica.cap >> 1);
-    } else { // rellocate array
-        u8 *data = alloc(a, size, align, replica.cap);
-        memcpy(data, replica.data + replica.start, size*replica.len);
+    if (!replica.data) { 
+        replica.data = alloc(a, size, align, replica.cap = 64); // empty: default to 64
+    } else if (a->beg == (replica.data + replica.cap * size)) { 
+        alloc(a, size, 1, replica.cap); // neighbour mem avail: extend array
+        replica.cap *= 2;
+    } else {
+        u8 *data = alloc(a, size, align, replica.cap *= 2); // reloc to 2*current cap
+        memcpy(data, replica.data, size*replica.len);
         replica.data = data;
     }
 
-    memcpy(slice, &replica, sizeof(replica));
+    memcpy(slice, &replica, sizeof(replica)); //type prunning
 }
 
 #define push(dynarr, arena) __extension__ ({  \
@@ -168,44 +165,14 @@ void grow(void *slice /*arr struct*/, isize size, isize align, arena *a) {
     typeof(arena) arena_ = (arena);           \
                                               \
     if (dynarr_->len >= dynarr_->cap) {       \
-        grow(dynarr_, sizeof(*dynarr_->data), \
-            alignof(*dynarr_->data), arena_); \
+        grow(dynarr_, sizeof(*dynarr_->data), alignof(*dynarr_->data), arena_); \
     }                                         \
     dynarr_->data + dynarr_->len++;           \
 })
 
 /*
-    MATRIX alloc (just to remember the VLA matrix ALLOC syntax)
-    i64 (*p_matrix_vla)[m][n] =  malloc(sizeof(*p_matrix_vla));
-
-    To be used as:  (*p_matrix_vla)[i][j]
-
-    As function return type its a pointer to the type: i64 *
-*/ 
-#define NEWMATRIX_VAR(type, var, m, n, arena_) \
-    type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
-
-//to be used as:  (*var)[i][j], has nice type safety
-#define matat(mat, i, j) (*mat)[i][j]
-
-/*
     HASH'n'TABLE
 */
-
-/* 
-    mask-step-index (MSI) Hash Table from Null Program 
-    Capacity needs to be a power of 2, an example for 2^15:
-        capmask = 32767 (2^15 - 1)
-        shiftstep = 49 (that is 64 - 15)
-*/ 
-i32 ht_lookup(u64 hash_ /* 1st hash, "access" a "list of elements" for it */, 
-              i32 index_ /* 2nd hash, iterates over the "list of elements"*/, 
-              i32 shiftstep /* Fixed, 64 - Exp */, 
-              i32 capmask /* Fixed, 2^Exp - 1*/) 
-{
-    u32 step = (u32)((hash_ >> shiftstep) | 1); //odd makes cycle impossible
-    return (index_ + step) | capmask; 
-}
 
 u64 hash_s8(s8 str) {
     u64 h = 0x7A5662DCDF;
@@ -214,39 +181,73 @@ u64 hash_s8(s8 str) {
     }
     return h ^ h>>32;
 }
-u64 hash_i64(i64 x_) {
-    u64 x = (u64)x_;
+u64 hash_cstr(char *str) {
+    return hash_s8(s8(str));
+}
+u64 hash_i64(i64 int64) {
+    u64 x = (u64)int64;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
     x ^= x >> 27; x *= 0x94d049bb133111eb; 
     return x ^ x>>31;
 }
-u64 hash_i32(i32 x_)
+u64 hash_i32(i32 int32)
 {
-    u32 x = (u32)x_;
+    u32 x = (u32)int32;
     x ^= x >> 16; x *= 0x7feb352d; 
     x ^= x >> 15; x *= 0x846ca68b; 
     return x ^ x>>16;
 }
 
-//deprecated, will need to be fixed:
-#define ht_foridx_print(var, label, _HaSH_tAble__, print_statement) __extension__ ({  \
-    typeof((_HaSH_tAble__).data) _data__ = (_HaSH_tAble__).data;                      \
-    typeof(_data__[0].key) _zero_key__ = {0};                                         \
-    typeof(_data__[0]) var = {0};                                                     \
-    printf("\n=== %s ===\n", label);                                                  \
-    printf("start:%lld len:%lld cap:%lld invalid:%ld\n",                              \
-        (_HaSH_tAble__).start, (_HaSH_tAble__).len,                                   \
-        (_HaSH_tAble__).cap, (_HaSH_tAble__).invalid);                                \
-    forrange(_pridx__, 0, (_HaSH_tAble__).cap, 1) {                                   \
-        var = _data__[_pridx__];                                                      \
-        if (not memcmp(&(var.key), &_zero_key__, sizeof(_zero_key__)))                \
-            continue;                                                                 \
-        printf("|");                                                                  \
-        print_statement;                                                              \
-        printf("| ");                                                                 \
-    }                                                                                 \
-    printf("\n----------------\n");                                                   \
-    (_HaSH_tAble__).invalid;                                                          \
+#define hash_it(X) _Generic((X), char *: hash_cstr, s8: hash_s8, i32: hash_i32, default: hash_i64)(X)
+
+threadlocal i32 msi_expo = 16; // default MSI exp: 2^16 = capacity of 65536 - 1 elements
+threadlocal i32 msi_mask = 65535; // capacity - 1
+threadlocal i32 msi_step = 48; // 64 - exp
+//Mask-Step-Index (MSI) Hash Table
+i32 msi_lookup(u64 hash, // 1st hash acts as base location
+              i32 index // 2nd "hash" steps over the "list of elements" from base-location
+            )
+{
+    u32 step = (u32)(hash >> msi_step) | 1;
+
+    return (index + step) & msi_mask;
+}
+
+void msi_set_maxn_elements(isize size) {
+    msi_expo = fit_pwr2_exp(size);
+    msi_mask = (1 << msi_expo) - 1;
+    msi_step = 64 - msi_expo;
+}
+
+#define msi_newdata(arena, table, expected_maxn) __extension__ ({\
+    msi_set_maxn_elements(expected_maxn); \
+    newxs(&a, typeof(*((table)->data)), msi_mask + 1); \
 })
 
+#define newmsi(arena, varname, expected_maxn) {.data = msi_newdata(arena, &varname, expected_maxn)};
 
+#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
+
+#define msi_s8(table, key_, val_) __extension__ ({        \
+    u64 hash = hash_it(key_);                             \
+    i32 index = (i32)hash;                                \
+    typeof(key_) zero_key = {0};                          \
+    typeof(val_) zero_val = {0};                          \
+                                                          \
+    index = msi_lookup(hash, index);                      \
+    for(;                                                 \
+        not memequal((table)->data[index].key, key_);     \
+        index = msi_lookup(hash, index))                  \
+    {                                                     \
+        if(memequal((table)->data[index].key, zero_key)){ \
+            if(not memequal(val_, zero_val)) {            \
+                (table)->data[index].key = key_;          \
+            }                                             \
+            break;                                        \
+        }                                                 \
+    }                                                     \
+    if(not memequal(val_, zero_val)) {                    \
+        (table)->data[index].val = val_;                  \
+    }                                                     \
+    index;                                                \
+})

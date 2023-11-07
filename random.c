@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "ale.h"
 
 int main() {
@@ -18,7 +16,7 @@ int main() {
 
     #define N 20
     i32 counts[N] = {0};
-    fori(100'000'000) {
+    fori(1000000000) {
         counts[RND64() % N] +=1;
     }
     fori(N) {

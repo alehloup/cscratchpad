@@ -1,10 +1,7 @@
-//#pragma once
-#include <stdio.h>
-#include <stdlib.h>
 #include "ale.h"
 
 typedef struct at{
-    ARR_HEADER_DATA(i64);
+    caplendata(i64);
 }at;
 void test_push(arena scratch) {
     at d = {};
@@ -13,7 +10,10 @@ void test_push(arena scratch) {
         *push(&d, &scratch) = i;
     }
 
-    print_arr("Vetor dinâmico", d, "%lld");
+    fori(d.len) {
+        printf("%lld ", d.data[i]);
+    } 
+    printn;
 }
 
 void test_vlamatrix(arena a) {
@@ -36,6 +36,7 @@ void test_vlamatrix(arena a) {
 int main() {
 
     arena scratch = newarena(_8MB);
+    test_push(scratch);
     test_vlamatrix(scratch);
 
     return 0;

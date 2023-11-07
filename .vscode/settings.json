@@ -4,6 +4,9 @@
         "stdint.h": "c",
         "typeinfo": "cpp",
         "aledefs.h": "c",
-        "ale.h": "c"
+        "ale.h": "c",
+        "cmath": "c",
+        "compare": "c",
+        "type_traits": "c"
     }
 }

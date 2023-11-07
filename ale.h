@@ -37,9 +37,9 @@ typedef i32 b32; //boolean
 #define keyval(keyt, valt) keyt key; valt val // entry fields
 #define tkeyval(keyt, valt) struct{ keyval(keyt, valt); } //struct entry
 
-#define datatypeof(table) typeof(((table)->data))
-#define keytypeof(table) typeof(((table)->data[0].key))
-#define valtypeof(table) typeof(((table)->data[0].val))
+#define datatypeof(_table_) typeof(((_table_)->data))
+#define keytypeof(_table_) typeof(((_table_)->data[0].key))
+#define valtypeof(_table_) typeof(((_table_)->data[0].val))
 
 /*
     VLA MATRIX 
@@ -254,12 +254,10 @@ void msi_set_maxn_elements(isize size) {
 })
 #define newmsi(arena, varname, expected_maxn) {.data = msi_newdata(arena, &varname, expected_maxn)};
 
-#define msi_upsert(table, key_, val_) __extension__ ({    \
+#define msi_idx(table, key_, msi_insert_if_not_found) __extension__ ({ \
     datatypeof(table) data = (table)->data;               \
     keytypeof(table) searchk = (keytypeof(table))key_;    \
-    valtypeof(table)  setval = (valtypeof(table))val_;    \
     typeof(searchk) zero_key = {0};                       \
-    typeof(setval)  zero_val = {0};                       \
                                                           \
     u64 hash = hash_it(searchk);                          \
     i32 index = (i32)hash;                                \
@@ -269,18 +267,21 @@ void msi_set_maxn_elements(isize size) {
         index = msi_lookup(hash, index))                  \
     {                                                     \
         if(memequal(data[index].key, zero_key)){          \
-            if(not memequal(setval, zero_val)) {          \
+            if(msi_insert_if_not_found) {                 \
                 data[index].key = searchk;                \
             }                                             \
             break;                                        \
         }                                                 \
     }                                                     \
-    if(not memequal(setval, zero_val)) {                  \
-        data[index].val = setval;                         \
-    }                                                     \
     index;                                                \
 })
-#define msi_only_get {0}
-#define msi_get_idx(table, key_) __extension__ ({msi_upsert(&table, key_, msi_only_get);})
-#define msi_get(table, key_) __extension__({(table).data[msi_get_idx(table, key_)].val;})
 
+#define msi_get(table, key) __extension__({        \
+    (table)->data[msi_idx(table, key, False)].val; \
+})
+#define msi_set(table, key, val_) __extension__({           \
+    i32 msi_index_ = msi_idx(table, key, True);             \
+    valtypeof(table) msi_current_val                        \
+        = (valtypeof(table)) (table)->data[msi_index_].val; \
+    (table)->data[msi_index_].val = val_;                   \
+})

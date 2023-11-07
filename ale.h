@@ -228,7 +228,7 @@ void msi_set_maxn_elements(isize size) {
 
 #define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
 
-#define msi_s8(table, key_, val_) __extension__ ({        \
+#define msi_upsert(table, key_, val_) __extension__ ({    \
     u64 hash = hash_it(key_);                             \
     i32 index = (i32)hash;                                \
     typeof(key_) zero_key = {0};                          \

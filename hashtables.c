@@ -1,17 +1,17 @@
 #include "ale.h"
 
 void test_msi_upsert(arena a) {
-    struct tables8s8{ lendata(struct {s8 key; s8 val;}); }
+    struct tabless{ lendata(struct {s8 key; s8 val;}); }
         ht = newmsi(&arena, ht, 1000);
 
     print("%llu", hash_it("Alessandro Stamatto"));
 
-    msi_upsert(&ht, s8("Alessandro"), s8("Stamatto"));
-    msi_upsert(&ht, s8("Sarah"), s8("Sakamoto"));
-    msi_upsert(&ht, s8("Alessandro"), s8("Ferreira"));
+    msi_upsert(&ht, s("Alessandro"), s("Stamatto"));
+    msi_upsert(&ht, s("Sarah"), s("Sakamoto"));
+    msi_upsert(&ht, s("Alessandro"), s("Ferreira"));
 
-    printf("%ld\n", msi_upsert(&ht, s8("sarah"), s8("sakamoto")));
-    printf("%ld\n", msi_upsert(&ht, s8("alessandro"), (s8){0}));
+    printf("%ld\n", msi_upsert(&ht, s("sarah"), s("sakamoto")));
+    printf("%ld\n", msi_upsert(&ht, s("Alessandro"), msi_only_get));
 
     fori(msi_mask) {
         if (not ht.data[i].key.len) {
@@ -25,15 +25,17 @@ void test_msi_upsert(arena a) {
 }
 
 void test_msi_upsert2(arena a) {
-    struct i64s8{ lendata(struct {i64 key; s8 val;}); }
+    struct i64s{ lendata(struct {i64 key; s8 val;}); }
         ht = newmsi(&arena, ht, 1000);
 
     print("%llu", hash_it((i64)4));
 
-    msi_upsert(&ht, (i64)5, s8("Stamatto")); 
-    msi_upsert(&ht, (i64)4, s8("Sakamoto"));
-    msi_upsert(&ht, (i64)5, s8("Ferreira"));
-    msi_upsert(&ht, (i64)5, (s8){0});
+    msi_upsert(&ht, 5, s("Stamatto")); 
+    msi_upsert(&ht, 4, s("Sakamoto"));
+    msi_upsert(&ht, 5, s("Ferreira"));
+
+    typeof(ht) *pt = &ht;
+    print("pegou: %s", msi_get(*pt, 5).data);
 
     fori(msi_mask) {
         if (not ht.data[i].key) {

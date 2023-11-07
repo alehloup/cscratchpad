@@ -69,7 +69,7 @@ typedef i32 b32; //boolean
     STRINGS
 */
 typedef struct s8{ i32 len; u8 *data; }s8;
-#define s8(s) ((s8){ cstrlen(s), (u8 *)s })
+#define s(cstr) (s8){ cstrlen(cstr), (u8 *)cstr }
 
 s8 s8substr(s8 s, i32 from, i32 count) {
     return (s8){ .data = (s.data)+from, .len = count };
@@ -182,7 +182,7 @@ u64 hash_s8(s8 str) {
     return h ^ h>>32;
 }
 u64 hash_cstr(char *str) {
-    return hash_s8(s8(str));
+    return hash_s8(s(str));
 }
 u64 hash_i64(i64 int64) {
     u64 x = (u64)int64;
@@ -231,14 +231,15 @@ void msi_set_maxn_elements(isize size) {
 #define keytype(table) typeof(((table)->data[0].key))
 #define valtype(table) typeof(((table)->data[0].val))
 
+#define msi_only_get {0}
 #define msi_upsert(table, key_, val_) __extension__ ({    \
-    u64 hash = hash_it(key_);                             \
-    i32 index = (i32)hash;                                \
-    keytype(table) searchk = (keytype(table))(key_);      \
-    valtype(table)  setval = (valtype(table))(val_);      \
+    keytype(table) searchk = (keytype(table))key_;        \
+    valtype(table)  setval = (valtype(table))val_;        \
     typeof(searchk) zero_key = {0};                       \
     valtype(table)  zero_val = {0};                       \
                                                           \
+    u64 hash = hash_it(searchk);                          \
+    i32 index = (i32)hash;                                \
     index = msi_lookup(hash, index);                      \
     for(;                                                 \
         not memequal((table)->data[index].key, searchk);  \
@@ -256,3 +257,5 @@ void msi_set_maxn_elements(isize size) {
     }                                                     \
     index;                                                \
 })
+
+#define msi_get(table, key_) ((table).data[msi_upsert(&table, key_, msi_only_get)]).val

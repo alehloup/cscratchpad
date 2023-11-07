@@ -7,7 +7,9 @@
 //better assert
 #define assert(c)  while (!(c)) __builtin_unreachable()
 
-//useful constants
+/*
+    CONSTANTS
+*/
 #define _1GB   1073741824
 #define _512MB  536870912
 #define _256MB  268435456
@@ -18,36 +20,58 @@
 #define  _8MB     8388608
 #define _19_ones 1111111111111111111
 
-//better type names
+/* 
+    PRIMITIVES
+*/
 typedef long long i64; typedef long i32; typedef short i16; typedef signed char i8;
 typedef unsigned long long u64; typedef unsigned long u32; typedef unsigned short u16; typedef unsigned char u8;
 typedef long long isize; typedef unsigned long long usize;
 typedef float f32; typedef double f64;
 typedef i32 b32; //boolean
 
+/*
+    COMPOSITES
+*/
 #define lendata(type)    i32 len; type *data // slice
 #define caplendata(type) i32 cap; lendata(type) // growable array
+#define keyval(keyt, valt) keyt key; valt val // entry fields
+#define tkeyval(keyt, valt) struct{ keyval(keyt, valt); } //struct entry
 
-// VLA Matrix with Malloc: i64 (*vla_matrix_pointer)[m][n] =  malloc(sizeof(*vla_matrix_pointer))
+#define datatypeof(table) typeof(((table)->data))
+#define keytypeof(table) typeof(((table)->data[0].key))
+#define valtypeof(table) typeof(((table)->data[0].val))
+
+/*
+    VLA MATRIX 
+    i64 (*vla_matrix_pointer)[m][n] =  malloc(sizeof(*vla_matrix_pointer))
+*/ 
 #define NEWMATRIX_VAR(type, var, m, n, arena_) \
     type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
 #define matat(mat, i, j) (*mat)[i][j]
 
-//Pythonesque
+/*
+    LAZY PYTHONESQUE
+*/
 #define True 1l
 #define False 0l
 #define and &&
 #define or ||
 #define not !
 #define printn printf("\n")
-#define print(...) printf(__VA_ARGS__); printf("\n");
+#define print(...) printf(__VA_ARGS__); printf("\n")
  
-//Lazy defines
 #define REF [static 1] /* NOT NULL pointer parameter*/
 #define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__) //define a function pointer
 #define threadlocal static _Thread_local//thread variable
 
-//better names for size operations
+//TRICK scope that "opens" at start, and "closes" at end 
+threadlocal b32 MACRO_scoped__;
+#define scoped(start, end) MACRO_scoped__ = 1;         \
+    for(start; MACRO_scoped__; (--MACRO_scoped__), end)
+
+/* 
+    MEMORYops
+*/
 #define sizeof(x)       ((isize)sizeof(x))
 #define alignof(x)      ((isize)_Alignof(x))
 #define countof(a)      (sizeof(a) / sizeof(*(a)))
@@ -55,8 +79,11 @@ typedef i32 b32; //boolean
     isize cOunt_ = countof(s) - 1;              \
     cOunt_ != 7 ? (i32)cOunt_ : (i32)strlen(s); \
 }) // count returns pointer size for dyn cstr so... hacky fix
+#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
 
-//for shortcuts
+/*
+    FORs
+*/
 #define loop(var, times) for(isize var = 0; var < times; ++var)
 #define fori(times) loop(i, times)
 #define forj(times) loop(j, times)
@@ -69,7 +96,7 @@ typedef i32 b32; //boolean
     STRINGS
 */
 typedef struct s8{ i32 len; u8 *data; }s8;
-#define s(cstr) (s8){ cstrlen(cstr), (u8 *)cstr }
+#define s(cstr) ((s8){ cstrlen(cstr), (u8 *)cstr })
 
 s8 s8substr(s8 s, i32 from, i32 count) {
     return (s8){ .data = (s.data)+from, .len = count };
@@ -81,11 +108,11 @@ b32 s8equal(s8 s1, s8 s2) {
 void s8print(s8 s) {
     printf("%.*s", (int)s.len, s.data);
 } 
+#define s8printn(s8str) s8print(s8str); printn  
 
-//TRICK scope that "opens" at start, and "closes" at end 
-threadlocal b32 MACRO_scoped__;
-#define scoped(start, end) MACRO_scoped__ = 1;         \
-    for(start; MACRO_scoped__; (--MACRO_scoped__), end)
+/*
+    MATH
+*/
 
 //Fast % when the number is a power of 2
 #define MODPWR2(number, modval) ((number) & (modval - 1))
@@ -99,7 +126,9 @@ i32 fit_pwr2_exp(i64 size) {
     return exp;
 }
 
-//One liner Pseudo Random generator
+/*
+    RANDOM
+*/
 threadlocal u64 MACRO_rnd64_seed__ = _19_ones;
 #define RNDSEED(x) ((MACRO_rnd64_seed__) = (u64)(x) >> 1)
 #define RND64() (MACRO_rnd64_seed__ = hash_i64(MACRO_rnd64_seed__))
@@ -223,39 +252,35 @@ void msi_set_maxn_elements(isize size) {
     msi_set_maxn_elements(expected_maxn); \
     newxs(&a, typeof(*((table)->data)), msi_mask + 1); \
 })
-
 #define newmsi(arena, varname, expected_maxn) {.data = msi_newdata(arena, &varname, expected_maxn)};
 
-#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
-
-#define keytype(table) typeof(((table)->data[0].key))
-#define valtype(table) typeof(((table)->data[0].val))
-
-#define msi_only_get {0}
 #define msi_upsert(table, key_, val_) __extension__ ({    \
-    keytype(table) searchk = (keytype(table))key_;        \
-    valtype(table)  setval = (valtype(table))val_;        \
+    datatypeof(table) data = (table)->data;               \
+    keytypeof(table) searchk = (keytypeof(table))key_;    \
+    valtypeof(table)  setval = (valtypeof(table))val_;    \
     typeof(searchk) zero_key = {0};                       \
-    valtype(table)  zero_val = {0};                       \
+    typeof(setval)  zero_val = {0};                       \
                                                           \
     u64 hash = hash_it(searchk);                          \
     i32 index = (i32)hash;                                \
     index = msi_lookup(hash, index);                      \
     for(;                                                 \
-        not memequal((table)->data[index].key, searchk);  \
+        not memequal(data[index].key, searchk);           \
         index = msi_lookup(hash, index))                  \
     {                                                     \
-        if(memequal((table)->data[index].key, zero_key)){ \
+        if(memequal(data[index].key, zero_key)){          \
             if(not memequal(setval, zero_val)) {          \
-                (table)->data[index].key = searchk;       \
+                data[index].key = searchk;                \
             }                                             \
             break;                                        \
         }                                                 \
     }                                                     \
     if(not memequal(setval, zero_val)) {                  \
-        (table)->data[index].val = setval;                \
+        data[index].val = setval;                         \
     }                                                     \
     index;                                                \
 })
+#define msi_only_get {0}
+#define msi_get_idx(table, key_) __extension__ ({msi_upsert(&table, key_, msi_only_get);})
+#define msi_get(table, key_) __extension__({(table).data[msi_get_idx(table, key_)].val;})
 
-#define msi_get(table, key_) ((table).data[msi_upsert(&table, key_, msi_only_get)]).val

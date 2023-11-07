@@ -1,9 +1,8 @@
 #include "ale.h"
 
-typedef struct tables8s8{ lendata(struct {s8 key; s8 val;}); }tables8s8;
-
 void test_msi_upsert(arena a) {
-    tables8s8 ht = newmsi(&arena, ht, 1000);
+    struct tables8s8{ lendata(struct {s8 key; s8 val;}); }
+        ht = newmsi(&arena, ht, 1000);
 
     print("%llu", hash_it("Alessandro Stamatto"));
 
@@ -25,10 +24,35 @@ void test_msi_upsert(arena a) {
     printn;
 }
 
+void test_msi_upsert2(arena a) {
+    struct i64s8{ lendata(struct {i64 key; s8 val;}); }
+        ht = newmsi(&arena, ht, 1000);
+
+    print("%llu", hash_it((i64)4));
+
+    msi_upsert(&ht, (i64)5, s8("Stamatto")); 
+    msi_upsert(&ht, (i64)4, s8("Sakamoto"));
+    msi_upsert(&ht, (i64)5, s8("Ferreira"));
+    msi_upsert(&ht, (i64)5, (s8){0});
+
+    fori(msi_mask) {
+        if (not ht.data[i].key) {
+            continue;
+        }
+        printf("[%lld]", i);
+        printf("%lld: %s", ht.data[i].key, ht.data[i].val.data);
+        printf(", ");
+    }
+    printn;
+}
+
 int main() {
 
     arena scratch = newarena(_8MB);
     test_msi_upsert(scratch);
+    printn;
+    printn;
+    test_msi_upsert2(scratch);
 
     return 0;
 }

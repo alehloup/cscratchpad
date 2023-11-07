@@ -228,26 +228,31 @@ void msi_set_maxn_elements(isize size) {
 
 #define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
 
+#define keytype(table) typeof(((table)->data[0].key))
+#define valtype(table) typeof(((table)->data[0].val))
+
 #define msi_upsert(table, key_, val_) __extension__ ({    \
     u64 hash = hash_it(key_);                             \
     i32 index = (i32)hash;                                \
-    typeof(key_) zero_key = {0};                          \
-    typeof(val_) zero_val = {0};                          \
+    keytype(table) searchk = (keytype(table))(key_);      \
+    valtype(table)  setval = (valtype(table))(val_);      \
+    typeof(searchk) zero_key = {0};                       \
+    valtype(table)  zero_val = {0};                       \
                                                           \
     index = msi_lookup(hash, index);                      \
     for(;                                                 \
-        not memequal((table)->data[index].key, key_);     \
+        not memequal((table)->data[index].key, searchk);  \
         index = msi_lookup(hash, index))                  \
     {                                                     \
         if(memequal((table)->data[index].key, zero_key)){ \
-            if(not memequal(val_, zero_val)) {            \
-                (table)->data[index].key = key_;          \
+            if(not memequal(setval, zero_val)) {          \
+                (table)->data[index].key = searchk;       \
             }                                             \
             break;                                        \
         }                                                 \
     }                                                     \
-    if(not memequal(val_, zero_val)) {                    \
-        (table)->data[index].val = val_;                  \
+    if(not memequal(setval, zero_val)) {                  \
+        (table)->data[index].val = setval;                \
     }                                                     \
     index;                                                \
 })

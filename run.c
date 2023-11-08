@@ -4,11 +4,11 @@ int main(MAINARGS) {
     winit;
 
     shellrun(
-        "gcc @Flags %s -o \"./builds/%s.exe\"" 
+        "gcc @Flags %32s -o \"./builds/%32s.exe\"" 
         " && " 
-        "\"./builds/%s.exe\""
+        "\"./builds/%32s.exe\""
             " | "
-            "tee \"./outputs/%sout.txt\""
+            "tee \"./outputs/%32sout.txt\""
             
         , _$1, _$1, _$1, _$1
     );

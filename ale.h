@@ -194,15 +194,20 @@ void grow(void *slice /*slice struct*/, isize size, isize align, arena *a) {
     memcpy(slice, &replica, sizeof(replica)); //type prunning
 }
 
-#define push(dynarr, arena) __extension__ ({  \
-    typeof(dynarr) dynarr_ = (dynarr);        \
-    typeof(arena) arena_ = (arena);           \
-                                              \
-    if (dynarr_->len >= dynarr_->cap) {       \
-        grow(dynarr_, sizeof(*dynarr_->data), \
-            alignof(*dynarr_->data), arena_); \
-    }                                         \
-    dynarr_->data + dynarr_->len++;           \
+#define push(dynarr, arena, _value_) __extension__ ({  \
+    typeof(dynarr) dynarr_ = (dynarr);                 \
+    typeof(arena) arena_ = (arena);                    \
+                                                       \
+    if (dynarr_->len >= dynarr_->cap) {                \
+        grow(dynarr_, sizeof(*dynarr_->data),          \
+            alignof(*dynarr_->data), arena_);          \
+    }                                                  \
+    dynarr_->data[dynarr_->len++] = _value_;           \
+})
+
+#define pop(array) __extension__ ({ \
+    assert((array)->len > 0);       \
+    (array)->data[--(array)->len];  \
 })
 
 /*

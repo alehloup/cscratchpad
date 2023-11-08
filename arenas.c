@@ -9,7 +9,7 @@ typedef struct teste{
 }teste;
 
 int main(int argc, char **argv) {
-    arena perm = newstatarena(1 << 27);
+    arena perm = newarena(1 << 27);
 
     printf("Começando beg:%p end:%p total:%lldMB\n", 
         perm.beg, perm.end, (perm.end - perm.beg)/1048576);

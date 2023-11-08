@@ -3,6 +3,7 @@
 #include <string.h> // memset memcpy memcmp
 #include <stdlib.h> // malloc system
 #include <stdio.h> // printf sprintf
+#include <stdarg.h> //variadic functions
 
 /*
     WINDOWS
@@ -154,12 +155,15 @@ void print_s8(s8 s) {
 /*
     SHELL
 */
-threadlocal char buffer[256] = {0};
-#define shellrun(...) __extension__ ({ \
-    memset(buffer, '\0', 256);         \
-    sprintf(buffer, __VA_ARGS__);      \
-    system(buffer);                    \
-})
+i32 shellrun(char buffer [static 256], ...) {
+    memset(buffer, '\0', 256);
+
+    va_list args; va_start(args, buffer);
+    char *format = va_arg(args, char *);
+
+    vsprintf(buffer, format, args);
+    return system(buffer);
+}
 
 //Args shortcuts
 #define MAINARGS int argc, char **argv

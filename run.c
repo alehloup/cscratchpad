@@ -3,7 +3,10 @@
 int main(MAINARGS) {
     winit;
 
+    char buffer[256];
     shellrun(
+        buffer,
+
         "gcc @Flags %32s -o \"./builds/%32s.exe\"" 
         " && " 
         "\"./builds/%32s.exe\""

@@ -1,7 +1,7 @@
 #include "ale.h"
 
 void test_msi_idx(arena a) {
-    struct tabless{lendata(tkeyval(s8, s8));}
+    struct tables2s{msi_ht_data(s8, s8);}
         ht = newmsi(&arena, ht, 1000);
 
     print("%llu", hash_it("Alessandro Stamatto"));
@@ -13,7 +13,7 @@ void test_msi_idx(arena a) {
     print("Pegou: %s", msi_get(&ht, s("Sarah")).data);
     print("Não pegou: %s", msi_get(&ht, s("Karol")).data);
 
-    fori(msi_mask) {
+    fori(ht.capmask) {
         if (not ht.data[i].key.len) {
             continue;
         }
@@ -25,7 +25,7 @@ void test_msi_idx(arena a) {
 }
 
 void test_msi_idx2(arena a) {
-    struct i64s{ lendata(tkeyval(i64, s8)); }
+    struct tablei2s{msi_ht_data(i64, s8);}
         ht = newmsi(&arena, ht, 1000);
 
     print("%llu", hash_it((i64)4));
@@ -38,7 +38,7 @@ void test_msi_idx2(arena a) {
     print("pegou: %s", msi_get(pt, 5).data);
     print("não pegou: %s", msi_get(pt, 3).data);
 
-    fori(msi_mask) {
+    fori(ht.capmask) {
         if (not ht.data[i].key) {
             continue;
         }

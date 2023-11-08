@@ -34,12 +34,16 @@ typedef i32 b32; //boolean
 */
 #define lendata(type)    i32 len; type *data // slice
 #define caplendata(type) i32 cap; lendata(type) // growable array
+#define msi_ht_data(keytype_, valtype_) \
+    i8 stepshift; i32 capmask; lendata(tkeyval(keytype_, valtype_))
+
+#define datatypeof(_table_) typeof(((_table_)->data))
+
 #define keyval(keyt, valt) keyt key; valt val // entry fields
 #define tkeyval(keyt, valt) struct{ keyval(keyt, valt); } //struct entry
 
-#define datatypeof(_table_) typeof(((_table_)->data))
-#define keytypeof(_table_) typeof(((_table_)->data[0].key))
-#define valtypeof(_table_) typeof(((_table_)->data[0].val))
+#define keytypeof(_table_) typeof(((_table_)->data[0].key)) // get ht key type
+#define valtypeof(_table_) typeof(((_table_)->data[0].val)) // get ht val type
 
 /*
     VLA MATRIX 
@@ -118,8 +122,8 @@ void s8print(s8 s) {
 #define MODPWR2(number, modval) ((number) & (modval - 1))
 
 // Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
-i32 fit_pwr2_exp(i64 size) {
-    i32 exp=9; i64 val=512; ++size;
+i8 fit_pwr2_exp(i32 size) {
+    i8 exp=9; i32 val=512; ++size;
     while (val < size) {
         ++exp; val*=2;
     }
@@ -229,51 +233,51 @@ u64 hash_i32(i32 int32)
 
 #define hash_it(X) _Generic((X), char *: hash_cstr, s8: hash_s8, i32: hash_i32, default: hash_i64)(X)
 
-threadlocal i32 msi_expo = 16; // default MSI exp: 2^16 = capacity of 65536 - 1 elements
-threadlocal i32 msi_mask = 65535; // capacity - 1
-threadlocal i32 msi_step = 48; // 64 - exp
 //Mask-Step-Index (MSI) Hash Table
 i32 msi_lookup(u64 hash, // 1st hash acts as base location
-              i32 index // 2nd "hash" steps over the "list of elements" from base-location
+              i32 index, // 2nd "hash" steps over the "list of elements" from base-location
+              i32 capmask, // trims number to < ht_capacity
+              i8 stepshift // use |exp| bits for step 
             )
 {
-    u32 step = (u32)(hash >> msi_step) | 1;
+    u32 step = (u32)(hash >> stepshift) | 1;
 
-    return (index + step) & msi_mask;
+    return (index + step) & capmask;
 }
 
-void msi_set_maxn_elements(isize size) {
-    msi_expo = fit_pwr2_exp(size);
-    msi_mask = (1 << msi_expo) - 1;
-    msi_step = 64 - msi_expo;
-}
-
-#define msi_newdata(arena, table, expected_maxn) __extension__ ({\
-    msi_set_maxn_elements(expected_maxn); \
-    newxs(&a, typeof(*((table)->data)), msi_mask + 1); \
-})
-#define newmsi(arena, varname, expected_maxn) {.data = msi_newdata(arena, &varname, expected_maxn)};
+#define newmsi(arena, varname, expected_maxn) __extension__ ({      \
+    i8 msi_expo = fit_pwr2_exp(expected_maxn);                      \
+    i32 msi_mask = (1 << msi_expo) - 1;                             \
+    i8 msi_step = 64 - msi_expo;                                    \
+    typeof(varname) temp_ht_ = {                                    \
+        .capmask = msi_mask, .stepshift = msi_step,                 \
+        .data = newxs(&a, typeof(*((varname).data)), msi_mask + 1)  \
+    };                                                              \
+    temp_ht_;                                                       \
+});
 
 #define msi_idx(table, key_, msi_insert_if_not_found) __extension__ ({ \
-    datatypeof(table) data = (table)->data;               \
-    keytypeof(table) searchk = (keytypeof(table))key_;    \
-    typeof(searchk) zero_key = {0};                       \
-                                                          \
-    u64 hash = hash_it(searchk);                          \
-    i32 index = (i32)hash;                                \
-    index = msi_lookup(hash, index);                      \
-    for(;                                                 \
-        not memequal(data[index].key, searchk);           \
-        index = msi_lookup(hash, index))                  \
-    {                                                     \
-        if(memequal(data[index].key, zero_key)){          \
-            if(msi_insert_if_not_found) {                 \
-                data[index].key = searchk;                \
-            }                                             \
-            break;                                        \
-        }                                                 \
-    }                                                     \
-    index;                                                \
+    datatypeof(table) data = (table)->data;                   \
+    keytypeof(table) searchk = (keytypeof(table))key_;        \
+    typeof(searchk) zero_key = {0};                           \
+                                                              \
+    u64 hash = hash_it(searchk);                              \
+    i32 index = (i32)hash;                                    \
+    index = msi_lookup(hash, index,                           \
+        (table)->capmask, (table)->stepshift);                \
+    for(;                                                     \
+        not memequal(data[index].key, searchk);               \
+        index = msi_lookup(hash, index,                       \
+            (table)->capmask, (table)->stepshift))            \
+    {                                                         \
+        if(memequal(data[index].key, zero_key)){              \
+            if(msi_insert_if_not_found) {                     \
+                data[index].key = searchk;                    \
+            }                                                 \
+            break;                                            \
+        }                                                     \
+    }                                                         \
+    index;                                                    \
 })
 
 #define msi_get(table, key) __extension__({        \

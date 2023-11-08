@@ -1,11 +1,27 @@
 #pragma once
 
-#include <string.h> //memset memcpy
-#include <stdlib.h> //malloc
-#include <stdio.h> //printf
+#include <string.h> // memset memcpy memcmp
+#include <stdlib.h> // malloc system
+#include <stdio.h> // printf sprintf
 
-//better assert
-#define assert(c)  while (!(c)) __builtin_unreachable()
+/*
+    ASSERT
+*/
+
+#ifndef NDEBUG
+#define assert(_cond_, ...) __extension__ ({         \
+    while (!(_cond_)) {                              \
+        printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
+        printf(__VA_ARGS__);                         \
+        printf(" !!\n");                             \
+        __builtin_unreachable();                     \
+    }                                                \
+})
+#endif
+#ifdef NDEBUG
+#define assert(_cond_, ...) __extension__ ({})
+#endif 
+
 
 /*
     CONSTANTS
@@ -77,14 +93,16 @@ threadlocal b32 MACRO_scoped__;
 /* 
     MEMORYops
 */
-#define sizeof(x)       ((isize)sizeof(x))
-#define alignof(x)      ((isize)_Alignof(x))
-#define countof(a)      (sizeof(a) / sizeof(*(a)))
+#define   sizeof(x)      ((isize)sizeof(x))
+#define  alignof(x)      ((isize)_Alignof(x))
+#define  countof(a)      (sizeof(a) / sizeof(*(a)))
+#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
+
+// Uses strlen if pointer size
 #define cstrlen(s) __extension__ ({             \
     isize cOunt_ = countof(s) - 1;              \
     cOunt_ != 7 ? (i32)cOunt_ : (i32)strlen(s); \
-}) // count returns pointer size for dyn cstr so... hacky fix
-#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
+}) 
 
 /*
     FORs
@@ -110,15 +128,38 @@ b32 s8equal(s8 s1, s8 s2) {
     return s1.len != s2.len ? False : \
         (s1.len == 0 ? True : not memcmp(s1.data, s2.data, s1.len));
 }
-void s8print(s8 s) {
+void print_s8(s8 s) {
     printf("%.*s", (int)s.len, s.data);
-} 
-#define s8printn(s8str) s8print(s8str); printn  
+}
+
+/*
+    SHELL
+*/
+threadlocal char buffer[256] = {0};
+#define shellrun(...) __extension__ ({ \
+    memset(buffer, '\0', 256);         \
+    sprintf(buffer, __VA_ARGS__);      \
+    system(buffer);                    \
+})
+
+//Args shortcuts
+#define MAINARGS int argc, char **argv
+#define _$0 argv[0]
+#define _$1 argv[1]
+#define _$2 argv[2]
+#define _$3 argv[3]
+#define _$4 argv[4]
+#define _$5 argv[5]
+#define _$6 argv[6]
+#define _$7 argv[7]
+#define _$8 argv[8]
+#define _$progname argv[0]
+#define _$first argv[1]
+#define _$last argv[argc - 1]
 
 /*
     MATH
 */
-
 //Fast % when the number is a power of 2
 #define MODPWR2(number, modval) ((number) & (modval - 1))
 
@@ -142,7 +183,6 @@ threadlocal u64 MACRO_rnd64_seed__ = _19_ones;
 /*
     ARENA
 */
-
 typedef struct arena{ u8 *beg; u8 *end; }arena;
 
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
@@ -150,11 +190,8 @@ void *alloc(arena a REF, isize size, isize align, isize count) {
     isize total = size * count;
     isize pad = MODPWR2(- (isize)a->beg, align); //mod -x gives n for next align
 
-    if (total > (a->end - a->beg - pad)) {
-        printf("OUT OF MEMORY, Ask:%lld Avail: %lld\n", total, a->end - a->beg - pad);
-        assert(total < (a->end - a->beg - pad)); //ARENA OUT OF MEMORY
-        return 0; //ARENA OUT OF MEMORY
-    }
+    assert(total < (a->end - a->beg - pad), \
+        "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", total, a->end - a->beg - pad);
 
     u8 *p = a->beg + pad;
     a->beg += pad + total;
@@ -175,7 +212,6 @@ arena newarena(isize cap) {
 /*
     GROWABLE ARRAY
 */
-
 void grow(void *slice /*slice struct*/, isize size, isize align, arena *a) {
     struct{caplendata(u8);} replica = {0};
     memcpy(&replica, slice, sizeof(replica)); //type prunning
@@ -205,15 +241,14 @@ void grow(void *slice /*slice struct*/, isize size, isize align, arena *a) {
     dynarr_->data[dynarr_->len++] = _value_;           \
 })
 
-#define pop(array) __extension__ ({ \
-    assert((array)->len > 0);       \
-    (array)->data[--(array)->len];  \
+#define pop(array) __extension__ ({                    \
+    assert((array)->len > 0, "POP ON EMPTY ARRAY");    \
+    (array)->data[--(array)->len];                     \
 })
 
 /*
-    HASH'n'TABLE
+    HASH
 */
-
 u64 hash_s8(s8 str) {
     u64 h = 0x7A5662DCDF;
     fori(str.len) { 
@@ -241,7 +276,9 @@ u64 hash_i32(i32 int32)
 #define hash_it(X) _Generic((X), \
      char *: hash_cstr, s8: hash_s8, i32: hash_i32, default: hash_i64)(X)
 
-//Mask-Step-Index (MSI) Hash Table
+/*
+    HASH TABLE : Mask-Step-Index (MSI) 
+*/
 i32 msi_lookup(u64 hash, // 1st hash acts as base location
               i32 index, // 2nd "hash" steps over the "list of elements" from base-location
               i32 capmask, // trims number to < ht_capacity
@@ -291,9 +328,10 @@ i32 msi_lookup(u64 hash, // 1st hash acts as base location
 #define msi_get(table, key) __extension__({        \
     (table)->data[msi_idx(table, key, False)].val; \
 })
-#define msi_set(table, key, val_) __extension__({           \
-    i32 msi_index_ = msi_idx(table, key, True);             \
-    valtypeof(table) msi_current_val                        \
-        = (valtypeof(table)) (table)->data[msi_index_].val; \
-    (table)->data[msi_index_].val = val_;                   \
+#define msi_set(table, key, val_) __extension__({              \
+    assert((table)->len < (table)->capmask, "MSI HT IS FULL"); \
+    i32 msi_index_ = msi_idx(table, key, True);                \
+    valtypeof(table) msi_current_val                           \
+        = (valtypeof(table)) (table)->data[msi_index_].val;    \
+    (table)->data[msi_index_].val = val_;                      \
 })

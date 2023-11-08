@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <string.h>
 #include "ale.h"
 
 int xisdigit(char c)
@@ -13,7 +11,7 @@ int main(int argc, char **argv) {
     //printf("%lld %s\n", string.len, string.data);
     //printf("%d\n", xisdigit(string.data[0]));
 
-    s8print(string); printn;
+    print_s8(string); printn;
 
     scoped(i64 x = (printf("inicio\n"), 5), printf("fim\n")) {
         printf("Meio! 1\n");

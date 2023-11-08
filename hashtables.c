@@ -18,7 +18,7 @@ void test_msi_idx(arena a) {
             continue;
         }
         printf("[%lld]", i);
-        s8print(ht.data[i].key); printf(" "); s8print(ht.data[i].val);
+        print_s8(ht.data[i].key); printf(" "); print_s8(ht.data[i].val);
         printf(", ");
     }
     printn;

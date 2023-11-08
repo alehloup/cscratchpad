@@ -7,7 +7,7 @@ void test_push(arena scratch) {
     at d = {0};
     
     push(&d, &scratch, 52);
-    pop(&d);
+    print("POP: %lld", pop(&d));
 
     fori(164) {
         push(&d, &scratch, i);

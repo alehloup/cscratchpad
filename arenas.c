@@ -9,6 +9,8 @@ typedef struct teste{
 }teste;
 
 int main(int argc, char **argv) {
+    winit;
+
     arena perm = newarena(1 << 27);
 
     printf("Começando beg:%p end:%p total:%lldMB\n", 

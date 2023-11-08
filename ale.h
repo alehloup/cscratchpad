@@ -5,6 +5,25 @@
 #include <stdio.h> // printf sprintf
 
 /*
+    WINDOWS
+*/
+#ifdef _WIN32
+#define winit __extension__ ({   \
+    int _setmode(int, int);      \
+    _setmode(0, 0x8000);         \
+    _setmode(1, 0x8000);         \
+                                 \
+    __declspec (dllimport) int __stdcall SetConsoleOutputCP(unsigned int); \
+    SetConsoleOutputCP(65001);   \
+    __declspec (dllimport) int __stdcall SetConsoleCP(unsigned int); \
+    SetConsoleCP(65001);         \
+})
+#endif
+#ifndef _WIN32
+#define winit __extension__ ({})
+#endif
+
+/*
     ASSERT
 */
 

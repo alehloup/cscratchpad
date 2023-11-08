@@ -1,6 +1,8 @@
 #include "ale.h"
 
 int main(MAINARGS) {
+    winit;
+
     shellrun(
         "gcc @Flags %s -o \"./builds/%s.exe\"" 
         " && " 

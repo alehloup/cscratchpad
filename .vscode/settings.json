@@ -8,6 +8,10 @@
         "cmath": "c",
         "compare": "c",
         "type_traits": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "string.h": "c",
+        "windows.h": "c",
+        "_mingw.h": "c"
     }
 }

@@ -2,7 +2,7 @@
 
 void test_msi_idx(arena a) {
     struct tables2s{msi_ht_data(s8, s8);}
-        ht = newmsi(&arena, ht, 1000);
+        ht = newmsi(&a, ht, 1000);
 
     print("%llu", hash_it("Alessandro Stamatto"));
 
@@ -26,7 +26,7 @@ void test_msi_idx(arena a) {
 
 void test_msi_idx2(arena a) {
     struct tablei2s{msi_ht_data(i64, s8);}
-        ht = newmsi(&arena, ht, 1000);
+        ht = newmsi(&a, ht, 1000);
 
     print("%llu", hash_it((i64)4));
 
@@ -49,6 +49,26 @@ void test_msi_idx2(arena a) {
     printn;
 }
 
+void test_msi_idx3(arena scratch) {
+    struct tab{ msi_ht_data(s8, i32); } 
+        ht = newmsi(&scratch, ht, 2000);
+
+    msi_set(&ht, s("Alex"), msi_current_val + 1);
+    msi_set(&ht, s("Alex"), msi_current_val + 51);
+    msi_set(&ht, s("Sarah"), msi_current_val + 4);
+    msi_set(&ht, s("Sarah"), msi_current_val * 13);
+
+    fori(ht.capmask) {
+        if (not ht.data[i].key.len) {
+            continue;
+        }
+        printf("[%lld]", i);
+        printf("%s: %ld", ht.data[i].key.data, ht.data[i].val);
+        printf(", ");
+    }
+    printn;
+}
+
 int main() {
 
     arena scratch = newarena(_8MB);
@@ -56,6 +76,8 @@ int main() {
     printn;
     printn;
     test_msi_idx2(scratch);
+
+    test_msi_idx3(scratch);
 
     return 0;
 }

@@ -23,8 +23,10 @@
 /* 
     PRIMITIVES
 */
-typedef long long i64; typedef long i32; typedef short i16; typedef signed char i8;
-typedef unsigned long long u64; typedef unsigned long u32; typedef unsigned short u16; typedef unsigned char u8;
+typedef long long i64; typedef long i32; 
+typedef short i16; typedef signed char i8;
+typedef unsigned long long u64; typedef unsigned long u32; 
+typedef unsigned short u16; typedef unsigned char u8;
 typedef long long isize; typedef unsigned long long usize;
 typedef float f32; typedef double f64;
 typedef i32 b32; //boolean
@@ -34,14 +36,13 @@ typedef i32 b32; //boolean
 */
 #define lendata(type)    i32 len; type *data // slice
 #define caplendata(type) i32 cap; lendata(type) // growable array
+
+#define keyval(keyt, valt) keyt key; valt val // entry 
+#define tkeyval(keyt, valt) struct{ keyval(keyt, valt); } // struct entry
 #define msi_ht_data(keytype_, valtype_) \
-    i8 stepshift; i32 capmask; lendata(tkeyval(keytype_, valtype_))
+    i8 stepshift; i32 capmask; lendata(tkeyval(keytype_, valtype_)) // msi hash table
 
-#define datatypeof(_table_) typeof(((_table_)->data))
-
-#define keyval(keyt, valt) keyt key; valt val // entry fields
-#define tkeyval(keyt, valt) struct{ keyval(keyt, valt); } //struct entry
-
+#define datatypeof(_table_) typeof(((_table_)->data)) // get array type
 #define keytypeof(_table_) typeof(((_table_)->data[0].key)) // get ht key type
 #define valtypeof(_table_) typeof(((_table_)->data[0].val)) // get ht val type
 
@@ -198,7 +199,8 @@ void grow(void *slice /*slice struct*/, isize size, isize align, arena *a) {
     typeof(arena) arena_ = (arena);           \
                                               \
     if (dynarr_->len >= dynarr_->cap) {       \
-        grow(dynarr_, sizeof(*dynarr_->data), alignof(*dynarr_->data), arena_); \
+        grow(dynarr_, sizeof(*dynarr_->data), \
+            alignof(*dynarr_->data), arena_); \
     }                                         \
     dynarr_->data + dynarr_->len++;           \
 })
@@ -231,7 +233,8 @@ u64 hash_i32(i32 int32)
     return x ^ x>>16;
 }
 
-#define hash_it(X) _Generic((X), char *: hash_cstr, s8: hash_s8, i32: hash_i32, default: hash_i64)(X)
+#define hash_it(X) _Generic((X), \
+     char *: hash_cstr, s8: hash_s8, i32: hash_i32, default: hash_i64)(X)
 
 //Mask-Step-Index (MSI) Hash Table
 i32 msi_lookup(u64 hash, // 1st hash acts as base location
@@ -245,15 +248,15 @@ i32 msi_lookup(u64 hash, // 1st hash acts as base location
     return (index + step) & capmask;
 }
 
-#define newmsi(arena, varname, expected_maxn) __extension__ ({      \
-    i8 msi_expo = fit_pwr2_exp(expected_maxn);                      \
-    i32 msi_mask = (1 << msi_expo) - 1;                             \
-    i8 msi_step = 64 - msi_expo;                                    \
-    typeof(varname) temp_ht_ = {                                    \
-        .capmask = msi_mask, .stepshift = msi_step,                 \
-        .data = newxs(&a, typeof(*((varname).data)), msi_mask + 1)  \
-    };                                                              \
-    temp_ht_;                                                       \
+#define newmsi(arena_, varname, expected_maxn) __extension__ ({          \
+    i8 msi_expo = fit_pwr2_exp(expected_maxn);                          \
+    i32 msi_mask = (1 << msi_expo) - 1;                                 \
+    i8 msi_step = 64 - msi_expo;                                        \
+    typeof(varname) temp_ht_ = {                                        \
+        .capmask = msi_mask, .stepshift = msi_step,                     \
+        .data = newxs(arena_, typeof(*((varname).data)), msi_mask + 1)  \
+    };                                                                  \
+    temp_ht_;                                                           \
 });
 
 #define msi_idx(table, key_, msi_insert_if_not_found) __extension__ ({ \

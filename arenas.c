@@ -8,7 +8,7 @@ typedef struct teste{
     i8 z;
 }teste;
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) {{
     winit;
 
     arena perm = newarena(1 << 27);
@@ -27,4 +27,4 @@ int main(int argc, char **argv) {
     }
 
     return 0;
-}
+}}

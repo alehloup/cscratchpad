@@ -1,0 +1,15 @@
+./builds/                         hello.c.exe
+inicio
+Meio! 1
+Meio! 5
+Meio! 3
+fim
+inicio
+Meio!
+fim
+Meio do arquivo
+Fechando
+cão maçã: 0
+cão cão: 1
+maçã cão: 0
+maçã maçã: 1

@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
     print_s8(string); printn;
 
-    scoped(i64 x = (printf("inicio\n"), 5), printf("fim\n")) {
+    scoped(long long x = (printf("inicio\n"), 5), printf("fim\n")) {
         printf("Meio! 1\n");
         printf("Meio! %lld\n", x);
         printf("Meio! 3\n");
@@ -27,10 +27,10 @@ int main(int argc, char **argv) {
         printf("Meio do arquivo\n");
     }   
 
-    printf("cão maçã: %ld\n", s8equal(s("cão"), s("maçã")));
-    printf("cão cão: %ld\n", s8equal(s("cão"), s("cão")));
-    printf("maçã cão: %ld\n", s8equal(s("maçã"), s("cão")));
-    printf("maçã maçã: %ld\n", s8equal(s("maçã"), s("maçã")));
+    printf("cão maçã: %d\n", s8equal(s("cão"), s("maçã")));
+    printf("cão cão: %d\n", s8equal(s("cão"), s("cão")));
+    printf("maçã cão: %d\n", s8equal(s("maçã"), s("cão")));
+    printf("maçã maçã: %d\n", s8equal(s("maçã"), s("maçã")));
 
     return 0;
 }

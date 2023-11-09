@@ -13,11 +13,11 @@ void test_msi_idx(arena a) {
     print("Pegou: %s", msi_get(&ht, s("Sarah")).data);
     print("Não pegou: %s", msi_get(&ht, s("Karol")).data);
 
-    fori(ht.capmask) {
+    for(int i = 0; i < ht.capmask; ++i) {
         if (not ht.data[i].key.len) {
             continue;
         }
-        printf("[%lld]", i);
+        printf("[%d]", i);
         print_s8(ht.data[i].key); printf(" "); print_s8(ht.data[i].val);
         printf(", ");
     }
@@ -25,10 +25,10 @@ void test_msi_idx(arena a) {
 }
 
 void test_msi_idx2(arena a) {
-    struct tablei2s{msi_ht_data(i64, s8);}
+    struct tablei2s{msi_ht_data(long long, s8);}
         ht = newmsi(&a, ht, 1000);
 
-    print("%llu", hash_it((i64)4));
+    print("%llu", hash_it((long long)4));
 
     msi_set(&ht, 5, s("Stamatto")); 
     msi_set(&ht, 4, s("Sakamoto"));
@@ -38,11 +38,11 @@ void test_msi_idx2(arena a) {
     print("pegou: %s", msi_get(pt, 5).data);
     print("não pegou: %s", msi_get(pt, 3).data);
 
-    fori(ht.capmask) {
+    for(int i = 0; i < ht.capmask; ++i) {
         if (not ht.data[i].key) {
             continue;
         }
-        printf("[%lld]", i);
+        printf("[%d]", i);
         printf("%lld: %s", ht.data[i].key, ht.data[i].val.data);
         printf(", ");
     }
@@ -50,7 +50,7 @@ void test_msi_idx2(arena a) {
 }
 
 void test_msi_idx3(arena scratch) {
-    struct tab{ msi_ht_data(s8, i32); } 
+    struct tab{ msi_ht_data(s8, int); } 
         ht = newmsi(&scratch, ht, 2000);
 
     msi_set(&ht, s("Alex"), msi_current_val + 1);
@@ -58,12 +58,12 @@ void test_msi_idx3(arena scratch) {
     msi_set(&ht, s("Sarah"), msi_current_val + 4);
     msi_set(&ht, s("Sarah"), msi_current_val * 13);
 
-    fori(ht.capmask) {
+    for(int i = 0; i < ht.capmask; ++i) {
         if (not ht.data[i].key.len) {
             continue;
         }
-        printf("[%lld]", i);
-        printf("%s: %ld", ht.data[i].key.data, ht.data[i].val);
+        printf("[%d]", i);
+        printf("%s: %d", ht.data[i].key.data, ht.data[i].val);
         printf(", ");
     }
     printn;

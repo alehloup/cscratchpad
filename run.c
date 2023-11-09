@@ -1,7 +1,6 @@
 #include "ale.h"
 
 int main(MAINARGS) {
-    winit;
 
     char buffer[256];
     shellrun(

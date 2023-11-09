@@ -1,28 +1,9 @@
 #pragma once
 
 #include <string.h> // memset memcpy memcmp
-#include <stdlib.h> // system (malloc is not used in this header)
+#include <stdlib.h> // system (malloc is not used)
 #include <stdio.h> // printf sprintf
 #include <stdarg.h> //variadic functions
-
-/*
-    WINDOWS
-*/
-#ifdef _WIN32
-#define winit __extension__ ({   \
-    int _setmode(int, int);      \
-    _setmode(0, 0x8000);         \
-    _setmode(1, 0x8000);         \
-                                 \
-    __declspec (dllimport) int __stdcall SetConsoleOutputCP(unsigned int); \
-    SetConsoleOutputCP(65001);   \
-    __declspec (dllimport) int __stdcall SetConsoleCP(unsigned int); \
-    SetConsoleCP(65001);         \
-})
-#endif
-#ifndef _WIN32
-#define winit __extension__ ({})
-#endif
 
 /*
     ASSERT
@@ -46,37 +27,27 @@
 /*
     CONSTANTS
 */
-#define _1GB   1073741824
-#define _512MB  536870912
 #define _256MB  268435456
 #define _128MB  134217728
 #define _64MB    67108864
 #define _32MB    33554432
-#define _16MB    16777216
 #define  _8MB     8388608
-#define _19_ones 1111111111111111111
 
 /* 
     PRIMITIVES
 */
-typedef long long i64; typedef long i32; 
-typedef short i16; typedef signed char i8;
-typedef unsigned long long u64; typedef unsigned long u32; 
-typedef unsigned short u16; typedef unsigned char u8;
-typedef long long isize; typedef unsigned long long usize;
-typedef float f32; typedef double f64;
-typedef i32 b32; //boolean
+typedef unsigned char u8; typedef long long int64; typedef unsigned long long uint64;
 
 /*
     COMPOSITES
 */
-#define lendata(type)    i32 len; type *data // slice
-#define caplendata(type) i32 cap; lendata(type) // growable array
+#define    lendata(type)          int len; type *data // slice
+#define caplendata(type) int cap; lendata(type) // growable array
 
 #define keyval(keyt, valt) keyt key; valt val // entry 
 #define tkeyval(keyt, valt) struct{ keyval(keyt, valt); } // struct entry
 #define msi_ht_data(keytype_, valtype_) \
-    i8 stepshift; i32 capmask; lendata(tkeyval(keytype_, valtype_)) // msi hash table
+    int stepshift; int capmask; lendata(tkeyval(keytype_, valtype_)) // msi hash table
 
 #define datatypeof(_table_) typeof(((_table_)->data)) // get array type
 #define keytypeof(_table_) typeof(((_table_)->data[0].key)) // get ht key type
@@ -84,7 +55,7 @@ typedef i32 b32; //boolean
 
 /*
     VLA MATRIX 
-    i64 (*vla_matrix_pointer)[m][n] =  malloc(sizeof(*vla_matrix_pointer))
+    long long (*vla_matrix_pointer)[m][n] =  malloc(sizeof(*vla_matrix_pointer))
 */ 
 #define NEWMATRIX_VAR(type, var, m, n, arena_) \
     type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
@@ -93,8 +64,8 @@ typedef i32 b32; //boolean
 /*
     LAZY PYTHONESQUE
 */
-#define True 1l
-#define False 0l
+#define True 1
+#define False 0
 #define and &&
 #define or ||
 #define not !
@@ -106,45 +77,34 @@ typedef i32 b32; //boolean
 #define threadlocal static _Thread_local//thread variable
 
 //TRICK scope that "opens" at start, and "closes" at end 
-threadlocal b32 MACRO_scoped__;
+threadlocal int MACRO_scoped__;
 #define scoped(start, end) MACRO_scoped__ = 1;         \
     for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 /* 
     MEMORYops
 */
-#define   sizeof(x)      ((isize)sizeof(x))
-#define  alignof(x)      ((isize)_Alignof(x))
+#define   sizeof(x)      ((int64)sizeof(x))
+#define  alignof(x)      ((int64)_Alignof(x))
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
 #define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
 
 // Uses strlen if pointer size
 #define cstrlen(s) __extension__ ({             \
-    isize cOunt_ = countof(s) - 1;              \
-    cOunt_ != 7 ? (i32)cOunt_ : (i32)strlen(s); \
+    int64 cOunt_ = countof(s) - 1;              \
+    cOunt_ != 7 ? (int)cOunt_ : (int)strlen(s); \
 }) 
-
-/*
-    FORs
-*/
-#define loop(var, times) for(isize var = 0; var < times; ++var)
-#define fori(times) loop(i, times)
-#define forj(times) loop(j, times)
-#define for_k(times) loop(k, times)
-#define forrange(var, from, to, inc)          \
-    for(isize var = (from), var##_TO__ = (to);\
-        var != var##_TO__; var+=inc)
 
 /*
     STRINGS
 */
-typedef struct s8{ i32 len; u8 *data; }s8;
+typedef struct s8{ int len; u8 *data; }s8;
 #define s(cstr) ((s8){ cstrlen(cstr), (u8 *)cstr })
 
-s8 s8substr(s8 s, i32 from, i32 count) {
+s8 s8substr(s8 s, int from, int count) {
     return (s8){ .data = (s.data)+from, .len = count };
 }
-b32 s8equal(s8 s1, s8 s2) {
+int s8equal(s8 s1, s8 s2) {
     return s1.len != s2.len ? False : \
         (s1.len == 0 ? True : not memcmp(s1.data, s2.data, s1.len));
 }
@@ -155,7 +115,7 @@ void print_s8(s8 s) {
 /*
     SHELL
 */
-i32 shellrun(char buffer [static 256], ...) {
+int shellrun(char buffer [static 256], ...) {
     memset(buffer, '\0', 256);
 
     va_list args; va_start(args, buffer);
@@ -170,13 +130,6 @@ i32 shellrun(char buffer [static 256], ...) {
 #define _$0 argv[0]
 #define _$1 argv[1]
 #define _$2 argv[2]
-#define _$3 argv[3]
-#define _$4 argv[4]
-#define _$5 argv[5]
-#define _$6 argv[6]
-#define _$7 argv[7]
-#define _$8 argv[8]
-#define _$progname argv[0]
 #define _$first argv[1]
 #define _$last argv[argc - 1]
 
@@ -187,8 +140,8 @@ i32 shellrun(char buffer [static 256], ...) {
 #define MODPWR2(number, modval) ((number) & (modval - 1))
 
 // Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
-i8 fit_pwr2_exp(i32 size) {
-    i8 exp=9; i32 val=512; ++size;
+int fit_pwr2_exp(int size) {
+    int exp=9; int val=512; ++size;
     while (val < size) {
         ++exp; val*=2;
     }
@@ -198,9 +151,9 @@ i8 fit_pwr2_exp(i32 size) {
 /*
     RANDOM
 */
-threadlocal u64 MACRO_rnd64_seed__ = _19_ones;
-#define RNDSEED(x) ((MACRO_rnd64_seed__) = (u64)(x) >> 1)
-#define RND64() (MACRO_rnd64_seed__ = hash_i64(MACRO_rnd64_seed__))
+threadlocal uint64 MACRO_rnd64_seed__ = 1111111111111111111;
+#define RNDSEED(x) ((MACRO_rnd64_seed__) = (uint64)(x) >> 1)
+#define RND64() (MACRO_rnd64_seed__ = hash_int64(MACRO_rnd64_seed__))
 #define RNDN(n) (RND64() % (n))
 
 /*
@@ -209,9 +162,9 @@ threadlocal u64 MACRO_rnd64_seed__ = _19_ones;
 typedef struct arena{ u8 *beg; u8 *end; }arena;
 
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
-void *alloc(arena a REF, isize size, isize align, isize count) {
-    isize total = size * count;
-    isize pad = MODPWR2(- (isize)a->beg, align); //mod -x gives n for next align
+void *alloc(arena a REF, int64 size, int64 align, int64 count) {
+    int64 total = size * count;
+    int64 pad = MODPWR2(- (int64)a->beg, align); //mod -x gives n for next align
 
     assert(total < (a->end - a->beg - pad), \
         "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", total, a->end - a->beg - pad);
@@ -225,7 +178,7 @@ void *alloc(arena a REF, isize size, isize align, isize count) {
 #define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
 
-arena newarena(isize cap, u8 buffer[static cap]) {
+arena newarena(int64 cap, u8 buffer[static cap]) {
     arena a = {0};
     a.beg = buffer;
     a.end = a.beg ? a.beg + cap : 0;
@@ -235,7 +188,7 @@ arena newarena(isize cap, u8 buffer[static cap]) {
 /*
     GROWABLE ARRAY
 */
-void grow(void *slice /*slice struct*/, isize size, isize align, arena *a) {
+void grow(void *slice /*slice struct*/, int64 size, int64 align, arena *a) {
     struct{caplendata(u8);} replica = {0};
     memcpy(&replica, slice, sizeof(replica)); //type prunning
 
@@ -272,51 +225,51 @@ void grow(void *slice /*slice struct*/, isize size, isize align, arena *a) {
 /*
     HASH
 */
-u64 hash_s8(s8 str) {
-    u64 h = 0x7A5662DCDF;
-    fori(str.len) { 
-        h ^= str.data[i] & 255; h *= _19_ones;
+uint64 hash_s8(s8 str) {
+    uint64 h = 0x7A5662DCDF;
+    for(int i = 0; i < str.len; ++i) { 
+        h ^= str.data[i] & 255; h *= 1111111111111111111;
     }
     return h ^ h>>32;
 }
-u64 hash_cstr(char *str) {
+uint64 hash_cstr(char *str) {
     return hash_s8(s(str));
 }
-u64 hash_i64(i64 int64) {
-    u64 x = (u64)int64;
+uint64 hash_int64(int64 integer64) {
+    uint64 x = (uint64)integer64;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
     x ^= x >> 27; x *= 0x94d049bb133111eb; 
     return x ^ x>>31;
 }
-u64 hash_i32(i32 int32)
+uint64 hash_int32(int integer32)
 {
-    u32 x = (u32)int32;
+    unsigned int x = (unsigned int)integer32;
     x ^= x >> 16; x *= 0x7feb352d; 
     x ^= x >> 15; x *= 0x846ca68b; 
     return x ^ x>>16;
 }
 
 #define hash_it(X) _Generic((X), \
-     char *: hash_cstr, s8: hash_s8, i32: hash_i32, default: hash_i64)(X)
+     char *: hash_cstr, s8: hash_s8, int: hash_int32, default: hash_int64)(X)
 
 /*
     HASH TABLE : Mask-Step-Index (MSI) 
 */
-i32 msi_lookup(u64 hash, // 1st hash acts as base location
-              i32 index, // 2nd "hash" steps over the "list of elements" from base-location
-              i32 capmask, // trims number to < ht_capacity
-              i8 stepshift // use |exp| bits for step 
+int msi_lookup(uint64 hash, // 1st hash acts as base location
+              int index, // 2nd "hash" steps over the "list of elements" from base-location
+              int capmask, // trims number to < ht_capacity
+              int stepshift // use |exp| bits for step 
             )
 {
-    u32 step = (u32)(hash >> stepshift) | 1;
+    unsigned int step = (unsigned int)(hash >> stepshift) | 1;
 
     return (index + step) & capmask;
 }
 
 #define newmsi(arena_, varname, expected_maxn) __extension__ ({          \
-    i8 msi_expo = fit_pwr2_exp(expected_maxn);                          \
-    i32 msi_mask = (1 << msi_expo) - 1;                                 \
-    i8 msi_step = 64 - msi_expo;                                        \
+    int msi_expo = fit_pwr2_exp(expected_maxn);                          \
+    int msi_mask = (1 << msi_expo) - 1;                                 \
+    int msi_step = 64 - msi_expo;                                        \
     typeof(varname) temp_ht_ = {                                        \
         .capmask = msi_mask, .stepshift = msi_step,                     \
         .data = newxs(arena_, typeof(*((varname).data)), msi_mask + 1)  \
@@ -329,8 +282,8 @@ i32 msi_lookup(u64 hash, // 1st hash acts as base location
     keytypeof(table) searchk = (keytypeof(table))key_;        \
     typeof(searchk) zero_key = {0};                           \
                                                               \
-    u64 hash = hash_it(searchk);                              \
-    i32 index = (i32)hash;                                    \
+    uint64 hash = hash_it(searchk);                              \
+    int index = (int)hash;                                    \
     index = msi_lookup(hash, index,                           \
         (table)->capmask, (table)->stepshift);                \
     for(;                                                     \
@@ -353,7 +306,7 @@ i32 msi_lookup(u64 hash, // 1st hash acts as base location
 })
 #define msi_set(table, key, val_) __extension__({              \
     assert((table)->len < (table)->capmask, "MSI HT IS FULL"); \
-    i32 msi_index_ = msi_idx(table, key, True);                \
+    int msi_index_ = msi_idx(table, key, True);                \
     valtypeof(table) msi_current_val                           \
         = (valtypeof(table)) (table)->data[msi_index_].val;    \
     (table)->data[msi_index_].val = val_;                      \

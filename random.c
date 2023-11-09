@@ -1,26 +1,16 @@
 #include "ale.h"
 
 int main() {
-    fori(5) {
-        forj(3) {
-            printf("|%lld %lld|", i, j);
-        }
-      printf("\n");  
-    } 
-
-    forrange(x, 10, 0, -1) {
-        printf("%lld ", x);
-    } printf("\n");
 
     RNDSEED(malloc(64));
 
     #define N 20
-    i32 counts[N] = {0};
-    fori(1000000000) {
+    int counts[N] = {0};
+    for(int i = 0; i < 1000000000; ++i) {
         counts[RND64() % N] +=1;
     }
-    fori(N) {
-        printf("%lld: %ld\n", i+1, counts[i]);
+    for(int i = 0; i < N; ++i) {
+        printf("%d: %d\n", i+1, counts[i]);
     }
 
     return 0;

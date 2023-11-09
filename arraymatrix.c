@@ -1,7 +1,7 @@
 #include "ale.h"
 
 typedef struct at{
-    caplendata(i64);
+    caplendata(long long);
 }at;
 void test_push(arena scratch) {
     at d = {0};
@@ -9,29 +9,29 @@ void test_push(arena scratch) {
     push(&d, &scratch, 52);
     print("POP: %lld", pop(&d));
 
-    fori(164) {
+    for(int i = 0; i < 164; ++i) {
         push(&d, &scratch, i);
     }
 
     print("POP: %lld", pop(&d));
 
-    fori(d.len) {
+    for(int i = 0; i < d.len; ++i) {
         printf("%lld ", d.data[i]);
     } 
     printn;
 }
 
 void test_vlamatrix(arena a) {
-    NEWMATRIX_VAR(i64, mat, 10, 10, &a);
+    NEWMATRIX_VAR(long long, mat, 10, 10, &a);
 
-    fori(10) {
-        forj(10) {
+    for(int i = 0; i < 10; ++i) {
+        for(int j = 0; j < 10; ++j) {
             (*mat)[i][j] = i;
         }
     }
 
-    fori(10) {
-        forj(10) {
+    for(int i = 0; i < 10; ++i) {
+        for(int j = 0; j < 10; ++j) {
             printf("%lld ", matat(mat, i, j));
         } 
         printf("\n");

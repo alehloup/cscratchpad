@@ -7,11 +7,11 @@ int main(int argc, char **argv) {
     shellrun(
         buffer,
         
-        "gcc @Flags %32s -o \"./builds/%32s.exe\"" 
+        "gcc @Flags %s -o \"./builds/%s.exe\"" 
         " && " 
-        "\"./builds/%32s.exe\" < %32s"
+        "\"./builds/%s.exe\" < %s"
             " | "
-            "tee \"./outputs/%32sout.txt\""
+            "tee \"./outputs/%sout.txt\""
             
         , _$1, _$1, _$1, _$2, _$1
     );

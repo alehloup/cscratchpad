@@ -5,9 +5,11 @@
 #include <stdio.h> // printf sprintf
 #include <stdarg.h> //variadic functions
 
-/*
-    ASSERT
-*/
+typedef long long int64; 
+typedef unsigned char u8; typedef unsigned int uint; typedef unsigned long long uint64;
+
+const int True = 1; const int False = 0;
+#define MegaBytes 1048576 //constexpr uint64 MegaBytes = 1048576;
 
 #ifndef NDEBUG
 #define assert(_cond_, ...) __extension__ ({         \
@@ -24,19 +26,6 @@
 #endif 
 
 /*
-    CONSTANTS
-*/
-#define _128MB  134217728
-#define _64MB    67108864
-#define _32MB    33554432
-#define  _8MB     8388608
-
-/* 
-    PRIMITIVES
-*/
-typedef unsigned char u8; typedef long long int64; typedef unsigned long long uint64;
-
-/*
     COMPOSITES
 */
 #define    lendata(type)          int len; type *data // slice
@@ -51,25 +40,12 @@ typedef unsigned char u8; typedef long long int64; typedef unsigned long long ui
 #define keytypeof(_table_) typeof(((_table_)->data[0].key)) // get ht key type
 #define valtypeof(_table_) typeof(((_table_)->data[0].val)) // get ht val type
 
-/*
-    VLA MATRIX 
-    long long (*vla_matrix_pointer)[m][n] =  malloc(sizeof(*vla_matrix_pointer))
-*/ 
 #define NEWMATRIX_VAR(type, var, m, n, arena_) \
     type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
 #define matat(mat, i, j) (*mat)[i][j]
 
-/*
-    LAZY PYTHONESQUE
-*/
-#define True 1
-#define False 0
-#define and &&
-#define or ||
-#define not !
 #define printn printf("\n")
 #define print(...) printf(__VA_ARGS__); printf("\n")
-#define swap(_x_1_, _y_2_) __extension__ ({ typeof(_x_1_) _swap_ = _x_1_; _x_1_ = _y_2_; _y_2_ = _swap_;})
  
 #define REF [static 1] /* NOT NULL pointer parameter*/
 #define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__) //define a function pointer
@@ -86,7 +62,7 @@ threadlocal int MACRO_scoped__;
 #define   sizeof(x)      ((int64)sizeof(x))
 #define  alignof(x)      ((int64)_Alignof(x))
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
-#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
+#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : ! memcmp(&x1, &x2, sizeof(x1)))
 
 /*
     STRINGS
@@ -99,7 +75,7 @@ typedef struct s8{ int len; u8 *data; }s8;
 
 int s8equal(s8 s1, s8 s2) {
     return s1.len != s2.len ? False : \
-        (s1.len == 0 ? True : not memcmp(s1.data, s2.data, s1.len));
+        (s1.len == 0 ? True : ! memcmp(s1.data, s2.data, s1.len));
 }
 void print_s8(s8 s) {
     printf("%.*s", (int)s.len, s.data);
@@ -136,10 +112,11 @@ int fit_pwr2_exp(int size) {
 /*
     RANDOM
 */
+uint64 hash_int64(int64 integer64); // defined more down low
 threadlocal uint64 MACRO_rnd64_seed__ = 1111111111111111111;
-#define RNDSEED(x) ((MACRO_rnd64_seed__) = (uint64)(x) >> 1)
-#define RND64() (MACRO_rnd64_seed__ = hash_int64(MACRO_rnd64_seed__))
-#define RNDN(n) (RND64() % (n))
+void SET_RND_SEED(uint64 x) { (MACRO_rnd64_seed__) = (uint64)(x) >> 1; }
+uint64 RND64() { return MACRO_rnd64_seed__ = hash_int64(MACRO_rnd64_seed__) >> 1; }
+int RNDN(int n) { return (int) RND64() % n; }
 
 /*
     ARENA
@@ -223,14 +200,14 @@ uint64 hash_cstr(char *str) {
 uint64 hash_int64(int64 integer64) {
     uint64 x = (uint64)integer64;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
-    x ^= x >> 27; x *= 0x94d049bb133111eb; 
+    //x ^= x >> 27; x *= 0x94d049bb133111eb; 
     return x ^ x>>31;
 }
 uint64 hash_int32(int integer32)
 {
-    unsigned int x = (unsigned int)integer32;
+    uint x = (uint)integer32;
     x ^= x >> 16; x *= 0x7feb352d; 
-    x ^= x >> 15; x *= 0x846ca68b; 
+    //x ^= x >> 15; x *= 0x846ca68b; 
     return x ^ x>>16;
 }
 
@@ -246,7 +223,7 @@ int msi_lookup(uint64 hash, // 1st hash acts as base location
               int stepshift // use |exp| bits for step 
             )
 {
-    unsigned int step = (unsigned int)(hash >> stepshift) | 1;
+    uint step = (uint)(hash >> stepshift) | 1;
 
     return (index + step) & capmask;
 }
@@ -272,7 +249,7 @@ int msi_lookup(uint64 hash, // 1st hash acts as base location
     index = msi_lookup(hash, index,                           \
         (table)->capmask, (table)->stepshift);                \
     for(;                                                     \
-        not memequal(data[index].key, searchk);               \
+         ! memequal(data[index].key, searchk);               \
         index = msi_lookup(hash, index,                       \
             (table)->capmask, (table)->stepshift))            \
     {                                                         \

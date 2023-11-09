@@ -14,7 +14,7 @@ void test_msi_idx(arena a) {
     print("Não pegou: %s", msi_get(&ht, s("Karol")).data);
 
     for(int i = 0; i < ht.capmask; ++i) {
-        if (not ht.data[i].key.len) {
+        if  ( ! ht.data[i].key.len) {
             continue;
         }
         printf("[%d]", i);
@@ -39,7 +39,7 @@ void test_msi_idx2(arena a) {
     print("não pegou: %s", msi_get(pt, 3).data);
 
     for(int i = 0; i < ht.capmask; ++i) {
-        if (not ht.data[i].key) {
+        if  ( ! ht.data[i].key) {
             continue;
         }
         printf("[%d]", i);
@@ -59,7 +59,7 @@ void test_msi_idx3(arena scratch) {
     msi_set(&ht, s("Sarah"), msi_current_val * 13);
 
     for(int i = 0; i < ht.capmask; ++i) {
-        if (not ht.data[i].key.len) {
+        if  ( ! ht.data[i].key.len) {
             continue;
         }
         printf("[%d]", i);
@@ -69,10 +69,9 @@ void test_msi_idx3(arena scratch) {
     printn;
 }
 
-threadlocal u8 bufferzao[_8MB];
+threadlocal u8 bufferzao[8*MegaBytes];
 int main() {
-
-    arena scratch = newarena(_8MB, bufferzao);
+    arena scratch = newarena(8*MegaBytes, malloc(8*MegaBytes));
     test_msi_idx(scratch);
     printn;
     printn;

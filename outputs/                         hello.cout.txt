@@ -1,4 +1,5 @@
 ./builds/                         hello.c.exe
+./builds/                         hello.c.exe 45
 inicio
 Meio! 1
 Meio! 5
@@ -13,4 +14,3 @@ cão maçã: 0
 cão cão: 1
 maçã cão: 0
 maçã maçã: 1
-52

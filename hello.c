@@ -34,9 +34,5 @@ int main(int argc, char **argv) {
     printf("maçã cão: %d\n", s8equal(s("maçã"), s("cão")));
     printf("maçã maçã: %d\n", s8equal(s("maçã"), s("maçã")));
 
-    int x = 2, y = 5;
-    swap(x, y);
-    printf("%d%d\n", x, y);
-
     return 0;
 }

@@ -2,7 +2,7 @@
 
 int main() {
 
-    RNDSEED(malloc(64));
+    SET_RND_SEED((uint64) malloc(64));
 
     #define N 20
     int counts[N] = {0};

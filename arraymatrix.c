@@ -1,7 +1,7 @@
 #include "ale.h"
 
 typedef struct at{
-    caplendata(long long);
+    caplendata(int64);
 }at;
 void test_push(arena scratch) {
     at d = {0};
@@ -22,7 +22,7 @@ void test_push(arena scratch) {
 }
 
 void test_vlamatrix(arena a) {
-    NEWMATRIX_VAR(long long, mat, 10, 10, &a);
+    NEWMATRIX_VAR(int64, mat, 10, 10, &a);
 
     for(int i = 0; i < 10; ++i) {
         for(int j = 0; j < 10; ++j) {
@@ -40,7 +40,7 @@ void test_vlamatrix(arena a) {
 
 int main() {
 
-    arena scratch = newarena(_8MB, malloc(_8MB));
+    arena scratch = newarena(8*MegaBytes, malloc(8*MegaBytes));
     test_push(scratch);
     test_vlamatrix(scratch);
 

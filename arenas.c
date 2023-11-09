@@ -10,7 +10,7 @@ typedef struct teste{
 
 int main(int argc, char **argv) {{
 
-    arena perm = newarena(_128MB, malloc(_128MB));
+    arena perm = newarena(128*MegaBytes, malloc(128*MegaBytes));
 
     printf("Começando beg:%p end:%p total:%lldMB\n", 
         perm.beg, perm.end, (perm.end - perm.beg)/1048576);

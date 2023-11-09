@@ -1,6 +1,6 @@
 -std=gnu2x -g3 -O3 -march=native -mtune=native -flto -static-pie
 
--Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -fsigned-char
+-Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -funsigned-char
 
 -Wall -Wextra -Wpedantic -Werror 
 

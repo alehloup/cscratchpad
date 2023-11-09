@@ -23,11 +23,9 @@
 #define assert(_cond_, ...) __extension__ ({})
 #endif 
 
-
 /*
     CONSTANTS
 */
-#define _256MB  268435456
 #define _128MB  134217728
 #define _64MB    67108864
 #define _32MB    33554432

@@ -1,7 +1,7 @@
 #include "ale.h"
 
 int main(int argc, char **argv) {
-    char buffer[256];
+    char buffer[512];
     char *_$1 = argv[1];
     
     shellrun(

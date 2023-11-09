@@ -84,8 +84,8 @@ void print_s8(s8 s) {
 /*
     SHELL
 */
-int shellrun(char buffer [static 256], ...) {
-    memset(buffer, '\0', 256);
+int shellrun(char buffer [static 512], ...) {
+    memset(buffer, '\0', 512);
 
     va_list args; va_start(args, buffer);
     char *format = va_arg(args, char *);

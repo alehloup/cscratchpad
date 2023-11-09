@@ -69,9 +69,10 @@ void test_msi_idx3(arena scratch) {
     printn;
 }
 
+threadlocal u8 bufferzao[_8MB];
 int main() {
 
-    arena scratch = newarena(_8MB);
+    arena scratch = newarena(_8MB, bufferzao);
     test_msi_idx(scratch);
     printn;
     printn;

@@ -40,7 +40,7 @@ void test_vlamatrix(arena a) {
 
 int main() {
 
-    arena scratch = newarena(_8MB);
+    arena scratch = newarena(_8MB, malloc(_8MB));
     test_push(scratch);
     test_vlamatrix(scratch);
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string.h> // memset memcpy memcmp
-#include <stdlib.h> // malloc system
+#include <stdlib.h> // system (malloc is not used in this header)
 #include <stdio.h> // printf sprintf
 #include <stdarg.h> //variadic functions
 
@@ -225,9 +225,9 @@ void *alloc(arena a REF, isize size, isize align, isize count) {
 #define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
 
-arena newarena(isize cap) {
+arena newarena(isize cap, u8 buffer[static cap]) {
     arena a = {0};
-    a.beg = (u8 *)malloc(cap);
+    a.beg = buffer;
     a.end = a.beg ? a.beg + cap : 0;
     return a;
 }

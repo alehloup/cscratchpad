@@ -21,4 +21,3 @@
 -fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=unreachable
 
 -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
-

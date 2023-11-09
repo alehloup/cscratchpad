@@ -1,8 +1,9 @@
 #include "ale.h"
 
-int main(MAINARGS) {
-
+int main(int argc, char **argv) {
     char buffer[256];
+    char *_$1 = argv[1], *_$2 = argv[2];
+
     shellrun(
         buffer,
         

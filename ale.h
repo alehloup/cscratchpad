@@ -71,6 +71,7 @@ typedef unsigned char u8; typedef long long int64; typedef unsigned long long ui
 #define not !
 #define printn printf("\n")
 #define print(...) printf(__VA_ARGS__); printf("\n")
+#define swap(_x_1_, _y_2_) __extension__ ({ typeof(_x_1_) _swap_ = _x_1_; _x_1_ = _y_2_; _y_2_ = _swap_;})
  
 #define REF [static 1] /* NOT NULL pointer parameter*/
 #define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__) //define a function pointer
@@ -124,14 +125,6 @@ int shellrun(char buffer [static 256], ...) {
     vsprintf(buffer, format, args);
     return system(buffer);
 }
-
-//Args shortcuts
-#define MAINARGS int argc, char **argv
-#define _$0 argv[0]
-#define _$1 argv[1]
-#define _$2 argv[2]
-#define _$first argv[1]
-#define _$last argv[argc - 1]
 
 /*
     MATH

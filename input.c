@@ -1,6 +1,6 @@
 #include "ale.h"
 
-int main(MAINARGS) {
+int main(int argc, char **argv) {
 
     static char s1[64] = {0};
     static char s2[64] = {0};

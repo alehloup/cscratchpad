@@ -25,6 +25,16 @@ const int True = 1; const int False = 0;
 #define assert(_cond_, ...) __extension__ ({})
 #endif 
 
+#define REF [static 1] /* NOT NULL pointer parameter*/
+#define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__) //define a function pointer
+#define threadlocal static _Thread_local//thread variable
+//TRICK scope that "opens" at start, and "closes" at end 
+threadlocal int MACRO_scoped__;
+#define scoped(start, end) MACRO_scoped__ = 1;         \
+    for(start; MACRO_scoped__; (--MACRO_scoped__), end)
+#define printn printf("\n")
+#define print(...) printf(__VA_ARGS__); printf("\n")
+
 /*
     COMPOSITES
 */
@@ -43,18 +53,6 @@ const int True = 1; const int False = 0;
 #define NEWMATRIX_VAR(type, var, m, n, arena_) \
     type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
 #define matat(mat, i, j) (*mat)[i][j]
-
-#define printn printf("\n")
-#define print(...) printf(__VA_ARGS__); printf("\n")
- 
-#define REF [static 1] /* NOT NULL pointer parameter*/
-#define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__) //define a function pointer
-#define threadlocal static _Thread_local//thread variable
-
-//TRICK scope that "opens" at start, and "closes" at end 
-threadlocal int MACRO_scoped__;
-#define scoped(start, end) MACRO_scoped__ = 1;         \
-    for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 /* 
     MEMORYops
@@ -112,11 +110,18 @@ int fit_pwr2_exp(int size) {
 /*
     RANDOM
 */
-uint64 hash_int64(int64 integer64); // defined more down low
-threadlocal uint64 MACRO_rnd64_seed__ = 1111111111111111111;
-void SET_RND_SEED(uint64 x) { (MACRO_rnd64_seed__) = (uint64)(x) >> 1; }
-uint64 RND64() { return MACRO_rnd64_seed__ = hash_int64(MACRO_rnd64_seed__) >> 1; }
-int RNDN(int n) { return (int) RND64() % n; }
+int64 hash_for_rnd(int64 integer64) {
+    uint64 x = (uint64)integer64;
+    x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
+    
+    x = (x ^ x>>31) >> 1;
+    return llabs((int64) x);
+}
+threadlocal int64 RANDOM_rnd64_seed__ = 1111111111111111111;
+void SET_RND_SEED(int64 x) { (RANDOM_rnd64_seed__) = llabs(x); }
+int64 RND64() { return RANDOM_rnd64_seed__ = hash_for_rnd(RANDOM_rnd64_seed__); }
+int RND32() { return (int) (RANDOM_rnd64_seed__ = hash_for_rnd(RANDOM_rnd64_seed__)); }
+int RNDN(int n) { return RND32() % n; }
 
 /*
     ARENA
@@ -187,28 +192,33 @@ void grow(void *slice /*slice struct*/, int64 size, int64 align, arena *a) {
 /*
     HASH
 */
-uint64 hash_s8(s8 str) {
+int64 hash_s8(s8 str) {
     uint64 h = 0x7A5662DCDF;
     for(int i = 0; i < str.len; ++i) { 
         h ^= str.data[i] & 255; h *= 1111111111111111111;
     }
-    return h ^ h>>32;
+
+    h = (h ^ h>>32) >> 1;
+    return llabs((int64) h);
 }
-uint64 hash_cstr(char *str) {
+int64 hash_cstr(char *str) {
     return hash_s8(s(str));
 }
-uint64 hash_int64(int64 integer64) {
+int64 hash_int64(int64 integer64) {
     uint64 x = (uint64)integer64;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
-    //x ^= x >> 27; x *= 0x94d049bb133111eb; 
-    return x ^ x>>31;
+    
+    x = (x ^ x>>31) >> 1;
+    return llabs((int64) x);
 }
-uint64 hash_int32(int integer32)
+int64 hash_int32(int integer32)
 {
     uint x = (uint)integer32;
+    
     x ^= x >> 16; x *= 0x7feb352d; 
-    //x ^= x >> 15; x *= 0x846ca68b; 
-    return x ^ x>>16;
+    
+    x = (x ^ x>>16) >> 1;
+    return llabs((int64) x);
 }
 
 #define hash_it(X) _Generic((X), \
@@ -244,12 +254,12 @@ int msi_lookup(uint64 hash, // 1st hash acts as base location
     keytypeof(table) searchk = (keytypeof(table))key_;        \
     typeof(searchk) zero_key = {0};                           \
                                                               \
-    uint64 hash = hash_it(searchk);                              \
+    uint64 hash = (uint64) hash_it(searchk);                  \
     int index = (int)hash;                                    \
     index = msi_lookup(hash, index,                           \
         (table)->capmask, (table)->stepshift);                \
     for(;                                                     \
-         ! memequal(data[index].key, searchk);               \
+         ! memequal(data[index].key, searchk);                \
         index = msi_lookup(hash, index,                       \
             (table)->capmask, (table)->stepshift))            \
     {                                                         \

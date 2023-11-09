@@ -4,7 +4,7 @@ void test_msi_idx(arena a) {
     struct tables2s{msi_ht_data(s8, s8);}
         ht = newmsi(&a, ht, 1000);
 
-    print("%llu", hash_it("Alessandro Stamatto"));
+    print("%lld", hash_it("Alessandro Stamatto"));
 
     msi_set(&ht, s("Alessandro"), s("Stamatto"));
     msi_set(&ht, s("Sarah"), s("Sakamoto"));
@@ -28,7 +28,7 @@ void test_msi_idx2(arena a) {
     struct tablei2s{msi_ht_data(long long, s8);}
         ht = newmsi(&a, ht, 1000);
 
-    print("%llu", hash_it((long long)4));
+    print("%lld", hash_it((long long)4));
 
     msi_set(&ht, 5, s("Stamatto")); 
     msi_set(&ht, 4, s("Sakamoto"));

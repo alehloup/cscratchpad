@@ -88,21 +88,15 @@ threadlocal int MACRO_scoped__;
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
 #define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : not memcmp(&x1, &x2, sizeof(x1)))
 
-// Uses strlen if pointer size
-#define cstrlen(s) __extension__ ({             \
-    int64 cOunt_ = countof(s) - 1;              \
-    cOunt_ != 7 ? (int)cOunt_ : (int)strlen(s); \
-}) 
-
 /*
     STRINGS
 */
 typedef struct s8{ int len; u8 *data; }s8;
-#define s(cstr) ((s8){ cstrlen(cstr), (u8 *)cstr })
 
-s8 s8substr(s8 s, int from, int count) {
-    return (s8){ .data = (s.data)+from, .len = count };
-}
+#define s(cstr) ((s8){ \
+    countof(cstr) == 8? (int)strlen(cstr) : (int) (countof(cstr) - 1), (u8 *)cstr \
+})
+
 int s8equal(s8 s1, s8 s2) {
     return s1.len != s2.len ? False : \
         (s1.len == 0 ? True : not memcmp(s1.data, s2.data, s1.len));

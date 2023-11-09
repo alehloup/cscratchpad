@@ -1,0 +1,11 @@
+17151443812849654710
+Pegou: Sakamoto
+Não pegou: (null)
+[121]Alessandro Ferreira, [700]Sarah Sakamoto, 
+
+
+13232826040865663252
+pegou: Ferreira
+não pegou: (null)
+[183]5: Ferreira, [1011]4: Sakamoto, 
+[178]Sarah: 52, [408]Alex: 52, 

@@ -13,6 +13,8 @@ int main(int argc, char **argv) {
 
     print_s8(string); printn;
 
+    print("%s %d", arg, s(arg).len);
+
     scoped(long long x = (printf("inicio\n"), 5), printf("fim\n")) {
         printf("Meio! 1\n");
         printf("Meio! %lld\n", x);

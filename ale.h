@@ -8,7 +8,6 @@
 typedef long long int64; 
 typedef unsigned char u8; typedef unsigned int uint; typedef unsigned long long uint64;
 
-const int True = 1; const int False = 0;
 #define MegaBytes 1048576 //constexpr uint64 MegaBytes = 1048576;
 
 #ifndef NDEBUG
@@ -60,7 +59,7 @@ threadlocal int MACRO_scoped__;
 #define   sizeof(x)      ((int64)sizeof(x))
 #define  alignof(x)      ((int64)_Alignof(x))
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
-#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? False : ! memcmp(&x1, &x2, sizeof(x1)))
+#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? 0 : ! memcmp(&x1, &x2, sizeof(x1)))
 
 /*
     STRINGS
@@ -72,8 +71,8 @@ typedef struct s8{ int len; u8 *data; }s8;
 })
 
 int s8equal(s8 s1, s8 s2) {
-    return s1.len != s2.len ? False : \
-        (s1.len == 0 ? True : ! memcmp(s1.data, s2.data, s1.len));
+    return s1.len != s2.len ? 0 : \
+        (s1.len == 0 ? 1 : ! memcmp(s1.data, s2.data, s1.len));
 }
 void print_s8(s8 s) {
     printf("%.*s", (int)s.len, s.data);
@@ -107,21 +106,20 @@ int fit_pwr2_exp(int size) {
     return exp;
 }
 
-/*
-    RANDOM
-*/
-int64 hash_for_rnd(int64 integer64) {
-    uint64 x = (uint64)integer64;
-    x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
+// RANDOM
+int RND(unsigned long long *seed) {
+    unsigned long long x = *seed;
     
-    x = (x ^ x>>31) >> 1;
-    return llabs((int64) x);
+    x ^= x >> 30;
+    x *= 0xbf58476d1ce4e5b9U;
+    x ^= x >> 27;
+    x *= 0x94d049bb133111ebU;
+    x ^= x >> 31;
+
+    *seed = x;
+    
+    return (int) (x & 2147483647);
 }
-threadlocal int64 RANDOM_rnd64_seed__ = 1111111111111111111;
-void SET_RND_SEED(int64 x) { (RANDOM_rnd64_seed__) = llabs(x); }
-int64 RND64() { return RANDOM_rnd64_seed__ = hash_for_rnd(RANDOM_rnd64_seed__); }
-int RND32() { return (int) (RANDOM_rnd64_seed__ = hash_for_rnd(RANDOM_rnd64_seed__)); }
-int RNDN(int n) { return RND32() % n; }
 
 /*
     ARENA
@@ -198,8 +196,7 @@ int64 hash_s8(s8 str) {
         h ^= str.data[i] & 255; h *= 1111111111111111111;
     }
 
-    h = (h ^ h>>32) >> 1;
-    return llabs((int64) h);
+    return (h ^ h>>32) >> 1;
 }
 int64 hash_cstr(char *str) {
     return hash_s8(s(str));
@@ -208,8 +205,7 @@ int64 hash_int64(int64 integer64) {
     uint64 x = (uint64)integer64;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
     
-    x = (x ^ x>>31) >> 1;
-    return llabs((int64) x);
+    return (x ^ x>>31) >> 1;
 }
 int64 hash_int32(int integer32)
 {
@@ -217,8 +213,7 @@ int64 hash_int32(int integer32)
     
     x ^= x >> 16; x *= 0x7feb352d; 
     
-    x = (x ^ x>>16) >> 1;
-    return llabs((int64) x);
+    return (x ^ x>>16) >> 1;
 }
 
 #define hash_it(X) _Generic((X), \
@@ -274,11 +269,11 @@ int msi_lookup(uint64 hash, // 1st hash acts as base location
 })
 
 #define msi_get(table, key) __extension__({        \
-    (table)->data[msi_idx(table, key, False)].val; \
+    (table)->data[msi_idx(table, key, 0)].val; \
 })
 #define msi_set(table, key, val_) __extension__({              \
     assert((table)->len < (table)->capmask, "MSI HT IS FULL"); \
-    int msi_index_ = msi_idx(table, key, True);                \
+    int msi_index_ = msi_idx(table, key, 1);                \
     valtypeof(table) msi_current_val                           \
         = (valtypeof(table)) (table)->data[msi_index_].val;    \
     (table)->data[msi_index_].val = val_;                      \

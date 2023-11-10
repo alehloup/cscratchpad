@@ -1,19 +1,19 @@
 #include "ale.h"
 
-int xisdigit(char c)
+int32_t xisdigit(char c)
 {
     return c>='0' && c<='9';
 }
 
-int main(int argc, char **argv) {
+int32_t main(int32_t argc, char **argv) {
     char* arg = argv[argc-1];
     s8 string = s(arg);
     //printf("%lld %s\n", string.len, string.data);
     //printf("%d\n", xisdigit(string.data[0]));
 
-    print_s8(string); printn;
+    print_s8(string); printf("\n");
 
-    print("%s %d", arg, s(arg).len);
+    printf("%s %d\n", arg, s(arg).len);
 
     scoped(long long x = (printf("inicio\n"), 5), printf("fim\n")) {
         printf("Meio! 1\n");

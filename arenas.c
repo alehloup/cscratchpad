@@ -1,14 +1,13 @@
-#include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include "ale.h"
 
 typedef struct teste{
-    int x;
+    int32_t x;
     long long y;
-    int z;
+    int32_t z;
 }teste;
 
-int main(int argc, char **argv) {{
+int32_t main(int32_t argc, char **argv) {{
 
     arena perm = newarena(128*MegaBytes, malloc(128*MegaBytes));
 
@@ -20,7 +19,7 @@ int main(int argc, char **argv) {{
     printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);
 
     teste *vetor = newxs(&perm, teste, 3);
-    for(int i = 0, j = 0; i < 3; ++i) {
+    for(int32_t i = 0, j = 0; i < 3; ++i) {
         vetor[i] = (teste){j++, j++, j++};
         printf("%d Ints: %d %lld %d\n", i, vetor[i].x, vetor[i].y, vetor[i].z);
     }

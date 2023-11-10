@@ -1,11 +1,10 @@
 8575721906424827355
-Pegou: Sakamoto
+Pegou: (null)
 Não pegou: (null)
-[573]Alessandro Ferreira, [861]Sarah Sakamoto, 
+[573]Alessandro Stamatto, [602]Alessandro Ferreira, [861]Sarah Sakamoto, 
 
 
 9128953514933409478
 pegou: Ferreira
 não pegou: (null)
 [193]4: Sakamoto, [232]5: Ferreira, 
-[89]Sarah: 52, [204]Alex: 52, 

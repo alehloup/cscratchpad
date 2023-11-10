@@ -12,6 +12,7 @@
         "stdio.h": "c",
         "string.h": "c",
         "windows.h": "c",
-        "_mingw.h": "c"
+        "_mingw.h": "c",
+        "corecrt_wstdlib.h": "c"
     }
 }

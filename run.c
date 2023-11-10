@@ -1,6 +1,6 @@
 #include "ale.h"
 
-int main(int argc, char **argv) {
+int32_t main(int32_t argc, char **argv) {
     char buffer[512];
     char *_$1 = argv[1];
     

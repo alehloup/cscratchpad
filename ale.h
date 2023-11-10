@@ -1,87 +1,55 @@
 #pragma once
 
-#include <string.h> // memset memcpy memcmp
-#include <stdlib.h> // system (malloc is not used)
-#include <stdio.h> // printf sprintf
-#include <stdarg.h> //variadic functions
+#include <stdint.h>   // standard ints
+#include <stdbool.h>  // standard bool
+#include <stdarg.h>   // standard variadic
+#include <string.h>   // memset memcpy memcmp
+#include <stdio.h>    // printf sprintf
 
-typedef long long int64; 
-typedef unsigned char u8; typedef unsigned int uint; typedef unsigned long long uint64;
+#define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
+//static inline MegaBytes()
 
-#define MegaBytes 1048576 //constexpr uint64 MegaBytes = 1048576;
-
-#ifndef NDEBUG
 #define assert(_cond_, ...) __extension__ ({         \
-    while (!(_cond_)) {                              \
+    if (!(_cond_)) {                                 \
         printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
         printf(__VA_ARGS__);                         \
         printf(" !!\n");                             \
         __builtin_unreachable();                     \
     }                                                \
 })
-#endif
-#ifdef NDEBUG
-#define assert(_cond_, ...) __extension__ ({})
-#endif 
 
-#define REF [static 1] /* NOT NULL pointer parameter*/
-#define def_funcp(ret, name, ...) typedef ret (*name)(__VA_ARGS__) //define a function pointer
-#define threadlocal static _Thread_local//thread variable
 //TRICK scope that "opens" at start, and "closes" at end 
-threadlocal int MACRO_scoped__;
-#define scoped(start, end) MACRO_scoped__ = 1;         \
-    for(start; MACRO_scoped__; (--MACRO_scoped__), end)
-#define printn printf("\n")
-#define print(...) printf(__VA_ARGS__); printf("\n")
-
-/*
-    COMPOSITES
-*/
-#define    lendata(type)          int len; type *data // slice
-#define caplendata(type) int cap; lendata(type) // growable array
-
-#define keyval(keyt, valt) keyt key; valt val // entry 
-#define tkeyval(keyt, valt) struct{ keyval(keyt, valt); } // struct entry
-#define msi_ht_data(keytype_, valtype_) \
-    int stepshift; int capmask; lendata(tkeyval(keytype_, valtype_)) // msi hash table
-
-#define datatypeof(_table_) typeof(((_table_)->data)) // get array type
-#define keytypeof(_table_) typeof(((_table_)->data[0].key)) // get ht key type
-#define valtypeof(_table_) typeof(((_table_)->data[0].val)) // get ht val type
-
-#define NEWMATRIX_VAR(type, var, m, n, arena_) \
-    type (*var)[m][n] = alloc(arena_, sizeof(type [m][n]), alignof(type [m][n]), 1);
-#define matat(mat, i, j) (*mat)[i][j]
+static _Thread_local int32_t MACRO_scoped__;
+#define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 /* 
     MEMORYops
 */
-#define   sizeof(x)      ((int64)sizeof(x))
-#define  alignof(x)      ((int64)_Alignof(x))
+#define   sizeof(x)      ((int64_t)sizeof(x))
+#define  alignof(x)      ((int64_t)_Alignof(x))
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
 #define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? 0 : ! memcmp(&x1, &x2, sizeof(x1)))
 
 /*
     STRINGS
 */
-typedef struct s8{ int len; u8 *data; }s8;
-
-#define s(cstr) ((s8){ \
-    countof(cstr) == 8? (int)strlen(cstr) : (int) (countof(cstr) - 1), (u8 *)cstr \
-})
-
-int s8equal(s8 s1, s8 s2) {
-    return s1.len != s2.len ? 0 : \
-        (s1.len == 0 ? 1 : ! memcmp(s1.data, s2.data, s1.len));
+typedef struct s8{ int32_t len; char *data; }s8;
+static inline s8 s(char *cstr) {
+    return (s8){countof(cstr) == 8? (int32_t)strlen(cstr) : (int32_t) (countof(cstr) - 1), (char *)cstr}; 
 }
-void print_s8(s8 s) {
-    printf("%.*s", (int)s.len, s.data);
+
+static int32_t s8equal(s8 s1, s8 s2) {
+    return s1.len != s2.len ? 0 : (s1.len == 0 ? 1 : ! memcmp(s1.data, s2.data, s1.len));
+}
+static void print_s8(s8 s) {
+    printf("%.*s", (int32_t)s.len, s.data);
 }
 
 /*
     SHELL
 */
-int shellrun(char buffer [static 512], ...) {
+int32_t __cdecl system(const char *_Command);
+static int32_t shellrun(char buffer [static 512], ...) {
     memset(buffer, '\0', 512);
 
     va_list args; va_start(args, buffer);
@@ -94,12 +62,14 @@ int shellrun(char buffer [static 512], ...) {
 /*
     MATH
 */
-//Fast % when the number is a power of 2
-#define MODPWR2(number, modval) ((number) & (modval - 1))
+//Fast mod when the number is a power of 2
+static inline int64_t MODPWR2(int64_t number, int64_t modval) {
+    return (number) & (modval - 1);
+}
 
 // Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
-int fit_pwr2_exp(int size) {
-    int exp=9; int val=512; ++size;
+static inline int32_t fit_pwr2_exp(int32_t size) {
+    int32_t exp=9; int32_t val=512; ++size;
     while (val < size) {
         ++exp; val*=2;
     }
@@ -107,8 +77,8 @@ int fit_pwr2_exp(int size) {
 }
 
 // RANDOM
-int RND(unsigned long long *seed) {
-    unsigned long long x = *seed;
+static int32_t RND(uint64_t seed[static 1]) {
+    uint64_t x = *seed;
     
     x ^= x >> 30;
     x *= 0xbf58476d1ce4e5b9U;
@@ -118,23 +88,29 @@ int RND(unsigned long long *seed) {
 
     *seed = x;
     
-    return (int) (x & 2147483647);
+    return (int32_t) (x & 2147483647);
 }
 
 /*
     ARENA
 */
-typedef struct arena{ u8 *beg; u8 *end; }arena;
+typedef struct arena{ char *beg; char *end; }arena;
+static inline arena newarena(int64_t cap, char buffer[static cap]) {
+    arena a = {0};
+    a.beg = buffer;
+    a.end = a.beg ? a.beg + cap : 0;
+    return a;
+}
 
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
-void *alloc(arena a REF, int64 size, int64 align, int64 count) {
-    int64 total = size * count;
-    int64 pad = MODPWR2(- (int64)a->beg, align); //mod -x gives n for next align
+static void *alloc(arena a[static 1], int64_t size, int64_t align, int64_t count) {
+    int64_t total = size * count;
+    int64_t pad = MODPWR2(- (int64_t)a->beg, align); //mod -x gives n for next align
 
     assert(total < (a->end - a->beg - pad), \
         "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", total, a->end - a->beg - pad);
 
-    u8 *p = a->beg + pad;
+    char *p = a->beg + pad;
     a->beg += pad + total;
     
     return memset(p, 0, total);
@@ -142,19 +118,13 @@ void *alloc(arena a REF, int64 size, int64 align, int64 count) {
 
 #define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
 #define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
-
-arena newarena(int64 cap, u8 buffer[static cap]) {
-    arena a = {0};
-    a.beg = buffer;
-    a.end = a.beg ? a.beg + cap : 0;
-    return a;
-}
+#define newmat(a, t, m, n) (t (*)[m][n]) alloc(a, sizeof(t [m][n]), alignof(t [m][n]), 1)
 
 /*
     GROWABLE ARRAY
 */
-void grow(void *slice /*slice struct*/, int64 size, int64 align, arena *a) {
-    struct{caplendata(u8);} replica = {0};
+static void grow(void *slice /*slice struct*/, int64_t size, int64_t align, arena *a) {
+    struct{int32_t cap; int32_t len; char *data;} replica = {0};
     memcpy(&replica, slice, sizeof(replica)); //type prunning
 
     if (!replica.data) { 
@@ -163,7 +133,7 @@ void grow(void *slice /*slice struct*/, int64 size, int64 align, arena *a) {
         alloc(a, size, 1, replica.cap); // neighbour mem avail: extend array
         replica.cap *= 2;
     } else {
-        u8 *data = alloc(a, size, align, replica.cap *= 2); // reloc to 2*current cap
+        char *data = alloc(a, size, align, replica.cap *= 2); // reloc to 2*current cap
         memcpy(data, replica.data, size*replica.len);
         replica.data = data;
     }
@@ -190,26 +160,26 @@ void grow(void *slice /*slice struct*/, int64 size, int64 align, arena *a) {
 /*
     HASH
 */
-int64 hash_s8(s8 str) {
-    uint64 h = 0x7A5662DCDF;
-    for(int i = 0; i < str.len; ++i) { 
+static int64_t hash_s8(s8 str) {
+    uint64_t h = 0x7A5662DCDF;
+    for(int32_t i = 0; i < str.len; ++i) { 
         h ^= str.data[i] & 255; h *= 1111111111111111111;
     }
 
     return (h ^ h>>32) >> 1;
 }
-int64 hash_cstr(char *str) {
+static int64_t hash_cstr(char *str) {
     return hash_s8(s(str));
 }
-int64 hash_int64(int64 integer64) {
-    uint64 x = (uint64)integer64;
+static int64_t hash_int64(int64_t integer64) {
+    uint64_t x = (uint64_t)integer64;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
     
     return (x ^ x>>31) >> 1;
 }
-int64 hash_int32(int integer32)
+static int64_t hash_int32(int32_t integer32)
 {
-    uint x = (uint)integer32;
+    uint32_t x = (uint32_t)integer32;
     
     x ^= x >> 16; x *= 0x7feb352d; 
     
@@ -222,21 +192,22 @@ int64 hash_int32(int integer32)
 /*
     HASH TABLE : Mask-Step-Index (MSI) 
 */
-int msi_lookup(uint64 hash, // 1st hash acts as base location
-              int index, // 2nd "hash" steps over the "list of elements" from base-location
-              int capmask, // trims number to < ht_capacity
-              int stepshift // use |exp| bits for step 
-            )
+static inline int32_t 
+    msi_lookup(
+        uint64_t hash, // 1st hash acts as base location
+        int32_t index, // 2nd "hash" steps over the "list of elements" from base-location
+        int32_t capmask, // trims number to < ht_capacity
+        int32_t stepshift // use |exp| bits for step 
+    )
 {
-    uint step = (uint)(hash >> stepshift) | 1;
-
+    uint32_t step = (uint32_t)(hash >> stepshift) | 1;
     return (index + step) & capmask;
 }
 
 #define newmsi(arena_, varname, expected_maxn) __extension__ ({          \
-    int msi_expo = fit_pwr2_exp(expected_maxn);                          \
-    int msi_mask = (1 << msi_expo) - 1;                                 \
-    int msi_step = 64 - msi_expo;                                        \
+    int32_t msi_expo = fit_pwr2_exp(expected_maxn);                          \
+    int32_t msi_mask = (1 << msi_expo) - 1;                                 \
+    int32_t msi_step = 64 - msi_expo;                                        \
     typeof(varname) temp_ht_ = {                                        \
         .capmask = msi_mask, .stepshift = msi_step,                     \
         .data = newxs(arena_, typeof(*((varname).data)), msi_mask + 1)  \
@@ -245,36 +216,37 @@ int msi_lookup(uint64 hash, // 1st hash acts as base location
 });
 
 #define msi_idx(table, key_, msi_insert_if_not_found) __extension__ ({ \
-    datatypeof(table) data = (table)->data;                   \
-    keytypeof(table) searchk = (keytypeof(table))key_;        \
-    typeof(searchk) zero_key = {0};                           \
-                                                              \
-    uint64 hash = (uint64) hash_it(searchk);                  \
-    int index = (int)hash;                                    \
-    index = msi_lookup(hash, index,                           \
-        (table)->capmask, (table)->stepshift);                \
-    for(;                                                     \
-         ! memequal(data[index].key, searchk);                \
-        index = msi_lookup(hash, index,                       \
-            (table)->capmask, (table)->stepshift))            \
-    {                                                         \
-        if(memequal(data[index].key, zero_key)){              \
-            if(msi_insert_if_not_found) {                     \
-                data[index].key = searchk;                    \
-            }                                                 \
-            break;                                            \
-        }                                                     \
-    }                                                         \
-    index;                                                    \
+    typeof(((table)->data)) data = (table)->data;                      \
+    typeof(data[0].key) searchk = (typeof(data[0].key))key_;           \
+    typeof(searchk) zero_key = {0};                                    \
+                                                                       \
+    uint64_t hash = (uint64_t) hash_it(searchk);                       \
+    int32_t index = (int32_t)hash;                                     \
+    index = msi_lookup(hash, index,                                    \
+        (table)->capmask, (table)->stepshift);                         \
+    for(;                                                              \
+         ! memequal(data[index].key, searchk);                         \
+        index = msi_lookup(hash, index,                                \
+            (table)->capmask, (table)->stepshift))                     \
+    {                                                                  \
+        if(memequal(data[index].key, zero_key)){                       \
+            if(msi_insert_if_not_found) {                              \
+                data[index].key = searchk;                             \
+            }                                                          \
+            break;                                                     \
+        }                                                              \
+    }                                                                  \
+    index;                                                             \
 })
 
-#define msi_get(table, key) __extension__({        \
-    (table)->data[msi_idx(table, key, 0)].val; \
+#define msi_get(table, key_) __extension__({                            \
+    (table)->data[msi_idx(table, key_, 0)].val;                         \
 })
-#define msi_set(table, key, val_) __extension__({              \
-    assert((table)->len < (table)->capmask, "MSI HT IS FULL"); \
-    int msi_index_ = msi_idx(table, key, 1);                \
-    valtypeof(table) msi_current_val                           \
-        = (valtypeof(table)) (table)->data[msi_index_].val;    \
-    (table)->data[msi_index_].val = val_;                      \
+#define msi_set(table, key_, val_) __extension__({                     \
+    assert((table)->len < (table)->capmask, "MSI HT IS FULL");         \
+    int32_t msi_index_ = msi_idx(table, key_, 1);                      \
+    typeof(((table)->data)) data = (table)->data;                      \
+    typeof(data[0].val) msi_current_val                                \
+        = (typeof(data[0].val)) data[msi_index_].val;                  \
+    data[msi_index_].val = val_;                                       \
 })

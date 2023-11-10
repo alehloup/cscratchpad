@@ -7,7 +7,6 @@
 #include <stdio.h>    // printf sprintf
 
 #define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
-//static inline MegaBytes()
 
 #define assert(_cond_, ...) __extension__ ({         \
     if (!(_cond_)) {                                 \
@@ -38,10 +37,10 @@ static inline s8 s(char *cstr) {
     return (s8){countof(cstr) == 8? (int32_t)strlen(cstr) : (int32_t) (countof(cstr) - 1), (char *)cstr}; 
 }
 
-static int32_t s8equal(s8 s1, s8 s2) {
+static inline int32_t s8equal(s8 s1, s8 s2) {
     return s1.len != s2.len ? 0 : (s1.len == 0 ? 1 : ! memcmp(s1.data, s2.data, s1.len));
 }
-static void print_s8(s8 s) {
+static inline void print_s8(s8 s) {
     printf("%.*s", (int32_t)s.len, s.data);
 }
 
@@ -141,21 +140,90 @@ static void grow(void *slice /*slice struct*/, int64_t size, int64_t align, aren
     memcpy(slice, &replica, sizeof(replica)); //type prunning
 }
 
-#define push(dynarr, arena, _value_) __extension__ ({  \
-    typeof(dynarr) dynarr_ = (dynarr);                 \
-    typeof(arena) arena_ = (arena);                    \
-                                                       \
-    if (dynarr_->len >= dynarr_->cap) {                \
-        grow(dynarr_, sizeof(*dynarr_->data),          \
-            alignof(*dynarr_->data), arena_);          \
-    }                                                  \
-    dynarr_->data[dynarr_->len++] = _value_;           \
-})
+/*
+    PUSH TO GROWABLE ARRAY
+*/
+static void push_s8(void *dynarr, arena a[static 1], s8 string) {
+    struct{int32_t cap; int32_t len; s8 *data;} replica = {0};
+    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
 
-#define pop(array) __extension__ ({                    \
-    assert((array)->len > 0, "POP ON EMPTY ARRAY");    \
-    (array)->data[--(array)->len];                     \
-})
+    if (replica.len >= replica.cap) {
+        int64_t oldcap = replica.cap;
+        grow(&replica, sizeof(int64_t), alignof(int64_t), a);
+        assert(replica.cap > oldcap, "GROW FAILED");
+    }
+
+    replica.data[replica.len++] = string;
+    
+    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
+}
+static void push_i64(void *dynarr, arena a[static 1], int64_t int64) {
+    struct{int32_t cap; int32_t len; int64_t *data;} replica = {0};
+    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
+
+    if (replica.len >= replica.cap) {
+        int64_t oldcap = replica.cap;
+        grow(&replica, sizeof(int64_t), alignof(int64_t), a);
+        assert(replica.cap > oldcap, "GROW FAILED");
+    }
+
+    replica.data[replica.len++] = int64;
+    
+    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
+}
+static inline void push_double(void *dynarr, arena a[static 1], double float64) {
+    int64_t replica;
+    memcpy(&replica, &float64, sizeof(replica)); //type prunning
+
+    push_i64(dynarr, a, replica);
+}
+static inline void push_ptr(void *dynarr, arena a[static 1], void *ptr) {
+    push_i64(dynarr, a, (int64_t) ptr);
+}
+static inline void push_cstr(void *dynarr, arena a[static 1], char *cstr) {
+    push_i64(dynarr, a, (int64_t) cstr);
+}
+
+#define push_it(dynarr, arena, X) _Generic((X),                            \
+    s8: push_s8, double: push_double, void *: push_ptr, char *: push_cstr, \
+    default: push_i64)(dynarr, arena, X)
+
+/*
+    POP OF GROWABLE ARRAY
+*/
+static s8 pop_s8(void *dynarr) {
+    struct{int32_t cap; int32_t len; s8 *data;} replica = {0};
+    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
+
+    assert(replica.len > 0, "POP ON EMPTY ARRAY");
+    s8 val = replica.data[--replica.len];
+
+    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
+    return val;
+}
+static int64_t pop_i64(void *dynarr) {
+    struct{int32_t cap; int32_t len; int64_t *data;} replica = {0};
+    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
+
+    assert(replica.len > 0, "POP ON EMPTY ARRAY");
+    int64_t val = replica.data[--replica.len];
+
+    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
+    return val;
+}
+static inline double pop_double(void *dynarr) {
+    int64_t replica = pop_i64(dynarr);
+    double val = 0;
+    memcpy(&val, &replica, sizeof(replica)); //type prunning
+
+    return val; 
+}
+static inline void * pop_ptr(void *dynarr) {
+     return (void *) pop_i64(dynarr);
+}
+static inline char * pop_cstr(void *dynarr) {
+     return (char *) pop_i64(dynarr);
+}
 
 /*
     HASH
@@ -171,13 +239,13 @@ static int64_t hash_s8(s8 str) {
 static int64_t hash_cstr(char *str) {
     return hash_s8(s(str));
 }
-static int64_t hash_int64(int64_t integer64) {
+static int64_t hash_i64(int64_t integer64) {
     uint64_t x = (uint64_t)integer64;
     x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
     
     return (x ^ x>>31) >> 1;
 }
-static int64_t hash_int32(int32_t integer32)
+static int64_t hash_i32(int32_t integer32)
 {
     uint32_t x = (uint32_t)integer32;
     
@@ -187,7 +255,7 @@ static int64_t hash_int32(int32_t integer32)
 }
 
 #define hash_it(X) _Generic((X), \
-     char *: hash_cstr, s8: hash_s8, int: hash_int32, default: hash_int64)(X)
+     char *: hash_cstr, s8: hash_s8, int: hash_i32, default: hash_i64)(X)
 
 /*
     HASH TABLE : Mask-Step-Index (MSI) 
@@ -204,10 +272,10 @@ static inline int32_t
     return (index + step) & capmask;
 }
 
-#define newmsi(arena_, varname, expected_maxn) __extension__ ({          \
-    int32_t msi_expo = fit_pwr2_exp(expected_maxn);                          \
-    int32_t msi_mask = (1 << msi_expo) - 1;                                 \
-    int32_t msi_step = 64 - msi_expo;                                        \
+#define newmsi(arena_, varname, expected_maxn) __extension__ ({         \
+    int32_t msi_expo = fit_pwr2_exp(expected_maxn);                     \
+    int32_t msi_mask = (1 << msi_expo) - 1;                             \
+    int32_t msi_step = 64 - msi_expo;                                   \
     typeof(varname) temp_ht_ = {                                        \
         .capmask = msi_mask, .stepshift = msi_step,                     \
         .data = newxs(arena_, typeof(*((varname).data)), msi_mask + 1)  \

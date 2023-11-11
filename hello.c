@@ -11,8 +11,6 @@ int32_t main(int32_t argc, const char * *argv) {
     //printf("%lld %s\n", string.len, string.data);
     //printf("%d\n", xisdigit(string.data[0]));
 
-    assert(false, "Testando Kaboom!");
-
     print_s8(string); printf("\n");
 
     printf("%s %d\n", arg, s(arg).len);

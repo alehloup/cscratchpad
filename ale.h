@@ -49,14 +49,15 @@ threadlocal char MACRO_scoped__;
 */
 typedef char * cstring;
 typedef const char * const staticstring;
-
-#define cstrlen(str) (countof(str) == 8? (int32_t)strlen(str) : (int32_t) (countof(str) - 1))
-
 typedef struct strslice{ int32_t len; cstring data; }strslice;
+
 static inline strslice cstr_to_slice(int32_t len, staticstring data) {
     strslice temp = {len, (cstring) data};
     return temp;
 } 
+
+// uses sizeof in static c-strings
+#define cstrlen(str) (countof(str) == 8? (int32_t)strlen(str) : (int32_t) (countof(str) - 1))
 #define s8(cstr) cstr_to_slice(cstrlen(cstr), cstr)
 
 /*
@@ -219,9 +220,6 @@ static int64_t hash_i64(int64_t integer64) {
     
     return (x ^ x>>31) >> 1;
 }
-
-#define hash_it(X) _Generic((X), \
-     char *: hash_cstr, default: hash_i64)(X)
 
 /*
     HASH TABLE : Mask-Step-Index (MSI) 

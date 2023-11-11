@@ -2,26 +2,34 @@
 
 #include <stdarg.h>    // standard variadic
 #include <stdint.h>    // standard ints
-#include <string.h>    // memset memcpy memcmp
-#include <stdio.h>     // printf sprintf
 
-#define assert(_cond_, ...)                          \
-    if (!(_cond_)) {                                 \
-        printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
-        printf(__VA_ARGS__);                         \
-        printf(" !!\n");                             \
-        __builtin_unreachable();                     \
-    }                                                \
+#include <string.h> // Memory Optimized functions
+#define ale_memset memset
+#define ale_memcpy memcpy
+#define ale_memcmp memcmp
+#define ale_strlen strlen
 
-static const int32_t True = 1;
-static const int32_t False = 0;
+#include <stdio.h>
+#define ale_printf printf
+#define ale_vsprintf vsprintf
+
+#include <stdlib.h>
+#define ale_system system
+
+#define ale_assert(_cond_, ...)                          \
+    if (!(_cond_)) {                                     \
+        ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
+        ale_printf(__VA_ARGS__);                         \
+        ale_printf(" !!\n");                             \
+        __builtin_unreachable();                         \
+    }                                                    \
 
 #ifdef __cplusplus
 #define _at_least_(_size_) /* static _size_ */
 #define  alignof(x) ((int64_t)alignof(x))
 #define Zero {}
 #define cpound(type) /* (type) */
-#define threadlocal thread_local
+#define threadlocal static thread_local
 #endif
 
 #ifndef __cplusplus
@@ -42,35 +50,34 @@ threadlocal char MACRO_scoped__;
 #define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
 #define   sizeof(x)      ((int64_t)sizeof(x))
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
-#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? 0 : ! memcmp(&x1, &x2, sizeof(x1)))
+#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? 0 : ! ale_memcmp(&x1, &x2, sizeof(x1)))
 
 /*
     STRINGS
 */
 typedef char * cstring;
 typedef const char * const staticstring;
-typedef struct strslice{ int32_t len; cstring data; }strslice;
+typedef struct slicestring{ int32_t len; cstring data; }slicestring;
 
-static inline strslice cstr_to_slice(int32_t len, staticstring data) {
-    strslice temp = {len, (cstring) data};
+static inline slicestring cstr_to_slice(int32_t len, staticstring data) {
+    slicestring temp = {len, (cstring) data};
     return temp;
 } 
 
 // uses sizeof in static c-strings
-#define cstrlen(str) (countof(str) == 8? (int32_t)strlen(str) : (int32_t) (countof(str) - 1))
+#define cstrlen(str) (countof(str) == 8? (int32_t)ale_strlen(str) : (int32_t) (countof(str) - 1))
 #define s8(cstr) cstr_to_slice(cstrlen(cstr), cstr)
 
 /*
     SHELL
 */
-int32_t __cdecl system(const char *buffer);
 static int32_t shellrun(char buffer [_at_least_(512)], staticstring format, ...) {
-    memset(buffer, '\0', 512);
+    ale_memset(buffer, '\0', 512);
 
     va_list args; va_start(args, format);
 
-    vsprintf(buffer, format, args);
-    return system(buffer);
+    ale_vsprintf(buffer, format, args);
+    return ale_system(buffer);
 }
 
 /*
@@ -114,13 +121,13 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
     int64_t total = size * count;
     int64_t pad = MODPWR2(- (int64_t)a->beg, align); //mod -x gives n for next align
 
-    assert(total < (a->end - a->beg - pad), \
+    ale_assert(total < (a->end - a->beg - pad), \
         "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", total, a->end - a->beg - pad);
 
     char *p = a->beg + pad;
     a->beg += pad + total;
     
-    return memset(p, 0, total);
+    return ale_memset(p, 0, total);
 }
 
 #define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
@@ -147,7 +154,7 @@ static void grow(void *slice /*slice struct*/,  arena a[_at_least_(1)]) {
         // RELOC
         int64_t *data = (int64_t *)  \
             alloc(a, sizeof(int64_t), alignof(int64_t), dynarray->cap *= 2);
-        memcpy(data, dynarray->data, sizeof(int64_t)*dynarray->len);
+        ale_memcpy(data, dynarray->data, sizeof(int64_t)*dynarray->len);
         dynarray->data = data;
     }
 }
@@ -167,7 +174,7 @@ static void push_i64(void *dynarr, arena a[_at_least_(1)], int64_t int64) {
 }
 static inline void push_double(void *dynarr, arena a[_at_least_(1)], double float64) {
     int64_t replica;
-    memcpy(&replica, &float64, sizeof(replica)); //type prunning
+    ale_memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
     push_i64(dynarr, a, replica);
 }
@@ -185,14 +192,14 @@ static int64_t pop_i64(void *dynarr) {
     struct dyna{int32_t cap; int32_t len; int64_t *data;};
     struct dyna *dynarray = (struct dyna *) dynarr;
 
-    assert(dynarray->len > 0, "POP ON EMPTY ARRAY");
+    ale_assert(dynarray->len > 0, "POP ON EMPTY ARRAY");
 
     return dynarray->data[--dynarray->len];
 }
 static inline double pop_double(void *dynarr) {
     int64_t replica = pop_i64(dynarr);
     double val = 0;
-    memcpy(&val, &replica, sizeof(replica)); //type prunning
+    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
 }
@@ -238,6 +245,7 @@ static inline int32_t
 
 static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn);
+    ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     struct msi_entry{int64_t key; int64_t val;};
     struct msi_ht{
@@ -256,6 +264,7 @@ static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
     return ht;
 }
 
+// Finds the index of |key| in the msi |table|, insert key if |insert_if_not_found| is true
 static int32_t msi_idx_i64(
     void *table /* msi_ht */, 
     int64_t key, int32_t insert_if_not_found
@@ -293,8 +302,8 @@ static int32_t msi_idx_i64(
     (table)->data[msi_idx(table, key_, 0)].val;                        \
 })
 #define msi_set(table, key_, val_) __extension__({                     \
-    assert((table)->len < (table)->capmask, "MSI HT IS FULL");         \
-    int32_t msi_index_ = msi_idx(table, key_, True);                   \
+    ale_assert((table)->len < (table)->capmask, "MSI HT IS FULL");         \
+    int32_t msi_index_ = msi_idx(table, key_, 1);                      \
     typeof(((table)->data)) data = (table)->data;                      \
     typeof(data[0].val) msi_current_val                                \
         = (typeof(data[0].val)) data[msi_index_].val;                  \

@@ -1,0 +1,23 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "ale.h"
+
+int32_t main(int32_t argc, char **argv) {
+    char buffer[512];
+    char *_$1 = argv[1];
+
+    staticstring format = (
+        "g++ @Flagscpp %s -o \"./builds/%s++.exe\"" 
+        " && " 
+        "\"./builds/%s++.exe\""
+            " | "
+            "tee \"./outputs/%s++out.txt\""
+    );
+
+    printf(format, _$1, _$1, _$1, _$1);
+    printf("\n");
+    
+    shellrun(buffer, format, _$1, _$1, _$1, _$1);
+
+    return 0;
+}

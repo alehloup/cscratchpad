@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "ale.h"
 
 int32_t main() {

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "ale.h"
 
 typedef struct strht{ 
@@ -9,7 +10,7 @@ typedef struct strht{
 void test_msi_idx(arena a) {
     strht *ht = (strht *)newmsi(&a, 1000);
 
-    printf("%lld\n", hash_it("Alessandro Stamatto"));
+    printf("%lld\n", hash_cstr("Alessandro Stamatto"));
 
     msi_set(ht, "Alessandro", "Stamatto");
     msi_set(ht, "Sarah", "Sakamoto");
@@ -37,7 +38,7 @@ typedef struct i64ht{
 void test_msi_idx2(arena a) {
     i64ht *ht = (i64ht *)newmsi(&a, 1000);
 
-    printf("%lld\n", hash_it(4));
+    printf("%lld\n", hash_i64(4));
 
     msi_set(ht, 5, "Stamatto"); 
     msi_set(ht, 4, "Sakamoto");

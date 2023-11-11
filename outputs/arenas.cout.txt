@@ -1,5 +1,0 @@
-Começando beg:000001500387a040 end:000001500b87a040 total:128MB
-Ints: 4 5 6
-0 Ints: 0 1 2
-1 Ints: 3 4 5
-2 Ints: 6 7 8

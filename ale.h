@@ -263,7 +263,11 @@ static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
     return ht;
 }
 
-#define msi_idx(table, key_, msi_insert_if_not_found) __extension__ ({ \
+static int32_t msi_idx_i64(void *table /* msi_ht */, int64_t key, int32_t insert_if_not_found) {
+    
+}
+
+#define msi_iddx(table, key_, msi_insert_if_not_found) __extension__ ({ \
     typeof(((table)->data)) data = (table)->data;                      \
     typeof(data[0].key) searchk = (typeof(data[0].key))key_;           \
     typeof(searchk) zero_key = Zero;                                   \

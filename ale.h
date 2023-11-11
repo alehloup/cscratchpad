@@ -137,34 +137,36 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
 /*
     GROWABLE ARRAY
 */
-static void grow(void *slice /*slice struct*/,  arena a[_at_least_(1)]) {
-    struct dyna{int32_t cap; int32_t len; int64_t *data;};
-    struct dyna *dynarray = (struct dyna *) slice;
+typedef int64_t dynael_layout;
+typedef struct dyna_layout{int32_t cap; int32_t len; int64_t *data;} dyna_layout;
+
+static void grow(void *dynamic_array,  arena a[_at_least_(1)]) { 
+    static const int32_t DYNA_FIRST_SIZE = 64;
+
+    dyna_layout *dynarray = (dyna_layout *)dynamic_array;
 
     if (!dynarray->data) {
-        // DEFAULT 64
-        dynarray->data = (int64_t *) \
-            alloc(a, sizeof(int64_t), alignof(int64_t), dynarray->cap = 64); 
+        int64_t *DYNA_START = dynarray->data = (dynael_layout *)
+            alloc(a, sizeof(dynael_layout), alignof(dynael_layout), dynarray->cap = DYNA_FIRST_SIZE); 
     } else if (a->beg == ((char *) &(dynarray->data[dynarray->cap]))) { 
         // EXTEND
-        int64_t *data = (int64_t *)  \
-            alloc(a, sizeof(int64_t), 1, dynarray->cap);
+        int64_t *DYNA_EXTEND = (dynael_layout *)
+            alloc(a, sizeof(dynael_layout), 1, dynarray->cap);
         dynarray->cap *= 2;
     } else {
         // RELOC
-        int64_t *data = (int64_t *)  \
-            alloc(a, sizeof(int64_t), alignof(int64_t), dynarray->cap *= 2);
-        ale_memcpy(data, dynarray->data, sizeof(int64_t)*dynarray->len);
-        dynarray->data = data;
+        int64_t *DYNA_RELOC = (dynael_layout *)
+            alloc(a, sizeof(dynael_layout), alignof(dynael_layout), dynarray->cap *= 2);
+        ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(dynael_layout)*dynarray->len);
+        dynarray->data = DYNA_RELOC;
     }
 }
 
 /*
     PUSH TO GROWABLE ARRAY
 */
-static void push_i64(void *dynarr, arena a[_at_least_(1)], int64_t int64) {
-    struct dyna{int32_t cap; int32_t len; int64_t *data;};
-    struct dyna *dynarray = (struct dyna *) dynarr;
+static inline void push_i64(void *dynamic_array, arena a[_at_least_(1)], int64_t int64) {
+    dyna_layout *dynarray = (dyna_layout *)dynamic_array;
 
     if (dynarray->len >= dynarray->cap) {
         grow(dynarray, a);
@@ -188,9 +190,8 @@ static inline void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
 /*
     POP OF GROWABLE ARRAY
 */
-static int64_t pop_i64(void *dynarr) {
-    struct dyna{int32_t cap; int32_t len; int64_t *data;};
-    struct dyna *dynarray = (struct dyna *) dynarr;
+static inline int64_t pop_i64(void *dynamic_array) {
+    dyna_layout *dynarray = (dyna_layout *)dynamic_array;
 
     ale_assert(dynarray->len > 0, "POP ON EMPTY ARRAY");
 
@@ -231,6 +232,12 @@ static int64_t hash_i64(int64_t integer64) {
 /*
     HASH TABLE : Mask-Step-Index (MSI) 
 */
+typedef struct msi_entry_layout{int64_t key; int64_t val;}msi_entry_layout;
+typedef struct msi_ht_layout{
+    int32_t stepshift;int32_t capmask; int32_t len;
+    struct msi_entry_layout *data;
+}msi_ht_layout;
+
 static inline int32_t 
     msi_lookup(
         uint64_t hash, // 1st hash acts as base location
@@ -247,19 +254,14 @@ static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
-    struct msi_entry{int64_t key; int64_t val;};
-    struct msi_ht{
-        int32_t stepshift;int32_t capmask; int32_t len;
-        struct msi_entry *data;
-    };
-    struct msi_ht *ht = (struct msi_ht*) \
-        alloc(a, sizeof(struct msi_ht), alignof(struct msi_ht), 1);
+    msi_ht_layout *ht = (msi_ht_layout*)
+        alloc(a, sizeof(msi_ht_layout), alignof(msi_ht_layout), 1);
     
     ht->stepshift = 64 - msi_expo;
     ht->capmask = (1 << msi_expo) - 1;
     ht->len = 0;
-    ht->data = (struct msi_entry *) \
-        alloc(a, sizeof(struct msi_entry), alignof(struct msi_entry), ht->capmask + 1);
+    ht->data = (msi_entry_layout *) \
+        alloc(a, sizeof(msi_entry_layout), alignof(msi_entry_layout), ht->capmask + 1);
 
     return ht;
 }
@@ -296,11 +298,29 @@ static int32_t msi_idx_i64(
     return index; // index of entry found OR entry empty
 }
 
+static inline int64_t msi_get_i64(void *table, int64_t key_64i) {
+    struct msi_entry{int64_t key; int64_t val;};
+    struct msi_ht{
+        int32_t stepshift;int32_t capmask; int32_t len;
+        struct msi_entry *data;
+    };
+    struct msi_ht *ht = (struct msi_ht*) table;
+
+    return ht->data[msi_idx_i64(ht, key_64i, 0)].val;
+}
+
+static inline int64_t msi_set_i64(void *table, int64_t key_64i, int64_t val_64i) {
+    struct msi_entry{int64_t key; int64_t val;};
+    struct msi_ht{
+        int32_t stepshift;int32_t capmask; int32_t len;
+        struct msi_entry *data;
+    };
+    struct msi_ht *ht = (struct msi_ht*) table;
+
+    return ht->data[msi_idx_i64(ht, key_64i, 1)].val = val_64i;
+}
 
 
-#define msi_get(table, key_) __extension__({                           \
-    (table)->data[msi_idx(table, key_, 0)].val;                        \
-})
 #define msi_set(table, key_, val_) __extension__({                     \
     ale_assert((table)->len < (table)->capmask, "MSI HT IS FULL");         \
     int32_t msi_index_ = msi_idx(table, key_, 1);                      \

@@ -1,31 +1,48 @@
 #pragma once
 
-#include <stdint.h>   // standard ints
-#include <stdbool.h>  // standard bool
 #include <stdarg.h>   // standard variadic
+#include <stdint.h>   // standard ints
 #include <string.h>   // memset memcpy memcmp
 #include <stdio.h>    // printf sprintf
 
-#define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
-
-#define assert(_cond_, ...) __extension__ ({         \
+#define assert(_cond_, ...)                          \
     if (!(_cond_)) {                                 \
         printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
         printf(__VA_ARGS__);                         \
         printf(" !!\n");                             \
         __builtin_unreachable();                     \
     }                                                \
-})
 
 //TRICK scope that "opens" at start, and "closes" at end 
-static _Thread_local int32_t MACRO_scoped__;
+static char MACRO_scoped__;
 #define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
+
+#ifndef false
+#define false 0
+#define true 1
+#endif
+
+#ifdef __cplusplus
+#define _at_least_(_size_) /* static _size_ */
+#define  alignof(x) ((int64_t)alignof(x))
+#define Zero {}
+#define cpound(type) /* (type) */
+#define threadlocal thread_local
+#endif
+
+#ifndef __cplusplus
+#define _at_least_(_size_) static _size_
+#define  alignof(x) ((int64_t)_Alignof(x))
+#define Zero {0}
+#define cpound(type) (type)
+#define threadlocal _Thread_local
+#endif
 
 /* 
     MEMORYops
 */
+#define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
 #define   sizeof(x)      ((int64_t)sizeof(x))
-#define  alignof(x)      ((int64_t)_Alignof(x))
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
 #define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? 0 : ! memcmp(&x1, &x2, sizeof(x1)))
 
@@ -33,8 +50,11 @@ static _Thread_local int32_t MACRO_scoped__;
     STRINGS
 */
 typedef struct s8{ int32_t len; char *data; }s8;
-static inline s8 s(char *cstr) {
-    return (s8){countof(cstr) == 8? (int32_t)strlen(cstr) : (int32_t) (countof(cstr) - 1), (char *)cstr}; 
+static inline s8 s(const char *cstr) {
+    s8 temp;
+    temp.len = countof(cstr) == 8? (int32_t)strlen(cstr) : (int32_t) (countof(cstr) - 1);
+    temp.data = (char *) cstr;
+    return temp; 
 }
 
 static inline int32_t s8equal(s8 s1, s8 s2) {
@@ -48,7 +68,7 @@ static inline void print_s8(s8 s) {
     SHELL
 */
 int32_t __cdecl system(const char *_Command);
-static int32_t shellrun(char buffer [static 512], ...) {
+static int32_t shellrun(char buffer [_at_least_(512)], ...) {
     memset(buffer, '\0', 512);
 
     va_list args; va_start(args, buffer);
@@ -76,33 +96,26 @@ static inline int32_t fit_pwr2_exp(int32_t size) {
 }
 
 // RANDOM
-static int32_t RND(uint64_t seed[static 1]) {
-    uint64_t x = *seed;
+static inline int32_t RND(uint64_t seed[_at_least_(1)]) {
+    *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
+    int32_t shift = 29 - (uint32_t)(*seed >> 61);
     
-    x ^= x >> 30;
-    x *= 0xbf58476d1ce4e5b9U;
-    x ^= x >> 27;
-    x *= 0x94d049bb133111ebU;
-    x ^= x >> 31;
-
-    *seed = x;
-    
-    return (int32_t) (x & 2147483647);
+    return ((int32_t) (*seed >> shift)) & 2147483647;
 }
 
 /*
     ARENA
 */
 typedef struct arena{ char *beg; char *end; }arena;
-static inline arena newarena(int64_t cap, char buffer[static cap]) {
-    arena a = {0};
-    a.beg = buffer;
+static inline arena newarena(int64_t cap, void * buffer) {
+    arena a = Zero;
+    a.beg = (char *)buffer;
     a.end = a.beg ? a.beg + cap : 0;
     return a;
 }
 
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
-static void *alloc(arena a[static 1], int64_t size, int64_t align, int64_t count) {
+static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t count) {
     int64_t total = size * count;
     int64_t pad = MODPWR2(- (int64_t)a->beg, align); //mod -x gives n for next align
 
@@ -122,17 +135,20 @@ static void *alloc(arena a[static 1], int64_t size, int64_t align, int64_t count
 /*
     GROWABLE ARRAY
 */
-static void grow(void *slice /*slice struct*/, int64_t size, int64_t align, arena *a) {
-    struct{int32_t cap; int32_t len; char *data;} replica = {0};
+static void grow(
+    void *slice /*slice struct*/, 
+    int64_t size, int64_t align, arena *a
+) {
+    struct{int32_t cap; int32_t len; char *data;} replica = Zero;
     memcpy(&replica, slice, sizeof(replica)); //type prunning
 
     if (!replica.data) { 
-        replica.data = alloc(a, size, align, replica.cap = 64); // empty: default to 64
+        replica.data = (char *) alloc(a, size, align, replica.cap = 64); // empty: default to 64
     } else if (a->beg == (replica.data + replica.cap * size)) { 
         alloc(a, size, 1, replica.cap); // neighbour mem avail: extend array
         replica.cap *= 2;
     } else {
-        char *data = alloc(a, size, align, replica.cap *= 2); // reloc to 2*current cap
+        char *data = (char *) alloc(a, size, align, replica.cap *= 2); // reloc to 2*current cap
         memcpy(data, replica.data, size*replica.len);
         replica.data = data;
     }
@@ -143,8 +159,8 @@ static void grow(void *slice /*slice struct*/, int64_t size, int64_t align, aren
 /*
     PUSH TO GROWABLE ARRAY
 */
-static void push_s8(void *dynarr, arena a[static 1], s8 string) {
-    struct{int32_t cap; int32_t len; s8 *data;} replica = {0};
+static void push_s8(void *dynarr, arena a[_at_least_(1)], s8 string) {
+    struct{int32_t cap; int32_t len; s8 *data;} replica = Zero;
     memcpy(&replica, dynarr, sizeof(replica)); //type prunning
 
     if (replica.len >= replica.cap) {
@@ -157,8 +173,8 @@ static void push_s8(void *dynarr, arena a[static 1], s8 string) {
     
     memcpy(dynarr, &replica, sizeof(replica)); //type prunning
 }
-static void push_i64(void *dynarr, arena a[static 1], int64_t int64) {
-    struct{int32_t cap; int32_t len; int64_t *data;} replica = {0};
+static void push_i64(void *dynarr, arena a[_at_least_(1)], int64_t int64) {
+    struct{int32_t cap; int32_t len; int64_t *data;} replica = Zero;
     memcpy(&replica, dynarr, sizeof(replica)); //type prunning
 
     if (replica.len >= replica.cap) {
@@ -171,28 +187,24 @@ static void push_i64(void *dynarr, arena a[static 1], int64_t int64) {
     
     memcpy(dynarr, &replica, sizeof(replica)); //type prunning
 }
-static inline void push_double(void *dynarr, arena a[static 1], double float64) {
+static inline void push_double(void *dynarr, arena a[_at_least_(1)], double float64) {
     int64_t replica;
     memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
     push_i64(dynarr, a, replica);
 }
-static inline void push_ptr(void *dynarr, arena a[static 1], void *ptr) {
+static inline void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
     push_i64(dynarr, a, (int64_t) ptr);
 }
-static inline void push_cstr(void *dynarr, arena a[static 1], char *cstr) {
+static inline void push_cstr(void *dynarr, arena a[_at_least_(1)], const char *cstr) {
     push_i64(dynarr, a, (int64_t) cstr);
 }
-
-#define push_it(dynarr, arena, X) _Generic((X),                            \
-    s8: push_s8, double: push_double, void *: push_ptr, char *: push_cstr, \
-    default: push_i64)(dynarr, arena, X)
 
 /*
     POP OF GROWABLE ARRAY
 */
 static s8 pop_s8(void *dynarr) {
-    struct{int32_t cap; int32_t len; s8 *data;} replica = {0};
+    struct{int32_t cap; int32_t len; s8 *data;} replica = Zero;
     memcpy(&replica, dynarr, sizeof(replica)); //type prunning
 
     assert(replica.len > 0, "POP ON EMPTY ARRAY");
@@ -202,7 +214,7 @@ static s8 pop_s8(void *dynarr) {
     return val;
 }
 static int64_t pop_i64(void *dynarr) {
-    struct{int32_t cap; int32_t len; int64_t *data;} replica = {0};
+    struct{int32_t cap; int32_t len; int64_t *data;} replica = Zero;
     memcpy(&replica, dynarr, sizeof(replica)); //type prunning
 
     assert(replica.len > 0, "POP ON EMPTY ARRAY");
@@ -277,8 +289,8 @@ static inline int32_t
     int32_t msi_mask = (1 << msi_expo) - 1;                             \
     int32_t msi_step = 64 - msi_expo;                                   \
     typeof(varname) temp_ht_ = {                                        \
-        .capmask = msi_mask, .stepshift = msi_step,                     \
-        .data = newxs(arena_, typeof(*((varname).data)), msi_mask + 1)  \
+        msi_step, msi_mask, 0,                                          \
+        newxs(arena_, typeof(*((varname).data)), msi_mask + 1)          \
     };                                                                  \
     temp_ht_;                                                           \
 });
@@ -286,7 +298,7 @@ static inline int32_t
 #define msi_idx(table, key_, msi_insert_if_not_found) __extension__ ({ \
     typeof(((table)->data)) data = (table)->data;                      \
     typeof(data[0].key) searchk = (typeof(data[0].key))key_;           \
-    typeof(searchk) zero_key = {0};                                    \
+    typeof(searchk) zero_key = Zero;                                    \
                                                                        \
     uint64_t hash = (uint64_t) hash_it(searchk);                       \
     int32_t index = (int32_t)hash;                                     \

@@ -58,7 +58,7 @@ void test_msi_idx2(arena a) {
     printf("\n");
 }
 
-static _Thread_local char bufferzao[8*MegaBytes];
+static threadlocal char bufferzao[8*MegaBytes];
 int32_t main() {
     arena scratch = newarena(8*MegaBytes, malloc(8*MegaBytes));
     test_msi_idx(scratch);

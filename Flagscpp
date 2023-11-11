@@ -1,12 +1,10 @@
--std=gnu2x -g3 -O3 -march=native -mtune=native -flto -static-pie
+-std=gnu++2b -g3 -O3 -march=native -mtune=native -flto -static-pie
 
 -Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -funsigned-char
 
--Wall -Wextra -Wpedantic -Werror
+-Wall -Wextra -Wpedantic -Werror 
 
 -Wshadow -Wundef -Wnull-dereference 
-
--Wstrict-prototypes -Wold-style-definition
 
 -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 
@@ -16,7 +14,7 @@
 
 -Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2 -Wformat-security -Wformat-signedness 
 
--Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum -Wenum-int-mismatch
+-Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum
 
 -fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=unreachable
 

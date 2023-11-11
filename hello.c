@@ -5,11 +5,13 @@ int32_t xisdigit(char c)
     return c>='0' && c<='9';
 }
 
-int32_t main(int32_t argc, char **argv) {
-    char* arg = argv[argc-1];
+int32_t main(int32_t argc, const char * *argv) {
+    const char* arg = argv[argc-1];
     s8 string = s(arg);
     //printf("%lld %s\n", string.len, string.data);
     //printf("%d\n", xisdigit(string.data[0]));
+
+    assert(false, "Testando Kaboom!");
 
     print_s8(string); printf("\n");
 

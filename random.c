@@ -4,7 +4,7 @@ int32_t main() {
     unsigned long long seed = 41635984;
 
     #define N 20
-    int32_t counts[N] = {0};
+    int32_t counts[N] = Zero;
     for(int32_t i = 0; i < 1000000000; ++i) {
         counts[RND(&seed) % N] +=1;
     }

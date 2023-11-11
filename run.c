@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "ale.h"
 
 int32_t main(int32_t argc, char **argv) {

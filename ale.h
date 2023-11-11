@@ -154,18 +154,16 @@ static void grow(
     PUSH TO GROWABLE ARRAY
 */
 static void push_i64(void *dynarr, arena a[_at_least_(1)], int64_t int64) {
-    struct{int32_t cap; int32_t len; int64_t *data;} replica = Zero;
-    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
+    struct dyna{int32_t cap; int32_t len; int64_t *data;};
+    struct dyna *dynarray = (struct dyna *) dynarr;
 
-    if (replica.len >= replica.cap) {
-        int64_t oldcap = replica.cap;
-        grow(&replica, sizeof(int64_t), alignof(int64_t), a);
-        assert(replica.cap > oldcap, "GROW FAILED");
+    if (dynarray->len >= dynarray->cap) {
+        int64_t oldcap = dynarray->cap;
+        grow(dynarray, sizeof(int64_t), alignof(int64_t), a);
+        assert(dynarray->cap > oldcap, "GROW FAILED");
     }
 
-    replica.data[replica.len++] = int64;
-    
-    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
+    dynarray->data[dynarray->len++] = int64;
 }
 static inline void push_double(void *dynarr, arena a[_at_least_(1)], double float64) {
     int64_t replica;
@@ -184,14 +182,12 @@ static inline void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
     POP OF GROWABLE ARRAY
 */
 static int64_t pop_i64(void *dynarr) {
-    struct{int32_t cap; int32_t len; int64_t *data;} replica = Zero;
-    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
+    struct dyna{int32_t cap; int32_t len; int64_t *data;};
+    struct dyna *dynarray = (struct dyna *) dynarr;
 
-    assert(replica.len > 0, "POP ON EMPTY ARRAY");
-    int64_t val = replica.data[--replica.len];
+    assert(dynarray->len > 0, "POP ON EMPTY ARRAY");
 
-    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
-    return val;
+    return dynarray->data[--dynarray->len];
 }
 static inline double pop_double(void *dynarr) {
     int64_t replica = pop_i64(dynarr);
@@ -264,7 +260,7 @@ static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
 }
 
 static int32_t msi_idx_i64(void *table /* msi_ht */, int64_t key, int32_t insert_if_not_found) {
-    
+    return 64;
 }
 
 #define msi_iddx(table, key_, msi_insert_if_not_found) __extension__ ({ \

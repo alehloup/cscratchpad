@@ -159,9 +159,7 @@ static void push_i64(void *dynarr, arena a[_at_least_(1)], int64_t int64) {
     struct dyna *dynarray = (struct dyna *) dynarr;
 
     if (dynarray->len >= dynarray->cap) {
-        int64_t oldcap = dynarray->cap;
         grow(dynarray, a);
-        assert(dynarray->cap > oldcap, "GROW FAILED");
     }
 
     dynarray->data[dynarray->len++] = int64;
@@ -260,33 +258,38 @@ static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
     return ht;
 }
 
-static int32_t msi_idx_i64(void *table /* msi_ht */, int64_t key, int32_t insert_if_not_found) {
-    return 64;
+static int32_t msi_idx_i64(
+    void *table /* msi_ht */, 
+    int64_t key, int32_t insert_if_not_found
+) {
+    struct msi_entry{int64_t key; int64_t val;};
+    struct msi_ht{
+        int32_t stepshift;int32_t capmask; int32_t len;
+        struct msi_entry *data;
+    };
+    struct msi_ht *ht = (struct msi_ht*) table;
+
+    uint64_t hash = (uint64_t) hash_i64(key);
+    int32_t index = (int32_t)hash;
+    
+    for(
+        index = msi_lookup(hash, index, ht->capmask, ht->stepshift);
+        ht->data[index].key != key; 
+        msi_lookup(hash, index, ht->capmask, ht->stepshift)
+    ) {
+        if (ht->data[index].key == 0) {
+            if (insert_if_not_found) {
+                ht->data[index].key = key;
+            }
+            break; // found empty slot
+        }
+    }
+
+
+    return index; // index of entry found OR entry empty
 }
 
-#define msi_iddx(table, key_, msi_insert_if_not_found) __extension__ ({ \
-    typeof(((table)->data)) data = (table)->data;                      \
-    typeof(data[0].key) searchk = (typeof(data[0].key))key_;           \
-    typeof(searchk) zero_key = Zero;                                   \
-                                                                       \
-    uint64_t hash = (uint64_t) hash_it(searchk);                       \
-    int32_t index = (int32_t)hash;                                     \
-    index = msi_lookup(hash, index,                                    \
-        (table)->capmask, (table)->stepshift);                         \
-    for(;                                                              \
-         ! memequal(data[index].key, searchk);                         \
-        index = msi_lookup(hash, index,                                \
-            (table)->capmask, (table)->stepshift))                     \
-    {                                                                  \
-        if(memequal(data[index].key, zero_key)){                       \
-            if(msi_insert_if_not_found) {                              \
-                data[index].key = searchk;                             \
-            }                                                          \
-            break;                                                     \
-        }                                                              \
-    }                                                                  \
-    index;                                                             \
-})
+
 
 #define msi_get(table, key_) __extension__({                           \
     (table)->data[msi_idx(table, key_, 0)].val;                        \

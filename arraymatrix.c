@@ -12,6 +12,7 @@ void test_push_i64(arena scratch) {
 
     for(int32_t i = 0; i < 164; ++i) {
         push_i64(&d, &scratch, i);
+        int32_t *force_reloc = newx(&scratch, int32_t);
     }
 
     printf("POP: %lld\n", pop_i64(&d));
@@ -28,12 +29,15 @@ typedef struct cstrings{
 void test_push_cstr(arena scratch) {
     cstrings d = Zero;
     
-    push_cstr(&d, &scratch, "Alessandro");
-    push_cstr(&d, &scratch, "Sarah");
-    push_cstr(&d, &scratch, "Evelyn");
+    for (int i = 0; i < 52; ++i) {
+        push_cstr(&d, &scratch, "sAl");
+        int32_t *force_reloc = newx(&scratch, int32_t);
+        push_cstr(&d, &scratch, "sSa");
+        push_cstr(&d, &scratch, "sEv");
+    }
 
     for (int i = 0; i < d.len; ++i) {
-        printf(" Str: %s\n", d.data[i]);
+        printf(" %d:%s ", i, d.data[i]);
     }
 
     printf("Pop: %s\n", pop_cstr(&d));
@@ -45,12 +49,15 @@ typedef struct s8s{
 void test_push_s8(arena scratch) {
     s8s d = Zero;
     
-    push_s8(&d, &scratch, s("s8 Alessandro"));
-    push_s8(&d, &scratch, s("s8 Sarah"));
-    push_s8(&d, &scratch, s("s8 Evelyn"));
+    for (int i = 0; i < 52; ++i) {
+        push_s8(&d, &scratch, s("s8 Al"));
+        int32_t *force_reloc = newx(&scratch, int32_t);
+        push_s8(&d, &scratch, s("s8 Sa"));
+        push_s8(&d, &scratch, s("s8 Ev"));
+    }
 
     for (int i = 0; i < d.len; ++i) {
-        printf(" Str: %s\n", d.data[i].data);
+        printf(" %d:%s ", i, d.data[i].data);
     }
 
     printf("Pop: %s\n", pop_s8(&d).data);
@@ -67,6 +74,7 @@ void test_push_double(arena scratch) {
 
     for(int32_t i = 0; i < 164; ++i) {
         push_double(&d, &scratch, i / 2.0);
+        int32_t *force_reloc = newx(&scratch, int32_t);
     }
 
     printf("POP: %lf\n", pop_double(&d));

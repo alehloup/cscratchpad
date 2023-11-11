@@ -165,7 +165,7 @@ static void push_s8(void *dynarr, arena a[_at_least_(1)], s8 string) {
 
     if (replica.len >= replica.cap) {
         int64_t oldcap = replica.cap;
-        grow(&replica, sizeof(int64_t), alignof(int64_t), a);
+        grow(&replica, sizeof(s8), alignof(s8), a);
         assert(replica.cap > oldcap, "GROW FAILED");
     }
 
@@ -257,17 +257,9 @@ static int64_t hash_i64(int64_t integer64) {
     
     return (x ^ x>>31) >> 1;
 }
-static int64_t hash_i32(int32_t integer32)
-{
-    uint32_t x = (uint32_t)integer32;
-    
-    x ^= x >> 16; x *= 0x7feb352d; 
-    
-    return (x ^ x>>16) >> 1;
-}
 
 #define hash_it(X) _Generic((X), \
-     char *: hash_cstr, s8: hash_s8, int: hash_i32, default: hash_i64)(X)
+     char *: hash_cstr, s8: hash_s8, default: hash_i64)(X)
 
 /*
     HASH TABLE : Mask-Step-Index (MSI) 

@@ -37,7 +37,7 @@ typedef struct i64ht{
 void test_msi_idx2(arena a) {
     i64ht ht = newmsi(&a, ht, 1000);
 
-    printf("%lld\n", hash_it((long long)4));
+    printf("%lld\n", hash_it(4));
 
     msi_set(&ht, 5, s("Stamatto")); 
     msi_set(&ht, 4, s("Sakamoto"));

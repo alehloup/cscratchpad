@@ -12,7 +12,7 @@ void test_push_i64(arena scratch) {
 
     for(int32_t i = 0; i < 164; ++i) {
         push_i64(&d, &scratch, i);
-        int32_t *force_reloc = newx(&scratch, int32_t);
+        //int32_t *force_reloc = newx(&scratch, int32_t);
     }
 
     printf("POP: %lld\n", pop_i64(&d));

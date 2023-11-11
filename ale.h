@@ -129,25 +129,26 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
 /*
     GROWABLE ARRAY
 */
-static void grow(
-    void *slice /*slice struct*/, 
-    int64_t size, int64_t align, arena a[_at_least_(1)]
-) {
-    struct{int32_t cap; int32_t len; char *data;} replica = Zero;
-    memcpy(&replica, slice, sizeof(replica)); //type prunning
+static void grow(void *slice /*slice struct*/,  arena a[_at_least_(1)]) {
+    struct dyna{int32_t cap; int32_t len; int64_t *data;};
+    struct dyna *dynarray = (struct dyna *) slice;
 
-    if (!replica.data) { 
-        replica.data = (char *) alloc(a, size, align, replica.cap = 64); // empty: default to 64
-    } else if (a->beg == (replica.data + replica.cap * size)) { 
-        alloc(a, size, 1, replica.cap); // neighbour mem avail: extend array
-        replica.cap *= 2;
+    if (!dynarray->data) {
+        // DEFAULT 64
+        dynarray->data = (int64_t *) \
+            alloc(a, sizeof(int64_t), alignof(int64_t), dynarray->cap = 64); 
+    } else if (a->beg == ((char *) &(dynarray->data[dynarray->cap]))) { 
+        // EXTEND
+        int64_t *data = (int64_t *)  \
+            alloc(a, sizeof(int64_t), 1, dynarray->cap);
+        dynarray->cap *= 2;
     } else {
-        char *data = (char *) alloc(a, size, align, replica.cap *= 2); // reloc to 2*current cap
-        memcpy(data, replica.data, size*replica.len);
-        replica.data = data;
+        // RELOC
+        int64_t *data = (int64_t *)  \
+            alloc(a, sizeof(int64_t), alignof(int64_t), dynarray->cap *= 2);
+        memcpy(data, dynarray->data, sizeof(int64_t)*dynarray->len);
+        dynarray->data = data;
     }
-
-    memcpy(slice, &replica, sizeof(replica)); //type prunning
 }
 
 /*
@@ -159,7 +160,7 @@ static void push_i64(void *dynarr, arena a[_at_least_(1)], int64_t int64) {
 
     if (dynarray->len >= dynarray->cap) {
         int64_t oldcap = dynarray->cap;
-        grow(dynarray, sizeof(int64_t), alignof(int64_t), a);
+        grow(dynarray, a);
         assert(dynarray->cap > oldcap, "GROW FAILED");
     }
 

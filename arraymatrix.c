@@ -24,7 +24,7 @@ void test_push_i64(arena scratch) {
 }
 
 typedef struct cstrings{
-    int32_t cap; int32_t len; char * *data;
+    int32_t cap; int32_t len; cstring *data;
 } cstrings;
 void test_push_cstr(arena scratch) {
     cstrings d = Zero;
@@ -41,26 +41,6 @@ void test_push_cstr(arena scratch) {
     }
 
     printf("Pop: %s\n", pop_cstr(&d));
-}
-
-typedef struct s8s{
-    int32_t cap; int32_t len; s8 *data;
-} s8s;
-void test_push_s8(arena scratch) {
-    s8s d = Zero;
-    
-    for (int i = 0; i < 52; ++i) {
-        push_s8(&d, &scratch, s("s8 Al"));
-        int32_t *force_reloc = newx(&scratch, int32_t);
-        push_s8(&d, &scratch, s("s8 Sa"));
-        push_s8(&d, &scratch, s("s8 Ev"));
-    }
-
-    for (int i = 0; i < d.len; ++i) {
-        printf(" %d:%s ", i, d.data[i].data);
-    }
-
-    printf("Pop: %s\n", pop_s8(&d).data);
 }
 
 typedef struct doubles{
@@ -117,7 +97,6 @@ int32_t main() {
 
     test_push_i64(scratch);
     test_push_cstr(scratch);
-    test_push_s8(scratch);
     test_push_double(scratch);
 
     return 0;

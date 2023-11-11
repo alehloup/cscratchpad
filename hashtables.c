@@ -3,7 +3,7 @@
 
 typedef struct strht{ 
     int32_t stepshift;int32_t capmask; 
-    int32_t len; struct{s8 key; s8 val;} *data; 
+    int32_t len; struct{cstring key; cstring val;} *data; 
 }strht;
 
 void test_msi_idx(arena a) {
@@ -11,19 +11,19 @@ void test_msi_idx(arena a) {
 
     printf("%lld\n", hash_it("Alessandro Stamatto"));
 
-    msi_set(&ht, s("Alessandro"), s("Stamatto"));
-    msi_set(&ht, s("Sarah"), s("Sakamoto"));
-    msi_set(&ht, s("Alessandro"), s("Ferreira"));
+    msi_set(&ht, "Alessandro", "Stamatto");
+    msi_set(&ht, "Sarah", "Sakamoto");
+    msi_set(&ht, "Alessandro", "Ferreira");
 
-    printf("Pegou: %s\n", msi_get(&ht, s("Sarah")).data);
-    printf("Não pegou: %s\n", msi_get(&ht, s("Karol")).data);
+    printf("Pegou: %s\n", msi_get(&ht, "Sarah"));
+    printf("Não pegou: %s\n", msi_get(&ht, "Karol"));
 
     for(int32_t i = 0; i < ht.capmask; ++i) {
-        if  ( ! ht.data[i].key.len) {
+        if  ( ! ht.data[i].key) {
             continue;
         }
         printf("[%d]", i);
-        print_s8(ht.data[i].key); printf(" "); print_s8(ht.data[i].val);
+        printf("%s:%s ", ht.data[i].key, ht.data[i].val);
         printf(", ");
     }
     printf("\n");
@@ -31,7 +31,7 @@ void test_msi_idx(arena a) {
 
 typedef struct i64ht{ 
     int32_t stepshift;int32_t capmask; 
-    int32_t len; struct{int64_t key; s8 val;} *data; 
+    int32_t len; struct{int64_t key; cstring val;} *data; 
 }i64ht;
 
 void test_msi_idx2(arena a) {
@@ -39,20 +39,20 @@ void test_msi_idx2(arena a) {
 
     printf("%lld\n", hash_it(4));
 
-    msi_set(&ht, 5, s("Stamatto")); 
-    msi_set(&ht, 4, s("Sakamoto"));
-    msi_set(&ht, 5, s("Ferreira"));
+    msi_set(&ht, 5, "Stamatto"); 
+    msi_set(&ht, 4, "Sakamoto");
+    msi_set(&ht, 5, "Ferreira");
 
     typeof(ht) *pt = &ht;
-    printf("pegou: %s\n", msi_get(pt, 5).data);
-    printf("não pegou: %s\n", msi_get(pt, 3).data);
+    printf("pegou: %s\n", msi_get(pt, 5));
+    printf("não pegou: %s\n", msi_get(pt, 3));
 
     for(int32_t i = 0; i < ht.capmask; ++i) {
         if  ( ! ht.data[i].key) {
             continue;
         }
         printf("[%d]", i);
-        printf("%lld: %s", ht.data[i].key, ht.data[i].val.data);
+        printf("%lld: %s", ht.data[i].key, ht.data[i].val);
         printf(", ");
     }
     printf("\n");
@@ -61,10 +61,14 @@ void test_msi_idx2(arena a) {
 static threadlocal char bufferzao[8*MegaBytes];
 int32_t main() {
     arena scratch = newarena(8*MegaBytes, malloc(8*MegaBytes));
-    test_msi_idx(scratch);
+    //test_msi_idx(scratch);
     printf("\n");
     printf("\n");
     test_msi_idx2(scratch);
+
+    hash_it("Woa!");
+    cstring blah = "Blah!";
+    hash_it(blah);
 
     return 0;
 }

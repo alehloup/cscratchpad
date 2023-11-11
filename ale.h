@@ -49,11 +49,12 @@ static char MACRO_scoped__;
 /*
     STRINGS
 */
+typedef char * cstring;
 typedef struct s8{ int32_t len; char *data; }s8;
-static inline s8 s(const char *cstr) {
+static inline s8 s(const cstring str) {
     s8 temp;
-    temp.len = countof(cstr) == 8? (int32_t)strlen(cstr) : (int32_t) (countof(cstr) - 1);
-    temp.data = (char *) cstr;
+    temp.len = countof(str) == 8? (int32_t)strlen(str) : (int32_t) (countof(str) - 1);
+    temp.data = (char *) str;
     return temp; 
 }
 
@@ -159,20 +160,6 @@ static void grow(
 /*
     PUSH TO GROWABLE ARRAY
 */
-static void push_s8(void *dynarr, arena a[_at_least_(1)], s8 string) {
-    struct{int32_t cap; int32_t len; s8 *data;} replica = Zero;
-    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
-
-    if (replica.len >= replica.cap) {
-        int64_t oldcap = replica.cap;
-        grow(&replica, sizeof(s8), alignof(s8), a);
-        assert(replica.cap > oldcap, "GROW FAILED");
-    }
-
-    replica.data[replica.len++] = string;
-    
-    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
-}
 static void push_i64(void *dynarr, arena a[_at_least_(1)], int64_t int64) {
     struct{int32_t cap; int32_t len; int64_t *data;} replica = Zero;
     memcpy(&replica, dynarr, sizeof(replica)); //type prunning
@@ -193,26 +180,16 @@ static inline void push_double(void *dynarr, arena a[_at_least_(1)], double floa
 
     push_i64(dynarr, a, replica);
 }
+static inline void push_cstr(void *dynarr, arena a[_at_least_(1)], const cstring cstr) {
+    push_i64(dynarr, a, (int64_t) cstr);
+}
 static inline void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
     push_i64(dynarr, a, (int64_t) ptr);
-}
-static inline void push_cstr(void *dynarr, arena a[_at_least_(1)], const char *cstr) {
-    push_i64(dynarr, a, (int64_t) cstr);
 }
 
 /*
     POP OF GROWABLE ARRAY
 */
-static s8 pop_s8(void *dynarr) {
-    struct{int32_t cap; int32_t len; s8 *data;} replica = Zero;
-    memcpy(&replica, dynarr, sizeof(replica)); //type prunning
-
-    assert(replica.len > 0, "POP ON EMPTY ARRAY");
-    s8 val = replica.data[--replica.len];
-
-    memcpy(dynarr, &replica, sizeof(replica)); //type prunning
-    return val;
-}
 static int64_t pop_i64(void *dynarr) {
     struct{int32_t cap; int32_t len; int64_t *data;} replica = Zero;
     memcpy(&replica, dynarr, sizeof(replica)); //type prunning
@@ -230,26 +207,23 @@ static inline double pop_double(void *dynarr) {
 
     return val; 
 }
+static inline cstring pop_cstr(void *dynarr) {
+     return (cstring) pop_i64(dynarr);
+}
 static inline void * pop_ptr(void *dynarr) {
      return (void *) pop_i64(dynarr);
-}
-static inline char * pop_cstr(void *dynarr) {
-     return (char *) pop_i64(dynarr);
 }
 
 /*
     HASH
 */
-static int64_t hash_s8(s8 str) {
+static int64_t hash_cstr(cstring str) {
     uint64_t h = 0x7A5662DCDF;
-    for(int32_t i = 0; i < str.len; ++i) { 
-        h ^= str.data[i] & 255; h *= 1111111111111111111;
+    while(*str) { 
+        h ^= (*(str++)) & 255; h *= 1111111111111111111;
     }
 
     return (h ^ h>>32) >> 1;
-}
-static int64_t hash_cstr(char *str) {
-    return hash_s8(s(str));
 }
 static int64_t hash_i64(int64_t integer64) {
     uint64_t x = (uint64_t)integer64;
@@ -259,7 +233,7 @@ static int64_t hash_i64(int64_t integer64) {
 }
 
 #define hash_it(X) _Generic((X), \
-     char *: hash_cstr, s8: hash_s8, default: hash_i64)(X)
+     char *: hash_cstr, default: hash_i64)(X)
 
 /*
     HASH TABLE : Mask-Step-Index (MSI) 

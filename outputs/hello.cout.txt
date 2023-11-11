@@ -1,5 +1,6 @@
-./builds/hello.c.exe
 ./builds/hello.c.exe 20
+Alessandro 10
+AlexSlice 9
 inicio
 Meio! 1
 Meio! 5

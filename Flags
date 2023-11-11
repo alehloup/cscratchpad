@@ -1,6 +1,6 @@
 -std=gnu2x -g3 -O3 -march=native -mtune=native -flto -static-pie
 
--Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -funsigned-char
+-Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -funsigned-char -fexec-charset=UTF-8
 
 -Wall -Wextra -Wpedantic -Werror
 
@@ -21,3 +21,5 @@
 -fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=unreachable
 
 -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
+
+libwinsane.o

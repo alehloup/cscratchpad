@@ -50,20 +50,14 @@ static char MACRO_scoped__;
     STRINGS
 */
 typedef char * cstring;
-typedef struct s8{ int32_t len; char *data; }s8;
-static inline s8 s(const cstring str) {
-    s8 temp;
-    temp.len = countof(str) == 8? (int32_t)strlen(str) : (int32_t) (countof(str) - 1);
-    temp.data = (char *) str;
-    return temp; 
-}
-
-static inline int32_t s8equal(s8 s1, s8 s2) {
-    return s1.len != s2.len ? 0 : (s1.len == 0 ? 1 : ! memcmp(s1.data, s2.data, s1.len));
-}
-static inline void print_s8(s8 s) {
-    printf("%.*s", (int32_t)s.len, s.data);
-}
+typedef const char * const staticstring;
+#define cstrlen(str) (countof(str) == 8? (int32_t)strlen(str) : (int32_t) (countof(str) - 1))
+typedef struct strslice{ int32_t len; cstring data; }strslice;
+static inline strslice cstr_to_slice(int32_t len, staticstring data) {
+    strslice temp = {len, (cstring) data};
+    return temp;
+} 
+#define s8(cstr) cstr_to_slice(cstrlen(cstr), cstr)
 
 /*
     SHELL

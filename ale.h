@@ -1,9 +1,9 @@
 #pragma once
 
-#include <stdarg.h>   // standard variadic
-#include <stdint.h>   // standard ints
-#include <string.h>   // memset memcpy memcmp
-#include <stdio.h>    // printf sprintf
+#include <stdarg.h>    // standard variadic
+#include <stdint.h>    // standard ints
+#include <string.h>    // memset memcpy memcmp
+#include <stdio.h>     // printf sprintf
 
 #define assert(_cond_, ...)                          \
     if (!(_cond_)) {                                 \
@@ -13,14 +13,8 @@
         __builtin_unreachable();                     \
     }                                                \
 
-//TRICK scope that "opens" at start, and "closes" at end 
-static char MACRO_scoped__;
-#define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
-
-#ifndef false
-#define false 0
-#define true 1
-#endif
+static const int32_t True = 1;
+static const int32_t False = 0;
 
 #ifdef __cplusplus
 #define _at_least_(_size_) /* static _size_ */
@@ -35,8 +29,12 @@ static char MACRO_scoped__;
 #define  alignof(x) ((int64_t)_Alignof(x))
 #define Zero {0}
 #define cpound(type) (type)
-#define threadlocal _Thread_local
+#define threadlocal static _Thread_local
 #endif
+
+//TRICK scope that "opens" at start, and "closes" at end 
+threadlocal char MACRO_scoped__;
+#define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 /* 
     MEMORYops
@@ -51,7 +49,9 @@ static char MACRO_scoped__;
 */
 typedef char * cstring;
 typedef const char * const staticstring;
+
 #define cstrlen(str) (countof(str) == 8? (int32_t)strlen(str) : (int32_t) (countof(str) - 1))
+
 typedef struct strslice{ int32_t len; cstring data; }strslice;
 static inline strslice cstr_to_slice(int32_t len, staticstring data) {
     strslice temp = {len, (cstring) data};
@@ -62,12 +62,11 @@ static inline strslice cstr_to_slice(int32_t len, staticstring data) {
 /*
     SHELL
 */
-int32_t __cdecl system(const char *_Command);
-static int32_t shellrun(char buffer [_at_least_(512)], ...) {
+int32_t __cdecl system(const char *buffer);
+static int32_t shellrun(char buffer [_at_least_(512)], staticstring format, ...) {
     memset(buffer, '\0', 512);
 
-    va_list args; va_start(args, buffer);
-    char *format = va_arg(args, char *);
+    va_list args; va_start(args, format);
 
     vsprintf(buffer, format, args);
     return system(buffer);
@@ -132,7 +131,7 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
 */
 static void grow(
     void *slice /*slice struct*/, 
-    int64_t size, int64_t align, arena *a
+    int64_t size, int64_t align, arena a[_at_least_(1)]
 ) {
     struct{int32_t cap; int32_t len; char *data;} replica = Zero;
     memcpy(&replica, slice, sizeof(replica)); //type prunning
@@ -174,7 +173,7 @@ static inline void push_double(void *dynarr, arena a[_at_least_(1)], double floa
 
     push_i64(dynarr, a, replica);
 }
-static inline void push_cstr(void *dynarr, arena a[_at_least_(1)], const cstring cstr) {
+static inline void push_cstr(void *dynarr, arena a[_at_least_(1)], staticstring cstr) {
     push_i64(dynarr, a, (int64_t) cstr);
 }
 static inline void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
@@ -244,21 +243,30 @@ static inline int32_t
     return (index + step) & capmask;
 }
 
-#define newmsi(arena_, varname, expected_maxn) __extension__ ({         \
-    int32_t msi_expo = fit_pwr2_exp(expected_maxn);                     \
-    int32_t msi_mask = (1 << msi_expo) - 1;                             \
-    int32_t msi_step = 64 - msi_expo;                                   \
-    typeof(varname) temp_ht_ = {                                        \
-        msi_step, msi_mask, 0,                                          \
-        newxs(arena_, typeof(*((varname).data)), msi_mask + 1)          \
-    };                                                                  \
-    temp_ht_;                                                           \
-});
+static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
+    const int32_t msi_expo = fit_pwr2_exp(expected_maxn);
+
+    struct msi_entry{int64_t key; int64_t val;};
+    struct msi_ht{
+        int32_t stepshift;int32_t capmask; int32_t len;
+        struct msi_entry *data;
+    };
+    struct msi_ht *ht = (struct msi_ht*) \
+        alloc(a, sizeof(struct msi_ht), alignof(struct msi_ht), 1);
+    
+    ht->stepshift = 64 - msi_expo;
+    ht->capmask = (1 << msi_expo) - 1;
+    ht->len = 0;
+    ht->data = (struct msi_entry *) \
+        alloc(a, sizeof(struct msi_entry), alignof(struct msi_entry), ht->capmask + 1);
+
+    return ht;
+}
 
 #define msi_idx(table, key_, msi_insert_if_not_found) __extension__ ({ \
     typeof(((table)->data)) data = (table)->data;                      \
     typeof(data[0].key) searchk = (typeof(data[0].key))key_;           \
-    typeof(searchk) zero_key = Zero;                                    \
+    typeof(searchk) zero_key = Zero;                                   \
                                                                        \
     uint64_t hash = (uint64_t) hash_it(searchk);                       \
     int32_t index = (int32_t)hash;                                     \
@@ -279,12 +287,12 @@ static inline int32_t
     index;                                                             \
 })
 
-#define msi_get(table, key_) __extension__({                            \
-    (table)->data[msi_idx(table, key_, 0)].val;                         \
+#define msi_get(table, key_) __extension__({                           \
+    (table)->data[msi_idx(table, key_, 0)].val;                        \
 })
 #define msi_set(table, key_, val_) __extension__({                     \
     assert((table)->len < (table)->capmask, "MSI HT IS FULL");         \
-    int32_t msi_index_ = msi_idx(table, key_, 1);                      \
+    int32_t msi_index_ = msi_idx(table, key_, True);                   \
     typeof(((table)->data)) data = (table)->data;                      \
     typeof(data[0].val) msi_current_val                                \
         = (typeof(data[0].val)) data[msi_index_].val;                  \

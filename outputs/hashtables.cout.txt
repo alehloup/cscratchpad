@@ -1,0 +1,10 @@
+9128953514933409478
+pegou: Ferreira
+não pegou: (null)
+[1]4: Sakamoto, [2]5: Ferreira, 
+
+
+8575721906424827355
+Pegou: Sakamotto
+Não pegou: (null)
+[1]Alessandro: Ferreira, [3]Sarah: Sakamotto, 

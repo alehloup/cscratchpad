@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "ale.h"
 
-int32_t main(int32_t argc, char **argv) {
+int32_t main(int32_t argc, cstring *argv) {
     char buffer[512];
-    char *_$1 = argv[1];
+    cstring _$1 = argv[1];
 
     staticstring format = (
         "gcc @Flags %s -o \"./builds/%s.exe\"" 
@@ -17,7 +17,8 @@ int32_t main(int32_t argc, char **argv) {
     printf(format, _$1, _$1, _$1, _$1);
     printf("\n");
     
-    shellrun(buffer, format, _$1, _$1, _$1, _$1);
+    shellrun(buffer, format, _$1, _$1, _$1, _$1
+    );
 
     return 0;
 }

@@ -1,19 +1,19 @@
 #pragma once
 
-#include <stdarg.h>    // standard variadic
-#include <stdint.h>    // standard ints
+#include <stdarg.h>    // variadic
+#include <stdint.h>    // ints
 
-#include <string.h> // Memory Optimized functions
+#include <string.h> // memory
 #define ale_memset memset
 #define ale_memcpy memcpy
-#define ale_memcmp memcmp
 #define ale_strlen strlen
+#define ale_strcmp strcmp
 
-#include <stdio.h>
+#include <stdio.h> // output
 #define ale_printf printf
 #define ale_vsprintf vsprintf
 
-#include <stdlib.h>
+#include <stdlib.h> // shell
 #define ale_system system
 
 #define ale_assert(_cond_, ...)                          \
@@ -50,16 +50,15 @@ threadlocal char MACRO_scoped__;
 #define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
 #define   sizeof(x)      ((int64_t)sizeof(x))
 #define  countof(a)      (sizeof(a) / sizeof(*(a)))
-#define memequal(x1, x2) (sizeof(x1) != sizeof(x2) ? 0 : ! ale_memcmp(&x1, &x2, sizeof(x1)))
 
 /*
     STRINGS
 */
-typedef char * cstring;
+typedef const char * cstring;
 typedef const char * const staticstring;
 typedef struct slicestring{ int32_t len; cstring data; }slicestring;
 
-static inline slicestring cstr_to_slice(int32_t len, staticstring data) {
+static slicestring cstr_to_slice(int32_t len, cstring data) {
     slicestring temp = {len, (cstring) data};
     return temp;
 } 
@@ -71,7 +70,7 @@ static inline slicestring cstr_to_slice(int32_t len, staticstring data) {
 /*
     SHELL
 */
-static int32_t shellrun(char buffer [_at_least_(512)], staticstring format, ...) {
+static int32_t shellrun(char buffer [_at_least_(512)], cstring format, ...) {
     ale_memset(buffer, '\0', 512);
 
     va_list args; va_start(args, format);
@@ -84,13 +83,13 @@ static int32_t shellrun(char buffer [_at_least_(512)], staticstring format, ...)
     MATH
 */
 //Fast mod when the number is a power of 2
-static inline int64_t MODPWR2(int64_t number, int64_t modval) {
+static int64_t MODPWR2(int64_t number, int64_t modval) {
     return (number) & (modval - 1);
 }
 
 // Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
-static inline int32_t fit_pwr2_exp(int32_t size) {
-    int32_t exp=9; int32_t val=512; ++size;
+static int32_t fit_pwr2_exp(int32_t size) {
+    int32_t exp=2; int32_t val=4; ++size;
     while (val < size) {
         ++exp; val*=2;
     }
@@ -98,7 +97,7 @@ static inline int32_t fit_pwr2_exp(int32_t size) {
 }
 
 // RANDOM
-static inline int32_t RND(uint64_t seed[_at_least_(1)]) {
+static int32_t RND(uint64_t seed[_at_least_(1)]) {
     *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
     int32_t shift = 29 - (uint32_t)(*seed >> 61);
     
@@ -109,7 +108,7 @@ static inline int32_t RND(uint64_t seed[_at_least_(1)]) {
     ARENA
 */
 typedef struct arena{ char *beg; char *end; }arena;
-static inline arena newarena(int64_t cap, void * buffer) {
+static arena newarena(int64_t cap, void * buffer) {
     arena a = Zero;
     a.beg = (char *)buffer;
     a.end = a.beg ? a.beg + cap : 0;
@@ -130,8 +129,8 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
     return ale_memset(p, 0, total);
 }
 
-#define newx(a, t) (t *)alloc(a, sizeof(t), alignof(t), 1)
-#define newxs(a, t, n) (t *)alloc(a, sizeof(t), alignof(t), n)
+#define newx(  a, t)       (t *)         alloc(a, sizeof(t),        alignof(t),        1)
+#define newxs( a, t, n)    (t *)         alloc(a, sizeof(t),        alignof(t),        n)
 #define newmat(a, t, m, n) (t (*)[m][n]) alloc(a, sizeof(t [m][n]), alignof(t [m][n]), 1)
 
 /*
@@ -165,7 +164,7 @@ static void grow(void *dynamic_array,  arena a[_at_least_(1)]) {
 /*
     PUSH TO GROWABLE ARRAY
 */
-static inline void push_i64(void *dynamic_array, arena a[_at_least_(1)], int64_t int64) {
+static void push_i64(void *dynamic_array, arena a[_at_least_(1)], int64_t int64) {
     dyna_layout *dynarray = (dyna_layout *)dynamic_array;
 
     if (dynarray->len >= dynarray->cap) {
@@ -174,40 +173,40 @@ static inline void push_i64(void *dynamic_array, arena a[_at_least_(1)], int64_t
 
     dynarray->data[dynarray->len++] = int64;
 }
-static inline void push_double(void *dynarr, arena a[_at_least_(1)], double float64) {
+static void push_double(void *dynarr, arena a[_at_least_(1)], double float64) {
     int64_t replica;
     ale_memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
     push_i64(dynarr, a, replica);
 }
-static inline void push_cstr(void *dynarr, arena a[_at_least_(1)], staticstring cstr) {
+static void push_cstr(void *dynarr, arena a[_at_least_(1)], cstring cstr) {
     push_i64(dynarr, a, (int64_t) cstr);
 }
-static inline void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
+static void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
     push_i64(dynarr, a, (int64_t) ptr);
 }
 
 /*
     POP OF GROWABLE ARRAY
 */
-static inline int64_t pop_i64(void *dynamic_array) {
+static int64_t pop_i64(void *dynamic_array) {
     dyna_layout *dynarray = (dyna_layout *)dynamic_array;
 
     ale_assert(dynarray->len > 0, "POP ON EMPTY ARRAY");
 
     return dynarray->data[--dynarray->len];
 }
-static inline double pop_double(void *dynarr) {
+static double pop_double(void *dynarr) {
     int64_t replica = pop_i64(dynarr);
     double val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
 }
-static inline cstring pop_cstr(void *dynarr) {
+static cstring pop_cstr(void *dynarr) {
      return (cstring) pop_i64(dynarr);
 }
-static inline void * pop_ptr(void *dynarr) {
+static void * pop_ptr(void *dynarr) {
      return (void *) pop_i64(dynarr);
 }
 
@@ -215,9 +214,11 @@ static inline void * pop_ptr(void *dynarr) {
     HASH
 */
 static int64_t hash_cstr(cstring str) {
+    cstring sp = (cstring) str;
+
     uint64_t h = 0x7A5662DCDF;
-    while(*str) { 
-        h ^= (*(str++)) & 255; h *= 1111111111111111111;
+    while(*sp) { 
+        h ^= (*(sp++)) & 255; h *= 1111111111111111111;
     }
 
     return (h ^ h>>32) >> 1;
@@ -235,10 +236,10 @@ static int64_t hash_i64(int64_t integer64) {
 typedef struct msi_entry_layout{int64_t key; int64_t val;}msi_entry_layout;
 typedef struct msi_ht_layout{
     int32_t stepshift;int32_t capmask; int32_t len;
-    struct msi_entry_layout *data;
+    msi_entry_layout *data;
 }msi_ht_layout;
 
-static inline int32_t 
+static int32_t 
     msi_lookup(
         uint64_t hash, // 1st hash acts as base location
         int32_t index, // 2nd "hash" steps over the "list of elements" from base-location
@@ -266,66 +267,79 @@ static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
     return ht;
 }
 
-// Finds the index of |key| in the msi |table|, insert key if |insert_if_not_found| is true
-static int32_t msi_idx_i64(
+// Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
+static int32_t msi_i64(
     void *table /* msi_ht */, 
-    int64_t key, int32_t insert_if_not_found
+    int64_t keyi64, int32_t create_if_not_found
 ) {
-    struct msi_entry{int64_t key; int64_t val;};
-    struct msi_ht{
-        int32_t stepshift;int32_t capmask; int32_t len;
-        struct msi_entry *data;
-    };
-    struct msi_ht *ht = (struct msi_ht*) table;
+    msi_ht_layout *ht = (msi_ht_layout*) table;
+    typeof(ht->data) data = ht->data;
 
-    uint64_t hash = (uint64_t) hash_i64(key);
+    uint64_t hash = (uint64_t) hash_i64(keyi64);
     int32_t index = (int32_t)hash;
+    int32_t capmask = ht->capmask;
+    int32_t stepshift = ht->stepshift;
     
     for(
-        index = msi_lookup(hash, index, ht->capmask, ht->stepshift);
-        ht->data[index].key != key; 
-        msi_lookup(hash, index, ht->capmask, ht->stepshift)
+        index = msi_lookup(hash, index, capmask, stepshift);
+        data[index].key != 0 && data[index].key != keyi64; 
+        index = msi_lookup(hash, index, capmask, stepshift)
     ) {
-        if (ht->data[index].key == 0) {
-            if (insert_if_not_found) {
-                ht->data[index].key = key;
-            }
-            break; // found empty slot
-        }
+        /* empty body */
     }
 
+    if (data[index].key == 0 && create_if_not_found) {
+        ale_assert(ht->len < capmask - 1, "MSI HT IS FULL");
+        data[index].key = keyi64;
+        ++ht->len;
+    }
 
     return index; // index of entry found OR entry empty
 }
 
-static inline int64_t msi_get_i64(void *table, int64_t key_64i) {
-    struct msi_entry{int64_t key; int64_t val;};
-    struct msi_ht{
-        int32_t stepshift;int32_t capmask; int32_t len;
-        struct msi_entry *data;
-    };
-    struct msi_ht *ht = (struct msi_ht*) table;
-
-    return ht->data[msi_idx_i64(ht, key_64i, 0)].val;
+// Returns the index of |ikey| in the msi |table|
+static int32_t msi_get_by_ikey(void *table, int64_t ikey) {
+    return msi_i64(table, ikey, 0);
+}
+// Creates key if not found, then returns the index of |ikey| in the msi |table|
+static int32_t msi_set_by_ikey(void *table, int64_t ikey) {
+    return msi_i64(table, ikey, 1);
 }
 
-static inline int64_t msi_set_i64(void *table, int64_t key_64i, int64_t val_64i) {
-    struct msi_entry{int64_t key; int64_t val;};
-    struct msi_ht{
-        int32_t stepshift;int32_t capmask; int32_t len;
-        struct msi_entry *data;
-    };
-    struct msi_ht *ht = (struct msi_ht*) table;
+// Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
+static int32_t msi_cstr(
+    void *table /* msi_ht */, 
+    cstring keycstr, int32_t create_if_not_found
+) {
+    msi_ht_layout *ht = (msi_ht_layout*) table;
+    typeof(ht->data) data = ht->data;
 
-    return ht->data[msi_idx_i64(ht, key_64i, 1)].val = val_64i;
+    uint64_t hash = (uint64_t) hash_cstr(keycstr);
+    int32_t index = (int32_t)hash;
+    int32_t capmask = ht->capmask;
+    int32_t stepshift = ht->stepshift;
+    
+    for(
+        index = msi_lookup(hash, index, capmask, stepshift);
+        data[index].key != 0 && ale_strcmp((cstring) data[index].key, keycstr);
+        index = msi_lookup(hash, index, capmask, stepshift)
+    ) {
+        /* empty body */
+    }
+
+    if (data[index].key == 0 && create_if_not_found) {
+        ale_assert(ht->len < capmask - 1, "MSI HT IS FULL");
+        data[index].key = (int64_t) keycstr;
+        ++ht->len;
+    }
+
+    return index; // index of entry found OR entry empty
 }
-
-
-#define msi_set(table, key_, val_) __extension__({                     \
-    ale_assert((table)->len < (table)->capmask, "MSI HT IS FULL");         \
-    int32_t msi_index_ = msi_idx(table, key_, 1);                      \
-    typeof(((table)->data)) data = (table)->data;                      \
-    typeof(data[0].val) msi_current_val                                \
-        = (typeof(data[0].val)) data[msi_index_].val;                  \
-    data[msi_index_].val = val_;                                       \
-})
+// Returns the index of |ikey| in the msi |table|
+static int32_t msi_get_by_skey(void *table, cstring skey) {
+    return msi_cstr(table, skey, 0);
+}
+// Creates key if not found, then returns the index of |ikey| in the msi |table|
+static int32_t msi_set_by_skey(void *table, cstring skey) {
+    return msi_cstr(table, skey, 1);
+}

@@ -1,0 +1,10 @@
+inicio
+Meio! 1
+Meio! 5
+Meio! 3
+fim
+inicio
+Meio!
+fim
+Meio do arquivo
+Fechando

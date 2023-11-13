@@ -13,7 +13,7 @@ int32_t main(int32_t argc, const cstring *argv) {
         printf("Meio!\n");
     }
 
-    scoped(staticstring arquivo = "Fechando\n", printf("%s", arquivo)) {
+    scoped(cstring arquivo = "Fechando\n", printf("%s", arquivo)) {
         printf("Meio do arquivo\n");
     }
 

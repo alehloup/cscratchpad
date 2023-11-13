@@ -8,7 +8,7 @@ typedef struct teste{
     int32_t z;
 }teste;
 
-int32_t main(int32_t argc, char **argv) {{
+int32_t main(int32_t argc, cstring *argv) {{
 
     arena perm = newarena(128*MegaBytes, malloc(128*MegaBytes));
 

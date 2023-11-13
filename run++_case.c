@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "ale.h"
 
-int32_t main(int32_t argc, char **argv) {
+int32_t main(int32_t argc, cstring *argv) {
     char buffer[512];
-    char *_$1 = argv[1], *_$2 = argv[2];
+    cstring _$1 = argv[1], _$2 = argv[2];
 
     staticstring format = (
         "g++ @Flagscpp %s -o \"./builds/%s++.exe\"" 

@@ -252,7 +252,7 @@ static int32_t
 }
 
 static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
-    const int32_t msi_expo = fit_pwr2_exp(expected_maxn);
+    const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     msi_ht_layout *ht = (msi_ht_layout*)
@@ -289,7 +289,7 @@ static int32_t msi_i64(
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < capmask - 1, "MSI HT IS FULL");
+        ale_assert(ht->len < capmask - 2, "MSI HT IS FULL");
         data[index].key = keyi64;
         ++ht->len;
     }
@@ -302,7 +302,7 @@ static int32_t msi_get_by_ikey(void *table, int64_t ikey) {
     return msi_i64(table, ikey, 0);
 }
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-static int32_t msi_set_by_ikey(void *table, int64_t ikey) {
+static int32_t msi_set_ikey(void *table, int64_t ikey) {
     return msi_i64(table, ikey, 1);
 }
 
@@ -328,7 +328,7 @@ static int32_t msi_cstr(
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < capmask - 1, "MSI HT IS FULL");
+        ale_assert(ht->len < capmask - 2, "MSI HT IS FULL");
         data[index].key = (int64_t) keycstr;
         ++ht->len;
     }
@@ -340,6 +340,6 @@ static int32_t msi_get_by_skey(void *table, cstring skey) {
     return msi_cstr(table, skey, 0);
 }
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-static int32_t msi_set_by_skey(void *table, cstring skey) {
+static int32_t msi_set_skey(void *table, cstring skey) {
     return msi_cstr(table, skey, 1);
 }

@@ -7,11 +7,17 @@ int32_t main(int32_t argc, const cstring *argv) {
 
     printf("\n%lld %f %s %p\n", x.i, x.d, x.s, x.p);
 
-    _ale_generic64 arr[5] = Zero;
+    int64_t ints[5] = {1, 2, 3, 4, 5};
+
+    int64_t *arr = ints;
 
     double f = 5.2;
 
-    arr[0] = cpound(_ale_generic64) {.d = f}; 
+    double *doubles = (double *) ints;
 
-    printf(" %f \n", arr[0].d);
+    //memcpy(&doubles, &arr, 8);
+
+    doubles[0] = f;
+
+    printf(" %f \n", doubles[0]);
 }

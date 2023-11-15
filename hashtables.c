@@ -93,9 +93,9 @@ void test_big_msi_i64(arena a) {
     printf("\n");
 }
 
-threadlocal char bufferzao[8*MegaBytes];
+threadlocal char bufferzao[2*MegaBytes];
 int32_t main() {
-    arena scratch = newarena(8*MegaBytes, malloc(8*MegaBytes));
+    arena scratch = newarena(sizeof(bufferzao), bufferzao);
     test_msi_i64(scratch);
     printf("\n");
     printf("\n");

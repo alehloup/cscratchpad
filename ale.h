@@ -70,6 +70,16 @@ static slicestring cstr_to_slice(int32_t len, cstring data) {
 #define s8(cstr) cstr_to_slice(cstrlen(cstr), cstr)
 
 /*
+    Generic 64 Union Type
+*/
+typedef union _ale_generic64{
+    int64_t i;
+    double d;
+    cstring s;
+    void *p;
+}_ale_generic64;
+
+/*
     SHELL
 */
 static int32_t shellrun(char buffer [_at_least_(512)], cstring format, ...) {

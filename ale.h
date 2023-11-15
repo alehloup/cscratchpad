@@ -30,6 +30,7 @@
 #define Zero {}
 #define cpound(type) /* (type) */
 #define threadlocal static thread_local
+#define buffer_param(_param_name, _len_size) void * _param_name /* static _len_size */
 #endif
 
 #ifndef __cplusplus
@@ -38,6 +39,7 @@
 #define Zero {0}
 #define cpound(type) (type)
 #define threadlocal static _Thread_local
+#define buffer_param(_param_name, _len_size) char _param_name[static _len_size] 
 #endif
 
 //TRICK scope that "opens" at start, and "closes" at end 
@@ -108,10 +110,10 @@ static int32_t RND(uint64_t seed[_at_least_(1)]) {
     ARENA
 */
 typedef struct arena{ char *beg; char *end; }arena;
-static arena newarena(int64_t cap, void * buffer) {
+static arena newarena(int64_t buffer_len, buffer_param(buffer, buffer_len)) {
     arena a = Zero;
     a.beg = (char *)buffer;
-    a.end = a.beg ? a.beg + cap : 0;
+    a.end = a.beg ? a.beg + buffer_len : 0;
     return a;
 }
 
@@ -140,6 +142,8 @@ typedef int64_t dynael_layout;
 typedef struct dyna_layout{int32_t cap; int32_t len; int64_t *data;} dyna_layout;
 
 static void grow(void *dynamic_array,  arena a[_at_least_(1)]) { 
+    ale_assert(dynamic_array, "DYNAMIC ARRAY IS NULL");
+
     static const int32_t DYNA_FIRST_SIZE = 64;
 
     dyna_layout *dynarray = (dyna_layout *)dynamic_array;
@@ -272,6 +276,8 @@ static int32_t msi_i64(
     void *table /* msi_ht */, 
     int64_t keyi64, int32_t create_if_not_found
 ) {
+    ale_assert(table, "MSI_i64 TABLE IS NULL");
+
     msi_ht_layout *ht = (msi_ht_layout*) table;
     typeof(ht->data) data = ht->data;
 
@@ -311,6 +317,8 @@ static int32_t msi_cstr(
     void *table /* msi_ht */, 
     cstring keycstr, int32_t create_if_not_found
 ) {
+    ale_assert(table, "MSI_CSTR TABLE IS NULL");
+
     msi_ht_layout *ht = (msi_ht_layout*) table;
     typeof(ht->data) data = ht->data;
 

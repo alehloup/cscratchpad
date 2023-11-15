@@ -247,7 +247,7 @@ static int64_t hash_i64(int64_t integer64) {
 */
 typedef struct msi_entry_layout{int64_t key; int64_t val;}msi_entry_layout;
 typedef struct msi_ht_layout{
-    int32_t stepshift;int32_t capmask; int32_t len;
+    int32_t shift;int32_t mask; int32_t len;
     msi_entry_layout *data;
 }msi_ht_layout;
 
@@ -255,12 +255,12 @@ static int32_t
     msi_lookup(
         uint64_t hash, // 1st hash acts as base location
         int32_t index, // 2nd "hash" steps over the "list of elements" from base-location
-        int32_t capmask, // trims number to < ht_capacity
-        int32_t stepshift // use |exp| bits for step 
+        int32_t mask, // trims number to < ht_capacity
+        int32_t shift // use |exp| bits for step 
     )
 {
-    uint32_t step = (uint32_t)(hash >> stepshift) | 1;
-    return (index + step) & capmask;
+    uint32_t step = (uint32_t)(hash >> shift) | 1;
+    return (index + step) & mask;
 }
 
 static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
@@ -270,11 +270,11 @@ static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
     msi_ht_layout *ht = (msi_ht_layout*)
         alloc(a, sizeof(msi_ht_layout), alignof(msi_ht_layout), 1);
     
-    ht->stepshift = 64 - msi_expo;
-    ht->capmask = (1 << msi_expo) - 1;
+    ht->shift = 64 - msi_expo;
+    ht->mask = (1 << msi_expo) - 1;
     ht->len = 0;
     ht->data = (msi_entry_layout *) \
-        alloc(a, sizeof(msi_entry_layout), alignof(msi_entry_layout), ht->capmask + 1);
+        alloc(a, sizeof(msi_entry_layout), alignof(msi_entry_layout), ht->mask + 1);
 
     return ht;
 }
@@ -291,19 +291,19 @@ static int32_t msi_i64(
 
     uint64_t hash = (uint64_t) hash_i64(keyi64);
     int32_t index = (int32_t)hash;
-    int32_t capmask = ht->capmask;
-    int32_t stepshift = ht->stepshift;
+    int32_t mask = ht->mask;
+    int32_t shift = ht->shift;
     
     for(
-        index = msi_lookup(hash, index, capmask, stepshift);
+        index = msi_lookup(hash, index, mask, shift);
         data[index].key != 0 && data[index].key != keyi64; 
-        index = msi_lookup(hash, index, capmask, stepshift)
+        index = msi_lookup(hash, index, mask, shift)
     ) {
         /* empty body */
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < capmask - 2, "MSI HT IS FULL");
+        ale_assert(ht->len < mask - 2, "MSI HT IS FULL");
         data[index].key = keyi64;
         ++ht->len;
     }
@@ -332,19 +332,19 @@ static int32_t msi_cstr(
 
     uint64_t hash = (uint64_t) hash_cstr(keycstr);
     int32_t index = (int32_t)hash;
-    int32_t capmask = ht->capmask;
-    int32_t stepshift = ht->stepshift;
+    int32_t mask = ht->mask;
+    int32_t shift = ht->shift;
     
     for(
-        index = msi_lookup(hash, index, capmask, stepshift);
+        index = msi_lookup(hash, index, mask, shift);
         data[index].key != 0 && ale_strcmp((cstring) data[index].key, keycstr);
-        index = msi_lookup(hash, index, capmask, stepshift)
+        index = msi_lookup(hash, index, mask, shift)
     ) {
         /* empty body */
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < capmask - 2, "MSI HT IS FULL");
+        ale_assert(ht->len < mask - 2, "MSI HT IS FULL");
         data[index].key = (int64_t) keycstr;
         ++ht->len;
     }

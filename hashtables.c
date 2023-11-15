@@ -3,7 +3,7 @@
 #include "ale.h"
 
 typedef struct strht{ 
-     int32_t stepshift;int32_t capmask; 
+     int32_t shift;int32_t mask; 
     int32_t len; struct{cstring key; cstring val;} *data; 
 }strht;
 
@@ -20,7 +20,7 @@ void test_msi_cstr(arena a) {
     printf("Pegou: %s\n", data[msi_get_by_skey(ht, "Sarah")].val);
     printf("Não pegou: %s\n", data[msi_get_by_skey(ht, "Karol")].val);
 
-    for(int32_t i = 0; i < ht->capmask; ++i) {
+    for(int32_t i = 0; i < ht->mask; ++i) {
         if  (! data[i].key) {
             continue;
         }
@@ -32,7 +32,7 @@ void test_msi_cstr(arena a) {
 }
 
 typedef struct i64ht{ 
-    int32_t stepshift;int32_t capmask; 
+    int32_t shift;int32_t mask; 
     int32_t len; struct{int64_t key; cstring val;} *data; 
 }i64ht;
 
@@ -49,7 +49,7 @@ void test_msi_i64(arena a) {
     printf("pegou: %s\n", data[msi_get_by_ikey(ht, 5)].val);
     printf("não pegou: %s\n", data[msi_get_by_ikey(ht, 3)].val);
 
-    for(int32_t i = 0; i < ht->capmask; ++i) {
+    for(int32_t i = 0; i < ht->mask; ++i) {
         if  ( ! data[i].key) {
             continue;
         }
@@ -61,7 +61,7 @@ void test_msi_i64(arena a) {
 }
 
 typedef struct i64bight{ 
-    int32_t stepshift;int32_t capmask; 
+    int32_t shift;int32_t mask; 
     int32_t len; struct{int64_t key; int64_t val;} *data; 
 }i64bight;
 
@@ -83,7 +83,7 @@ void test_big_msi_i64(arena a) {
         ale_assert(data[idx].key == data[idx].val, "should be equal!");
     }
 
-    for(int32_t i = ht->len; i < ht->capmask; ++i) {
+    for(int32_t i = ht->len; i < ht->mask; ++i) {
         int32_t idx = msi_get_by_ikey(ht, i);
 
         ale_assert(data[idx].key == 0, "should be empty!");

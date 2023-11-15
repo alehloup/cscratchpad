@@ -27,7 +27,6 @@
 #ifdef __cplusplus
 #define _at_least_(_size_) /* static _size_ */
 #define  alignof(x) ((int64_t)alignof(x))
-#define Zero {}
 #define cpound(type) /* (type) */
 #define threadlocal static thread_local
 #define buffer_param(_param_name, _len_size) void * _param_name /* static _len_size */
@@ -36,7 +35,6 @@
 #ifndef __cplusplus
 #define _at_least_(_size_) static _size_
 #define  alignof(x) ((int64_t)_Alignof(x))
-#define Zero {0}
 #define cpound(type) (type)
 #define threadlocal static _Thread_local
 #define buffer_param(_param_name, _len_size) char _param_name[static _len_size] 
@@ -121,7 +119,7 @@ static int32_t RND(uint64_t seed[_at_least_(1)]) {
 */
 typedef struct arena{ char *beg; char *end; }arena;
 static arena newarena(int64_t buffer_len, buffer_param(buffer, buffer_len)) {
-    arena a = Zero;
+    arena a = {};
     a.beg = (char *)buffer;
     a.end = a.beg ? a.beg + buffer_len : 0;
     return a;

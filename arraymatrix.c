@@ -6,7 +6,7 @@ typedef struct i64s{
     int32_t cap; int32_t len; int64_t *data;
 }i64s;
 void test_push_i64(arena scratch) {
-    i64s d = Zero;
+    i64s d = {};
     
     push_i64(&d, &scratch, 52);
     printf("POP: %lld\n", pop_i64(&d));
@@ -28,7 +28,7 @@ typedef struct cstrings{
     int32_t cap; int32_t len; cstring *data;
 } cstrings;
 void test_push_cstr(arena scratch) {
-    cstrings d = Zero;
+    cstrings d = {};
     
     for (int i = 0; i < 52; ++i) {
         push_cstr(&d, &scratch, "sAl");
@@ -48,7 +48,7 @@ typedef struct doubles{
     int32_t cap; int32_t len; double *data;
 }doubles;
 void test_push_double(arena scratch) {
-    doubles d = Zero;
+    doubles d = {};
     
     push_double(&d, &scratch, 5.2);
     printf("POP: %lf\n", pop_double(&d));

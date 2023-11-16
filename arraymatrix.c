@@ -2,81 +2,6 @@
 #include <stdio.h>
 #include "ale.h"
 
-typedef struct i64s{
-    int32_t cap; int32_t len; int64_t *data;
-}i64s;
-void test_push_i64(arena scratch) {
-    printf("=========== I64s ===========\n");
-
-    i64s d = {};
-    
-    push_i64(&d, &scratch, 52+64000);
-    printf("POP: %lld\n", pop_i64(&d));
-
-    for(int32_t i = 0; i < 164; ++i) {
-        push_i64(&d, &scratch, i+64000);
-        int8_t *force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
-    }
-
-    printf("POP: %lld\n", pop_i64(&d));
-
-    for(int32_t i = 0; i < d.len; ++i) {
-        printf("%lld ", d.data[i]);
-    } 
-    printf("\n");
-}
-
-typedef struct cstrings{
-    int32_t cap; int32_t len; cstring *data;
-} cstrings;
-void test_push_cstr(arena scratch) {
-    printf("=========== CSTRINGs ===========\n");
-    
-    cstrings d = {};
-    
-    for (int i = 0; i < 52; ++i) {
-        push_cstr(&d, &scratch, "sAl");
-        int8_t *force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
-        push_cstr(&d, &scratch, "sSa");
-        push_cstr(&d, &scratch, "sEv");
-    }
-
-    for (int i = 0; i < d.len; ++i) {
-        printf(" %d:%s ", i, d.data[i]);
-    }
-
-    printf("Pop: %s\n", pop_cstr(&d));
-}
-
-typedef struct doubles{
-    int32_t cap; int32_t len; double *data;
-}doubles;
-void test_push_double(arena scratch) {
-    printf("=========== DOUBLEs ===========\n");
-    
-    doubles d = {};
-    
-    push_double(&d, &scratch, 5.2+0.00064);
-    printf("POP: %lf\n", pop_double(&d));
-
-    for(int32_t i = 0; i < 164; ++i) {
-        push_double(&d, &scratch, (i / 2.0)+0.00064);
-        int8_t *force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
-    }
-
-    printf("POP: %lf\n", pop_double(&d));
-
-    for(int32_t i = 0; i < d.len; ++i) {
-        printf("%lf ", d.data[i]);
-    } 
-    printf("\n");
-}
-
-// void test_size_cvla(int m, int n, int64_t mat[_at_least_(1)][m][n]) {
-//     printf("size: %lld \n", sizeof(*mat));
-// }
-
-
 void test_vlamatrix(arena a) {
     printf("=========== MATRIXs ===========\n");
 
@@ -98,13 +23,30 @@ void test_vlamatrix(arena a) {
     }
 }
 
-typedef struct i32s{
-    int32_t cap; int32_t len; int32_t *data;
-}i32s;
+void test_push_cstr(arena scratch) {
+    printf("=========== CSTRINGs ===========\n");
+    
+    vector64 d = {};
+    
+    for (int i = 0; i < 52; ++i) {
+        push_cstr(&d, &scratch, "sAl");
+        int8_t *force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
+        push_cstr(&d, &scratch, "sSa");
+        push_cstr(&d, &scratch, "sEv");
+    }
+
+    cstring *data = data_as_cstring(&d);
+    for (int i = 0; i < d.len; ++i) {
+        printf(" %d:%s ", i, data[i]);
+    }
+
+    printf("Pop: %s\n", pop_cstr(&d));
+}
+
 void test_push_i32(arena scratch) {
     printf("=========== I32s ===========\n");
 
-    i32s d = {};
+    vector32 d = {};
     
     push_i32(&d, &scratch, 52+32000);
     printf("POP: %d\n", pop_i32(&d));
@@ -116,32 +58,76 @@ void test_push_i32(arena scratch) {
 
     printf("POP: %d\n", pop_i32(&d));
 
+    int32_t *data = data_as_i32(&d);
     for(int32_t i = 0; i < d.len; ++i) {
-        printf("%d ", d.data[i]);
+        printf("%d ", data[i]);
     } 
     printf("\n");
 }
 
-typedef struct floats{
-    int32_t cap; int32_t len; float *data;
-}floats;
+void test_push_i64(arena scratch) {
+    printf("=========== I64s ===========\n");
+
+    vector64 d = {};
+    
+    push_i64(&d, &scratch, 52+64000);
+    printf("POP: %lld\n", pop_i64(&d));
+
+    for(int32_t i = 0; i < 164; ++i) {
+        push_i64(&d, &scratch, i+64000);
+        int8_t *force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
+    }
+
+    printf("POP: %lld\n", pop_i64(&d));
+
+    int64_t *data = data_as_i64(&d);
+
+    for(int32_t i = 0; i < d.len; ++i) {
+        printf("%lld ", data[i]);
+    } 
+    printf("\n");
+}
+
 void test_push_float(arena scratch) {
     printf("=========== FLOATs ===========\n");
 
-    floats d = {};
+    vector32 d = {};
     
     push_float(&d, &scratch, 5.2f + 0.0032f);
-    printf("POP: %f\n", pop_float(&d));
+    printf("POP: %f\n", (double) pop_float(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
         push_float(&d, &scratch, ((float)i / 2.0f) + 0.0032f);
         int8_t *force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
     }
 
-    printf("POP: %f\n", pop_float(&d));
+    printf("POP: %f\n", (double) pop_float(&d));
 
+    float *data = data_as_float(&d);
     for(int32_t i = 0; i < d.len; ++i) {
-        printf("%f ", (double) d.data[i]);
+        printf("%f ", (double) data[i]);
+    } 
+    printf("\n");
+}
+
+void test_push_double(arena scratch) {
+    printf("=========== DOUBLEs ===========\n");
+    
+    vector64 d = {};
+    
+    push_double(&d, &scratch, 5.2+0.0064);
+    printf("POP: %lf\n", pop_double(&d));
+
+    for(int32_t i = 0; i < 164; ++i) {
+        push_double(&d, &scratch, (i / 2.0)+0.0064);
+        int8_t *force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
+    }
+
+    printf("POP: %lf\n", pop_double(&d));
+
+    double *data = data_as_double(&d);
+    for(int32_t i = 0; i < d.len; ++i) {
+        printf("%lf ", data[i]);
     } 
     printf("\n");
 }

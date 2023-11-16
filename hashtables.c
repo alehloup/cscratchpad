@@ -8,7 +8,7 @@ typedef struct strht{
 }strht;
 
 void test_msi_cstr(arena a) {
-    strht *ht = (strht *)newmsi(&a, 4);
+    strht *ht = (strht *)new_64msi(&a, 4);
     typeof(ht->data) data = ht->data;
     
     printf("%lld\n", hash_cstr("Alessandro Stamatto"));
@@ -37,17 +37,17 @@ typedef struct i64ht{
 }i64ht;
 
 void test_msi_i64(arena a) {
-    i64ht *ht = (i64ht *)newmsi(&a, 4);
+    i64ht *ht = (i64ht *)new_64msi(&a, 4);
     typeof(ht->data) data = ht->data;
 
     printf("%lld\n", hash_i64(4));
 
-    data[msi_set_ikey(ht, 5)].val = "Stamatto";
-    data[msi_set_ikey(ht, 4)].val = "Sakamoto";
-    data[msi_set_ikey(ht, 5)].val = "Ferreira";
+    data[msi_set_i64key(ht, 5)].val = "Stamatto";
+    data[msi_set_i64key(ht, 4)].val = "Sakamoto";
+    data[msi_set_i64key(ht, 5)].val = "Ferreira";
 
-    printf("pegou: %s\n", data[msi_get_by_ikey(ht, 5)].val);
-    printf("não pegou: %s\n", data[msi_get_by_ikey(ht, 3)].val);
+    printf("pegou: %s\n", data[msi_get_by_i64key(ht, 5)].val);
+    printf("não pegou: %s\n", data[msi_get_by_i64key(ht, 3)].val);
 
     for(int32_t i = 0; i < ht->mask; ++i) {
         if  ( ! data[i].key) {
@@ -66,15 +66,15 @@ typedef struct i64bight{
 }i64bight;
 
 void test_big_msi_i64(arena a) {
-    i64bight *ht = (i64bight *)newmsi(&a, 128);
+    i64bight *ht = (i64bight *)new_64msi(&a, 128);
     typeof(ht->data) data = ht->data;
 
     for(int i = 0; i < 128; ++i) {
-        data[msi_set_ikey(ht, i)].val = i;
+        data[msi_set_i64key(ht, i)].val = i;
     }
 
     for(int32_t i = 0; i < ht->len; ++i) {
-        int32_t idx = msi_get_by_ikey(ht, i);
+        int32_t idx = msi_get_by_i64key(ht, i);
         
         printf("[%d]", idx);
         printf("%lld: %lld", data[idx].key, data[idx].val);
@@ -84,7 +84,7 @@ void test_big_msi_i64(arena a) {
     }
 
     for(int32_t i = ht->len; i < ht->mask; ++i) {
-        int32_t idx = msi_get_by_ikey(ht, i);
+        int32_t idx = msi_get_by_i64key(ht, i);
 
         ale_assert(data[idx].key == 0, "should be empty!");
     }

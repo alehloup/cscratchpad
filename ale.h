@@ -150,7 +150,7 @@ typedef int64_t dynael64_layout;
 typedef struct dyna64_layout{int32_t cap; int32_t len; int64_t *data;}dyna64_layout;
 
 static void grow(void *dynamic_array,  arena a[_at_least_(1)]) { 
-    ale_assert(dynamic_array, "DYNAMIC ARRAY IS NULL");
+    ale_assert(dynamic_array, "DYNAMIC 64bit ARRAY IS NULL");
 
     static const int32_t DYNA_FIRST_SIZE = 64;
 
@@ -250,7 +250,7 @@ static void push_float(void *dynarr, arena a[_at_least_(1)], float float32) {
 static int64_t pop_i64(void *dynamic_array) {
     dyna64_layout *dynarray = (dyna64_layout *)dynamic_array;
 
-    ale_assert(dynarray->len > 0, "POP ON EMPTY ARRAY");
+    ale_assert(dynarray->len > 0, "POP ON 64bit EMPTY ARRAY");
 
     return dynarray->data[--dynarray->len];
 }
@@ -306,12 +306,6 @@ static int64_t hash_i64(int64_t integer64) {
 /*
     HASH TABLE : Mask-Step-Index (MSI) 
 */
-typedef struct msi_entry_layout{int64_t key; int64_t val;}msi_entry_layout;
-typedef struct msi_ht_layout{
-    int32_t shift;int32_t mask; int32_t len;
-    msi_entry_layout *data;
-}msi_ht_layout;
-
 static int32_t 
     msi_lookup(
         uint64_t hash, // 1st hash acts as base location
@@ -324,18 +318,24 @@ static int32_t
     return (index + step) & mask;
 }
 
-static void * newmsi(arena a[_at_least_(1)], int32_t expected_maxn) {
+typedef struct msi_entry64_layout{int64_t key; int64_t val;}msi_entry64_layout;
+typedef struct msi_ht64_layout{
+    int32_t shift;int32_t mask; int32_t len;
+    msi_entry64_layout *data;
+}msi_ht64_layout;
+
+static void * new_64msi(arena a[_at_least_(1)], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
-    msi_ht_layout *ht = (msi_ht_layout*)
-        alloc(a, sizeof(msi_ht_layout), alignof(msi_ht_layout), 1);
+    msi_ht64_layout *ht = (msi_ht64_layout*)
+        alloc(a, sizeof(msi_ht64_layout), alignof(msi_ht64_layout), 1);
     
     ht->shift = 64 - msi_expo;
     ht->mask = (1 << msi_expo) - 1;
     ht->len = 0;
-    ht->data = (msi_entry_layout *) \
-        alloc(a, sizeof(msi_entry_layout), alignof(msi_entry_layout), ht->mask + 1);
+    ht->data = (msi_entry64_layout *)
+        alloc(a, sizeof(msi_entry64_layout), alignof(msi_entry64_layout), ht->mask + 1);
 
     return ht;
 }
@@ -347,7 +347,7 @@ static int32_t msi_i64(
 ) {
     ale_assert(table, "MSI_i64 TABLE IS NULL");
 
-    msi_ht_layout *ht = (msi_ht_layout*) table;
+    msi_ht64_layout *ht = (msi_ht64_layout*) table;
     typeof(ht->data) data = ht->data;
 
     uint64_t hash = (uint64_t) hash_i64(keyi64);
@@ -373,11 +373,11 @@ static int32_t msi_i64(
 }
 
 // Returns the index of |ikey| in the msi |table|
-static int32_t msi_get_by_ikey(void *table, int64_t ikey) {
+static int32_t msi_get_by_i64key(void *table, int64_t ikey) {
     return msi_i64(table, ikey, 0);
 }
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-static int32_t msi_set_ikey(void *table, int64_t ikey) {
+static int32_t msi_set_i64key(void *table, int64_t ikey) {
     return msi_i64(table, ikey, 1);
 }
 
@@ -388,7 +388,7 @@ static int32_t msi_cstr(
 ) {
     ale_assert(table, "MSI_CSTR TABLE IS NULL");
 
-    msi_ht_layout *ht = (msi_ht_layout*) table;
+    msi_ht64_layout *ht = (msi_ht64_layout*) table;
     typeof(ht->data) data = ht->data;
 
     uint64_t hash = (uint64_t) hash_cstr(keycstr);

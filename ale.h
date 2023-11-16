@@ -303,10 +303,10 @@ static int32_t
     return (index + step) & mask;
 }
 
-typedef struct msiht64_entry{int64_t key; int64_t val;}msiht64_entry;
+typedef struct entry_i64_i64{int64_t key; int64_t val;}entry_i64_i64;
 typedef struct msiht64{
     int32_t shift;int32_t mask; int32_t len;
-    msiht64_entry *data;
+    entry_i64_i64 *data;
 }msiht64;
 static msiht64 * newmsi64(arena a[1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
@@ -318,8 +318,8 @@ static msiht64 * newmsi64(arena a[1], int32_t expected_maxn) {
     ht->shift = 64 - msi_expo;
     ht->mask = (1 << msi_expo) - 1;
     ht->len = 0;
-    ht->data = (msiht64_entry *)
-        alloc(a, sizeof(msiht64_entry), alignof(msiht64_entry), ht->mask + 1);
+    ht->data = (entry_i64_i64 *)
+        alloc(a, sizeof(entry_i64_i64), alignof(entry_i64_i64), ht->mask + 1);
 
     return ht;
 }
@@ -402,25 +402,25 @@ static pointer msiki_set_ptr(msiht64 *table, int64_t ikey, pointer pval) {
     return pval;
 }
 
-typedef struct msiki_data_int64{int64_t key; int64_t val;}msiki_data_int64;
-static msiki_data_int64 * msiki_data_as_int64(msiht64 *table) {
+
+static entry_i64_i64 * msiki_data_as_int64(msiht64 *table) {
     auto data = table->data;
-    return (msiki_data_int64 *) data;
+    return (entry_i64_i64 *) data;
 }
-typedef struct msiki_data_double{int64_t key; double val;}msiki_data_double;
-static msiki_data_double * msiki_data_as_double(msiht64 *table) {
+typedef struct entry_i64_f64{int64_t key; double val;}entry_i64_f64;
+static entry_i64_f64 * msiki_data_as_double(msiht64 *table) {
     auto data = table->data;
-    return (msiki_data_double *) data;
+    return (entry_i64_f64 *) data;
 }
-typedef struct msiki_data_cstr{int64_t key; cstring val;}msiki_data_cstr;
-static msiki_data_cstr * msiki_data_as_cstr(msiht64 *table) {
+typedef struct entry_i64_cstr{int64_t key; cstring val;}entry_i64_cstr;
+static entry_i64_cstr * msiki_data_as_cstr(msiht64 *table) {
     auto data = table->data;
-    return (msiki_data_cstr *) data;
+    return (entry_i64_cstr *) data;
 }
-typedef struct msiki_data_ptr{int64_t key; pointer val;}msiki_data_ptr;
-static msiki_data_ptr * msiki_data_as_ptr(msiht64 *table) {
+typedef struct entry_i64_ptr{int64_t key; pointer val;}entry_i64_ptr;
+static entry_i64_ptr * msiki_data_as_ptr(msiht64 *table) {
     auto data = table->data;
-    return (msiki_data_ptr *) data;
+    return (entry_i64_ptr *) data;
 }
 
 // Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
@@ -500,31 +500,31 @@ static pointer msiks_set_ptr(msiht64 *table, cstring skey, pointer pval) {
     return pval;
 }
 
-typedef struct msiks_data_int64{cstring key; int64_t val;}msiks_data_int64;
-static msiks_data_int64 * msiks_data_as_int64(msiht64 *table) {
+typedef struct entry_cstr_i64{cstring key; int64_t val;}entry_cstr_i64;
+static entry_cstr_i64 * msiks_data_as_int64(msiht64 *table) {
     auto data = table->data;
-    return (msiks_data_int64 *) data;
+    return (entry_cstr_i64 *) data;
 }
-typedef struct msiks_data_double{cstring key; double val;}msiks_data_double;
-static msiks_data_double * msiks_data_as_double(msiht64 *table) {
+typedef struct entry_cstr_double{cstring key; double val;}entry_cstr_double;
+static entry_cstr_double * msiks_data_as_double(msiht64 *table) {
     auto data = table->data;
-    return (msiks_data_double *) data;
+    return (entry_cstr_double *) data;
 }
-typedef struct msiks_data_cstr{cstring key; cstring val;}msiks_data_cstr;
-static msiks_data_cstr * msiks_data_as_cstr(msiht64 *table) {
+typedef struct entry_cstr_cstr{cstring key; cstring val;}entry_cstr_cstr;
+static entry_cstr_cstr * msiks_data_as_cstr(msiht64 *table) {
     auto data = table->data;
-    return (msiks_data_cstr *) data;
+    return (entry_cstr_cstr *) data;
 }
-typedef struct msiks_data_ptr{cstring key; pointer val;}msiks_data_ptr;
-static msiks_data_ptr * msiks_data_as_ptr(msiht64 *table) {
+typedef struct entry_cstr_ptr{cstring key; pointer val;}entry_cstr_ptr;
+static entry_cstr_ptr * msiks_data_as_ptr(msiht64 *table) {
     auto data = table->data;
-    return (msiks_data_ptr *) data;
+    return (entry_cstr_ptr *) data;
 }
 
-typedef struct msiht32_entry{int32_t key; int32_t val;}msiht32_entry;
+typedef struct entry_i32_i32{int32_t key; int32_t val;}entry_i32_i32;
 typedef struct msiht32{
     int32_t shift;int32_t mask; int32_t len;
-    msiht32_entry *data;
+    entry_i32_i32 *data;
 }msiht32;
 static msiht32 * newmsi32(arena a[1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
@@ -536,8 +536,8 @@ static msiht32 * newmsi32(arena a[1], int32_t expected_maxn) {
     ht->shift = 64 - msi_expo;
     ht->mask = (1 << msi_expo) - 1;
     ht->len = 0;
-    ht->data = (msiht32_entry *)
-        alloc(a, sizeof(msiht32_entry), alignof(msiht32_entry), ht->mask + 1);
+    ht->data = (entry_i32_i32 *)
+        alloc(a, sizeof(entry_i32_i32), alignof(entry_i32_i32), ht->mask + 1);
 
     return ht;
 }
@@ -606,13 +606,12 @@ static float msiki_set_float(msiht32 *table, int32_t ikey, float dval) {
 }
 
 
-typedef struct msiki_data_int32{int32_t key; int32_t val;}msiki_data_int32;
-static msiki_data_int32 * msiki_data_as_int32(msiht32 *table) {
+static entry_i32_i32 * msiki_data_as_int32(msiht32 *table) {
     auto data = table->data;
-    return (msiki_data_int32 *) data;
+    return (entry_i32_i32 *) data;
 }
-typedef struct msiki_data_float{int32_t key; float val;}msiki_data_float;
-static msiki_data_float * msiki_data_as_float(msiht32 *table) {
+typedef struct entry_i32_f32{int32_t key; float val;}entry_i32_f32;
+static entry_i32_f32 * msiki_data_as_float(msiht32 *table) {
     auto data = table->data;
-    return (msiki_data_float *) data;
+    return (entry_i32_f32 *) data;
 }

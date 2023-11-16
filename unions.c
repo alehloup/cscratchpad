@@ -5,7 +5,7 @@ int32_t main(int32_t argc, const cstring *argv) {
 
     _ale_generic64 x = { .s="Alex" };
 
-    printf("\n%lld %f %s %p\n", x.i, x.d, x.s, x.p);
+    ale_printf("\n%lld %f %s %p\n", x.i, x.d, x.s, x.p);
 
     int64_t ints[5] = {1, 2, 3, 4, 5};
 
@@ -19,5 +19,5 @@ int32_t main(int32_t argc, const cstring *argv) {
 
     doubles[0] = f;
 
-    printf(" %f \n", doubles[0]);
+    ale_printf(" %f \n", doubles[0]);
 }

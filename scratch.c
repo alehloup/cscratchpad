@@ -1,12 +1,17 @@
 #define ale_assert(_cond_, ...)                      \
     if (!(_cond_)) {                                 \
-        printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
-        printf(__VA_ARGS__);                         \
-        printf(" !!\n");                             \
+        ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
+        ale_printf(__VA_ARGS__);                         \
+        ale_printf(" !!\n");                             \
         __builtin_unreachable();                     \
     }                                                \
 
 #include <stdio.h>
+#define ale_printf printf
+
+// #undef  ale_printf
+// #define ale_printf(format, ...) ;
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -42,15 +47,16 @@ refbit randomizedSetGet(RandomizedSet* obj, int val) {
 
     uint8_t *block = &(obj->table[block_index]);
 
-    return (refbit) { block, mod_bit, *block & mod_bit};
+    refbit ret = { block, mod_bit, (bool) (*block & mod_bit)};
+    return ret;
 }
 
 bool randomizedSetInsert(RandomizedSet* obj, int val) {
     refbit x = randomizedSetGet(obj, val);
 
-    printf("\niantes v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
+    ale_printf("\niantes v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
     *(x.ref) = (*(x.ref) | x.mod_bit);
-    printf("idepois v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
+    ale_printf("idepois v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
 
     if (!x.was_set) {
         obj->shuffle[obj->shuffle_len++] = val;
@@ -62,9 +68,9 @@ bool randomizedSetInsert(RandomizedSet* obj, int val) {
 bool randomizedSetRemove(RandomizedSet* obj, int val) {
     refbit x = randomizedSetGet(obj, val);
     
-    printf("\nrantes v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
+    ale_printf("\nrantes v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
     *(x.ref) = (*(x.ref) & (uint8_t)(~x.mod_bit));
-    printf("rdepois v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
+    ale_printf("rdepois v:%d b:%d m:%d w:%d \n", val, *(x.ref), x.mod_bit, x.was_set);
     
     return x.was_set;
 }
@@ -100,16 +106,16 @@ void randomizedSetFree(RandomizedSet* obj) {
 
 void printbool(int b) {
     if (b) {
-        printf("true, ");
+        ale_printf("true, ");
     }
     else {
-        printf("false, ");
+        ale_printf("false, ");
     };
 }
 
 void test() {
     RandomizedSet* obj = randomizedSetCreate();
-    printf("[[], ");
+    ale_printf("[[], ");
 
     printbool(randomizedSetInsert(obj, 0));
 
@@ -121,9 +127,9 @@ void test() {
 
     printbool(randomizedSetRemove(obj, 1));
 
-    printf("%d", randomizedSetGetRandom(obj));
+    ale_printf("%d", randomizedSetGetRandom(obj));
     
-    printf("]");
+    ale_printf("]");
     randomizedSetFree(obj);
     
 }

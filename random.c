@@ -10,7 +10,7 @@ int32_t main() {
         counts[RND(&seed) % N] +=1;
     }
     for(int32_t i = 0; i < N; ++i) {
-        printf("%d: %d\n", i+1, counts[i]);
+        ale_printf("%d: %d\n", i+1, counts[i]);
     }
 
     return 0;

@@ -13,6 +13,7 @@
         "string.h": "c",
         "windows.h": "c",
         "_mingw.h": "c",
-        "corecrt_wstdlib.h": "c"
+        "corecrt_wstdlib.h": "c",
+        "stdalign.h": "c"
     }
 }

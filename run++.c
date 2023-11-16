@@ -14,8 +14,8 @@ int32_t main(int32_t argc, cstring *argv) {
             "tee \"./outputs/%s++out.txt\""
     );
 
-    printf(format, _$1, _$1, _$1, _$1);
-    printf("\n");
+    ale_printf(format, _$1, _$1, _$1, _$1);
+    ale_printf("\n");
     
     shellrun(buffer, format, _$1, _$1, _$1, _$1);
 

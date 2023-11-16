@@ -11,24 +11,24 @@ void test_msi_cstr(arena a) {
     strht *ht = (strht *)new_64msi(&a, 4);
     typeof(ht->data) data = ht->data;
     
-    printf("%lld\n", hash_cstr("Alessandro Stamatto"));
+    ale_printf("%lld\n", hash_cstr("Alessandro Stamatto"));
 
     data[msi_set_skey(ht, "Alessandro")].val = "Stamatto";
     data[msi_set_skey(ht, "Sarah")].val = "Sakamotto";
     data[msi_set_skey(ht, "Alessandro")].val = "Ferreira";
 
-    printf("Pegou: %s\n", data[msi_get_by_skey(ht, "Sarah")].val);
-    printf("Não pegou: %s\n", data[msi_get_by_skey(ht, "Karol")].val);
+    ale_printf("Pegou: %s\n", data[msi_get_by_skey(ht, "Sarah")].val);
+    ale_printf("Não pegou: %s\n", data[msi_get_by_skey(ht, "Karol")].val);
 
     for(int32_t i = 0; i < ht->mask; ++i) {
         if  (! data[i].key) {
             continue;
         }
-        printf("[%d]", i);
-        printf("%s: %s", data[i].key, data[i].val);
-        printf(", ");
+        ale_printf("[%d]", i);
+        ale_printf("%s: %s", data[i].key, data[i].val);
+        ale_printf(", ");
     }
-    printf("\n");
+    ale_printf("\n");
 }
 
 typedef struct i64ht{ 
@@ -40,24 +40,24 @@ void test_msi_i64(arena a) {
     i64ht *ht = (i64ht *)new_64msi(&a, 4);
     typeof(ht->data) data = ht->data;
 
-    printf("%lld\n", hash_i64(4));
+    ale_printf("%lld\n", hash_i64(4));
 
     data[msi_set_i64key(ht, 5)].val = "Stamatto";
     data[msi_set_i64key(ht, 4)].val = "Sakamoto";
     data[msi_set_i64key(ht, 5)].val = "Ferreira";
 
-    printf("pegou: %s\n", data[msi_get_by_i64key(ht, 5)].val);
-    printf("não pegou: %s\n", data[msi_get_by_i64key(ht, 3)].val);
+    ale_printf("pegou: %s\n", data[msi_get_by_i64key(ht, 5)].val);
+    ale_printf("não pegou: %s\n", data[msi_get_by_i64key(ht, 3)].val);
 
     for(int32_t i = 0; i < ht->mask; ++i) {
         if  ( ! data[i].key) {
             continue;
         }
-        printf("[%d]", i);
-        printf("%lld: %s", data[i].key, data[i].val);
-        printf(", ");
+        ale_printf("[%d]", i);
+        ale_printf("%lld: %s", data[i].key, data[i].val);
+        ale_printf(", ");
     }
-    printf("\n");
+    ale_printf("\n");
 }
 
 typedef struct i64bight{ 
@@ -76,9 +76,9 @@ void test_big_msi_i64(arena a) {
     for(int32_t i = 0; i < ht->len; ++i) {
         int32_t idx = msi_get_by_i64key(ht, i);
         
-        printf("[%d]", idx);
-        printf("%lld: %lld", data[idx].key, data[idx].val);
-        printf(", ");
+        ale_printf("[%d]", idx);
+        ale_printf("%lld: %lld", data[idx].key, data[idx].val);
+        ale_printf(", ");
 
         ale_assert(data[idx].key == data[idx].val, "should be equal!");
     }
@@ -90,18 +90,18 @@ void test_big_msi_i64(arena a) {
     }
 
 
-    printf("\n");
+    ale_printf("\n");
 }
 
-threadlocal char bufferzao[2*_Mega_Bytes];
+static thread_local uint8_t bufferzao[2*_Mega_Bytes];
 int32_t main() {
     arena scratch = newarena(sizeof(bufferzao), bufferzao);
     test_msi_i64(scratch);
-    printf("\n");
-    printf("\n");
+    ale_printf("\n");
+    ale_printf("\n");
     test_msi_cstr(scratch);
-    printf("\n");
-    printf("\n");
+    ale_printf("\n");
+    ale_printf("\n");
     test_big_msi_i64(scratch);
 
     return 0;

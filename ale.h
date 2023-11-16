@@ -2,6 +2,8 @@
 
 #include <stdarg.h>    // variadic
 #include <stdint.h>    // ints
+#include <stdbool.h>   // booleans
+#include <stdalign.h>  // alignof
 
 #include <string.h> // memory
 #define ale_memset memset
@@ -11,10 +13,14 @@
 
 #include <stdio.h> // output
 #define ale_printf printf
+// #undef  ale_printf // uncomment for removing prints
+// #define ale_printf(format, ...) ; // uncomment for removing prints
 #define ale_vsprintf vsprintf
 
 #include <stdlib.h> // shell
 #define ale_system system
+
+#define _Mega_Bytes 1048576 //constexpr uint64_t _Mega_Bytes = 1048576;
 
 #define ale_assert(_cond_, ...)                          \
     if (!(_cond_)) {                                     \
@@ -24,29 +30,8 @@
         __builtin_unreachable();                         \
     }                                                    \
 
-#define _Mega_Bytes 1048576 //constexpr uint64_t _Mega_Bytes = 1048576;
-#define   sizeof(x)      ((int64_t)sizeof(x))
-
-#ifdef __cplusplus
-#define _at_least_(_size_) /* static _size_ */
-#define  alignof(x) ((int64_t)alignof(x))
-#define cpound(type) /* (type) */
-#define threadlocal static thread_local
-#define buffer_param(_param_name, _len_size) void * _param_name /* static _len_size */
-#define auto auto
-#endif
-
-#ifndef __cplusplus
-#define _at_least_(_size_) static _size_
-#define  alignof(x) ((int64_t)_Alignof(x))
-#define cpound(type) (type)
-#define threadlocal static _Thread_local
-#define buffer_param(_param_name, _len_size) char _param_name[static _len_size] 
-#define auto __auto_type
-#endif
-
 //TRICK scope that "opens" at start, and "closes" at end 
-threadlocal char MACRO_scoped__;
+static thread_local char MACRO_scoped__;
 #define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 /*
@@ -74,7 +59,7 @@ typedef union _ale_generic64{
 /*
     SHELL
 */
-static int32_t shellrun(char buffer [_at_least_(512)], cstring format, ...) {
+static int32_t shellrun(char buffer [512], cstring format, ...) {
     ale_memset(buffer, '\0', 512);
 
     va_list args; va_start(args, format);
@@ -101,7 +86,7 @@ static int32_t fit_pwr2_exp(int32_t size) {
 }
 
 // RANDOM
-static int32_t RND(uint64_t seed[_at_least_(1)]) {
+static int32_t RND(uint64_t seed[1]) {
     *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
     int32_t shift = 29 - (uint32_t)(*seed >> 61);
     
@@ -111,23 +96,23 @@ static int32_t RND(uint64_t seed[_at_least_(1)]) {
 /*
     ARENA
 */
-typedef struct arena{ char *beg; char *end; }arena;
-static arena newarena(int64_t buffer_len, buffer_param(buffer, buffer_len)) {
+typedef struct arena{ uint8_t *beg; uint8_t *end; }arena;
+static arena newarena(int64_t buffer_len, uint8_t buffer[]) {
     arena a = {};
-    a.beg = (char *)buffer;
+    a.beg = (uint8_t *)buffer;
     a.end = a.beg ? a.beg + buffer_len : 0;
     return a;
 }
 
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
-static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t count) {
+static void *alloc(arena a[1], int64_t size, int64_t align, int64_t count) {
     int64_t total = size * count;
     int64_t pad = MODPWR2(- (int64_t)a->beg, align); //mod -x gives n for next align
 
     ale_assert(total < (a->end - a->beg - pad), \
         "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", total, a->end - a->beg - pad);
 
-    char *p = a->beg + pad;
+    uint8_t *p = a->beg + pad;
     a->beg += pad + total;
     
     return ale_memset(p, 0, total);
@@ -139,13 +124,13 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
 typedef int64_t vector64_element;
 typedef struct vector64{int32_t cap; int32_t len; int64_t *data;}vector64;
 
-static void grow(vector64 dynarray[_at_least_(1)],  arena a[_at_least_(1)]) { 
+static void grow(vector64 dynarray[1],  arena a[1]) { 
     static const int32_t DYNA_FIRST_SIZE = 64;
 
     if (!dynarray->data) {
         int64_t *DYNA_START = dynarray->data = (vector64_element *)
             alloc(a, sizeof(vector64_element), alignof(vector64_element), dynarray->cap = DYNA_FIRST_SIZE); 
-    } else if (a->beg == ((char *) &(dynarray->data[dynarray->cap]))) { 
+    } else if (a->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
         // EXTEND
         int64_t *DYNA_EXTEND = (vector64_element *)
             alloc(a, sizeof(vector64_element), 1, dynarray->cap);
@@ -162,36 +147,36 @@ static void grow(vector64 dynarray[_at_least_(1)],  arena a[_at_least_(1)]) {
 /*
     PUSH TO GROWABLE ARRAY
 */
-static void push_i64(vector64 dynarray[_at_least_(1)], arena a[_at_least_(1)], int64_t int64) {
+static void push_i64(vector64 dynarray[1], arena a[1], int64_t int64) {
     if (dynarray->len >= dynarray->cap) {
         grow(dynarray, a);
     }
 
     dynarray->data[dynarray->len++] = int64;
 }
-static void push_double(vector64 dynarr[_at_least_(1)], arena a[_at_least_(1)], double float64) {
+static void push_double(vector64 dynarr[1], arena a[1], double float64) {
     int64_t replica;
     ale_memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
     push_i64(dynarr, a, replica);
 }
-static void push_cstr(vector64 dynarr[_at_least_(1)], arena a[_at_least_(1)], cstring cstr) {
+static void push_cstr(vector64 dynarr[1], arena a[1], cstring cstr) {
     push_i64(dynarr, a, (int64_t) cstr);
 }
-static void push_ptr(vector64 dynarr[_at_least_(1)], arena a[_at_least_(1)], void *ptr) {
+static void push_ptr(vector64 dynarr[1], arena a[1], void *ptr) {
     push_i64(dynarr, a, (int64_t) ptr);
 }
 
 typedef int32_t vector32_element;
 typedef struct vector32{int32_t cap; int32_t len; int32_t *data;}vector32;
 
-static void grow32(vector32 dynarray[_at_least_(1)],  arena a[_at_least_(1)]) { 
+static void grow32(vector32 dynarray[1],  arena a[1]) { 
     static const int32_t DYNA_FIRST_SIZE = 64;
 
     if (!dynarray->data) {
         int32_t *DYNA_START = dynarray->data = (vector32_element *)
             alloc(a, sizeof(vector32_element), alignof(vector32_element), dynarray->cap = DYNA_FIRST_SIZE); 
-    } else if (a->beg == ((char *) &(dynarray->data[dynarray->cap]))) { 
+    } else if (a->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
         // EXTEND
         int32_t *DYNA_EXTEND = (vector32_element *)
             alloc(a, sizeof(vector32_element), 1, dynarray->cap);
@@ -208,14 +193,14 @@ static void grow32(vector32 dynarray[_at_least_(1)],  arena a[_at_least_(1)]) {
 /*
     PUSH TO grow32ABLE ARRAY
 */
-static void push_i32(vector32 dynarray[_at_least_(1)], arena a[_at_least_(1)], int32_t int32) {
+static void push_i32(vector32 dynarray[1], arena a[1], int32_t int32) {
     if (dynarray->len >= dynarray->cap) {
         grow32(dynarray, a);
     }
 
     dynarray->data[dynarray->len++] = int32;
 }
-static void push_float(vector32 dynarr[_at_least_(1)], arena a[_at_least_(1)], float float32) {
+static void push_float(vector32 dynarr[1], arena a[1], float float32) {
     int32_t replica;
     ale_memcpy(&replica, &float32, sizeof(replica)); //type prunning
 
@@ -225,31 +210,31 @@ static void push_float(vector32 dynarr[_at_least_(1)], arena a[_at_least_(1)], f
 /*
     POP OF GROWABLE ARRAY
 */
-static int64_t pop_i64(vector64 dynarray[_at_least_(1)]) {
+static int64_t pop_i64(vector64 dynarray[1]) {
     ale_assert(dynarray->len > 0, "POP ON 64bit EMPTY ARRAY");
 
     return dynarray->data[--dynarray->len];
 }
-static double pop_double(vector64 dynarr[_at_least_(1)]) {
+static double pop_double(vector64 dynarr[1]) {
     int64_t replica = pop_i64(dynarr);
     double val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
 }
-static cstring pop_cstr(vector64 dynarr[_at_least_(1)]) {
+static cstring pop_cstr(vector64 dynarr[1]) {
      return (cstring) pop_i64(dynarr);
 }
-static void * pop_ptr(vector64 dynarr[_at_least_(1)]) {
+static void * pop_ptr(vector64 dynarr[1]) {
      return (void *) pop_i64(dynarr);
 }
 
-static int32_t pop_i32(vector32 dynarray[_at_least_(1)]) {
+static int32_t pop_i32(vector32 dynarray[1]) {
     ale_assert(dynarray->len > 0, "POP ON 32bit EMPTY ARRAY");
 
     return dynarray->data[--dynarray->len];
 }
-static float pop_float(vector32 dynarr[_at_least_(1)]) {
+static float pop_float(vector32 dynarr[1]) {
     int32_t replica = pop_i32(dynarr);
     float val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
@@ -260,22 +245,22 @@ static float pop_float(vector32 dynarr[_at_least_(1)]) {
 /*
     DATA AS GROWABLE ARRAY
 */
-static int64_t * data_as_i64(vector64 *dynamic_array) {
+static int64_t * vector_data_as_i64(vector64 *dynamic_array) {
     return (int64_t *) dynamic_array->data;
 }
-static double * data_as_double(vector64 *dynamic_array) {
+static double * vector_data_as_double(vector64 *dynamic_array) {
     return (double *) dynamic_array->data;
 }
-static cstring * data_as_cstring(vector64 *dynamic_array) {
+static cstring * vector_data_as_cstring(vector64 *dynamic_array) {
     return (cstring *) dynamic_array->data;
 }
-static void * * data_as_ptr(vector64 *dynamic_array) {
+static void * * vector_data_as_ptr(vector64 *dynamic_array) {
     return (void * *) dynamic_array->data;
 }
-static int32_t * data_as_i32(vector32 *dynamic_array) {
+static int32_t * vector_data_as_i32(vector32 *dynamic_array) {
     return (int32_t *) dynamic_array->data;
 }
-static float * data_as_float(vector32 *dynamic_array) {
+static float * vector_data_as_float(vector32 *dynamic_array) {
     return (float *) dynamic_array->data;
 }
 
@@ -314,24 +299,24 @@ static int32_t
     return (index + step) & mask;
 }
 
-typedef struct msi_entry64_layout{int64_t key; int64_t val;}msi_entry64_layout;
-typedef struct msi_ht64_layout{
+typedef struct msiht64_entry{int64_t key; int64_t val;}msiht64_entry;
+typedef struct msiht64{
     int32_t shift;int32_t mask; int32_t len;
-    msi_entry64_layout *data;
-}msi_ht64_layout;
+    msiht64_entry *data;
+}msiht64;
 
-static void * new_64msi(arena a[_at_least_(1)], int32_t expected_maxn) {
+static void * new_64msi(arena a[1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
-    msi_ht64_layout *ht = (msi_ht64_layout*)
-        alloc(a, sizeof(msi_ht64_layout), alignof(msi_ht64_layout), 1);
+    msiht64 *ht = (msiht64*)
+        alloc(a, sizeof(msiht64), alignof(msiht64), 1);
     
     ht->shift = 64 - msi_expo;
     ht->mask = (1 << msi_expo) - 1;
     ht->len = 0;
-    ht->data = (msi_entry64_layout *)
-        alloc(a, sizeof(msi_entry64_layout), alignof(msi_entry64_layout), ht->mask + 1);
+    ht->data = (msiht64_entry *)
+        alloc(a, sizeof(msiht64_entry), alignof(msiht64_entry), ht->mask + 1);
 
     return ht;
 }
@@ -343,7 +328,7 @@ static int32_t msi_i64(
 ) {
     ale_assert(table, "MSI_i64 TABLE IS NULL");
 
-    msi_ht64_layout *ht = (msi_ht64_layout*) table;
+    msiht64 *ht = (msiht64*) table;
     typeof(ht->data) data = ht->data;
 
     uint64_t hash = (uint64_t) hash_i64(keyi64);
@@ -384,7 +369,7 @@ static int32_t msi_cstr(
 ) {
     ale_assert(table, "MSI_CSTR TABLE IS NULL");
 
-    msi_ht64_layout *ht = (msi_ht64_layout*) table;
+    msiht64 *ht = (msiht64*) table;
     typeof(ht->data) data = ht->data;
 
     uint64_t hash = (uint64_t) hash_cstr(keycstr);

@@ -15,11 +15,11 @@ int32_t main(int32_t argc, cstring *argv) {{
     printf("Começando beg:%p end:%p total:%lldMB\n", 
         perm.beg, perm.end, (perm.end - perm.beg)/1048576);
 
-    teste *woa = newx(&perm, teste);
+    teste *woa = (typeof(woa)) alloc(&perm, sizeof(teste), alignof(teste), 1);
     *woa = cpound(teste){4, 5, 6};
     printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);
 
-    teste *vetor = newxs(&perm, teste, 3);
+    teste *vetor = (typeof(vetor)) alloc(&perm, sizeof(teste), alignof(teste), 3);
     for(int32_t i = 0, j = 0; i < 3; ++i) {
         vetor[i] = cpound(teste){j++, j++, j++};
         printf("%d Ints: %d %lld %d\n", i, vetor[i].x, vetor[i].y, vetor[i].z);

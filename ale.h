@@ -139,36 +139,36 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
     return ale_memset(p, 0, total);
 }
 
-#define newx(  a, t)       (t *)         alloc(a, sizeof(t),        alignof(t),        1)
-#define newxs( a, t, n)    (t *)         alloc(a, sizeof(t),        alignof(t),        n)
-#define newmat(a, t, m, n) (t (*)[m][n]) alloc(a, sizeof(t [m][n]), alignof(t [m][n]), 1)
+// #define newx(  a, t)       (t *)         alloc(a, sizeof(t),        alignof(t),        1)
+// #define newxs( a, t, n)    (t *)         alloc(a, sizeof(t),        alignof(t),        n)
+// #define newmat(a, t, m, n) (t (*)[m][n]) alloc(a, sizeof(t [m][n]), alignof(t [m][n]), 1)
 
 /*
     GROWABLE ARRAY
 */
-typedef int64_t dynael_layout;
-typedef struct dyna_layout{int32_t cap; int32_t len; int64_t *data;} dyna_layout;
+typedef int64_t dynael64_layout;
+typedef struct dyna64_layout{int32_t cap; int32_t len; int64_t *data;}dyna64_layout;
 
 static void grow(void *dynamic_array,  arena a[_at_least_(1)]) { 
     ale_assert(dynamic_array, "DYNAMIC ARRAY IS NULL");
 
     static const int32_t DYNA_FIRST_SIZE = 64;
 
-    dyna_layout *dynarray = (dyna_layout *)dynamic_array;
+    dyna64_layout *dynarray = (dyna64_layout *)dynamic_array;
 
     if (!dynarray->data) {
-        int64_t *DYNA_START = dynarray->data = (dynael_layout *)
-            alloc(a, sizeof(dynael_layout), alignof(dynael_layout), dynarray->cap = DYNA_FIRST_SIZE); 
+        int64_t *DYNA_START = dynarray->data = (dynael64_layout *)
+            alloc(a, sizeof(dynael64_layout), alignof(dynael64_layout), dynarray->cap = DYNA_FIRST_SIZE); 
     } else if (a->beg == ((char *) &(dynarray->data[dynarray->cap]))) { 
         // EXTEND
-        int64_t *DYNA_EXTEND = (dynael_layout *)
-            alloc(a, sizeof(dynael_layout), 1, dynarray->cap);
+        int64_t *DYNA_EXTEND = (dynael64_layout *)
+            alloc(a, sizeof(dynael64_layout), 1, dynarray->cap);
         dynarray->cap *= 2;
     } else {
         // RELOC
-        int64_t *DYNA_RELOC = (dynael_layout *)
-            alloc(a, sizeof(dynael_layout), alignof(dynael_layout), dynarray->cap *= 2);
-        ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(dynael_layout)*dynarray->len);
+        int64_t *DYNA_RELOC = (dynael64_layout *)
+            alloc(a, sizeof(dynael64_layout), alignof(dynael64_layout), dynarray->cap *= 2);
+        ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(dynael64_layout)*dynarray->len);
         dynarray->data = DYNA_RELOC;
     }
 }
@@ -177,7 +177,7 @@ static void grow(void *dynamic_array,  arena a[_at_least_(1)]) {
     PUSH TO GROWABLE ARRAY
 */
 static void push_i64(void *dynamic_array, arena a[_at_least_(1)], int64_t int64) {
-    dyna_layout *dynarray = (dyna_layout *)dynamic_array;
+    dyna64_layout *dynarray = (dyna64_layout *)dynamic_array;
 
     if (dynarray->len >= dynarray->cap) {
         grow(dynarray, a);
@@ -198,11 +198,57 @@ static void push_ptr(void *dynarr, arena a[_at_least_(1)], void *ptr) {
     push_i64(dynarr, a, (int64_t) ptr);
 }
 
+typedef int32_t dynael32_layout;
+typedef struct dyna32_layout{int32_t cap; int32_t len; int32_t *data;}dyna32_layout;
+
+static void grow32(void *dynamic_array,  arena a[_at_least_(1)]) { 
+    ale_assert(dynamic_array, "DYNAMIC 32bit ARRAY IS NULL");
+
+    static const int32_t DYNA_FIRST_SIZE = 64;
+
+    dyna32_layout *dynarray = (dyna32_layout *)dynamic_array;
+
+    if (!dynarray->data) {
+        int32_t *DYNA_START = dynarray->data = (dynael32_layout *)
+            alloc(a, sizeof(dynael32_layout), alignof(dynael32_layout), dynarray->cap = DYNA_FIRST_SIZE); 
+    } else if (a->beg == ((char *) &(dynarray->data[dynarray->cap]))) { 
+        // EXTEND
+        int32_t *DYNA_EXTEND = (dynael32_layout *)
+            alloc(a, sizeof(dynael32_layout), 1, dynarray->cap);
+        dynarray->cap *= 2;
+    } else {
+        // RELOC
+        int32_t *DYNA_RELOC = (dynael32_layout *)
+            alloc(a, sizeof(dynael32_layout), alignof(dynael32_layout), dynarray->cap *= 2);
+        ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(dynael32_layout)*dynarray->len);
+        dynarray->data = DYNA_RELOC;
+    }
+}
+
+/*
+    PUSH TO grow32ABLE ARRAY
+*/
+static void push_i32(void *dynamic_array, arena a[_at_least_(1)], int32_t int32) {
+    dyna32_layout *dynarray = (dyna32_layout *)dynamic_array;
+
+    if (dynarray->len >= dynarray->cap) {
+        grow32(dynarray, a);
+    }
+
+    dynarray->data[dynarray->len++] = int32;
+}
+static void push_float(void *dynarr, arena a[_at_least_(1)], float float32) {
+    int32_t replica;
+    ale_memcpy(&replica, &float32, sizeof(replica)); //type prunning
+
+    push_i32(dynarr, a, replica);
+}
+
 /*
     POP OF GROWABLE ARRAY
 */
 static int64_t pop_i64(void *dynamic_array) {
-    dyna_layout *dynarray = (dyna_layout *)dynamic_array;
+    dyna64_layout *dynarray = (dyna64_layout *)dynamic_array;
 
     ale_assert(dynarray->len > 0, "POP ON EMPTY ARRAY");
 
@@ -220,6 +266,21 @@ static cstring pop_cstr(void *dynarr) {
 }
 static void * pop_ptr(void *dynarr) {
      return (void *) pop_i64(dynarr);
+}
+
+static int32_t pop_i32(void *dynamic_array) {
+    dyna32_layout *dynarray = (dyna32_layout *)dynamic_array;
+
+    ale_assert(dynarray->len > 0, "POP ON 32bit EMPTY ARRAY");
+
+    return dynarray->data[--dynarray->len];
+}
+static double pop_float(void *dynarr) {
+    int32_t replica = pop_i32(dynarr);
+    float val = 0;
+    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+
+    return val; 
 }
 
 /*

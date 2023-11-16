@@ -34,6 +34,8 @@
 static thread_local char MACRO_scoped__;
 #define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
+typedef void * pointer; //generic pointer
+
 /*
     STRINGS
 */
@@ -55,7 +57,7 @@ typedef union _ale_generic64{
     int64_t i;
     double d;
     cstring s;
-    void *p;
+    pointer p;
 }_ale_generic64;
 
 /*
@@ -107,7 +109,7 @@ static arena newarena(int64_t buffer_len, uint8_t buffer[]) {
 }
 
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
-static void *alloc(arena a[1], int64_t size, int64_t align, int64_t count) {
+static pointer alloc(arena a[1], int64_t size, int64_t align, int64_t count) {
     int64_t total = size * count;
     int64_t pad = MODPWR2(- (int64_t)a->beg, align); //mod -x gives n for next align
 
@@ -165,7 +167,7 @@ static void push_double(vector64 dynarr[1], arena a[1], double float64) {
 static void push_cstr(vector64 dynarr[1], arena a[1], cstring cstr) {
     push_i64(dynarr, a, (int64_t) cstr);
 }
-static void push_ptr(vector64 dynarr[1], arena a[1], void *ptr) {
+static void push_ptr(vector64 dynarr[1], arena a[1], pointer ptr) {
     push_i64(dynarr, a, (int64_t) ptr);
 }
 
@@ -227,8 +229,8 @@ static double pop_double(vector64 dynarr[1]) {
 static cstring pop_cstr(vector64 dynarr[1]) {
      return (cstring) pop_i64(dynarr);
 }
-static void * pop_ptr(vector64 dynarr[1]) {
-     return (void *) pop_i64(dynarr);
+static pointer pop_ptr(vector64 dynarr[1]) {
+     return (pointer) pop_i64(dynarr);
 }
 
 static int32_t pop_i32(vector32 dynarray[1]) {
@@ -256,8 +258,8 @@ static double * vector_data_as_double(vector64 *dynamic_array) {
 static cstring * vector_data_as_cstring(vector64 *dynamic_array) {
     return (cstring *) dynamic_array->data;
 }
-static void * * vector_data_as_ptr(vector64 *dynamic_array) {
-    return (void * *) dynamic_array->data;
+static pointer * vector_data_as_ptr(vector64 *dynamic_array) {
+    return (pointer *) dynamic_array->data;
 }
 static int32_t * vector_data_as_i32(vector32 *dynamic_array) {
     return (int32_t *) dynamic_array->data;
@@ -324,11 +326,11 @@ static msiht64 * new_64msi(arena a[1], int32_t expected_maxn) {
 }
 
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
-static int32_t msi_i64(
+static int32_t msiki(
     msiht64 *ht /* msi_ht */, 
     int64_t keyi64, int32_t create_if_not_found
 ) {
-    ale_assert(ht, "MSI_i64 TABLE IS NULL");
+    ale_assert(ht, "MSI KI TABLE IS NULL");
 
     typeof(ht->data) data = ht->data;
 
@@ -346,7 +348,7 @@ static int32_t msi_i64(
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < mask - 2, "MSI HT IS FULL");
+        ale_assert(ht->len < mask - 2, "MSI KI HT IS FULL");
         data[index].key = keyi64;
         ++ht->len;
     }
@@ -355,20 +357,79 @@ static int32_t msi_i64(
 }
 
 // Returns the index of |ikey| in the msi |table|
-static int32_t msi_get_by_i64key(msiht64 *table, int64_t ikey) {
-    return msi_i64(table, ikey, 0);
+static int32_t msiki_get_idx(msiht64 *table, int64_t ikey) {
+    return msiki(table, ikey, 0);
 }
+
+static int64_t msiki_get_i64(msiht64 *table, int64_t ikey) {
+    return table->data[msiki(table, ikey, 0)].val;
+}
+static double msiki_get_double(msiht64 *table, int64_t ikey) {
+    int64_t replica = table->data[msiki(table, ikey, 0)].val;
+    double val = 0;
+    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+
+    return val;
+}
+static cstring msiki_get_cstr(msiht64 *table, int64_t ikey) {
+    return (itocstr) table->data[msiki(table, ikey, 0)].val;
+}
+static pointer msiki_get_ptr(msiht64 *table, int64_t ikey) {
+    return (pointer) table->data[msiki(table, ikey, 0)].val;
+}
+
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-static int32_t msi_set_i64key(msiht64 *table, int64_t ikey) {
-    return msi_i64(table, ikey, 1);
+static int32_t msiki_set_idx(msiht64 *table, int64_t ikey) {
+    return msiki(table, ikey, 1);
+}
+
+static int64_t msiki_set_i64(msiht64 *table, int64_t ikey, int64_t ival) {
+    table->data[msiki(table, ikey, 1)].val = ival;
+    return ival;
+}
+static double msiki_set_double(msiht64 *table, int64_t ikey, double dval) {
+    int64_t replica;
+    ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
+
+    table->data[msiki(table, ikey, 1)].val = replica;
+    return dval;
+}
+static cstring msiki_set_cstr(msiht64 *table, int64_t ikey, cstring sval) {
+    table->data[msiki(table, ikey, 1)].val = (cstrtoi) sval;
+    return sval;
+}
+static pointer msiki_set_ptr(msiht64 *table, int64_t ikey, pointer pval) {
+    table->data[msiki(table, ikey, 1)].val = (int64_t) pval;
+    return pval;
+}
+
+typedef struct msiki_data_int64{int64_t key; int64_t val;}msiki_data_int64;
+static msiki_data_int64 * msiki_data_as_int64(msiht64 *table) {
+    auto data = table->data;
+    return (msiki_data_int64 *) data;
+}
+typedef struct msiki_data_double{int64_t key; double val;}msiki_data_double;
+static msiki_data_double * msiki_data_as_double(msiht64 *table) {
+    auto data = table->data;
+    return (msiki_data_double *) data;
+}
+typedef struct msiki_data_cstr{int64_t key; cstring val;}msiki_data_cstr;
+static msiki_data_cstr * msiki_data_as_cstr(msiht64 *table) {
+    auto data = table->data;
+    return (msiki_data_cstr *) data;
+}
+typedef struct msiki_data_ptr{int64_t key; pointer val;}msiki_data_ptr;
+static msiki_data_ptr * msiki_data_as_ptr(msiht64 *table) {
+    auto data = table->data;
+    return (msiki_data_ptr *) data;
 }
 
 // Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
-static int32_t msi_cstr(
+static int32_t msiks(
     msiht64 *ht /* msi_ht */, 
     cstring keycstr, int32_t create_if_not_found
 ) {
-    ale_assert(ht, "MSI_CSTR TABLE IS NULL");
+    ale_assert(ht, "MSI KS TABLE IS NULL");
 
     typeof(ht->data) data = ht->data;
 
@@ -386,7 +447,7 @@ static int32_t msi_cstr(
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < mask - 2, "MSI HT IS FULL");
+        ale_assert(ht->len < mask - 2, "MSI KS HT IS FULL");
         data[index].key = (int64_t) keycstr;
         ++ht->len;
     }
@@ -394,10 +455,69 @@ static int32_t msi_cstr(
     return index; // index of entry found OR entry empty
 }
 // Returns the index of |ikey| in the msi |table|
-static int32_t msi_get_by_skey(msiht64 *table, cstring skey) {
-    return msi_cstr(table, skey, 0);
+static int32_t msiks_get_idx(msiht64 *table, cstring skey) {
+    return msiks(table, skey, 0);
 }
-// Creates key if not found, then returns the index of |ikey| in the msi |table|
-static int32_t msi_set_skey(msiht64 *table, cstring skey) {
-    return msi_cstr(table, skey, 1);
+
+static int64_t msiks_get_i64(msiht64 *table, cstring skey) {
+    return (int64_t) table->data[msiks(table, skey, 0)].val;
+}
+static double msiks_get_double(msiht64 *table, cstring skey) {
+    int64_t replica = table->data[msiks(table, skey, 0)].val;
+    double val = 0;
+    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+
+    return val;
+}
+static cstring msiks_get_cstr(msiht64 *table, cstring skey) {
+    return (itocstr) table->data[msiks(table, skey, 0)].val;
+}
+static pointer msiks_get_ptr(msiht64 *table, cstring skey) {
+    return (pointer) table->data[msiks(table, skey, 0)].val;
+}
+
+// Creates key if not found, then returns the index of |skey| in the msi |table|
+static int32_t msiks_set_idx(msiht64 *table, cstring skey) {
+    return msiks(table, skey, 1);
+}
+
+static int64_t msiks_set_i64(msiht64 *table, cstring skey, int64_t ival) {
+    table->data[msiks(table, skey, 1)].val = ival;
+    return ival;
+}
+static double msiks_set_double(msiht64 *table, cstring skey, double dval) {
+    int64_t replica;
+    ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
+
+    table->data[msiks(table, skey, 1)].val = replica;
+    return dval;
+}
+static cstring msiks_set_cstr(msiht64 *table, cstring skey, cstring sval) {
+    table->data[msiks(table, skey, 1)].val = (cstrtoi) sval;
+    return sval;
+}
+static pointer msiks_set_ptr(msiht64 *table, cstring skey, pointer pval) {
+    table->data[msiks(table, skey, 1)].val = (int64_t) pval;
+    return pval;
+}
+
+typedef struct msiks_data_int64{cstring key; int64_t val;}msiks_data_int64;
+static msiks_data_int64 * msiks_data_as_int64(msiht64 *table) {
+    auto data = table->data;
+    return (msiks_data_int64 *) data;
+}
+typedef struct msiks_data_double{cstring key; double val;}msiks_data_double;
+static msiks_data_double * msiks_data_as_double(msiht64 *table) {
+    auto data = table->data;
+    return (msiks_data_double *) data;
+}
+typedef struct msiks_data_cstr{cstring key; cstring val;}msiks_data_cstr;
+static msiks_data_cstr * msiks_data_as_cstr(msiht64 *table) {
+    auto data = table->data;
+    return (msiks_data_cstr *) data;
+}
+typedef struct msiks_data_ptr{cstring key; pointer val;}msiks_data_ptr;
+static msiks_data_ptr * msiks_data_as_ptr(msiht64 *table) {
+    auto data = table->data;
+    return (msiks_data_ptr *) data;
 }

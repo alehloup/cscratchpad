@@ -4,23 +4,24 @@
 
 void test_msi_cstr(arena a) {
     auto ht = new_64msi(&a, 4);
-    auto data = ht->data;
     
     ale_printf("%lld\n", hash_cstr("Alessandro Stamatto"));
 
-    data[msi_set_skey(ht, "Alessandro")].val = (cstrtoi) "Stamatto";
-    data[msi_set_skey(ht, "Sarah")].val = (cstrtoi) "Sakamotto";
-    data[msi_set_skey(ht, "Alessandro")].val = (cstrtoi) "Ferreira";
+    msiks_set_cstr(ht, "Alessandro", "Stamatto");
+    msiks_set_cstr(ht, "Sarah", "Sakamotto");
+    msiks_set_cstr(ht, "Alessandro", "Ferreira");
 
-    ale_printf("Pegou: %s\n", (itocstr) data[msi_get_by_skey(ht, "Sarah")].val);
-    ale_printf("Não pegou: %s\n", (itocstr) data[msi_get_by_skey(ht, "Karol")].val);
 
+    ale_printf("Pegou: %s\n", msiks_get_cstr(ht, "Sarah"));
+    ale_printf("Não pegou: %s\n", msiks_get_cstr(ht, "Karol"));
+
+    auto data = msiks_data_as_cstr(ht);
     for(int32_t i = 0; i < ht->mask; ++i) {
         if  (! data[i].key) {
             continue;
         }
         ale_printf("[%d]", i);
-        ale_printf("%s: %s", (itocstr) data[i].key, (itocstr) data[i].val);
+        ale_printf("%s: %s", data[i].key, data[i].val);
         ale_printf(", ");
     }
     ale_printf("\n");
@@ -28,23 +29,23 @@ void test_msi_cstr(arena a) {
 
 void test_msi_i64(arena a) {
     auto ht = new_64msi(&a, 4);
-    auto data = ht->data;
 
     ale_printf("%lld\n", hash_i64(4));
 
-    data[msi_set_i64key(ht, 5)].val = (cstrtoi) "Stamatto";
-    data[msi_set_i64key(ht, 4)].val = (cstrtoi) "Sakamoto";
-    data[msi_set_i64key(ht, 5)].val = (cstrtoi) "Ferreira";
+    msiki_set_cstr(ht, 5, "Stamatto");
+    msiki_set_cstr(ht, 4, "Sakamoto");
+    msiki_set_cstr(ht, 5, "Ferreira");
 
-    ale_printf("pegou: %s\n", (itocstr) data[msi_get_by_i64key(ht, 5)].val);
-    ale_printf("não pegou: %s\n", (itocstr) data[msi_get_by_i64key(ht, 3)].val);
+    ale_printf("pegou: %s\n", msiki_get_cstr(ht, 5));
+    ale_printf("não pegou: %s\n", msiki_get_cstr(ht, 3));
 
+    auto data = msiki_data_as_cstr(ht);
     for(int32_t i = 0; i < ht->mask; ++i) {
         if  ( ! data[i].key) {
             continue;
         }
         ale_printf("[%d]", i);
-        ale_printf("%lld: %s", data[i].key, (itocstr) data[i].val);
+        ale_printf("%lld: %s", data[i].key, data[i].val);
         ale_printf(", ");
     }
     ale_printf("\n");
@@ -52,14 +53,14 @@ void test_msi_i64(arena a) {
 
 void test_big_msi_i64(arena a) {
     auto ht = new_64msi(&a, 128);
-    auto data = ht->data;
 
     for(int i = 0; i < 128; ++i) {
-        data[msi_set_i64key(ht, i)].val = i;
+        msiki_set_i64(ht, i, i);
     }
 
+    auto data = msiki_data_as_int64(ht);
     for(int32_t i = 0; i < ht->len; ++i) {
-        int32_t idx = msi_get_by_i64key(ht, i);
+        int32_t idx = msiki_get_idx(ht, i);
         
         ale_printf("[%d]", idx);
         ale_printf("%lld: %lld", data[idx].key, data[idx].val);
@@ -69,7 +70,7 @@ void test_big_msi_i64(arena a) {
     }
 
     for(int32_t i = ht->len; i < ht->mask; ++i) {
-        int32_t idx = msi_get_by_i64key(ht, i);
+        int32_t idx = msiki_get_idx(ht, i);
 
         ale_assert(data[idx].key == 0, "should be empty!");
     }

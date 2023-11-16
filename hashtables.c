@@ -3,7 +3,7 @@
 #include "ale.h"
 
 void test_msi_cstr(arena a) {
-    auto ht = new_64msi(&a, 4);
+    auto ht = newmsi64(&a, 4);
     
     ale_printf("%lld\n", hash_cstr("Alessandro Stamatto"));
 
@@ -28,7 +28,7 @@ void test_msi_cstr(arena a) {
 }
 
 void test_msi_i64(arena a) {
-    auto ht = new_64msi(&a, 4);
+    auto ht = newmsi64(&a, 4);
 
     ale_printf("%lld\n", hash_i64(4));
 
@@ -52,7 +52,7 @@ void test_msi_i64(arena a) {
 }
 
 void test_big_msi_i64(arena a) {
-    auto ht = new_64msi(&a, 128);
+    auto ht = newmsi64(&a, 128);
 
     for(int i = 0; i < 128; ++i) {
         msiki_set_i64(ht, i, i);

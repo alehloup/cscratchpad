@@ -308,8 +308,7 @@ typedef struct msiht64{
     int32_t shift;int32_t mask; int32_t len;
     msiht64_entry *data;
 }msiht64;
-
-static msiht64 * new_64msi(arena a[1], int32_t expected_maxn) {
+static msiht64 * newmsi64(arena a[1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
@@ -520,4 +519,100 @@ typedef struct msiks_data_ptr{cstring key; pointer val;}msiks_data_ptr;
 static msiks_data_ptr * msiks_data_as_ptr(msiht64 *table) {
     auto data = table->data;
     return (msiks_data_ptr *) data;
+}
+
+typedef struct msiht32_entry{int32_t key; int32_t val;}msiht32_entry;
+typedef struct msiht32{
+    int32_t shift;int32_t mask; int32_t len;
+    msiht32_entry *data;
+}msiht32;
+static msiht32 * newmsi32(arena a[1], int32_t expected_maxn) {
+    const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
+    ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
+
+    msiht32 *ht = (msiht32*)
+        alloc(a, sizeof(msiht32), alignof(msiht32), 1);
+    
+    ht->shift = 64 - msi_expo;
+    ht->mask = (1 << msi_expo) - 1;
+    ht->len = 0;
+    ht->data = (msiht32_entry *)
+        alloc(a, sizeof(msiht32_entry), alignof(msiht32_entry), ht->mask + 1);
+
+    return ht;
+}
+
+static int32_t msiki32(
+    msiht32 *ht /* msi_ht */, 
+    int32_t keyi32, int32_t create_if_not_found
+) {
+    ale_assert(ht, "MSI KI TABLE IS NULL");
+
+    typeof(ht->data) data = ht->data;
+
+    uint64_t hash = (uint64_t) hash_i64(keyi32);
+    int32_t index = (int32_t)hash;
+    int32_t mask = ht->mask;
+    int32_t shift = ht->shift;
+    
+    for(
+        index = msi_lookup(hash, index, mask, shift);
+        data[index].key != 0 && data[index].key != keyi32; 
+        index = msi_lookup(hash, index, mask, shift)
+    ) {
+        /* empty body */
+    }
+
+    if (data[index].key == 0 && create_if_not_found) {
+        ale_assert(ht->len < mask - 2, "MSI KI32 HT IS FULL");
+        data[index].key = keyi32;
+        ++ht->len;
+    }
+
+    return index; // index of entry found OR entry empty
+}
+
+// Returns the index of |ikey| in the msi |table|
+static int32_t msiki32_get_idx(msiht32 *table, int32_t ikey) {
+    return msiki32(table, ikey, 0);
+}
+
+static int32_t msiki_get_i32(msiht32 *table, int32_t ikey) {
+    return table->data[msiki32(table, ikey, 0)].val;
+}
+static float msiki_get_float(msiht32 *table, int32_t ikey) {
+    int32_t replica = table->data[msiki32(table, ikey, 0)].val;
+    float val = 0;
+    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+
+    return val;
+}
+
+// Creates key if not found, then returns the index of |ikey| in the msi |table|
+static int32_t msiki32_set_idx(msiht32 *table, int32_t ikey) {
+    return msiki32(table, ikey, 1);
+}
+
+static int32_t msiki_set_i32(msiht32 *table, int32_t ikey, int32_t ival) {
+    table->data[msiki32(table, ikey, 1)].val = ival;
+    return ival;
+}
+static float msiki_set_float(msiht32 *table, int32_t ikey, float dval) {
+    int32_t replica;
+    ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
+
+    table->data[msiki32(table, ikey, 1)].val = replica;
+    return dval;
+}
+
+
+typedef struct msiki_data_int32{int32_t key; int32_t val;}msiki_data_int32;
+static msiki_data_int32 * msiki_data_as_int32(msiht32 *table) {
+    auto data = table->data;
+    return (msiki_data_int32 *) data;
+}
+typedef struct msiki_data_float{int32_t key; float val;}msiki_data_float;
+static msiki_data_float * msiki_data_as_float(msiht32 *table) {
+    auto data = table->data;
+    return (msiki_data_float *) data;
 }

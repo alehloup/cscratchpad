@@ -24,7 +24,7 @@
         __builtin_unreachable();                         \
     }                                                    \
 
-#define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
+#define _Mega_Bytes 1048576 //constexpr uint64_t _Mega_Bytes = 1048576;
 #define   sizeof(x)      ((int64_t)sizeof(x))
 
 #ifdef __cplusplus
@@ -33,6 +33,7 @@
 #define cpound(type) /* (type) */
 #define threadlocal static thread_local
 #define buffer_param(_param_name, _len_size) void * _param_name /* static _len_size */
+#define auto auto
 #endif
 
 #ifndef __cplusplus
@@ -41,6 +42,7 @@
 #define cpound(type) (type)
 #define threadlocal static _Thread_local
 #define buffer_param(_param_name, _len_size) char _param_name[static _len_size] 
+#define auto __auto_type
 #endif
 
 //TRICK scope that "opens" at start, and "closes" at end 

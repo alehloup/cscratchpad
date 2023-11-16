@@ -40,6 +40,8 @@ static thread_local char MACRO_scoped__;
 typedef const char * cstring;
 typedef const char * const staticstring;
 typedef struct slicestring{ int32_t len; cstring data; }slicestring;
+typedef int64_t cstrtoi; // to convert a cstring, a pointer, to an int64
+typedef cstring itocstr; // to convert a int64 to a cstring (a pointer)
 
 static slicestring s8(int32_t len, cstring data) {
     slicestring temp = {len, (cstring) data};
@@ -305,7 +307,7 @@ typedef struct msiht64{
     msiht64_entry *data;
 }msiht64;
 
-static void * new_64msi(arena a[1], int32_t expected_maxn) {
+static msiht64 * new_64msi(arena a[1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
@@ -323,12 +325,11 @@ static void * new_64msi(arena a[1], int32_t expected_maxn) {
 
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 static int32_t msi_i64(
-    void *table /* msi_ht */, 
+    msiht64 *ht /* msi_ht */, 
     int64_t keyi64, int32_t create_if_not_found
 ) {
-    ale_assert(table, "MSI_i64 TABLE IS NULL");
+    ale_assert(ht, "MSI_i64 TABLE IS NULL");
 
-    msiht64 *ht = (msiht64*) table;
     typeof(ht->data) data = ht->data;
 
     uint64_t hash = (uint64_t) hash_i64(keyi64);
@@ -354,22 +355,21 @@ static int32_t msi_i64(
 }
 
 // Returns the index of |ikey| in the msi |table|
-static int32_t msi_get_by_i64key(void *table, int64_t ikey) {
+static int32_t msi_get_by_i64key(msiht64 *table, int64_t ikey) {
     return msi_i64(table, ikey, 0);
 }
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-static int32_t msi_set_i64key(void *table, int64_t ikey) {
+static int32_t msi_set_i64key(msiht64 *table, int64_t ikey) {
     return msi_i64(table, ikey, 1);
 }
 
 // Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
 static int32_t msi_cstr(
-    void *table /* msi_ht */, 
+    msiht64 *ht /* msi_ht */, 
     cstring keycstr, int32_t create_if_not_found
 ) {
-    ale_assert(table, "MSI_CSTR TABLE IS NULL");
+    ale_assert(ht, "MSI_CSTR TABLE IS NULL");
 
-    msiht64 *ht = (msiht64*) table;
     typeof(ht->data) data = ht->data;
 
     uint64_t hash = (uint64_t) hash_cstr(keycstr);
@@ -394,10 +394,10 @@ static int32_t msi_cstr(
     return index; // index of entry found OR entry empty
 }
 // Returns the index of |ikey| in the msi |table|
-static int32_t msi_get_by_skey(void *table, cstring skey) {
+static int32_t msi_get_by_skey(msiht64 *table, cstring skey) {
     return msi_cstr(table, skey, 0);
 }
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-static int32_t msi_set_skey(void *table, cstring skey) {
+static int32_t msi_set_skey(msiht64 *table, cstring skey) {
     return msi_cstr(table, skey, 1);
 }

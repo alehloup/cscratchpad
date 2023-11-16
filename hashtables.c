@@ -2,72 +2,57 @@
 #include <stdio.h>
 #include "ale.h"
 
-typedef struct strht{ 
-     int32_t shift;int32_t mask; 
-    int32_t len; struct{cstring key; cstring val;} *data; 
-}strht;
-
 void test_msi_cstr(arena a) {
-    strht *ht = (strht *)new_64msi(&a, 4);
-    typeof(ht->data) data = ht->data;
+    auto ht = new_64msi(&a, 4);
+    auto data = ht->data;
     
     ale_printf("%lld\n", hash_cstr("Alessandro Stamatto"));
 
-    data[msi_set_skey(ht, "Alessandro")].val = "Stamatto";
-    data[msi_set_skey(ht, "Sarah")].val = "Sakamotto";
-    data[msi_set_skey(ht, "Alessandro")].val = "Ferreira";
+    data[msi_set_skey(ht, "Alessandro")].val = (cstrtoi) "Stamatto";
+    data[msi_set_skey(ht, "Sarah")].val = (cstrtoi) "Sakamotto";
+    data[msi_set_skey(ht, "Alessandro")].val = (cstrtoi) "Ferreira";
 
-    ale_printf("Pegou: %s\n", data[msi_get_by_skey(ht, "Sarah")].val);
-    ale_printf("Não pegou: %s\n", data[msi_get_by_skey(ht, "Karol")].val);
+    ale_printf("Pegou: %s\n", (itocstr) data[msi_get_by_skey(ht, "Sarah")].val);
+    ale_printf("Não pegou: %s\n", (itocstr) data[msi_get_by_skey(ht, "Karol")].val);
 
     for(int32_t i = 0; i < ht->mask; ++i) {
         if  (! data[i].key) {
             continue;
         }
         ale_printf("[%d]", i);
-        ale_printf("%s: %s", data[i].key, data[i].val);
+        ale_printf("%s: %s", (itocstr) data[i].key, (itocstr) data[i].val);
         ale_printf(", ");
     }
     ale_printf("\n");
 }
 
-typedef struct i64ht{ 
-    int32_t shift;int32_t mask; 
-    int32_t len; struct{int64_t key; cstring val;} *data; 
-}i64ht;
-
 void test_msi_i64(arena a) {
-    i64ht *ht = (i64ht *)new_64msi(&a, 4);
-    typeof(ht->data) data = ht->data;
+    auto ht = new_64msi(&a, 4);
+    auto data = ht->data;
 
     ale_printf("%lld\n", hash_i64(4));
 
-    data[msi_set_i64key(ht, 5)].val = "Stamatto";
-    data[msi_set_i64key(ht, 4)].val = "Sakamoto";
-    data[msi_set_i64key(ht, 5)].val = "Ferreira";
+    data[msi_set_i64key(ht, 5)].val = (cstrtoi) "Stamatto";
+    data[msi_set_i64key(ht, 4)].val = (cstrtoi) "Sakamoto";
+    data[msi_set_i64key(ht, 5)].val = (cstrtoi) "Ferreira";
 
-    ale_printf("pegou: %s\n", data[msi_get_by_i64key(ht, 5)].val);
-    ale_printf("não pegou: %s\n", data[msi_get_by_i64key(ht, 3)].val);
+    ale_printf("pegou: %s\n", (itocstr) data[msi_get_by_i64key(ht, 5)].val);
+    ale_printf("não pegou: %s\n", (itocstr) data[msi_get_by_i64key(ht, 3)].val);
 
     for(int32_t i = 0; i < ht->mask; ++i) {
         if  ( ! data[i].key) {
             continue;
         }
         ale_printf("[%d]", i);
-        ale_printf("%lld: %s", data[i].key, data[i].val);
+        ale_printf("%lld: %s", data[i].key, (itocstr) data[i].val);
         ale_printf(", ");
     }
     ale_printf("\n");
 }
 
-typedef struct i64bight{ 
-    int32_t shift;int32_t mask; 
-    int32_t len; struct{int64_t key; int64_t val;} *data; 
-}i64bight;
-
 void test_big_msi_i64(arena a) {
-    i64bight *ht = (i64bight *)new_64msi(&a, 128);
-    typeof(ht->data) data = ht->data;
+    auto ht = new_64msi(&a, 128);
+    auto data = ht->data;
 
     for(int i = 0; i < 128; ++i) {
         data[msi_set_i64key(ht, i)].val = i;

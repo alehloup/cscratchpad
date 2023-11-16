@@ -24,6 +24,9 @@
         __builtin_unreachable();                         \
     }                                                    \
 
+#define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
+#define   sizeof(x)      ((int64_t)sizeof(x))
+
 #ifdef __cplusplus
 #define _at_least_(_size_) /* static _size_ */
 #define  alignof(x) ((int64_t)alignof(x))
@@ -44,13 +47,6 @@
 threadlocal char MACRO_scoped__;
 #define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
-/* 
-    MEMORYops
-*/
-#define MegaBytes 1048576 //constexpr uint64_t MegaBytes = 1048576;
-#define   sizeof(x)      ((int64_t)sizeof(x))
-#define  countof(a)      (sizeof(a) / sizeof(*(a)))
-
 /*
     STRINGS
 */
@@ -58,14 +54,10 @@ typedef const char * cstring;
 typedef const char * const staticstring;
 typedef struct slicestring{ int32_t len; cstring data; }slicestring;
 
-static slicestring cstr_to_slice(int32_t len, cstring data) {
+static slicestring s8(int32_t len, cstring data) {
     slicestring temp = {len, (cstring) data};
     return temp;
 } 
-
-// uses sizeof in static c-strings
-#define cstrlen(str) (countof(str) == 8? (int32_t)ale_strlen(str) : (int32_t) (countof(str) - 1))
-#define s8(cstr) cstr_to_slice(cstrlen(cstr), cstr)
 
 /*
     Generic 64 Union Type
@@ -138,10 +130,6 @@ static void *alloc(arena a[_at_least_(1)], int64_t size, int64_t align, int64_t 
     
     return ale_memset(p, 0, total);
 }
-
-// #define newx(  a, t)       (t *)         alloc(a, sizeof(t),        alignof(t),        1)
-// #define newxs( a, t, n)    (t *)         alloc(a, sizeof(t),        alignof(t),        n)
-// #define newmat(a, t, m, n) (t (*)[m][n]) alloc(a, sizeof(t [m][n]), alignof(t [m][n]), 1)
 
 /*
     GROWABLE ARRAY
@@ -281,6 +269,28 @@ static double pop_float(void *dynarr) {
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
+}
+
+/*
+    DATA AS GROWABLE ARRAY
+*/
+static int64_t * data_as_i64(dyna64_layout *dynamic_array) {
+    return (int64_t *) dynamic_array->data;
+}
+static double * data_as_double(dyna64_layout *dynamic_array) {
+    return (double *) dynamic_array->data;
+}
+static cstring * data_as_cstring(dyna64_layout *dynamic_array) {
+    return (cstring *) dynamic_array->data;
+}
+static void * * data_as_ptr(dyna64_layout *dynamic_array) {
+    return (void * *) dynamic_array->data;
+}
+static int32_t * data_as_i32(dyna32_layout *dynamic_array) {
+    return (int32_t *) dynamic_array->data;
+}
+static float * data_as_float(dyna32_layout *dynamic_array) {
+    return (float *) dynamic_array->data;
 }
 
 /*

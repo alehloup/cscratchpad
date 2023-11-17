@@ -3,7 +3,7 @@
 
 int32_t main(int32_t argc, const cstring *argv) {
 
-    _ale_generic64 x = { .s="Alex" };
+    union64_t x = { .s="Alex" };
 
     ale_printf("\n%lld %f %s %p\n", x.i, x.d, x.s, x.p);
 

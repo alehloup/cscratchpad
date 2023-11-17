@@ -1,68 +1,68 @@
 #pragma once
 
-#include <stdalign.h>  // alignof
-#include <stdarg.h>    // variadic
-#include <stdbool.h>   // booleans
-#include <stdint.h>    // ints
-
-//       <stdfloat.h> // consistency with stdint
-typedef float float32_t;
-typedef double float64_t;
-
-#include <string.h> // memory
+/*
+    Choose which core functions to use
+*/
+#include <string.h>      // memory
 #define ale_memset memset
 #define ale_memcpy memcpy
 #define ale_strlen strlen
 #define ale_strcmp strcmp
 
-#include <stdio.h> // output
+#include <stdio.h>       // output
 #define ale_printf printf
 // #undef  ale_printf // uncomment for removing prints
 // #define ale_printf(format, ...) ; // uncomment for removing prints
 #define ale_vsprintf vsprintf
 
-#include <stdlib.h> // shell
+#include <stdlib.h>      // shell
 #define ale_system system
 
-#define _Mega_Bytes 1048576 //constexpr uint64_t _Mega_Bytes = 1048576;
+/*
+    STANDARD TYPES
+*/
+#include <stdalign.h>    // alignof
+#include <stdarg.h>      // variadic
+#include <stdbool.h>     // booleans
+#include <stdint.h>      // ints
+//       <stdfloat.h>    // consistency with stdint
+typedef float float32_t;
+typedef double float64_t;
+//       <stdstring.h>   // better string typenames
+typedef const char * cstring;
+typedef const char * const staticstring;
+typedef struct slicestring{ int32_t len; cstring data; }slicestring;
+typedef int64_t cstrtoi; // to convert a cstring, a pointer, to an int64
+typedef cstring itocstr; // to convert a int64 to a cstring (a pointer)
+//       <stdptr.h>      // pointer typename
+typedef void * pointer;  // generic pointer
+//       <stdconst.h>    // constants 
+#define _Mega_Bytes 1048576 // malloc(52*_Mega_Bytes)
+//       <stdunion.h>    // generic unions
+typedef union union64_t{
+    int64_t i;
+    float64_t d;
+    cstring s;
+    pointer p;
+}union64_t;
+typedef union union32_t{
+    int32_t i;
+    float32_t d;
+}union32_t;
 
+/*
+    Better Assert + Scope/Defer Trick
+*/
 #define ale_assert(_cond_, ...)                          \
     if (!(_cond_)) {                                     \
         ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
         ale_printf(__VA_ARGS__);                         \
         ale_printf(" !!\n");                             \
         __builtin_unreachable();                         \
-    }                                                    \
-
-//TRICK scope that "opens" at start, and "closes" at end 
+    }
 static thread_local char MACRO_scoped__;
+//TRICK scope that "opens" at start, and "closes" at end 
 #define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
-
-typedef void * pointer; //generic pointer
-
-/*
-    STRINGS
-*/
-typedef const char * cstring;
-typedef const char * const staticstring;
-typedef struct slicestring{ int32_t len; cstring data; }slicestring;
-typedef int64_t cstrtoi; // to convert a cstring, a pointer, to an int64
-typedef cstring itocstr; // to convert a int64 to a cstring (a pointer)
-
-static slicestring s8(int32_t len, cstring data) {
-    slicestring temp = {len, (cstring) data};
-    return temp;
-} 
-
-/*
-    Generic 64 Union Type
-*/
-typedef union _ale_generic64{
-    int64_t i;
-    float64_t d;
-    cstring s;
-    pointer p;
-}_ale_generic64;
 
 /*
     SHELL
@@ -131,7 +131,6 @@ static pointer alloc(arena a[1], int64_t size, int64_t align, int64_t count) {
 */
 typedef int64_t vector64_element;
 typedef struct vector64{int32_t cap; int32_t len; int64_t *data;}vector64;
-
 static void grow64(vector64 dynarray[1],  arena a[1]) { 
     static const int32_t DYNA_FIRST_SIZE = 64;
 
@@ -148,6 +147,28 @@ static void grow64(vector64 dynarray[1],  arena a[1]) {
         int64_t *DYNA_RELOC = (vector64_element *)
             alloc(a, sizeof(vector64_element), alignof(vector64_element), dynarray->cap *= 2);
         ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(vector64_element)*dynarray->len);
+        dynarray->data = DYNA_RELOC;
+    }
+}
+
+typedef int32_t vector32_element;
+typedef struct vector32{int32_t cap; int32_t len; int32_t *data;}vector32;
+static void grow32(vector32 dynarray[1],  arena a[1]) { 
+    static const int32_t DYNA_FIRST_SIZE = 64;
+
+    if (!dynarray->data) {
+        int32_t *DYNA_START = dynarray->data = (vector32_element *)
+            alloc(a, sizeof(vector32_element), alignof(vector32_element), dynarray->cap = DYNA_FIRST_SIZE); 
+    } else if (a->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
+        // EXTEND
+        int32_t *DYNA_EXTEND = (vector32_element *)
+            alloc(a, sizeof(vector32_element), 1, dynarray->cap);
+        dynarray->cap *= 2;
+    } else {
+        // RELOC
+        int32_t *DYNA_RELOC = (vector32_element *)
+            alloc(a, sizeof(vector32_element), alignof(vector32_element), dynarray->cap *= 2);
+        ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(vector32_element)*dynarray->len);
         dynarray->data = DYNA_RELOC;
     }
 }
@@ -175,32 +196,6 @@ static void push_ptr(vector64 dynarr[1], arena a[1], pointer ptr) {
     push_i64(dynarr, a, (int64_t) ptr);
 }
 
-typedef int32_t vector32_element;
-typedef struct vector32{int32_t cap; int32_t len; int32_t *data;}vector32;
-
-static void grow32(vector32 dynarray[1],  arena a[1]) { 
-    static const int32_t DYNA_FIRST_SIZE = 64;
-
-    if (!dynarray->data) {
-        int32_t *DYNA_START = dynarray->data = (vector32_element *)
-            alloc(a, sizeof(vector32_element), alignof(vector32_element), dynarray->cap = DYNA_FIRST_SIZE); 
-    } else if (a->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
-        // EXTEND
-        int32_t *DYNA_EXTEND = (vector32_element *)
-            alloc(a, sizeof(vector32_element), 1, dynarray->cap);
-        dynarray->cap *= 2;
-    } else {
-        // RELOC
-        int32_t *DYNA_RELOC = (vector32_element *)
-            alloc(a, sizeof(vector32_element), alignof(vector32_element), dynarray->cap *= 2);
-        ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(vector32_element)*dynarray->len);
-        dynarray->data = DYNA_RELOC;
-    }
-}
-
-/*
-    PUSH TO grow32ABLE ARRAY
-*/
 static void push_i32(vector32 dynarray[1], arena a[1], int32_t int32) {
     if (dynarray->len >= dynarray->cap) {
         grow32(dynarray, a);
@@ -216,7 +211,7 @@ static void push_f32(vector32 dynarr[1], arena a[1], float32_t float32) {
 }
 
 /*
-    POP OF GROWABLE ARRAY
+    POP GROWABLE ARRAY
 */
 static int64_t pop_i64(vector64 dynarray[1]) {
     ale_assert(dynarray->len > 0, "POP ON 64bit EMPTY ARRAY");
@@ -328,6 +323,30 @@ static msiht64 * newmsi64(arena a[1], int32_t expected_maxn) {
     return ht;
 }
 
+typedef struct entry_i32_i32{int32_t key; int32_t val;}entry_i32_i32;
+typedef struct msiht32{
+    int32_t shift;int32_t mask; int32_t len;
+    entry_i32_i32 *data;
+}msiht32;
+static msiht32 * newmsi32(arena a[1], int32_t expected_maxn) {
+    const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
+    ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
+
+    msiht32 *ht = (msiht32*)
+        alloc(a, sizeof(msiht32), alignof(msiht32), 1);
+    
+    ht->shift = 64 - msi_expo;
+    ht->mask = (1 << msi_expo) - 1;
+    ht->len = 0;
+    ht->data = (entry_i32_i32 *)
+        alloc(a, sizeof(entry_i32_i32), alignof(entry_i32_i32), ht->mask + 1);
+
+    return ht;
+}
+
+/*
+    MSI Hash Table with Integer64 as Key
+*/
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 static int32_t msiki(
     msiht64 *ht /* msi_ht */, 
@@ -406,7 +425,6 @@ static pointer msiki_set_ptr(msiht64 *table, int64_t ikey, pointer pval) {
     return pval;
 }
 
-
 static entry_i64_i64 * msiki_data_as_int64(msiht64 *table) {
     auto data = table->data;
     return (entry_i64_i64 *) data;
@@ -427,6 +445,9 @@ static entry_i64_ptr * msiki_data_as_ptr(msiht64 *table) {
     return (entry_i64_ptr *) data;
 }
 
+/*
+    MSI Hash Table with Cstring as Key
+*/
 // Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
 static int32_t msiks(
     msiht64 *ht /* msi_ht */, 
@@ -525,27 +546,9 @@ static entry_cstr_ptr * msiks_data_as_ptr(msiht64 *table) {
     return (entry_cstr_ptr *) data;
 }
 
-typedef struct entry_i32_i32{int32_t key; int32_t val;}entry_i32_i32;
-typedef struct msiht32{
-    int32_t shift;int32_t mask; int32_t len;
-    entry_i32_i32 *data;
-}msiht32;
-static msiht32 * newmsi32(arena a[1], int32_t expected_maxn) {
-    const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
-    ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
-
-    msiht32 *ht = (msiht32*)
-        alloc(a, sizeof(msiht32), alignof(msiht32), 1);
-    
-    ht->shift = 64 - msi_expo;
-    ht->mask = (1 << msi_expo) - 1;
-    ht->len = 0;
-    ht->data = (entry_i32_i32 *)
-        alloc(a, sizeof(entry_i32_i32), alignof(entry_i32_i32), ht->mask + 1);
-
-    return ht;
-}
-
+/*
+    MSI Hash Table with Integer32 as Key
+*/
 static int32_t msiki32(
     msiht32 *ht /* msi_ht */, 
     int32_t keyi32, int32_t create_if_not_found
@@ -608,7 +611,6 @@ static float32_t msiki_set_f32(msiht32 *table, int32_t ikey, float32_t dval) {
     table->data[msiki32(table, ikey, 1)].val = replica;
     return dval;
 }
-
 
 static entry_i32_i32 * msiki_data_as_int32(msiht32 *table) {
     auto data = table->data;

@@ -94,18 +94,18 @@ void test_push_f32(arena scratch) {
     vector32 d = {};
     
     push_f32(&d, &scratch, 5.2f + 0.0032f);
-    ale_printf("POP: %f\n", (double) pop_f32(&d));
+    ale_printf("POP: %f\n", (float64_t) pop_f32(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
-        push_f32(&d, &scratch, ((float)i / 2.0f) + 0.0032f);
+        push_f32(&d, &scratch, ((float32_t)i / 2.0f) + 0.0032f);
         auto force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
     }
 
-    ale_printf("POP: %f\n", (double) pop_f32(&d));
+    ale_printf("POP: %f\n", (float64_t) pop_f32(&d));
 
     auto data = vector_data_as_f32(&d);
     for(int32_t i = 0; i < d.len; ++i) {
-        ale_printf("%f ", (double) data[i]);
+        ale_printf("%f ", (float64_t) data[i]);
     } 
     ale_printf("\n");
 }

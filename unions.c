@@ -11,13 +11,13 @@ int32_t main(int32_t argc, const cstring *argv) {
 
     int64_t *arr = ints;
 
-    double f = 5.2;
+    float64_t f = 5.2;
 
-    double *doubles = (double *) ints;
+    float64_t *f64s = (float64_t *) ints;
 
-    //memcpy(&doubles, &arr, 8);
+    //memcpy(&f64s, &arr, 8);
 
-    doubles[0] = f;
+    f64s[0] = f;
 
-    ale_printf(" %f \n", doubles[0]);
+    ale_printf(" %f \n", f64s[0]);
 }

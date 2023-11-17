@@ -1,9 +1,13 @@
 #pragma once
 
-#include <stdarg.h>    // variadic
-#include <stdint.h>    // ints
-#include <stdbool.h>   // booleans
 #include <stdalign.h>  // alignof
+#include <stdarg.h>    // variadic
+#include <stdbool.h>   // booleans
+#include <stdint.h>    // ints
+
+//       <stdfloat.h> // consistency with stdint
+typedef float float32_t;
+typedef double float64_t;
 
 #include <string.h> // memory
 #define ale_memset memset
@@ -55,7 +59,7 @@ static slicestring s8(int32_t len, cstring data) {
 */
 typedef union _ale_generic64{
     int64_t i;
-    double d;
+    float64_t d;
     cstring s;
     pointer p;
 }_ale_generic64;
@@ -158,7 +162,7 @@ static void push_i64(vector64 dynarray[1], arena a[1], int64_t int64) {
 
     dynarray->data[dynarray->len++] = int64;
 }
-static void push_f64(vector64 dynarr[1], arena a[1], double float64) {
+static void push_f64(vector64 dynarr[1], arena a[1], float64_t float64) {
     int64_t replica;
     ale_memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
@@ -204,7 +208,7 @@ static void push_i32(vector32 dynarray[1], arena a[1], int32_t int32) {
 
     dynarray->data[dynarray->len++] = int32;
 }
-static void push_f32(vector32 dynarr[1], arena a[1], float float32) {
+static void push_f32(vector32 dynarr[1], arena a[1], float32_t float32) {
     int32_t replica;
     ale_memcpy(&replica, &float32, sizeof(replica)); //type prunning
 
@@ -219,9 +223,9 @@ static int64_t pop_i64(vector64 dynarray[1]) {
 
     return dynarray->data[--dynarray->len];
 }
-static double pop_f64(vector64 dynarr[1]) {
+static float64_t pop_f64(vector64 dynarr[1]) {
     int64_t replica = pop_i64(dynarr);
-    double val = 0;
+    float64_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
@@ -238,9 +242,9 @@ static int32_t pop_i32(vector32 dynarray[1]) {
 
     return dynarray->data[--dynarray->len];
 }
-static float pop_f32(vector32 dynarr[1]) {
+static float32_t pop_f32(vector32 dynarr[1]) {
     int32_t replica = pop_i32(dynarr);
-    float val = 0;
+    float32_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
@@ -252,8 +256,8 @@ static float pop_f32(vector32 dynarr[1]) {
 static int64_t * vector_data_as_i64(vector64 *dynamic_array) {
     return (int64_t *) dynamic_array->data;
 }
-static double * vector_data_as_f64(vector64 *dynamic_array) {
-    return (double *) dynamic_array->data;
+static float64_t * vector_data_as_f64(vector64 *dynamic_array) {
+    return (float64_t *) dynamic_array->data;
 }
 static cstring * vector_data_as_cstring(vector64 *dynamic_array) {
     return (cstring *) dynamic_array->data;
@@ -264,8 +268,8 @@ static pointer * vector_data_as_ptr(vector64 *dynamic_array) {
 static int32_t * vector_data_as_i32(vector32 *dynamic_array) {
     return (int32_t *) dynamic_array->data;
 }
-static float * vector_data_as_f32(vector32 *dynamic_array) {
-    return (float *) dynamic_array->data;
+static float32_t * vector_data_as_f32(vector32 *dynamic_array) {
+    return (float32_t *) dynamic_array->data;
 }
 
 /*
@@ -363,9 +367,9 @@ static int32_t msiki_get_idx(msiht64 *table, int64_t ikey) {
 static int64_t msiki_get_i64(msiht64 *table, int64_t ikey) {
     return table->data[msiki(table, ikey, 0)].val;
 }
-static double msiki_get_f64(msiht64 *table, int64_t ikey) {
+static float64_t msiki_get_f64(msiht64 *table, int64_t ikey) {
     int64_t replica = table->data[msiki(table, ikey, 0)].val;
-    double val = 0;
+    float64_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
@@ -386,7 +390,7 @@ static int64_t msiki_set_i64(msiht64 *table, int64_t ikey, int64_t ival) {
     table->data[msiki(table, ikey, 1)].val = ival;
     return ival;
 }
-static double msiki_set_f64(msiht64 *table, int64_t ikey, double dval) {
+static float64_t msiki_set_f64(msiht64 *table, int64_t ikey, float64_t dval) {
     int64_t replica;
     ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
 
@@ -407,7 +411,7 @@ static entry_i64_i64 * msiki_data_as_int64(msiht64 *table) {
     auto data = table->data;
     return (entry_i64_i64 *) data;
 }
-typedef struct entry_i64_f64{int64_t key; double val;}entry_i64_f64;
+typedef struct entry_i64_f64{int64_t key; float64_t val;}entry_i64_f64;
 static entry_i64_f64 * msiki_data_as_f64(msiht64 *table) {
     auto data = table->data;
     return (entry_i64_f64 *) data;
@@ -461,9 +465,9 @@ static int32_t msiks_get_idx(msiht64 *table, cstring skey) {
 static int64_t msiks_get_i64(msiht64 *table, cstring skey) {
     return (int64_t) table->data[msiks(table, skey, 0)].val;
 }
-static double msiks_get_f64(msiht64 *table, cstring skey) {
+static float64_t msiks_get_f64(msiht64 *table, cstring skey) {
     int64_t replica = table->data[msiks(table, skey, 0)].val;
-    double val = 0;
+    float64_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
@@ -484,7 +488,7 @@ static int64_t msiks_set_i64(msiht64 *table, cstring skey, int64_t ival) {
     table->data[msiks(table, skey, 1)].val = ival;
     return ival;
 }
-static double msiks_set_f64(msiht64 *table, cstring skey, double dval) {
+static float64_t msiks_set_f64(msiht64 *table, cstring skey, float64_t dval) {
     int64_t replica;
     ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
 
@@ -505,7 +509,7 @@ static entry_cstr_i64 * msiks_data_as_int64(msiht64 *table) {
     auto data = table->data;
     return (entry_cstr_i64 *) data;
 }
-typedef struct entry_cstr_f64{cstring key; double val;}entry_cstr_f64;
+typedef struct entry_cstr_f64{cstring key; float64_t val;}entry_cstr_f64;
 static entry_cstr_f64 * msiks_data_as_f64(msiht64 *table) {
     auto data = table->data;
     return (entry_cstr_f64 *) data;
@@ -580,9 +584,9 @@ static int32_t msiki32_get_idx(msiht32 *table, int32_t ikey) {
 static int32_t msiki_get_i32(msiht32 *table, int32_t ikey) {
     return table->data[msiki32(table, ikey, 0)].val;
 }
-static float msiki_get_f32(msiht32 *table, int32_t ikey) {
+static float32_t msiki_get_f32(msiht32 *table, int32_t ikey) {
     int32_t replica = table->data[msiki32(table, ikey, 0)].val;
-    float val = 0;
+    float32_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
@@ -597,7 +601,7 @@ static int32_t msiki_set_i32(msiht32 *table, int32_t ikey, int32_t ival) {
     table->data[msiki32(table, ikey, 1)].val = ival;
     return ival;
 }
-static float msiki_set_f32(msiht32 *table, int32_t ikey, float dval) {
+static float32_t msiki_set_f32(msiht32 *table, int32_t ikey, float32_t dval) {
     int32_t replica;
     ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
 
@@ -610,7 +614,7 @@ static entry_i32_i32 * msiki_data_as_int32(msiht32 *table) {
     auto data = table->data;
     return (entry_i32_i32 *) data;
 }
-typedef struct entry_i32_f32{int32_t key; float val;}entry_i32_f32;
+typedef struct entry_i32_f32{int32_t key; float32_t val;}entry_i32_f32;
 static entry_i32_f32 * msiki_data_as_f32(msiht32 *table) {
     auto data = table->data;
     return (entry_i32_f32 *) data;

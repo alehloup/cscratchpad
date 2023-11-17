@@ -88,44 +88,44 @@ void test_push_i64(arena scratch) {
     ale_printf("\n");
 }
 
-void test_push_float(arena scratch) {
+void test_push_f32(arena scratch) {
     ale_printf("=========== FLOATs ===========\n");
 
     vector32 d = {};
     
-    push_float(&d, &scratch, 5.2f + 0.0032f);
-    ale_printf("POP: %f\n", (double) pop_float(&d));
+    push_f32(&d, &scratch, 5.2f + 0.0032f);
+    ale_printf("POP: %f\n", (double) pop_f32(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
-        push_float(&d, &scratch, ((float)i / 2.0f) + 0.0032f);
+        push_f32(&d, &scratch, ((float)i / 2.0f) + 0.0032f);
         auto force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
     }
 
-    ale_printf("POP: %f\n", (double) pop_float(&d));
+    ale_printf("POP: %f\n", (double) pop_f32(&d));
 
-    auto data = vector_data_as_float(&d);
+    auto data = vector_data_as_f32(&d);
     for(int32_t i = 0; i < d.len; ++i) {
         ale_printf("%f ", (double) data[i]);
     } 
     ale_printf("\n");
 }
 
-void test_push_double(arena scratch) {
+void test_push_f64(arena scratch) {
     ale_printf("=========== DOUBLEs ===========\n");
     
     vector64 d = {};
     
-    push_double(&d, &scratch, 5.2+0.0064);
-    ale_printf("POP: %lf\n", pop_double(&d));
+    push_f64(&d, &scratch, 5.2+0.0064);
+    ale_printf("POP: %lf\n", pop_f64(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
-        push_double(&d, &scratch, (i / 2.0)+0.0064);
+        push_f64(&d, &scratch, (i / 2.0)+0.0064);
         auto force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), alignof(int8_t), 1);
     }
 
-    ale_printf("POP: %lf\n", pop_double(&d));
+    ale_printf("POP: %lf\n", pop_f64(&d));
 
-    auto data = vector_data_as_double(&d);
+    auto data = vector_data_as_f64(&d);
     for(int32_t i = 0; i < d.len; ++i) {
         ale_printf("%lf ", data[i]);
     } 
@@ -140,8 +140,8 @@ int32_t main() {
     test_push_cstr(scratch);
     test_push_i32(scratch);
     test_push_i64(scratch);
-    test_push_float(scratch);
-    test_push_double(scratch);
+    test_push_f32(scratch);
+    test_push_f64(scratch);
 
     return 0;
 }

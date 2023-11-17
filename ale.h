@@ -51,8 +51,17 @@ typedef union union32_t{
 }union32_t;
 
 /*
-    Better Assert + Scope/Defer Trick
+    Auto + _Thread_local + Better Assert + Scope/Defer
 */
+// auto
+#ifdef __cplusplus
+    #define auto auto
+    #define _Thread_local thread_local
+#endif 
+#ifndef __cplusplus
+    #define auto __auto_type
+    #define thread_local _Thread_local
+#endif
 #define ale_assert(_cond_, ...)                          \
     if (!(_cond_)) {                                     \
         ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
@@ -60,7 +69,7 @@ typedef union union32_t{
         ale_printf(" !!\n");                             \
         __builtin_unreachable();                         \
     }
-static thread_local char MACRO_scoped__;
+static _Thread_local char MACRO_scoped__;
 //TRICK scope that "opens" at start, and "closes" at end 
 #define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 

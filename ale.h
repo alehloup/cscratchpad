@@ -246,7 +246,7 @@ static float32_t pop_f32(vector32 dynarr[1]) {
 }
 
 /*
-    DATA AS GROWABLE ARRAY
+    GROWABLE ARRAY DATA AS
 */
 static int64_t * vector_data_as_i64(vector64 *dynamic_array) {
     return (int64_t *) dynamic_array->data;
@@ -282,9 +282,9 @@ static int64_t hash_cstr(cstring str) {
 }
 static int64_t hash_i64(int64_t integer64) {
     uint64_t x = (uint64_t)integer64;
-    x ^= x >> 30; x *= 0xbf58476d1ce4e5b9; 
+    x ^= (x >> 30); x *= 0xbf58476d1ce4e5b9; 
     
-    return (x ^ x>>31) >> 1;
+    return (x ^ (x>>31)) >> 1;
 }
 
 /*
@@ -553,7 +553,7 @@ static int32_t msiki32(
     msiht32 *ht /* msi_ht */, 
     int32_t keyi32, int32_t create_if_not_found
 ) {
-    ale_assert(ht, "MSI KI TABLE IS NULL");
+    ale_assert(ht, "MSI KI32 TABLE IS NULL");
 
     typeof(ht->data) data = ht->data;
 

@@ -134,7 +134,7 @@ static pointer alloc(arena a[_at_least_ 1], int64_t size, int64_t align, int64_t
     int64_t pad = MODPWR2(- (int64_t)a->beg, align); //mod -x gives n for next align
 
     ale_assert(total < (a->end - a->beg - pad), \
-        "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", total, a->end - a->beg - pad);
+        "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", (long long int)(total), (long long int)(a->end - a->beg - pad));
 
     uint8_t *p = a->beg + pad;
     a->beg += pad + total;
@@ -372,7 +372,7 @@ static int32_t msiki(
 ) {
     ale_assert(ht, "MSI KI TABLE IS NULL");
 
-    typeof(ht->data) data = ht->data;
+    auto data = ht->data;
 
     uint64_t hash = (uint64_t) hash_i64(keyi64);
     int32_t index = (int32_t)hash;
@@ -473,7 +473,7 @@ static int32_t msiks(
 ) {
     ale_assert(ht, "MSI KS TABLE IS NULL");
 
-    typeof(ht->data) data = ht->data;
+    auto data = ht->data;
 
     uint64_t hash = (uint64_t) hash_cstr(keycstr);
     int32_t index = (int32_t)hash;
@@ -573,7 +573,7 @@ static int32_t msiki32(
 ) {
     ale_assert(ht, "MSI KI32 TABLE IS NULL");
 
-    typeof(ht->data) data = ht->data;
+    auto data = ht->data;
 
     uint64_t hash = (uint64_t) hash_i64(keyi32);
     int32_t index = (int32_t)hash;

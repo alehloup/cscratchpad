@@ -278,13 +278,15 @@ static int64_t hash_cstr(cstring str) {
         h ^= (*(sp++)) & 255; h *= 1111111111111111111;
     }
 
-    return (h ^ h>>32) >> 1;
+    return (h ^ (h >> 32)) >> 1;
 }
 static int64_t hash_i64(int64_t integer64) {
     uint64_t x = (uint64_t)integer64;
-    x ^= (x >> 30); x *= 0xbf58476d1ce4e5b9; 
+    x *= 0x94d049bb133111eb; 
+    x ^= (x >> 30); 
+    x *= 0xbf58476d1ce4e5b9; 
     
-    return (x ^ (x>>31)) >> 1;
+    return (x ^ (x >> 31)) >> 1;
 }
 
 /*

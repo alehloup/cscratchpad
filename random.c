@@ -7,7 +7,7 @@ int32_t main() {
     #define N 20
     int32_t counts[N] = {};
     for(int32_t i = 0; i < 1000000000; ++i) {
-        counts[RND(&seed) % N] +=1;
+        counts[rnd(&seed) % N] +=1;
     }
     for(int32_t i = 0; i < N; ++i) {
         ale_printf("%d: %d\n", i+1, counts[i]);

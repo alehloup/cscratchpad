@@ -110,7 +110,7 @@ static int32_t fit_pwr2_exp(int32_t size) {
 }
 
 // RANDOM
-static int32_t RND(uint64_t seed[_at_least_ 1]) {
+static int32_t rnd(uint64_t seed[_at_least_ 1]) {
     *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
     int32_t shift = 29 - (uint32_t)(*seed >> 61);
     
@@ -128,6 +128,9 @@ static arena newarena(int64_t buffer_len, uint8_t buffer[_vla_param(buffer_len)]
     return a;
 }
 
+/*
+    Arena Allocator that always zeroes the memory
+*/
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
 static pointer alloc(arena a[_at_least_ 1], int64_t size, int64_t align, int64_t count) {
     int64_t total = size * count;
@@ -140,6 +143,10 @@ static pointer alloc(arena a[_at_least_ 1], int64_t size, int64_t align, int64_t
     a->beg += pad + total;
     
     return ale_memset(p, 0, total);
+}
+__attribute((malloc, alloc_size(2), alloc_align(3)))
+static pointer alloc1(arena a[_at_least_ 1], int64_t size, int64_t align) {
+    return alloc(a, size, align, 1);
 }
 
 /*
@@ -325,7 +332,7 @@ typedef struct msiht64{
     int32_t shift;int32_t mask; int32_t len;
     entry_i64_i64 *data;
 }msiht64;
-static msiht64 * newmsi64(arena a[_at_least_ 1], int32_t expected_maxn) {
+static msiht64 newmsi64(arena a[_at_least_ 1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
@@ -338,7 +345,7 @@ static msiht64 * newmsi64(arena a[_at_least_ 1], int32_t expected_maxn) {
     ht->data = (entry_i64_i64 *)
         alloc(a, sizeof(entry_i64_i64), alignof(entry_i64_i64), ht->mask + 1);
 
-    return ht;
+    return *ht;
 }
 
 typedef struct entry_i32_i32{int32_t key; int32_t val;}entry_i32_i32;
@@ -346,7 +353,7 @@ typedef struct msiht32{
     int32_t shift;int32_t mask; int32_t len;
     entry_i32_i32 *data;
 }msiht32;
-static msiht32 * newmsi32(arena a[_at_least_ 1], int32_t expected_maxn) {
+static msiht32 newmsi32(arena a[_at_least_ 1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
@@ -359,7 +366,7 @@ static msiht32 * newmsi32(arena a[_at_least_ 1], int32_t expected_maxn) {
     ht->data = (entry_i32_i32 *)
         alloc(a, sizeof(entry_i32_i32), alignof(entry_i32_i32), ht->mask + 1);
 
-    return ht;
+    return *ht;
 }
 
 /*
@@ -397,25 +404,25 @@ static int32_t msiki(
 }
 
 // Returns the index of |ikey| in the msi |table|
-static int32_t msiki_get_idx(msiht64 table[_at_least_ 1], int64_t ikey) {
-    return msiki(table, ikey, 0);
+static int32_t msiki_get_idx(msiht64 table, int64_t ikey) {
+    return msiki(&table, ikey, 0);
 }
 
-static int64_t msiki_get_i64(msiht64 table[_at_least_ 1], int64_t ikey) {
-    return table->data[msiki(table, ikey, 0)].val;
+static int64_t msiki_get_i64(msiht64 table, int64_t ikey) {
+    return table.data[msiki(&table, ikey, 0)].val;
 }
-static float64_t msiki_get_f64(msiht64 table[_at_least_ 1], int64_t ikey) {
-    int64_t replica = table->data[msiki(table, ikey, 0)].val;
+static float64_t msiki_get_f64(msiht64 table, int64_t ikey) {
+    int64_t replica = table.data[msiki(&table, ikey, 0)].val;
     float64_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
 }
-static cstring msiki_get_cstr(msiht64 table[_at_least_ 1], int64_t ikey) {
-    return (itocstr) table->data[msiki(table, ikey, 0)].val;
+static cstring msiki_get_cstr(msiht64 table, int64_t ikey) {
+    return (itocstr) table.data[msiki(&table, ikey, 0)].val;
 }
-static pointer msiki_get_ptr(msiht64 table[_at_least_ 1], int64_t ikey) {
-    return (pointer) table->data[msiki(table, ikey, 0)].val;
+static pointer msiki_get_ptr(msiht64 table, int64_t ikey) {
+    return (pointer) table.data[msiki(&table, ikey, 0)].val;
 }
 
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
@@ -497,25 +504,25 @@ static int32_t msiks(
     return index; // index of entry found OR entry empty
 }
 // Returns the index of |ikey| in the msi |table|
-static int32_t msiks_get_idx(msiht64 table[_at_least_ 1], cstring skey) {
-    return msiks(table, skey, 0);
+static int32_t msiks_get_idx(msiht64 table, cstring skey) {
+    return msiks(&table, skey, 0);
 }
 
-static int64_t msiks_get_i64(msiht64 table[_at_least_ 1], cstring skey) {
-    return (int64_t) table->data[msiks(table, skey, 0)].val;
+static int64_t msiks_get_i64(msiht64 table, cstring skey) {
+    return (int64_t) table.data[msiks(&table, skey, 0)].val;
 }
-static float64_t msiks_get_f64(msiht64 table[_at_least_ 1], cstring skey) {
-    int64_t replica = table->data[msiks(table, skey, 0)].val;
+static float64_t msiks_get_f64(msiht64 table, cstring skey) {
+    int64_t replica = table.data[msiks(&table, skey, 0)].val;
     float64_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
 }
-static cstring msiks_get_cstr(msiht64 table[_at_least_ 1], cstring skey) {
-    return (itocstr) table->data[msiks(table, skey, 0)].val;
+static cstring msiks_get_cstr(msiht64 table, cstring skey) {
+    return (itocstr) table.data[msiks(&table, skey, 0)].val;
 }
-static pointer msiks_get_ptr(msiht64 table[_at_least_ 1], cstring skey) {
-    return (pointer) table->data[msiks(table, skey, 0)].val;
+static pointer msiks_get_ptr(msiht64 table, cstring skey) {
+    return (pointer) table.data[msiks(&table, skey, 0)].val;
 }
 
 // Creates key if not found, then returns the index of |skey| in the msi |table|
@@ -598,15 +605,15 @@ static int32_t msiki32(
 }
 
 // Returns the index of |ikey| in the msi |table|
-static int32_t msiki32_get_idx(msiht32 table[_at_least_ 1], int32_t ikey) {
-    return msiki32(table, ikey, 0);
+static int32_t msiki32_get_idx(msiht32 table, int32_t ikey) {
+    return msiki32(&table, ikey, 0);
 }
 
-static int32_t msiki_get_i32(msiht32 table[_at_least_ 1], int32_t ikey) {
-    return table->data[msiki32(table, ikey, 0)].val;
+static int32_t msiki_get_i32(msiht32 table, int32_t ikey) {
+    return table.data[msiki32(&table, ikey, 0)].val;
 }
-static float32_t msiki_get_f32(msiht32 table[_at_least_ 1], int32_t ikey) {
-    int32_t replica = table->data[msiki32(table, ikey, 0)].val;
+static float32_t msiki_get_f32(msiht32 table, int32_t ikey) {
+    int32_t replica = table.data[msiki32(&table, ikey, 0)].val;
     float32_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 

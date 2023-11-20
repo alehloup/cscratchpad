@@ -1,16 +1,1 @@
-[[], 
-iantes v:0 b:0 m:1 w:0 
-idepois v:0 b:1 m:1 w:0 
-true, 
-iantes v:1 b:1 m:2 w:0 
-idepois v:1 b:3 m:2 w:0 
-true, 
-rantes v:0 b:3 m:1 w:1 
-rdepois v:0 b:2 m:1 w:1 
-true, 
-iantes v:2 b:2 m:4 w:0 
-idepois v:2 b:6 m:4 w:0 
-true, 
-rantes v:1 b:6 m:2 w:1 
-rdepois v:1 b:4 m:2 w:1 
-true, 2]
+divisão zero:  2 

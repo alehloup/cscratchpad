@@ -15,6 +15,13 @@
 // #define ale_printf(format, ...) ; // uncomment for removing prints
 #define ale_vsprintf vsprintf
 
+//file functions
+#define ale_fopen fopen
+#define ale_fseek fseek
+#define ale_ftell ftell
+#define ale_fread fread
+#define ale_fclose fclose
+
 #include <stdlib.h>      // shell
 #define ale_system system
 
@@ -31,7 +38,7 @@ typedef double float64_t;
 //       <stdstring.h>   // better string typenames
 typedef const char * cstring;
 typedef const char * const staticstring;
-typedef struct slicestring{ int32_t len; cstring data; }slicestring;
+typedef struct s8{ int32_t len; char *data; }s8;
 typedef int64_t cstrtoi; // to convert a cstring, a pointer, to an int64
 typedef cstring itocstr; // to convert a int64 to a cstring (a pointer)
 //       <stdptr.h>      // pointer typename
@@ -645,4 +652,32 @@ typedef struct entry_i32_f32{int32_t key; float32_t val;}entry_i32_f32;
 static entry_i32_f32 * msiki_data_as_f32(msiht32 table[_at_least_ 1]) {
     auto data = table->data;
     return (entry_i32_f32 *) data;
+}
+
+/*
+    FILES
+*/
+
+s8 file_to_buffer(arena a[_at_least_ 1], cstring filename) {
+    s8 buffer = {.len = 0, .data = 0};
+
+    {FILE *f = ale_fopen(filename, "rb");
+    
+        if (!f) {
+            return buffer;
+        }
+    
+        ale_fseek(f, 0, SEEK_END);
+        int32_t fsize = ale_ftell(f);
+        ale_fseek(f, 0, SEEK_SET);
+
+        buffer.data = (char *) alloc(a, sizeof(char), alignof(char), fsize+1);
+        ale_fread(buffer.data, sizeof(char), fsize+1, f);
+        buffer.data[fsize] = 0;
+        
+        buffer.len = fsize;
+
+    ale_fclose(f);}
+    
+    return buffer;
 }

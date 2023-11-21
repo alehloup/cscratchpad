@@ -6,6 +6,5 @@ int main(void) {
     arena perm = newarena(sizeof(buffer), buffer);
     
     s8 contents = file_to_buffer(&perm, "exemplo.txt");
-    printf("%s", contents.data);
-    
+    printf("%s", contents.data);    
 }

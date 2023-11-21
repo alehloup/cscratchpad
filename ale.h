@@ -127,33 +127,33 @@ static int32_t rnd(uint64_t seed[_at_least_ 1]) {
 /*
     ARENA
 */
-typedef struct arena{ uint8_t *beg; uint8_t *end; }arena;
-static arena newarena(int64_t buffer_len, uint8_t buffer[_vla_param(buffer_len)]) {
-    arena a = {};
-    a.beg = (uint8_t *)buffer;
-    a.end = a.beg ? a.beg + buffer_len : 0;
-    return a;
+typedef struct arena_t{ uint8_t *beg; uint8_t *end; }arena_t;
+static arena_t newarena(int64_t buffer_len, uint8_t buffer[_vla_param(buffer_len)]) {
+    arena_t arena = {};
+    arena.beg = (uint8_t *)buffer;
+    arena.end = arena.beg ? arena.beg + buffer_len : 0;
+    return arena;
 }
 
 /*
     Arena Allocator that always zeroes the memory
 */
 __attribute((malloc, alloc_size(2, 4), alloc_align(3)))
-static pointer alloc(arena a[_at_least_ 1], int64_t size, int64_t align, int64_t count) {
+static pointer alloc(arena_t arena[_at_least_ 1], int64_t size, int64_t align, int64_t count) {
     int64_t total = size * count;
-    int64_t pad = MODPWR2(- (int64_t)a->beg, align); //mod -x gives n for next align
+    int64_t pad = MODPWR2(- (int64_t)arena->beg, align); //mod -x gives n for next align
 
-    ale_assert(total < (a->end - a->beg - pad), \
-        "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", (long long int)(total), (long long int)(a->end - a->beg - pad));
+    ale_assert(total < (arena->end - arena->beg - pad), \
+        "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", (long long int)(total), (long long int)(arena->end - arena->beg - pad));
 
-    uint8_t *p = a->beg + pad;
-    a->beg += pad + total;
+    uint8_t *p = arena->beg + pad;
+    arena->beg += pad + total;
     
     return ale_memset(p, 0, total);
 }
 __attribute((malloc, alloc_size(2), alloc_align(3)))
-static pointer alloc1(arena a[_at_least_ 1], int64_t size, int64_t align) {
-    return alloc(a, size, align, 1);
+static pointer alloc1(arena_t arena[_at_least_ 1], int64_t size, int64_t align) {
+    return alloc(arena, size, align, 1);
 }
 
 /*
@@ -161,21 +161,21 @@ static pointer alloc1(arena a[_at_least_ 1], int64_t size, int64_t align) {
 */
 typedef int64_t vector64_element;
 typedef struct vector64{int32_t cap; int32_t len; int64_t *data;}vector64;
-static void grow64(vector64 dynarray[_at_least_ 1],  arena a[_at_least_ 1]) { 
+static void grow64(vector64 dynarray[_at_least_ 1],  arena_t arena[_at_least_ 1]) { 
     static const int32_t DYNA_FIRST_SIZE = 64;
 
     if (!dynarray->data) {
         int64_t *DYNA_START = dynarray->data = (vector64_element *)
-            alloc(a, sizeof(vector64_element), alignof(vector64_element), dynarray->cap = DYNA_FIRST_SIZE); 
-    } else if (a->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
+            alloc(arena, sizeof(vector64_element), alignof(vector64_element), dynarray->cap = DYNA_FIRST_SIZE); 
+    } else if (arena->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
         // EXTEND
         int64_t *DYNA_EXTEND = (vector64_element *)
-            alloc(a, sizeof(vector64_element), 1, dynarray->cap);
+            alloc(arena, sizeof(vector64_element), 1, dynarray->cap);
         dynarray->cap *= 2;
     } else {
         // RELOC
         int64_t *DYNA_RELOC = (vector64_element *)
-            alloc(a, sizeof(vector64_element), alignof(vector64_element), dynarray->cap *= 2);
+            alloc(arena, sizeof(vector64_element), alignof(vector64_element), dynarray->cap *= 2);
         ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(vector64_element)*dynarray->len);
         dynarray->data = DYNA_RELOC;
     }
@@ -183,21 +183,21 @@ static void grow64(vector64 dynarray[_at_least_ 1],  arena a[_at_least_ 1]) {
 
 typedef int32_t vector32_element;
 typedef struct vector32{int32_t cap; int32_t len; int32_t *data;}vector32;
-static void grow32(vector32 dynarray[_at_least_ 1],  arena a[_at_least_ 1]) { 
+static void grow32(vector32 dynarray[_at_least_ 1],  arena_t arena[_at_least_ 1]) { 
     static const int32_t DYNA_FIRST_SIZE = 64;
 
     if (!dynarray->data) {
         int32_t *DYNA_START = dynarray->data = (vector32_element *)
-            alloc(a, sizeof(vector32_element), alignof(vector32_element), dynarray->cap = DYNA_FIRST_SIZE); 
-    } else if (a->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
+            alloc(arena, sizeof(vector32_element), alignof(vector32_element), dynarray->cap = DYNA_FIRST_SIZE); 
+    } else if (arena->beg == ((uint8_t *) &(dynarray->data[dynarray->cap]))) { 
         // EXTEND
         int32_t *DYNA_EXTEND = (vector32_element *)
-            alloc(a, sizeof(vector32_element), 1, dynarray->cap);
+            alloc(arena, sizeof(vector32_element), 1, dynarray->cap);
         dynarray->cap *= 2;
     } else {
         // RELOC
         int32_t *DYNA_RELOC = (vector32_element *)
-            alloc(a, sizeof(vector32_element), alignof(vector32_element), dynarray->cap *= 2);
+            alloc(arena, sizeof(vector32_element), alignof(vector32_element), dynarray->cap *= 2);
         ale_memcpy(DYNA_RELOC, dynarray->data, sizeof(vector32_element)*dynarray->len);
         dynarray->data = DYNA_RELOC;
     }
@@ -206,38 +206,38 @@ static void grow32(vector32 dynarray[_at_least_ 1],  arena a[_at_least_ 1]) {
 /*
     PUSH TO GROWABLE ARRAY
 */
-static void push_i64(vector64 dynarray[_at_least_ 1], arena a[_at_least_ 1], int64_t int64) {
+static void push_i64(vector64 dynarray[_at_least_ 1], arena_t arena[_at_least_ 1], int64_t int64) {
     if (dynarray->len >= dynarray->cap) {
-        grow64(dynarray, a);
+        grow64(dynarray, arena);
     }
 
     dynarray->data[dynarray->len++] = int64;
 }
-static void push_f64(vector64 dynarr[_at_least_ 1], arena a[_at_least_ 1], float64_t float64) {
+static void push_f64(vector64 dynarr[_at_least_ 1], arena_t arena[_at_least_ 1], float64_t float64) {
     int64_t replica;
     ale_memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
-    push_i64(dynarr, a, replica);
+    push_i64(dynarr, arena, replica);
 }
-static void push_cstr(vector64 dynarr[_at_least_ 1], arena a[_at_least_ 1], cstring cstr) {
-    push_i64(dynarr, a, (int64_t) cstr);
+static void push_cstr(vector64 dynarr[_at_least_ 1], arena_t arena[_at_least_ 1], cstring cstr) {
+    push_i64(dynarr, arena, (int64_t) cstr);
 }
-static void push_ptr(vector64 dynarr[_at_least_ 1], arena a[_at_least_ 1], pointer ptr) {
-    push_i64(dynarr, a, (int64_t) ptr);
+static void push_ptr(vector64 dynarr[_at_least_ 1], arena_t arena[_at_least_ 1], pointer ptr) {
+    push_i64(dynarr, arena, (int64_t) ptr);
 }
 
-static void push_i32(vector32 dynarray[_at_least_ 1], arena a[_at_least_ 1], int32_t int32) {
+static void push_i32(vector32 dynarray[_at_least_ 1], arena_t arena[_at_least_ 1], int32_t int32) {
     if (dynarray->len >= dynarray->cap) {
-        grow32(dynarray, a);
+        grow32(dynarray, arena);
     }
 
     dynarray->data[dynarray->len++] = int32;
 }
-static void push_f32(vector32 dynarr[_at_least_ 1], arena a[_at_least_ 1], float32_t float32) {
+static void push_f32(vector32 dynarr[_at_least_ 1], arena_t arena[_at_least_ 1], float32_t float32) {
     int32_t replica;
     ale_memcpy(&replica, &float32, sizeof(replica)); //type prunning
 
-    push_i32(dynarr, a, replica);
+    push_i32(dynarr, arena, replica);
 }
 
 /*
@@ -339,18 +339,18 @@ typedef struct msiht64{
     int32_t shift;int32_t mask; int32_t len;
     entry_i64_i64 *data;
 }msiht64;
-static msiht64 newmsi64(arena a[_at_least_ 1], int32_t expected_maxn) {
+static msiht64 newmsi64(arena_t arena[_at_least_ 1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     msiht64 *ht = (msiht64*)
-        alloc(a, sizeof(msiht64), alignof(msiht64), 1);
+        alloc(arena, sizeof(msiht64), alignof(msiht64), 1);
     
     ht->shift = 64 - msi_expo;
     ht->mask = (1 << msi_expo) - 1;
     ht->len = 0;
     ht->data = (entry_i64_i64 *)
-        alloc(a, sizeof(entry_i64_i64), alignof(entry_i64_i64), ht->mask + 1);
+        alloc(arena, sizeof(entry_i64_i64), alignof(entry_i64_i64), ht->mask + 1);
 
     return *ht;
 }
@@ -360,18 +360,18 @@ typedef struct msiht32{
     int32_t shift;int32_t mask; int32_t len;
     entry_i32_i32 *data;
 }msiht32;
-static msiht32 newmsi32(arena a[_at_least_ 1], int32_t expected_maxn) {
+static msiht32 newmsi32(arena_t arena[_at_least_ 1], int32_t expected_maxn) {
     const int32_t msi_expo = fit_pwr2_exp(expected_maxn + 64);
     ale_assert(msi_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     msiht32 *ht = (msiht32*)
-        alloc(a, sizeof(msiht32), alignof(msiht32), 1);
+        alloc(arena, sizeof(msiht32), alignof(msiht32), 1);
     
     ht->shift = 64 - msi_expo;
     ht->mask = (1 << msi_expo) - 1;
     ht->len = 0;
     ht->data = (entry_i32_i32 *)
-        alloc(a, sizeof(entry_i32_i32), alignof(entry_i32_i32), ht->mask + 1);
+        alloc(arena, sizeof(entry_i32_i32), alignof(entry_i32_i32), ht->mask + 1);
 
     return *ht;
 }
@@ -658,7 +658,7 @@ static entry_i32_f32 * msiki_data_as_f32(msiht32 table[_at_least_ 1]) {
     FILES
 */
 
-s8 file_to_buffer(arena a[_at_least_ 1], cstring filename) {
+s8 file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
     s8 buffer = {.len = 0, .data = 0};
 
     {FILE *f = ale_fopen(filename, "rb");
@@ -671,7 +671,7 @@ s8 file_to_buffer(arena a[_at_least_ 1], cstring filename) {
         int32_t fsize = ale_ftell(f);
         ale_fseek(f, 0, SEEK_SET);
 
-        buffer.data = (char *) alloc(a, sizeof(char), alignof(char), fsize+1);
+        buffer.data = (char *) alloc(arena, sizeof(char), alignof(char), fsize+1);
         ale_fread(buffer.data, sizeof(char), fsize+1, f);
         buffer.data[fsize] = 0;
         

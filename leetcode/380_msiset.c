@@ -1,7 +1,7 @@
 #include "../ale.h"
 
 static uint8_t memory[4*_Mega_Bytes] = {};
-static arena perm = {};
+static arena_t perm = {};
 
 typedef struct {
     msiht32 table;

@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include "ale.h"
 
-void test_msi_cstr(arena a) {
-    auto ht = newmsi64(&a, 4);
+void test_msi_cstr(arena_t scratch) {
+    auto ht = newmsi64(&scratch, 4);
     
     ale_printf("%lld\n", hash_cstr("Alessandro Stamatto"));
 
@@ -27,8 +27,8 @@ void test_msi_cstr(arena a) {
     ale_printf("\n");
 }
 
-void test_msi_i64(arena a) {
-    auto ht = newmsi64(&a, 4);
+void test_msi_i64(arena_t arena) {
+    auto ht = newmsi64(&arena, 4);
 
     ale_printf("%lld\n", hash_i64(4));
 
@@ -51,8 +51,8 @@ void test_msi_i64(arena a) {
     ale_printf("\n");
 }
 
-void test_big_msi_i64(arena a) {
-    auto ht = newmsi64(&a, 128);
+void test_big_msi_i64(arena_t scratch) {
+    auto ht = newmsi64(&scratch, 128);
 
     for(int i = 0; i < 128; ++i) {
         msiki_set_i64(&ht, i, i);
@@ -81,7 +81,7 @@ void test_big_msi_i64(arena a) {
 
 static thread_local uint8_t bufferzao[2*_Mega_Bytes] = {};
 int32_t main() {
-    arena scratch = newarena(sizeof(bufferzao), bufferzao);
+    arena_t scratch = newarena(sizeof(bufferzao), bufferzao);
     test_msi_i64(scratch);
     ale_printf("\n");
     ale_printf("\n");

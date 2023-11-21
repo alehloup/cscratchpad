@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include "ale.h"
 
-void test_vlamatrix(arena a) {
+void test_vlamatrix(arena_t scratch) {
     ale_printf("=========== MATRIXs ===========\n");
 
-    int64_t (*mat)[10][10] = (typeof(mat)) alloc(&a, sizeof(int64_t [10][10]), alignof(int64_t [10][10]), 1);
+    int64_t (*mat)[10][10] = (typeof(mat)) alloc(&scratch, sizeof(int64_t [10][10]), alignof(int64_t [10][10]), 1);
 
     // test_size_cvla(10, 10, mat); // only works in C
 
@@ -23,7 +23,7 @@ void test_vlamatrix(arena a) {
     }
 }
 
-void test_push_cstr(arena scratch) {
+void test_push_cstr(arena_t scratch) {
     ale_printf("=========== CSTRINGs ===========\n");
     
     vector64 d = {};
@@ -43,7 +43,7 @@ void test_push_cstr(arena scratch) {
     ale_printf("Pop: %s\n", pop_cstr(&d));
 }
 
-void test_push_i32(arena scratch) {
+void test_push_i32(arena_t scratch) {
     ale_printf("=========== I32s ===========\n");
 
     vector32 d = {};
@@ -65,7 +65,7 @@ void test_push_i32(arena scratch) {
     ale_printf("\n");
 }
 
-void test_push_i64(arena scratch) {
+void test_push_i64(arena_t scratch) {
     ale_printf("=========== I64s ===========\n");
 
     vector64 d = {};
@@ -88,7 +88,7 @@ void test_push_i64(arena scratch) {
     ale_printf("\n");
 }
 
-void test_push_f32(arena scratch) {
+void test_push_f32(arena_t scratch) {
     ale_printf("=========== FLOATs ===========\n");
 
     vector32 d = {};
@@ -110,7 +110,7 @@ void test_push_f32(arena scratch) {
     ale_printf("\n");
 }
 
-void test_push_f64(arena scratch) {
+void test_push_f64(arena_t scratch) {
     ale_printf("=========== DOUBLEs ===========\n");
     
     vector64 d = {};
@@ -134,7 +134,7 @@ void test_push_f64(arena scratch) {
 
 int32_t main() {
 
-    arena scratch = newarena(8*_Mega_Bytes, (uint8_t *) malloc(8*_Mega_Bytes));
+    arena_t scratch = newarena(8*_Mega_Bytes, (uint8_t *) malloc(8*_Mega_Bytes));
     
     test_vlamatrix(scratch);
     test_push_cstr(scratch);

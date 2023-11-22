@@ -730,6 +730,7 @@ static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
     {FILE *f = ale_fopen(filename, "rb");
     
         if (!f) {
+            ale_fclose(f);
             return contents;
         }
     

@@ -308,6 +308,16 @@ static float32_t * vector_data_as_f32(vector32_t dynamic_array[_at_least_ 1]) {
 }
 
 /*
+    GROWABLE ARRAY SIMPLE REMOVE
+*/
+static void vector64_remove_by_lastswap(vector64_t dynamic_array[_at_least_ 1], int32_t index) {
+    dynamic_array->data[index] = dynamic_array->data[--dynamic_array->len];
+}
+static void vector32_remove_by_lastswap(vector32_t dynamic_array[_at_least_ 1], int32_t index) {
+    dynamic_array->data[index] = dynamic_array->data[--dynamic_array->len];
+}
+
+/*
     HASH
 */
 static int64_t hash_cstr(cstring str) {
@@ -668,7 +678,7 @@ static entry_i32_f32 * msiki_data_as_f32(msiht32 table[_at_least_ 1]) {
     FILES
 */
 
-modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
+static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
     modstring contents = 0;
 
     {FILE *f = ale_fopen(filename, "rb");
@@ -691,10 +701,24 @@ modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
 }
 
 
-vector64_t text_to_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
+static vector64_t text_to_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
     vector64_t lines = {.cap=0, .len=0, .data=0};
     
-
+    for (char *cursor = text_to_alter, *current = text_to_alter; *cursor != '\0'; ++cursor) {
+        if (*cursor == '\r') {
+            *cursor = '\0';
+        }
+        else if (*cursor == '\n') {
+            *cursor = '\0';
+            
+            push_cstr(&lines,  arena, current);
+            current = cursor+1;
+        }
+    }
 
     return lines;
+}
+
+static int void_compare_cstrings(const void *a, const void *b) {
+    return ale_strcmp(*(cstring *)a, *(cstring *)b);
 }

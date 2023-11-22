@@ -94,6 +94,7 @@ static thread_local char MACRO_scoped__;
 /*
     SHELL
 */
+__attribute((format (printf, 2, 3)))
 static int32_t shellrun(char buffer [_at_least_ 512], cstring format, ...) {
     ale_memset(buffer, '\0', 512);
 

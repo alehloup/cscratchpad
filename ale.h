@@ -30,11 +30,14 @@
 */
 #include <stdalign.h>    // alignof
 #include <stdarg.h>      // variadic
-#include <stdbool.h>     // booleans
 #include <stdint.h>      // ints
 //       <stdfloat.h>    // consistency with stdint
 typedef float float32_t;
 typedef double float64_t;
+//       <stdbool.h>
+typedef int32_t b32;     // int to be used as boolean
+static const b32 True = 1;
+static const b32 False = 0;
 //       <stdstring.h>   // better string typenames
 typedef const char * cstring;
 typedef const char * const staticstring;
@@ -700,10 +703,11 @@ static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
     return contents;
 }
 
-static vector64_t text_to_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
+// Alters a text by converting \n to \0 and pushing each line as a cstring in the returned vector
+static vector64_t slice_into_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
     vector64_t lines = {.cap=0, .len=0, .data=0};
     
-    for (char *cursor = text_to_alter, *current = text_to_alter; *cursor != '\0'; ++cursor) {
+    for (modstring cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
             *cursor = '\0';
         }
@@ -720,4 +724,34 @@ static vector64_t text_to_lines(arena_t arena[_at_least_ 1], modstring text_to_a
 
 static int void_compare_cstrings(const void *a, const void *b) {
     return ale_strcmp(*(cstring *)a, *(cstring *)b);
+}
+
+static b32 is_empty_cstring(cstring str) {
+    for (cstring cursor = str; *cursor != '\0'; ++cursor) {
+        if (*cursor != ' ') {
+            return False;
+        }
+    }
+    return True;
+}
+
+// Alters a text by converting \n to \0 and pushing each nonempty line as a cstring in the returned vector
+static vector64_t slice_into_nonempty_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
+    vector64_t lines = {.cap=0, .len=0, .data=0};
+    
+    for (modstring cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
+        if (*cursor == '\r') {
+            *cursor = '\0';
+        }
+        else if (*cursor == '\n') {
+            *cursor = '\0';
+            
+            if (!is_empty_cstring(current)) {
+                push_cstr(&lines,  arena, current);
+            }
+            current = cursor+1;
+        }
+    }
+
+    return lines;
 }

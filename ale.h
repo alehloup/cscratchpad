@@ -761,7 +761,7 @@ static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
 }
 
 // Alters a text by converting \n to \0 and pushing each line as a cstring in the returned vector
-__attribute((nonnull(1), warn_unused_result))
+__attribute((nonnull, warn_unused_result))
 static vector64_t slice_into_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
     vector64_t lines = {.cap=0, .len=0, .data=0};
     
@@ -795,7 +795,7 @@ static b32 is_empty_cstring(cstring str) {
 }
 
 // Alters a text by converting \n to \0 and pushing each nonempty line as a cstring in the returned vector
-__attribute((nonnull(1), warn_unused_result))
+__attribute((nonnull, warn_unused_result))
 static vector64_t slice_into_nonempty_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
     vector64_t lines = {.cap=0, .len=0, .data=0};
     

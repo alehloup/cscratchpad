@@ -49,17 +49,6 @@ typedef cstring itocstr; // to convert a int64 to a cstring (a pointer)
 typedef void * pointer;  // generic pointer
 //       <stdconst.h>    // constants 
 #define _Mega_Bytes 1048576 // malloc(52*_Mega_Bytes)
-//       <stdunion.h>    // generic unions
-typedef union union64_t{
-    int64_t i;
-    float64_t d;
-    cstring s;
-    pointer p;
-}union64_t;
-typedef union union32_t{
-    int32_t i;
-    float32_t d;
-}union32_t;
 
 /*
     C/C++ compatibility shims
@@ -87,9 +76,6 @@ typedef union union32_t{
         ale_printf(" !!\n");                             \
         __builtin_unreachable();                         \
     }
-static thread_local char MACRO_scoped__;
-//TRICK scope that "opens" at start, and "closes" at end 
-#define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 /*
     SHELL
@@ -124,7 +110,7 @@ static int32_t fit_pwr2_exp(int32_t size) {
 }
 
 // RANDOM
-__attribute((nonnull, pure, warn_unused_result))
+__attribute((pure, nonnull, warn_unused_result))
 static int32_t rnd(uint64_t seed[_at_least_ 1]) {
     *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
     int32_t shift = 29 - (uint32_t)(*seed >> 61);
@@ -136,7 +122,7 @@ static int32_t rnd(uint64_t seed[_at_least_ 1]) {
     ARENA
 */
 typedef struct arena_t{ uint8_t *beg; uint8_t *end; }arena_t;
-__attribute((warn_unused_result))
+__attribute((nonnull, warn_unused_result))
 static arena_t newarena(int64_t buffer_len, uint8_t buffer[_vla_param(buffer_len)]) {
     arena_t arena = {};
     arena.beg = (uint8_t *)buffer;

@@ -16,6 +16,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+typedef const char * cstring;
+
 static uint8_t table[536870913] = {};
 static int32_t shuffle[200001] = {};
 
@@ -134,7 +136,7 @@ void test() {
     
 }
 
-int32_t main(int32_t argc, const char * *argv) {
+int32_t main(int32_t argc, cstring *argv) {
     test();
     return 0;
 }

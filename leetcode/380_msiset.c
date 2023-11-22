@@ -5,7 +5,7 @@ static arena_t perm = {};
 
 typedef struct {
     msiht32 table;
-    vector32 cache;
+    vector32_t cache;
 } RandomizedSet;
 
 
@@ -19,7 +19,7 @@ void print_cache(RandomizedSet* obj) {
 
 RandomizedSet * randomizedSetCreate() {
     perm = newarena(sizeof(memory), memory);
-    RandomizedSet *S = alloc1(&perm, sizeof(RandomizedSet), alignof(RandomizedSet));
+    RandomizedSet *S = (RandomizedSet *) alloc1(&perm, sizeof(RandomizedSet), alignof(RandomizedSet));
     S->table = newmsi32(&perm, 200000);
     push_i32(&S->cache, &perm, 0);
     return S;
@@ -130,7 +130,7 @@ void test() {
     
 }
 
-int32_t main(int32_t argc, const char * *argv) {
+int32_t main(int32_t argc, cstring *argv) {
     test();
     return 0;
 }

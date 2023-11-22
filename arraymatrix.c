@@ -26,7 +26,7 @@ void test_vlamatrix(arena_t scratch) {
 void test_push_cstr(arena_t scratch) {
     ale_printf("=========== CSTRINGs ===========\n");
     
-    vector64 d = {};
+    vector64_t d = {};
     
     for (int i = 0; i < 52; ++i) {
         push_cstr(&d, &scratch, "sAl");
@@ -46,7 +46,7 @@ void test_push_cstr(arena_t scratch) {
 void test_push_i32(arena_t scratch) {
     ale_printf("=========== I32s ===========\n");
 
-    vector32 d = {};
+    vector32_t d = {};
     
     push_i32(&d, &scratch, 52+32000);
     ale_printf("POP: %d\n", pop_i32(&d));
@@ -68,7 +68,7 @@ void test_push_i32(arena_t scratch) {
 void test_push_i64(arena_t scratch) {
     ale_printf("=========== I64s ===========\n");
 
-    vector64 d = {};
+    vector64_t d = {};
     
     push_i64(&d, &scratch, 52+64000);
     ale_printf("POP: %lld\n", pop_i64(&d));
@@ -91,7 +91,7 @@ void test_push_i64(arena_t scratch) {
 void test_push_f32(arena_t scratch) {
     ale_printf("=========== FLOATs ===========\n");
 
-    vector32 d = {};
+    vector32_t d = {};
     
     push_f32(&d, &scratch, 5.2f + 0.0032f);
     ale_printf("POP: %f\n", (float64_t) pop_f32(&d));
@@ -113,7 +113,7 @@ void test_push_f32(arena_t scratch) {
 void test_push_f64(arena_t scratch) {
     ale_printf("=========== DOUBLEs ===========\n");
     
-    vector64 d = {};
+    vector64_t d = {};
     
     push_f64(&d, &scratch, 5.2+0.0064);
     ale_printf("POP: %lf\n", pop_f64(&d));

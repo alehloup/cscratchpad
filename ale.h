@@ -700,7 +700,6 @@ static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
     return contents;
 }
 
-
 static vector64_t text_to_lines(arena_t arena[_at_least_ 1], modstring text_to_alter) {
     vector64_t lines = {.cap=0, .len=0, .data=0};
     

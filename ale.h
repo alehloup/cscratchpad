@@ -67,7 +67,7 @@ typedef void * pointer;  // generic pointer
 #endif
 
 /*
-    Better Assert + Scope/Defer
+    Better Assert
 */
 #define ale_assert(_cond_, ...)                          \
     if (!(_cond_)) {                                     \
@@ -122,7 +122,7 @@ static int32_t rnd(uint64_t seed[_at_least_ 1]) {
     ARENA
 */
 typedef struct arena_t{ uint8_t *beg; uint8_t *end; }arena_t;
-__attribute((nonnull, warn_unused_result))
+__attribute((nonnull, warn_unused_result, access(read_only, 2, 1)))
 static arena_t newarena(int64_t buffer_len, uint8_t buffer[_vla_param(buffer_len)]) {
     arena_t arena = {};
     arena.beg = (uint8_t *)buffer;

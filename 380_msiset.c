@@ -80,7 +80,7 @@ bool randomizedSetRemove(RandomizedSet* obj, int val) {
 }
 
 int randomizedSetGetRandom(RandomizedSet* obj) {
-    static thread_local uint64_t seed = 11111111111l;
+    static uint64_t seed = 11111111111l;
     int32_t range = obj->cache.len - 1;
     if (obj->cache.data[0]) {
         ++range;
@@ -96,6 +96,9 @@ int randomizedSetGetRandom(RandomizedSet* obj) {
 }
 
 void randomizedSetFree(RandomizedSet* obj) {
+    if (!obj) {
+        ale_printf("Obj is null!");
+    }
     perm.beg = 0;
     perm.end = 0;
 }
@@ -130,7 +133,7 @@ void test() {
     
 }
 
-int32_t main(int32_t argc, cstring *argv) {
+int32_t main() {
     test();
     return 0;
 }

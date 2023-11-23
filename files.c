@@ -1,6 +1,6 @@
 #include "ale.h"
 
-static thread_local uint8_t buffer[2*_Mega_Bytes];
+static uint8_t buffer[2*_Mega_Bytes];
 
 int main(void) {
     arena_t perm = newarena(sizeof(buffer), buffer);

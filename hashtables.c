@@ -79,7 +79,7 @@ void test_big_msi_i64(arena_t scratch) {
     ale_printf("\n");
 }
 
-static thread_local uint8_t bufferzao[2*_Mega_Bytes] = {};
+static uint8_t bufferzao[2*_Mega_Bytes] = {};
 int32_t main() {
     arena_t scratch = newarena(sizeof(bufferzao), bufferzao);
     test_msi_i64(scratch);

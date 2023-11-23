@@ -1,0 +1,9 @@
+#  define __mingw_bos_ptr_chk_warn(p, n, maxtype) \
+     ((__mingw_bos_known(p) \
+     && __builtin_constant_p(__mingw_bos(p, maxtype) < (size_t)(n)) \
+     && __mingw_bos(p, maxtype) < (size_t)(n)) \
+     ? __mingw_chk_fail_warn() : __mingw_bos_ptr_chk(p, n, maxtype))
+
+dst:00000069af5ff8e0, sz: 1 * 27 == 27, 0
+
+__mingw_bos_ptr_chk_warn(00000069af5ff8e0, 27, 0)

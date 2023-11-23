@@ -5,7 +5,7 @@ typedef union union64_t{
     int64_t i;
     float64_t d;
     cstring s;
-    pointer p;
+    void * p;
 }union64_t;
 typedef union union32_t{
     int32_t i;

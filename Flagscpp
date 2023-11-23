@@ -1,12 +1,10 @@
--std=gnu++2b -g3 -O3 -march=native -mtune=native -flto -static-pie
+-std=gnu++2b -g3 -O3 -march=native -mtune=native -flto -static-pie -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
 
--Wtrivial-auto-var-init -ftrivial-auto-var-init=zero -funsigned-char -fexec-charset=UTF-8
+-fanalyzer -Wall -Wextra -Wpedantic -Werror 
 
--Wall -Wextra -Wpedantic -Werror 
+-fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=unreachable
 
--Wshadow -Wundef -Wnull-dereference 
-
--Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
+-Wshadow -Wundef -Wnull-dereference -Wno-unused-function -Wno-unused-variable
 
 -Wconversion -Wno-sign-conversion -Wdouble-promotion
 
@@ -15,11 +13,5 @@
 -Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2 -Wformat-security -Wformat-signedness 
 
 -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum
-
--fsanitize=undefined -fsanitize=bounds -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=unreachable
-
--D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
-
--fanalyzer
 
 libwinsane.o

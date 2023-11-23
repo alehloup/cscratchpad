@@ -138,7 +138,7 @@ static pointer alloc(arena_t arena[_at_least_ 1], int64_t size, int64_t align, i
     int64_t total = size * count;
     int64_t pad = MODPWR2(- (int64_t)arena->beg, align); //mod -x gives n for next align
 
-    ale_assert(total < (arena->end - arena->beg - pad), \
+    ale_assert(total < (arena->end - arena->beg - pad),
         "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", (long long int)(total), (long long int)(arena->end - arena->beg - pad));
 
     uint8_t *p = arena->beg + pad;
@@ -727,10 +727,11 @@ __attribute((nonnull, warn_unused_result))
 static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
     modstring contents = 0;
 
-    {FILE *f = ale_fopen(filename, "rb");
+    {
+        FILE *f = 
+    ale_fopen(filename, "rb");
     
         if (!f) {
-            ale_fclose(f);
             return contents;
         }
     
@@ -739,10 +740,15 @@ static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
         ale_fseek(f, 0, SEEK_SET);
 
         contents = (modstring) alloc(arena, sizeof(char), alignof(char), fsize+1);
-        ale_fread(contents, sizeof(char), fsize+1, f);
+        if (!contents) {
+            ale_fclose(f);
+            return contents;
+        }
+        ale_fread(contents, sizeof(char), fsize, f);
         contents[fsize] = 0;
 
-    ale_fclose(f);}
+    ale_fclose(f);
+    }
     
     return contents;
 }

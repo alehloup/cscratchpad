@@ -2,20 +2,20 @@
 #include <stdio.h>
 #include "ale.h"
 
-void test_msi_cstr(arena_t scratch) {
-    msiht64 ht = newmsi64(&scratch, 4);
+void test_ht_str(arena_t scratch) {
+    ht64_t ht = new_ht64(&scratch, 4);
     
-    ale_printf("%lld\n", hash_cstr("Alessandro Stamatto"));
+    ale_printf("%lld\n", hash_str("Alessandro Stamatto"));
 
-    msiks_set_cstr(&ht, "Alessandro", "Stamatto");
-    msiks_set_cstr(&ht, "Sarah", "Sakamotto");
-    msiks_set_cstr(&ht, "Alessandro", "Ferreira");
+    htstr_set_str(&ht, "Alessandro", "Stamatto");
+    htstr_set_str(&ht, "Sarah", "Sakamotto");
+    htstr_set_str(&ht, "Alessandro", "Ferreira");
 
 
-    ale_printf("Pegou: %s\n", msiks_get_cstr(ht, "Sarah"));
-    ale_printf("Não pegou: %s\n", msiks_get_cstr(ht, "Karol"));
+    ale_printf("Pegou: %s\n", htstr_get_str(ht, "Sarah"));
+    ale_printf("Não pegou: %s\n", htstr_get_str(ht, "Karol"));
 
-    entry_cstr_cstr *data = msiks_data_as_cstr(&ht);
+    entry_str_str *data = htstr_data_as_str(&ht);
     for(int32_t i = 0; i < ht.mask; ++i) {
         if  (! data[i].key) {
             continue;
@@ -27,19 +27,19 @@ void test_msi_cstr(arena_t scratch) {
     ale_printf("\n");
 }
 
-void test_msi_i64(arena_t arena) {
-    msiht64 ht = newmsi64(&arena, 4);
+void test_ht_i64(arena_t arena) {
+    ht64_t ht = new_ht64(&arena, 4);
 
     ale_printf("%lld\n", hash_i64(4));
 
-    msiki_set_cstr(&ht, 5, "Stamatto");
-    msiki_set_cstr(&ht, 4, "Sakamoto");
-    msiki_set_cstr(&ht, 5, "Ferreira");
+    htnum_set_str(&ht, 5, "Stamatto");
+    htnum_set_str(&ht, 4, "Sakamoto");
+    htnum_set_str(&ht, 5, "Ferreira");
 
-    ale_printf("pegou: %s\n", msiki_get_cstr(ht, 5));
-    ale_printf("não pegou: %s\n", msiki_get_cstr(ht, 3));
+    ale_printf("pegou: %s\n", htnum_get_str(ht, 5));
+    ale_printf("não pegou: %s\n", htnum_get_str(ht, 3));
 
-    entry_i64_cstr *data = msiki_data_as_cstr(&ht);
+    entry_i64_str *data = htnum_data_as_str(&ht);
     for(int32_t i = 0; i < ht.mask; ++i) {
         if  ( ! data[i].key) {
             continue;
@@ -51,16 +51,16 @@ void test_msi_i64(arena_t arena) {
     ale_printf("\n");
 }
 
-void test_big_msi_i64(arena_t scratch) {
-    msiht64 ht = newmsi64(&scratch, 128);
+void test_big_ht_i64(arena_t scratch) {
+    ht64_t ht = new_ht64(&scratch, 128);
 
     for(int i = 0; i < 128; ++i) {
-        msiki_set_i64(&ht, i, i);
+        htnum_set_i64(&ht, i, i);
     }
 
-    entry_i64_i64 *data = msiki_data_as_int64(&ht);
+    entry64_t *data = htnum_data_as_int64(&ht);
     for(int32_t i = 0; i < ht.len; ++i) {
-        int32_t idx = msiki_get_idx(ht, i);
+        int32_t idx = htnum_get_idx(ht, i);
         
         ale_printf("[%d]", idx);
         ale_printf("%lld: %lld", data[idx].key, data[idx].val);
@@ -70,7 +70,7 @@ void test_big_msi_i64(arena_t scratch) {
     }
 
     for(int32_t i = ht.len; i < ht.mask; ++i) {
-        int32_t idx = msiki_get_idx(ht, i);
+        int32_t idx = htnum_get_idx(ht, i);
 
         ale_assert(data[idx].key == 0, "should be empty!");
     }
@@ -82,13 +82,13 @@ void test_big_msi_i64(arena_t scratch) {
 static uint8_t bufferzao[2*_Mega_Bytes] = {};
 int32_t main() {
     arena_t scratch = newarena(sizeof(bufferzao), bufferzao);
-    test_msi_i64(scratch);
+    test_ht_i64(scratch);
     ale_printf("\n");
     ale_printf("\n");
-    test_msi_cstr(scratch);
+    test_ht_str(scratch);
     ale_printf("\n");
     ale_printf("\n");
-    test_big_msi_i64(scratch);
+    test_big_ht_i64(scratch);
 
     return 0;
 }

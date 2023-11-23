@@ -9,10 +9,10 @@ int main(void) {
     printf("%s", contents);
 
     vector64_t lines = slice_into_nonempty_lines(&perm, contents);
-    cstring *data = vector_data_as_cstring(&lines);
+    cstring *data = vec_data_as_string(&lines);
 
     qsort(data, (uint64_t) lines.len, 
-        sizeof(cstring), void_compare_cstrings);
+        sizeof(cstring), void_compare_strings);
 
     for (int i = 0; i < lines.len; ++i) {
         printf("%d: %s\n", i, data[i]);

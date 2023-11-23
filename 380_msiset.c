@@ -4,7 +4,7 @@ static uint8_t memory[4*_Mega_Bytes] = {};
 static arena_t perm = {};
 
 typedef struct {
-    msiht32 table;
+    ht32_t table;
     vector32_t cache;
 } RandomizedSet;
 
@@ -20,8 +20,8 @@ void print_cache(RandomizedSet* obj) {
 RandomizedSet * randomizedSetCreate() {
     perm = newarena(sizeof(memory), memory);
     RandomizedSet *S = (RandomizedSet *) alloc1(&perm, sizeof(RandomizedSet), alignof(RandomizedSet));
-    S->table = newmsi32(&perm, 200000);
-    push_i32(&S->cache, &perm, 0);
+    S->table = new_ht32(&perm, 200000);
+    vec_push_i32(&S->cache, &perm, 0);
     return S;
 }
 
@@ -33,13 +33,13 @@ bool randomizedSetInsert(RandomizedSet* obj, int val) {
         return ret;
     }
 
-    int32_t msiidx = msiki32_get_idx(obj->table, val);
-    entry_i32_i32 entry = obj->table.data[msiidx];
+    int32_t msiidx = htint_get_idx(obj->table, val);
+    entry32_t entry = obj->table.data[msiidx];
     if (entry.val) {
         return 0;
     }
 
-    push_i32(&obj->cache, &perm, val);
+    vec_push_i32(&obj->cache, &perm, val);
 
     obj->table.data[msiidx].key = val;
     obj->table.data[msiidx].val = obj->cache.len - 1;
@@ -57,7 +57,7 @@ bool randomizedSetRemove(RandomizedSet* obj, int val) {
         return 0;
     }
 
-    int32_t msiidx = msiki32_get_idx(obj->table, val);
+    int32_t msiidx = htint_get_idx(obj->table, val);
     
     if (obj->table.data[msiidx].val) {
         int32_t idxval = obj->table.data[msiidx].val;

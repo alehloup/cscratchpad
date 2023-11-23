@@ -9,7 +9,7 @@ int main(void) {
     printf("%s", contents);
 
     vector64_t lines = slice_into_nonempty_lines(&perm, contents);
-    auto data = vector_data_as_cstring(&lines);
+    cstring *data = vector_data_as_cstring(&lines);
 
     qsort(data, (uint64_t) lines.len, 
         sizeof(cstring), void_compare_cstrings);

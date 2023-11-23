@@ -406,7 +406,7 @@ static int32_t msiki(
     msiht64 ht[1] /* msi_ht */, 
     int64_t keyi64, int32_t create_if_not_found
 ) {
-    auto data = ht->data;
+    entry_i64_i64 *data = ht->data;
 
     uint64_t hash = (uint64_t) hash_i64(keyi64);
     int32_t index = (int32_t)hash;
@@ -486,26 +486,22 @@ static void * msiki_set_ptr(msiht64 table[1], int64_t ikey, void * pval) {
 }
 __attribute((nonnull, warn_unused_result))
 static entry_i64_i64 * msiki_data_as_int64(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_i64_i64 *) data;
+    return (entry_i64_i64 *) table->data;
 }
 typedef struct entry_i64_f64{int64_t key; float64_t val;}entry_i64_f64;
 __attribute((nonnull, warn_unused_result))
 static entry_i64_f64 * msiki_data_as_f64(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_i64_f64 *) data;
+    return (entry_i64_f64 *) table->data;
 }
 typedef struct entry_i64_cstr{int64_t key; cstring val;}entry_i64_cstr;
 __attribute((nonnull, warn_unused_result))
 static entry_i64_cstr * msiki_data_as_cstr(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_i64_cstr *) data;
+    return (entry_i64_cstr *) table->data;
 }
 typedef struct entry_i64_ptr{int64_t key; void * val;}entry_i64_ptr;
 __attribute((nonnull, warn_unused_result))
 static entry_i64_ptr * msiki_data_as_ptr(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_i64_ptr *) data;
+    return (entry_i64_ptr *) table->data;
 }
 
 /*
@@ -517,7 +513,7 @@ static int32_t msiks(
     msiht64 ht[1] /* msi_ht */, 
     cstring keycstr, int32_t create_if_not_found
 ) {
-    auto data = ht->data;
+    entry_i64_i64 *data = ht->data;
 
     uint64_t hash = (uint64_t) hash_cstr(keycstr);
     int32_t index = (int32_t)hash;
@@ -598,26 +594,22 @@ static void * msiks_set_ptr(msiht64 table[1], cstring skey, void * pval) {
 typedef struct entry_cstr_i64{cstring key; int64_t val;}entry_cstr_i64;
 __attribute((nonnull, warn_unused_result))
 static entry_cstr_i64 * msiks_data_as_int64(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_cstr_i64 *) data;
+    return (entry_cstr_i64 *) table->data;
 }
 typedef struct entry_cstr_f64{cstring key; float64_t val;}entry_cstr_f64;
 __attribute((nonnull, warn_unused_result))
 static entry_cstr_f64 * msiks_data_as_f64(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_cstr_f64 *) data;
+    return (entry_cstr_f64 *) table->data;
 }
 typedef struct entry_cstr_cstr{cstring key; cstring val;}entry_cstr_cstr;
 __attribute((nonnull, warn_unused_result))
 static entry_cstr_cstr * msiks_data_as_cstr(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_cstr_cstr *) data;
+    return (entry_cstr_cstr *) table->data;
 }
 typedef struct entry_cstr_ptr{cstring key; void * val;}entry_cstr_ptr;
 __attribute((nonnull, warn_unused_result))
 static entry_cstr_ptr * msiks_data_as_ptr(msiht64 table[1]) {
-    auto data = table->data;
-    return (entry_cstr_ptr *) data;
+    return (entry_cstr_ptr *) table->data;
 }
 
 /*
@@ -628,7 +620,7 @@ static int32_t msiki32(
     msiht32 ht[1] /* msi_ht */, 
     int32_t keyi32, int32_t create_if_not_found
 ) {
-    auto data = ht->data;
+    entry_i32_i32 *data = ht->data;
 
     uint64_t hash = (uint64_t) hash_i64(keyi32);
     int32_t index = (int32_t)hash;
@@ -690,33 +682,30 @@ static float32_t msiki_set_f32(msiht32 table[1], int32_t ikey, float32_t dval) {
 }
 __attribute((nonnull, warn_unused_result))
 static entry_i32_i32 * msiki_data_as_int32(msiht32 table[1]) {
-    auto data = table->data;
-    return (entry_i32_i32 *) data;
+    return (entry_i32_i32 *) table->data;
 }
 typedef struct entry_i32_f32{int32_t key; float32_t val;}entry_i32_f32;
 __attribute((nonnull, warn_unused_result))
 static entry_i32_f32 * msiki_data_as_f32(msiht32 table[1]) {
-    auto data = table->data;
-    return (entry_i32_f32 *) data;
+    return (entry_i32_f32 *) table->data;
 }
 
 /*
     FILES
 */
+__attribute((nonnull, warn_unused_result))
 static size_t ale_fread_noex(void * __restrict__ __dst, size_t __sz, size_t __n, FILE * __restrict__ __f) {
     #ifdef __cplusplus
-        try {
-            return ale_fread(__dst, __sz, __n, __f); } catch(...) {return 0;}
+        try { return ale_fread(__dst, __sz, __n, __f); } catch(...) {return 0;}
     #endif 
-            return ale_fread(__dst, __sz, __n, __f);
+              return ale_fread(__dst, __sz, __n, __f);
 }
 
 __attribute((nonnull, warn_unused_result))
 static modstring file_to_buffer(arena_t arena[1], cstring filename) {
     modstring contents = 0;
 
-    {
-        FILE *f = 
+    {FILE *f = 
     ale_fopen(filename, "rb");
     
         if (!f) {
@@ -732,7 +721,10 @@ static modstring file_to_buffer(arena_t arena[1], cstring filename) {
             ale_fclose(f);
             return contents;
         }
-        ale_fread_noex(contents, sizeof(char), fsize, f);
+        int32_t bytesread = (int32_t) ale_fread_noex(contents, sizeof(char), fsize, f);
+        if (bytesread != fsize) {
+            ale_printf("could not read fsize:%d bytes, bytesread:%d ", fsize, bytesread);
+        }
         contents[fsize] = 0;
 
     ale_fclose(f);

@@ -3,7 +3,7 @@
 #include "ale.h"
 
 void test_msi_cstr(arena_t scratch) {
-    auto ht = newmsi64(&scratch, 4);
+    msiht64 ht = newmsi64(&scratch, 4);
     
     ale_printf("%lld\n", hash_cstr("Alessandro Stamatto"));
 
@@ -15,7 +15,7 @@ void test_msi_cstr(arena_t scratch) {
     ale_printf("Pegou: %s\n", msiks_get_cstr(ht, "Sarah"));
     ale_printf("Não pegou: %s\n", msiks_get_cstr(ht, "Karol"));
 
-    auto data = msiks_data_as_cstr(&ht);
+    entry_cstr_cstr *data = msiks_data_as_cstr(&ht);
     for(int32_t i = 0; i < ht.mask; ++i) {
         if  (! data[i].key) {
             continue;
@@ -28,7 +28,7 @@ void test_msi_cstr(arena_t scratch) {
 }
 
 void test_msi_i64(arena_t arena) {
-    auto ht = newmsi64(&arena, 4);
+    msiht64 ht = newmsi64(&arena, 4);
 
     ale_printf("%lld\n", hash_i64(4));
 
@@ -39,7 +39,7 @@ void test_msi_i64(arena_t arena) {
     ale_printf("pegou: %s\n", msiki_get_cstr(ht, 5));
     ale_printf("não pegou: %s\n", msiki_get_cstr(ht, 3));
 
-    auto data = msiki_data_as_cstr(&ht);
+    entry_i64_cstr *data = msiki_data_as_cstr(&ht);
     for(int32_t i = 0; i < ht.mask; ++i) {
         if  ( ! data[i].key) {
             continue;
@@ -52,13 +52,13 @@ void test_msi_i64(arena_t arena) {
 }
 
 void test_big_msi_i64(arena_t scratch) {
-    auto ht = newmsi64(&scratch, 128);
+    msiht64 ht = newmsi64(&scratch, 128);
 
     for(int i = 0; i < 128; ++i) {
         msiki_set_i64(&ht, i, i);
     }
 
-    auto data = msiki_data_as_int64(&ht);
+    entry_i64_i64 *data = msiki_data_as_int64(&ht);
     for(int32_t i = 0; i < ht.len; ++i) {
         int32_t idx = msiki_get_idx(ht, i);
         

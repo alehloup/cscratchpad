@@ -34,7 +34,7 @@ bool randomizedSetInsert(RandomizedSet* obj, int val) {
     }
 
     int32_t msiidx = msiki32_get_idx(obj->table, val);
-    auto entry = obj->table.data[msiidx];
+    entry_i32_i32 entry = obj->table.data[msiidx];
     if (entry.val) {
         return 0;
     }

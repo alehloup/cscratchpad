@@ -133,7 +133,7 @@ static arena_t newarena(int64_t buffer_len, uint8_t buffer[_vla_param(buffer_len
 /*
     Arena Allocator that always zeroes the memory
 */
-__attribute((malloc, alloc_size(2, 4), alloc_align(3), nonnull, warn_unused_result))
+__attribute((malloc, alloc_size(2, 4), alloc_align(3), nonnull, warn_unused_result, no_sanitize ("leak")))
 static pointer alloc(arena_t arena[_at_least_ 1], int64_t size, int64_t align, int64_t count) {
     int64_t total = size * count;
     int64_t pad = MODPWR2(- (int64_t)arena->beg, align); //mod -x gives n for next align
@@ -146,7 +146,7 @@ static pointer alloc(arena_t arena[_at_least_ 1], int64_t size, int64_t align, i
     
     return ale_memset(p, 0, total);
 }
-__attribute((malloc, alloc_size(2), alloc_align(3), nonnull, warn_unused_result))
+__attribute((malloc, alloc_size(2), alloc_align(3), nonnull, warn_unused_result, no_sanitize ("leak")))
 static pointer alloc1(arena_t arena[_at_least_ 1], int64_t size, int64_t align) {
     return alloc(arena, size, align, 1);
 }

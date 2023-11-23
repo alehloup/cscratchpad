@@ -58,12 +58,14 @@ typedef void * pointer;  // generic pointer
     #define _Thread_local thread_local
     #define _at_least_ /* static array size not supported in C++ */
     #define _vla_param(_vla_size_) /* vla parameter not supported in C++ */
+    #define dropexcept(...) try { __VA_ARGS__; } catch(...) {;}
 #endif 
 #ifndef __cplusplus
     #define auto __auto_type
     #define thread_local _Thread_local
     #define _at_least_ static /* usage in array/pointer parameters: buffer[static 512] */
     #define _vla_param(_vla_size_) static _vla_size_ /* usage in vla parameters: buffer[buffer_len] */
+    #define dropexcept(...) __VA_ARGS__;
 #endif
 
 /*
@@ -744,7 +746,7 @@ static modstring file_to_buffer(arena_t arena[_at_least_ 1], cstring filename) {
             ale_fclose(f);
             return contents;
         }
-        ale_fread(contents, sizeof(char), fsize, f);
+        dropexcept(ale_fread(contents, sizeof(char), fsize, f));
         contents[fsize] = 0;
 
     ale_fclose(f);

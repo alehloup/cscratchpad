@@ -1,21 +1,27 @@
 #pragma once
 
+#include <assert.h>  // standard assert
+#include <stdarg.h>  // allows variadic functions
+#include <stdint.h>  // explicit size intes
+#include <string.h>  // memory operations
+#include <stdio.h>   // files and system
+#include <stdlib.h>  // malloc is not used
+
 #define ale_printf printf
 // #define ale_printf(format, ...) ; // uncomment for removing prints
 
-#ifdef _MSC_VER
-    #define gcc_attr(...) static //do NOT use attributes in MSVC
-#endif
-#ifndef _MSC_VER
-    #define gcc_attr(...) __attribute((__VA_ARGS__)) static // Use attributes in GCC and Clang
-#endif
+// Allows assert to print messages if printf is enabled
+#define ale_assert(_cond_, ...)                          \
+    if (!(_cond_)) {                                     \
+        ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
+        ale_printf(__VA_ARGS__);                         \
+        ale_printf(" !!\n");                             \
+        assert(_cond_);/*__builtin_unreachable();*/      \
+    }
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+/*
+    ==================== TYPES ====================
+*/
 
 #define _Mega_Bytes 1048576 // malloc(52*_Mega_Bytes)
 
@@ -36,21 +42,17 @@ typedef char * mstr_t; // modifiable string
 typedef struct s8_struct{ int32_t len; mstr_t data; }s8_struct; // slice struct
 typedef s8_struct * s8str_t; // slice string
 
-// Assert
-#define ale_assert(_cond_, ...)                          \
-    if (!(_cond_)) {                                     \
-        ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
-        ale_printf(__VA_ARGS__);                         \
-        ale_printf(" !!\n");                             \
-        assert(_cond_);/*__builtin_unreachable();*/      \
-    }
-
+#ifdef _MSC_VER
+    #define gcc_attr(...) static //do NOT use attributes in MSVC
+#endif
+#ifndef _MSC_VER
+    #define gcc_attr(...) __attribute((__VA_ARGS__)) static // Use attributes in GCC and Clang
+#endif
 // Simple attributes
 #define $math gcc_attr(const, warn_unused_result)
 #define $pure gcc_attr(pure, nonnull, warn_unused_result)
 #define $fun gcc_attr(nonnull, warn_unused_result)
 #define $proc gcc_attr(nonnull) void
-
 // Parametric attributes
 #define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
     gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), format(printf, paramidx_format, paramidx_varargs))
@@ -59,17 +61,51 @@ typedef s8_struct * s8str_t; // slice string
 #define $malloc(paramidx_elementsize, paramidx_elementcount) \
     gcc_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), nonnull, warn_unused_result, no_sanitize ("leak"))
 
-// SHELL
-$format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
-int32_t shellrun(int32_t bufferlen, char buffer [512], cstr_t format, ...) {
-    memset(buffer, '\0', 512);
+/*
+    ==================== MATH ====================
+*/
 
-    va_list args; va_start(args, format);
-
-    vsprintf_s(buffer, bufferlen, format, args);
-    return system(buffer);
+// Random
+$fun int32_t rnd(uint64_t seed[1]) {
+    *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
+    int32_t shift = 29 - (uint32_t)(*seed >> 61);
+    
+    return ((int32_t) (*seed >> shift)) & 2147483647;
 }
 
+// Hash
+$pure int64_t hash_str(cstr_t str) {
+    cstr_t sp = (cstr_t) str;
+
+    uint64_t h = 0x7A5662DCDF;
+    while(*sp) { 
+        h ^= (*(sp++)) & 255; h *= 1111111111111111111;
+    }
+
+    return (h ^ (h >> 32)) >> 1;
+}
+$math int64_t hash_i64(int64_t integer64) {
+    uint64_t x = (uint64_t)integer64;
+    x *= 0x94d049bb133111eb; 
+    x ^= (x >> 30); 
+    x *= 0xbf58476d1ce4e5b9; 
+    
+    return (x ^ (x >> 31)) >> 1;
+}
+
+// Mask-Step-Index (MSI) lookup
+$math int32_t ht_lookup(
+    uint64_t hash, // 1st hash acts as base location
+    int32_t index, // 2nd "hash" steps over the "list of elements" from base-location
+    int32_t mask, // trims number to < ht_capacity
+    int32_t shift // use |exp| bits for step 
+)
+{
+    uint32_t step = (uint32_t)(hash >> shift) | 1;
+    return (index + step) & mask;
+}
+
+// bitmask for optimized Mod for power 2 numbers
 $math int64_t MODPWR2(int64_t number, int64_t modval) {
     return (number) & (modval - 1);
 }
@@ -83,13 +119,9 @@ $math int32_t fit_pwr2_exp(int32_t size) {
     return exp;
 }
 
-// RANDOM
-$fun int32_t rnd(uint64_t seed[1]) {
-    *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
-    int32_t shift = 29 - (uint32_t)(*seed >> 61);
-    
-    return ((int32_t) (*seed >> shift)) & 2147483647;
-}
+/*
+    ==================== ARENA ALLOCATION ====================
+*/
 
 // ARENA
 typedef struct arena_t{ uint8_t *beg; uint8_t *end; }arena_t;
@@ -119,6 +151,10 @@ void * alloc(arena_t arena[1], int64_t size, int64_t count) {
 $fun void * alloc1(arena_t arena[1], int64_t size) {
     return alloc(arena, size, 1);
 }
+
+/*
+    ==================== DATA STRUCTURES ====================
+*/
 
 // VECTOR (dynamic array)
 typedef struct vector64_t{int32_t cap; int32_t len; int64_t *data;}vector64_t;
@@ -255,39 +291,6 @@ $proc vec64_rem(vector64_t dynamic_array[1], int32_t index) {
 }
 $proc vec32_rem(vector32_t dynamic_array[1], int32_t index) {
     dynamic_array->data[index] = dynamic_array->data[--dynamic_array->len];
-}
-
-// Hash
-$pure int64_t hash_str(cstr_t str) {
-    cstr_t sp = (cstr_t) str;
-
-    uint64_t h = 0x7A5662DCDF;
-    while(*sp) { 
-        h ^= (*(sp++)) & 255; h *= 1111111111111111111;
-    }
-
-    return (h ^ (h >> 32)) >> 1;
-}
-$math int64_t hash_i64(int64_t integer64) {
-    uint64_t x = (uint64_t)integer64;
-    x *= 0x94d049bb133111eb; 
-    x ^= (x >> 30); 
-    x *= 0xbf58476d1ce4e5b9; 
-    
-    return (x ^ (x >> 31)) >> 1;
-}
-
-// HASH TABLE : Mask-Step-Index (MSI) 
-
-$math int32_t ht_lookup(
-    uint64_t hash, // 1st hash acts as base location
-    int32_t index, // 2nd "hash" steps over the "list of elements" from base-location
-    int32_t mask, // trims number to < ht_capacity
-    int32_t shift // use |exp| bits for step 
-)
-{
-    uint32_t step = (uint32_t)(hash >> shift) | 1;
-    return (index + step) & mask;
 }
 
 typedef struct entry64_t{int64_t key; int64_t val;}entry64_t;
@@ -570,6 +573,21 @@ $fun entry32_t * htint_data_as_int32(ht32_t table[1]) {
 typedef struct entry_i32_f32{int32_t key; float32_t val;}entry_i32_f32;
 $fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
     return (entry_i32_f32 *) table->data;
+}
+
+/*
+    ==================== INPUT/OUTPUT IO ====================
+*/
+
+// SHELL
+$format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
+int32_t shellrun(int32_t bufferlen, char buffer [512], cstr_t format, ...) {
+    memset(buffer, '\0', 512);
+
+    va_list args; va_start(args, format);
+
+    vsprintf_s(buffer, bufferlen, format, args);
+    return system(buffer);
 }
 
 // FILES

@@ -639,7 +639,7 @@ $fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
 
 // Alters a text by converting \n to \0 and pushing each line as a cstr_t in the returned vector
 $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
-    vector64_t lines = {.cap=0, .len=0, .data=0};
+    vector64_t lines = {0, 0, 0};
     
     for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
@@ -670,7 +670,7 @@ $get b32_t is_empty_string(cstr_t str) {
 
 // Alters a text by converting \n to \0 and pushing each nonempty line as a cstr_t in the returned vector
 $fun vector64_t slice_into_nonempty_lines(arena_t arena[1], mstr_t text_to_alter) {
-    vector64_t lines = {.cap=0, .len=0, .data=0};
+    vector64_t lines = {0, 0, 0};
     
     for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {

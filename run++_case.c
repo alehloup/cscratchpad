@@ -11,7 +11,7 @@ int32_t main(int32_t argc, cstr_t *argv) {
     cstr_t _$1 = argv[1], _$2 = argv[2];
 
     sstr_t format = (
-        "g++ @Flagscpp %s -o \"./builds/%s++.exe\"" 
+        "g++ @Flags %s -o \"./builds/%s++.exe\"" 
         " && " 
         "\"./builds/%s++.exe\" < %s"
             " | "

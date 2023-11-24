@@ -54,6 +54,7 @@ void test_vec_push_i32(arena_t scratch) {
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_i32(&d, &scratch, i+32000);
         int8_t * force_reloc = (int8_t *) alloc1(&scratch, sizeof(int8_t));
+        *force_reloc = 52;
     }
 
     ale_printf("POP: %d\n", vec_pop_i32(&d));

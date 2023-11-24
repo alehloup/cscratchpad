@@ -17,7 +17,7 @@ int32_t main() {
         ale_printf("Meio!\n");
     }
 
-    scoped(cstring arquivo = "Fechando\n", ale_printf("%s", arquivo)) {
+    scoped(cstr_t arquivo = "Fechando\n", ale_printf("%s", arquivo)) {
         ale_printf("Meio do arquivo\n");
     }
 

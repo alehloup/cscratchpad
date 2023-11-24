@@ -2,15 +2,15 @@
 #include <stdlib.h>
 #include "ale.h"
 
-int32_t main(int32_t argc, cstring *argv) {
+int32_t main(int32_t argc, cstr_t *argv) {
     if (argc < 1) {
         ale_printf("No args...");
     }
 
     char buffer[512];
-    cstring _$1 = argv[1], _$2 = argv[2];
+    cstr_t _$1 = argv[1], _$2 = argv[2];
 
-    staticstring format = (
+    sstr_t format = (
         "g++ @Flagscpp %s -o \"./builds/%s++.exe\"" 
         " && " 
         "\"./builds/%s++.exe\" < %s"

@@ -1,14 +1,14 @@
 #include "ale.h"
 
-int32_t main(int32_t argc, cstring *argv) {
+int32_t main(int32_t argc, cstr_t *argv) {
     if (argc < 1) {
         ale_printf("No args...");
     }
 
     char buffer[512];
-    cstring _$1 = argv[1];
+    cstr_t _$1 = argv[1];
 
-    staticstring format = (
+    sstr_t format = (
         "gcc @Flags %s -o \"./builds/%s.exe\"" 
         " && " 
         "\"./builds/%s.exe\""

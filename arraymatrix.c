@@ -35,7 +35,7 @@ void test_vec_push_str(arena_t scratch) {
         vec_push_str(&d, &scratch, "sEv");
     }
 
-    cstring *data = vec_data_as_string(&d);
+    cstr_t *data = vec_data_as_string(&d);
     for (int i = 0; i < d.len; ++i) {
         ale_printf(" %d:%s ", i, data[i]);
     }

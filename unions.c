@@ -4,7 +4,7 @@
 typedef union union64_t{
     int64_t i;
     float64_t d;
-    cstring s;
+    cstr_t s;
     void * p;
 }union64_t;
 typedef union union32_t{
@@ -12,7 +12,7 @@ typedef union union32_t{
     float32_t d;
 }union32_t;
 
-int32_t main(int32_t argc, const cstring *argv) {
+int32_t main(int32_t argc, const cstr_t *argv) {
 
     union64_t x = { .s="Alex" };
 

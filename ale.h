@@ -43,10 +43,12 @@ static const b32_t True = 1;
 static const b32_t False = 0;
 
 // String
-typedef const char * cstring;
-typedef const char * const staticstring;
-typedef char * modstring;
-typedef struct s8{ int32_t len; modstring data; }s8;
+typedef const char * cstr_t; // const string
+typedef const char * const sstr_t; // static string
+typedef char * mstr_t; // modifiable string
+
+typedef struct s8_struct{ int32_t len; mstr_t data; }s8_struct; // slice struct
+typedef s8_struct * s8str_t; // slice string
 
 // Assert
 #define ale_assert(_cond_, ...)                          \
@@ -75,7 +77,7 @@ typedef struct s8{ int32_t len; modstring data; }s8;
 
 // SHELL
 $format(/*format*/2, /*varargs*/3) 
-int32_t shellrun(char buffer [512], cstring format, ...) {
+int32_t shellrun(char buffer [512], cstr_t format, ...) {
     ale_memset(buffer, '\0', 512);
 
     va_list args; va_start(args, format);
@@ -193,14 +195,14 @@ $proc vec_push_f64(vector64_t dynamic_array[1], arena_t arena[1], float64_t floa
 
     vec_push_i64(dynamic_array, arena, replica);
 }
-$proc vec_push_str(vector64_t dynamic_array[1], arena_t arena[1], cstring cstr) {
+$proc vec_push_str(vector64_t dynamic_array[1], arena_t arena[1], cstr_t cstr) {
     vec_push_i64(dynamic_array, arena, (int64_t) cstr);
 }
 $proc vec_push_ptr(vector64_t dynamic_array[1], arena_t arena[1], void * ptr) {
     vec_push_i64(dynamic_array, arena, (int64_t) ptr);
 }
-$proc vec_push_s8ptr(vector64_t dynamic_array[1], arena_t arena[1], s8 * stringslice_ptr) {
-    vec_push_i64(dynamic_array, arena, (int64_t) stringslice_ptr);
+$proc vec_push_s8str(vector64_t dynamic_array[1], arena_t arena[1], s8str_t s8str) {
+    vec_push_i64(dynamic_array, arena, (int64_t) s8str);
 }
 $proc vec_push_i32(vector32_t dynamic_array[1], arena_t arena[1], int32_t int32) {
     if (dynamic_array->len >= dynamic_array->cap) {
@@ -229,14 +231,14 @@ $fun float64_t vec_pop_f64(vector64_t dynamic_array[1]) {
 
     return val; 
 }
-$fun cstring vec_pop_str(vector64_t dynamic_array[1]) {
-     return (cstring) vec_pop_i64(dynamic_array);
+$fun cstr_t vec_pop_str(vector64_t dynamic_array[1]) {
+     return (cstr_t) vec_pop_i64(dynamic_array);
 }
 $fun void * vec_pop_ptr(vector64_t dynamic_array[1]) {
      return (void *) vec_pop_i64(dynamic_array);
 }
-$fun s8 * vec_pop_s8ptr(vector64_t dynamic_array[1]) {
-     return (s8 *) vec_pop_i64(dynamic_array);
+$fun s8str_t vec_pop_s8str(vector64_t dynamic_array[1]) {
+     return (s8str_t) vec_pop_i64(dynamic_array);
 }
 $fun int32_t vec_pop_i32(vector32_t dynamic_array[1]) {
     ale_assert(dynamic_array->len > 0, "POP ON 32bit EMPTY ARRAY");
@@ -258,14 +260,14 @@ $fun int64_t * vec_data_as_i64(vector64_t dynamic_array[1]) {
 $fun float64_t * vec_data_as_f64(vector64_t dynamic_array[1]) {
     return (float64_t *) dynamic_array->data;
 }
-$fun cstring * vec_data_as_string(vector64_t dynamic_array[1]) {
-    return (cstring *) dynamic_array->data;
+$fun cstr_t * vec_data_as_string(vector64_t dynamic_array[1]) {
+    return (cstr_t *) dynamic_array->data;
 }
 $fun void * * vec_data_as_ptr(vector64_t dynamic_array[1]) {
     return (void * *) dynamic_array->data;
 }
-$fun s8 * vec_data_as_s8ptr(vector64_t dynamic_array[1]) {
-    return (s8 *) dynamic_array->data;
+$fun s8str_t * vec_data_as_s8str(vector64_t dynamic_array[1]) {
+    return (s8str_t *) dynamic_array->data;
 }
 $fun int32_t * vec_data_as_i32(vector32_t dynamic_array[1]) {
     return (int32_t *) dynamic_array->data;
@@ -283,8 +285,8 @@ $proc vec32_rem(vector32_t dynamic_array[1], int32_t index) {
 }
 
 // Hash
-$pure int64_t hash_str(cstring str) {
-    cstring sp = (cstring) str;
+$pure int64_t hash_str(cstr_t str) {
+    cstr_t sp = (cstr_t) str;
 
     uint64_t h = 0x7A5662DCDF;
     while(*sp) { 
@@ -403,8 +405,8 @@ $get float64_t htnum_get_f64(ht64_t table, int64_t ikey) {
 
     return val;
 }
-$get cstring htnum_get_str(ht64_t table, int64_t ikey) {
-    return (cstring) table.data[htnum(&table, ikey, 0)].val;
+$get cstr_t htnum_get_str(ht64_t table, int64_t ikey) {
+    return (cstr_t) table.data[htnum(&table, ikey, 0)].val;
 }
 $get void * htnum_get_ptr(ht64_t table, int64_t ikey) {
     return (void *) table.data[htnum(&table, ikey, 0)].val;
@@ -425,7 +427,7 @@ $set float64_t htnum_set_f64(ht64_t table[1], int64_t ikey, float64_t dval) {
     table->data[htnum(table, ikey, 1)].val = replica;
     return dval;
 }
-$set cstring htnum_set_str(ht64_t table[1], int64_t ikey, cstring sval) {
+$set cstr_t htnum_set_str(ht64_t table[1], int64_t ikey, cstr_t sval) {
     table->data[htnum(table, ikey, 1)].val = (int64_t) sval;
     return sval;
 }
@@ -440,7 +442,7 @@ typedef struct entry_i64_f64{int64_t key; float64_t val;}entry_i64_f64;
 $fun entry_i64_f64 * htnum_data_as_f64(ht64_t table[1]) {
     return (entry_i64_f64 *) table->data;
 }
-typedef struct entry_i64_str{int64_t key; cstring val;}entry_i64_str;
+typedef struct entry_i64_str{int64_t key; cstr_t val;}entry_i64_str;
 $fun entry_i64_str * htnum_data_as_str(ht64_t table[1]) {
     return (entry_i64_str *) table->data;
 }
@@ -453,7 +455,7 @@ $fun entry_i64_ptr * htnum_data_as_ptr(ht64_t table[1]) {
 // Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
 $fun int32_t htstr(
     ht64_t ht[1] /* ht_ht */, 
-    cstring keycstr, int32_t create_if_not_found
+    cstr_t keycstr, int32_t create_if_not_found
 ) {
     entry64_t *data = ht->data;
 
@@ -464,7 +466,7 @@ $fun int32_t htstr(
     
     for(
         index = ht_lookup(hash, index, mask, shift);
-        data[index].key != 0 && ale_strcmp((cstring) data[index].key, keycstr);
+        data[index].key != 0 && ale_strcmp((cstr_t) data[index].key, keycstr);
         index = ht_lookup(hash, index, mask, shift)
     ) {
         /* empty body */
@@ -479,63 +481,63 @@ $fun int32_t htstr(
     return index; // index of entry found OR entry empty
 }
 // Returns the index of |ikey| in the msi |table|
-$get int32_t htstr_get_idx(ht64_t table, cstring skey) {
+$get int32_t htstr_get_idx(ht64_t table, cstr_t skey) {
     return htstr(&table, skey, 0);
 }
-$get int64_t htstr_get_i64(ht64_t table, cstring skey) {
+$get int64_t htstr_get_i64(ht64_t table, cstr_t skey) {
     return (int64_t) table.data[htstr(&table, skey, 0)].val;
 }
-$get float64_t htstr_get_f64(ht64_t table, cstring skey) {
+$get float64_t htstr_get_f64(ht64_t table, cstr_t skey) {
     int64_t replica = table.data[htstr(&table, skey, 0)].val;
     float64_t val = 0;
     ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
 }
-$get cstring htstr_get_str(ht64_t table, cstring skey) {
-    return (cstring) table.data[htstr(&table, skey, 0)].val;
+$get cstr_t htstr_get_str(ht64_t table, cstr_t skey) {
+    return (cstr_t) table.data[htstr(&table, skey, 0)].val;
 }
-$get void * htstr_get_ptr(ht64_t table, cstring skey) {
+$get void * htstr_get_ptr(ht64_t table, cstr_t skey) {
     return (void *) table.data[htstr(&table, skey, 0)].val;
 }
 
 // Creates key if not found, then returns the index of |skey| in the msi |table|
-$set int32_t htstr_set_idx(ht64_t table[1], cstring skey) {
+$set int32_t htstr_set_idx(ht64_t table[1], cstr_t skey) {
     return htstr(table, skey, 1);
 }
-$set int64_t htstr_set_i64(ht64_t table[1], cstring skey, int64_t ival) {
+$set int64_t htstr_set_i64(ht64_t table[1], cstr_t skey, int64_t ival) {
     table->data[htstr(table, skey, 1)].val = ival;
     return ival;
 }
-$set float64_t htstr_set_f64(ht64_t table[1], cstring skey, float64_t dval) {
+$set float64_t htstr_set_f64(ht64_t table[1], cstr_t skey, float64_t dval) {
     int64_t replica;
     ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
 
     table->data[htstr(table, skey, 1)].val = replica;
     return dval;
 }
-$set cstring htstr_set_str(ht64_t table[1], cstring skey, cstring sval) {
+$set cstr_t htstr_set_str(ht64_t table[1], cstr_t skey, cstr_t sval) {
     table->data[htstr(table, skey, 1)].val = (int64_t) sval;
     return sval;
 }
-$fun void * htstr_set_ptr(ht64_t table[1], cstring skey, void * pval) {
+$fun void * htstr_set_ptr(ht64_t table[1], cstr_t skey, void * pval) {
     table->data[htstr(table, skey, 1)].val = (int64_t) pval;
     return pval;
 }
 
-typedef struct entry_str_i64{cstring key; int64_t val;}entry_str_i64;
+typedef struct entry_str_i64{cstr_t key; int64_t val;}entry_str_i64;
 $fun entry_str_i64 * htstr_data_as_int64(ht64_t table[1]) {
     return (entry_str_i64 *) table->data;
 }
-typedef struct entry_str_f64{cstring key; float64_t val;}entry_str_f64;
+typedef struct entry_str_f64{cstr_t key; float64_t val;}entry_str_f64;
 $fun entry_str_f64 * htstr_data_as_f64(ht64_t table[1]) {
     return (entry_str_f64 *) table->data;
 }
-typedef struct entry_str_str{cstring key; cstring val;}entry_str_str;
+typedef struct entry_str_str{cstr_t key; cstr_t val;}entry_str_str;
 $fun entry_str_str * htstr_data_as_str(ht64_t table[1]) {
     return (entry_str_str *) table->data;
 }
-typedef struct entry_str_ptr{cstring key; void * val;}entry_str_ptr;
+typedef struct entry_str_ptr{cstr_t key; void * val;}entry_str_ptr;
 $fun entry_str_ptr * htstr_data_as_ptr(ht64_t table[1]) {
     return (entry_str_ptr *) table->data;
 }
@@ -615,8 +617,8 @@ $fun size_t ale_fread_noex(void * __restrict__ __dst, size_t __sz, size_t __n, F
               return ale_fread(__dst, __sz, __n, __f);
 }
 
-$fun modstring file_to_buffer(arena_t arena[1], cstring filename) {
-    modstring contents = 0;
+$fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
+    mstr_t contents = 0;
 
     {FILE *f = 
     ale_fopen(filename, "rb");
@@ -629,7 +631,7 @@ $fun modstring file_to_buffer(arena_t arena[1], cstring filename) {
         int32_t fsize = ale_ftell(f);
         ale_fseek(f, 0, SEEK_SET);
 
-        contents = (modstring) alloc(arena, sizeof(char), alignof(char), fsize+1);
+        contents = (mstr_t) alloc(arena, sizeof(char), alignof(char), fsize+1);
         if (!contents) {
             ale_fclose(f);
             return contents;
@@ -646,11 +648,11 @@ $fun modstring file_to_buffer(arena_t arena[1], cstring filename) {
     return contents;
 }
 
-// Alters a text by converting \n to \0 and pushing each line as a cstring in the returned vector
-$fun vector64_t slice_into_lines(arena_t arena[1], modstring text_to_alter) {
+// Alters a text by converting \n to \0 and pushing each line as a cstr_t in the returned vector
+$fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
     vector64_t lines = {.cap=0, .len=0, .data=0};
     
-    for (modstring cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
+    for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
             *cursor = '\0';
         }
@@ -666,10 +668,10 @@ $fun vector64_t slice_into_lines(arena_t arena[1], modstring text_to_alter) {
 }
 
 $pure int void_compare_strings(const void *a, const void *b) {
-    return ale_strcmp(*(cstring *)a, *(cstring *)b);
+    return ale_strcmp(*(cstr_t *)a, *(cstr_t *)b);
 }
-$get b32_t is_empty_string(cstring str) {
-    for (cstring cursor = str; *cursor != '\0'; ++cursor) {
+$get b32_t is_empty_string(cstr_t str) {
+    for (cstr_t cursor = str; *cursor != '\0'; ++cursor) {
         if (*cursor != ' ') {
             return False;
         }
@@ -677,11 +679,11 @@ $get b32_t is_empty_string(cstring str) {
     return True;
 }
 
-// Alters a text by converting \n to \0 and pushing each nonempty line as a cstring in the returned vector
-$fun vector64_t slice_into_nonempty_lines(arena_t arena[1], modstring text_to_alter) {
+// Alters a text by converting \n to \0 and pushing each nonempty line as a cstr_t in the returned vector
+$fun vector64_t slice_into_nonempty_lines(arena_t arena[1], mstr_t text_to_alter) {
     vector64_t lines = {.cap=0, .len=0, .data=0};
     
-    for (modstring cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
+    for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
             *cursor = '\0';
         }

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "ale.h"
 
-int32_t main(int32_t argc, cstring *argv) {
+int32_t main(int32_t argc, cstr_t *argv) {
 
     static char s1[64] = {};
     static char s2[64] = {};

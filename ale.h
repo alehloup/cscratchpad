@@ -1,10 +1,5 @@
 #pragma once
-
 // ================ CONFIGURE WHAT TO USE ================
-
-#define ale_attr(...) __attribute((__VA_ARGS__)) static // Use attributes
-//#define ale_attr(...) static //do NOT use attributes
-
 #define ale_printf printf
 // #define ale_printf(format, ...) ; // uncomment for removing prints
 
@@ -14,7 +9,6 @@
 #define ale_memcpy memcpy
 #define ale_strlen strlen
 #define ale_strcmp strcmp
-
 #include <stdio.h>
 #define ale_vsprintf vsprintf
 #define ale_fopen fopen
@@ -22,9 +16,15 @@
 #define ale_ftell ftell
 #define ale_fread fread
 #define ale_fclose fclose
-
 #include <stdlib.h>
 #define ale_system system
+
+#ifdef _MSC_VER
+    #define ale_attr(...) static //do NOT use attributes in MSVC
+#endif
+#ifndef _MSC_VER
+    #define ale_attr(...) __attribute((__VA_ARGS__)) static // Use attributes in GCC and Clang
+#endif
 
 // ========================================================
 #include <stdalign.h>

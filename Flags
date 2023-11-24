@@ -1,20 +1,24 @@
--g3 -O3 -march=native -mtune=native -flto -static-pie 
+-g3 -O3 -march=native -mtune=native -flto -static-pie
 
 -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
+-ftrivial-auto-var-init=zero -D_GLIBCXX_ASSERTIONS 
 
 -fanalyzer -Wall -Wextra -Wpedantic -Werror
 
--fsanitize=undefined -fsanitize=bounds 
+-fsanitize=undefined -fsanitize=bounds-strict -fsanitize=alignment -fsanitize=object-size
+-fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute 
+-fsanitize=builtin -fsanitize-address-use-after-scope
 -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=unreachable
 
--Wnull-dereference -Wshadow -Wundef -Wno-unused-function
+-Wshadow -Wundef -Wno-unused-function
+-Wstringop-overflow=4 -Wnull-dereference -Wuse-after-free=3 -Wcast-align=strict 
 -Wconversion -Wno-sign-conversion -Wdouble-promotion 
 -Wlogical-op -Wduplicated-cond -Wduplicated-branches 
 -Wswitch-default -Wswitch-enum 
 
--Warray-bounds -fstrict-flex-arrays -Wstrict-aliasing -Warray-parameter 
+-Warray-bounds=2 -fstrict-flex-arrays -Wstrict-aliasing -Warray-parameter 
 -Wvla-larger-than=0 -Wvla-parameter
-
+ 
 -Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2 -Wformat-security -Wformat-signedness 
 
 libwinsane.o

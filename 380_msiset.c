@@ -1,11 +1,9 @@
 #include "ale.h"
 
-static uint8_t memory[4*_Mega_Bytes] = {};
-static arena_t perm = {};
-
 typedef struct {
     ht32_t table;
     vector32_t cache;
+    arena_t * arena;
 } RandomizedSet;
 
 
@@ -18,10 +16,16 @@ void print_cache(RandomizedSet* obj) {
 }
 
 RandomizedSet * randomizedSetCreate() {
-    perm = newarena(sizeof(memory), memory);
-    RandomizedSet *S = (RandomizedSet *) alloc1(&perm, sizeof(RandomizedSet), alignof(RandomizedSet));
-    S->table = new_ht32(&perm, 200000);
-    vec_push_i32(&S->cache, &perm, 0);
+    static uint8_t memory[4*_Mega_Bytes] = {};
+    static arena_t arena = {};
+
+    arena = newarena(sizeof(memory), memory);
+    
+    RandomizedSet *S = (RandomizedSet *) alloc1(&arena, sizeof(RandomizedSet), alignof(RandomizedSet));
+    S->arena = &arena;
+
+    S->table = new_ht32(&arena, 200000);
+    vec_push_i32(&S->cache, &arena, 0);
     return S;
 }
 
@@ -39,7 +43,7 @@ bool randomizedSetInsert(RandomizedSet* obj, int val) {
         return 0;
     }
 
-    vec_push_i32(&obj->cache, &perm, val);
+    vec_push_i32(&obj->cache, obj->arena, val);
 
     obj->table.data[msiidx].key = val;
     obj->table.data[msiidx].val = obj->cache.len - 1;
@@ -86,8 +90,6 @@ int randomizedSetGetRandom(RandomizedSet* obj) {
         ++range;
     }
 
-
-
     int32_t choosen = (rnd(&seed) % range) + 1;
     if (choosen == obj->cache.len) {
         return 0;
@@ -99,8 +101,8 @@ void randomizedSetFree(RandomizedSet* obj) {
     if (!obj) {
         ale_printf("Obj is null!");
     }
-    perm.beg = 0;
-    perm.end = 0;
+    obj->arena->beg = 0;
+    obj->arena->end = 0;
 }
 
 void printbool(int b) {

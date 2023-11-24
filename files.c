@@ -1,8 +1,8 @@
 #include "ale.h"
 
-static uint8_t buffer[2*_Mega_Bytes];
-
 int main(void) {
+    static uint8_t buffer[2*_Mega_Bytes];
+
     arena_t perm = newarena(sizeof(buffer), buffer);
     
     mstr_t contents = file_to_buffer(&perm, "exemplo.txt");

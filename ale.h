@@ -1,35 +1,21 @@
 #pragma once
-// ================ CONFIGURE WHAT TO USE ================
+
 #define ale_printf printf
 // #define ale_printf(format, ...) ; // uncomment for removing prints
 
-// Core functions to use
-#include <string.h>
-#define ale_memset memset
-#define ale_memcpy memcpy
-#define ale_strlen strlen
-#define ale_strcmp strcmp
-#include <stdio.h>
-#define ale_vsprintf_s vsprintf_s
-#define ale_fopen_s fopen_s
-#define ale_fseek fseek
-#define ale_ftell ftell
-#define ale_fread fread
-#define ale_fclose fclose
-#include <stdlib.h>
-#define ale_system system
-
 #ifdef _MSC_VER
-    #define ale_attr(...) static //do NOT use attributes in MSVC
+    #define gcc_attr(...) static //do NOT use attributes in MSVC
 #endif
 #ifndef _MSC_VER
-    #define ale_attr(...) __attribute((__VA_ARGS__)) static // Use attributes in GCC and Clang
+    #define gcc_attr(...) __attribute((__VA_ARGS__)) static // Use attributes in GCC and Clang
 #endif
 
-// ========================================================
+#include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define _Mega_Bytes 1048576 // malloc(52*_Mega_Bytes)
 
@@ -60,30 +46,28 @@ typedef s8_struct * s8str_t; // slice string
     }
 
 // Simple attributes
-#define $math ale_attr(const, warn_unused_result)
-#define $fun ale_attr(nonnull, warn_unused_result)
-#define $proc ale_attr(nonnull) void
-#define $get ale_attr(warn_unused_result)
-#define $set ale_attr(nonnull)
-#define $pure ale_attr(pure, warn_unused_result)
+#define $math gcc_attr(const, warn_unused_result)
+#define $pure gcc_attr(pure, nonnull, warn_unused_result)
+#define $fun gcc_attr(nonnull, warn_unused_result)
+#define $proc gcc_attr(nonnull) void
 
 // Parametric attributes
 #define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
-    ale_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), format(printf, paramidx_format, paramidx_varargs))
+    gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), format(printf, paramidx_format, paramidx_varargs))
 #define $read_buffer(paramidx_bufferlen, paramidx_buffer) \
-    ale_attr(nonnull, warn_unused_result, access(read_only, paramidx_buffer, paramidx_bufferlen))
+    gcc_attr(nonnull, warn_unused_result, access(read_only, paramidx_buffer, paramidx_bufferlen))
 #define $malloc(paramidx_elementsize, paramidx_elementcount) \
-    ale_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), nonnull, warn_unused_result, no_sanitize ("leak"))
+    gcc_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), nonnull, warn_unused_result, no_sanitize ("leak"))
 
 // SHELL
 $format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
 int32_t shellrun(int32_t bufferlen, char buffer [512], cstr_t format, ...) {
-    ale_memset(buffer, '\0', 512);
+    memset(buffer, '\0', 512);
 
     va_list args; va_start(args, format);
 
-    ale_vsprintf_s(buffer, bufferlen, format, args);
-    return ale_system(buffer);
+    vsprintf_s(buffer, bufferlen, format, args);
+    return system(buffer);
 }
 
 $math int64_t MODPWR2(int64_t number, int64_t modval) {
@@ -130,7 +114,7 @@ void * alloc(arena_t arena[1], int64_t size, int64_t count) {
     uint8_t *p = arena->beg + pad;
     arena->beg += pad + total;
     
-    return ale_memset(p, 0, total);
+    return memset(p, 0, total);
 }
 $fun void * alloc1(arena_t arena[1], int64_t size) {
     return alloc(arena, size, 1);
@@ -153,7 +137,7 @@ $proc vec64_grow(vector64_t dynamic_array[1],  arena_t arena[1]) {
     } else {
         int64_t *DYNA_RELOC = (int64_t *)
             alloc(arena, 8LL, dynamic_array->cap *= 2);
-        ale_memcpy(DYNA_RELOC, dynamic_array->data, 8LL*dynamic_array->len);
+        memcpy(DYNA_RELOC, dynamic_array->data, 8LL*dynamic_array->len);
         dynamic_array->data = DYNA_RELOC;
     }
 }
@@ -174,7 +158,7 @@ $proc vec32_grow(vector32_t dynamic_array[1], arena_t arena[1]) {
     } else {
         int32_t *DYNA_RELOC = (int32_t *)
             alloc(arena, 4LL, dynamic_array->cap *= 2);
-        ale_memcpy(DYNA_RELOC, dynamic_array->data, 4LL*dynamic_array->len);
+        memcpy(DYNA_RELOC, dynamic_array->data, 4LL*dynamic_array->len);
         dynamic_array->data = DYNA_RELOC;
     }
 }
@@ -189,7 +173,7 @@ $proc vec_push_i64(vector64_t dynamic_array[1], arena_t arena[1], int64_t int64)
 }
 $proc vec_push_f64(vector64_t dynamic_array[1], arena_t arena[1], float64_t float64) {
     int64_t replica;
-    ale_memcpy(&replica, &float64, sizeof(replica)); //type prunning
+    memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
     vec_push_i64(dynamic_array, arena, replica);
 }
@@ -211,7 +195,7 @@ $proc vec_push_i32(vector32_t dynamic_array[1], arena_t arena[1], int32_t int32)
 }
 $proc vec_push_f32(vector32_t dynamic_array[1], arena_t arena[1], float32_t float32) {
     int32_t replica;
-    ale_memcpy(&replica, &float32, sizeof(replica)); //type prunning
+    memcpy(&replica, &float32, sizeof(replica)); //type prunning
 
     vec_push_i32(dynamic_array, arena, replica);
 }
@@ -225,7 +209,7 @@ $fun int64_t vec_pop_i64(vector64_t dynamic_array[1]) {
 $fun float64_t vec_pop_f64(vector64_t dynamic_array[1]) {
     int64_t replica = vec_pop_i64(dynamic_array);
     float64_t val = 0;
-    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+    memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
 }
@@ -246,7 +230,7 @@ $fun int32_t vec_pop_i32(vector32_t dynamic_array[1]) {
 $fun float32_t vec_pop_f32(vector32_t dynamic_array[1]) {
     int32_t replica = vec_pop_i32(dynamic_array);
     float32_t val = 0;
-    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+    memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
 }
@@ -381,48 +365,44 @@ $fun int32_t htnum(
 }
 
 // Returns the index of |ikey| in the msi |table|
-$get int32_t htnum_get_idx(ht64_t table, int64_t ikey) {
+$fun int32_t htnum_get_idx(ht64_t table, int64_t ikey) {
     return htnum(&table, ikey, 0);
 }
-$get int64_t htnum_get_i64(ht64_t table, int64_t ikey) {
+$fun int64_t htnum_get_i64(ht64_t table, int64_t ikey) {
     return table.data[htnum(&table, ikey, 0)].val;
 }
-$get float64_t htnum_get_f64(ht64_t table, int64_t ikey) {
+$fun float64_t htnum_get_f64(ht64_t table, int64_t ikey) {
     int64_t replica = table.data[htnum(&table, ikey, 0)].val;
     float64_t val = 0;
-    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+    memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
 }
-$get cstr_t htnum_get_str(ht64_t table, int64_t ikey) {
+$fun cstr_t htnum_get_str(ht64_t table, int64_t ikey) {
     return (cstr_t) table.data[htnum(&table, ikey, 0)].val;
 }
-$get void * htnum_get_ptr(ht64_t table, int64_t ikey) {
+$fun void * htnum_get_ptr(ht64_t table, int64_t ikey) {
     return (void *) table.data[htnum(&table, ikey, 0)].val;
 }
 
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-$set int32_t htnum_set_idx(ht64_t table[1], int64_t ikey) {
-    return htnum(table, ikey, 1);
+$proc htnum_set_idx(ht64_t table[1], int64_t ikey) {
+    htnum(table, ikey, 1);
 }
-$set int64_t htnum_set_i64(ht64_t table[1], int64_t ikey, int64_t ival) {
+$proc htnum_set_i64(ht64_t table[1], int64_t ikey, int64_t ival) {
     table->data[htnum(table, ikey, 1)].val = ival;
-    return ival;
 }
-$set float64_t htnum_set_f64(ht64_t table[1], int64_t ikey, float64_t dval) {
+$proc htnum_set_f64(ht64_t table[1], int64_t ikey, float64_t dval) {
     int64_t replica;
-    ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
+    memcpy(&replica, &dval, sizeof(replica)); //type prunning
 
     table->data[htnum(table, ikey, 1)].val = replica;
-    return dval;
 }
-$set cstr_t htnum_set_str(ht64_t table[1], int64_t ikey, cstr_t sval) {
+$proc htnum_set_str(ht64_t table[1], int64_t ikey, cstr_t sval) {
     table->data[htnum(table, ikey, 1)].val = (int64_t) sval;
-    return sval;
 }
-$fun void * htnum_set_ptr(ht64_t table[1], int64_t ikey, void * pval) {
+$proc htnum_set_ptr(ht64_t table[1], int64_t ikey, void * pval) {
     table->data[htnum(table, ikey, 1)].val = (int64_t) pval;
-    return pval;
 }
 $fun entry64_t * htnum_data_as_int64(ht64_t table[1]) {
     return (entry64_t *) table->data;
@@ -455,7 +435,7 @@ $fun int32_t htstr(
     
     for(
         index = ht_lookup(hash, index, mask, shift);
-        data[index].key != 0 && ale_strcmp((cstr_t) data[index].key, keycstr);
+        data[index].key != 0 && strcmp((cstr_t) data[index].key, keycstr);
         index = ht_lookup(hash, index, mask, shift)
     ) {
         /* empty body */
@@ -470,48 +450,44 @@ $fun int32_t htstr(
     return index; // index of entry found OR entry empty
 }
 // Returns the index of |ikey| in the msi |table|
-$get int32_t htstr_get_idx(ht64_t table, cstr_t skey) {
+$fun int32_t htstr_get_idx(ht64_t table, cstr_t skey) {
     return htstr(&table, skey, 0);
 }
-$get int64_t htstr_get_i64(ht64_t table, cstr_t skey) {
+$fun int64_t htstr_get_i64(ht64_t table, cstr_t skey) {
     return (int64_t) table.data[htstr(&table, skey, 0)].val;
 }
-$get float64_t htstr_get_f64(ht64_t table, cstr_t skey) {
+$fun float64_t htstr_get_f64(ht64_t table, cstr_t skey) {
     int64_t replica = table.data[htstr(&table, skey, 0)].val;
     float64_t val = 0;
-    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+    memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
 }
-$get cstr_t htstr_get_str(ht64_t table, cstr_t skey) {
+$fun cstr_t htstr_get_str(ht64_t table, cstr_t skey) {
     return (cstr_t) table.data[htstr(&table, skey, 0)].val;
 }
-$get void * htstr_get_ptr(ht64_t table, cstr_t skey) {
+$fun void * htstr_get_ptr(ht64_t table, cstr_t skey) {
     return (void *) table.data[htstr(&table, skey, 0)].val;
 }
 
 // Creates key if not found, then returns the index of |skey| in the msi |table|
-$set int32_t htstr_set_idx(ht64_t table[1], cstr_t skey) {
-    return htstr(table, skey, 1);
+$proc htstr_set_idx(ht64_t table[1], cstr_t skey) {
+    htstr(table, skey, 1);
 }
-$set int64_t htstr_set_i64(ht64_t table[1], cstr_t skey, int64_t ival) {
+$proc htstr_set_i64(ht64_t table[1], cstr_t skey, int64_t ival) {
     table->data[htstr(table, skey, 1)].val = ival;
-    return ival;
 }
-$set float64_t htstr_set_f64(ht64_t table[1], cstr_t skey, float64_t dval) {
+$proc htstr_set_f64(ht64_t table[1], cstr_t skey, float64_t dval) {
     int64_t replica;
-    ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
+    memcpy(&replica, &dval, sizeof(replica)); //type prunning
 
     table->data[htstr(table, skey, 1)].val = replica;
-    return dval;
 }
-$set cstr_t htstr_set_str(ht64_t table[1], cstr_t skey, cstr_t sval) {
+$proc htstr_set_str(ht64_t table[1], cstr_t skey, cstr_t sval) {
     table->data[htstr(table, skey, 1)].val = (int64_t) sval;
-    return sval;
 }
-$fun void * htstr_set_ptr(ht64_t table[1], cstr_t skey, void * pval) {
+$proc htstr_set_ptr(ht64_t table[1], cstr_t skey, void * pval) {
     table->data[htstr(table, skey, 1)].val = (int64_t) pval;
-    return pval;
 }
 
 typedef struct entry_str_i64{cstr_t key; int64_t val;}entry_str_i64;
@@ -561,34 +537,32 @@ $fun int32_t htint(
 }
 
 // Returns the index of |ikey| in the msi |table|
-$get int32_t htint_get_idx(ht32_t table, int32_t ikey) {
+$fun int32_t htint_get_idx(ht32_t table, int32_t ikey) {
     return htint(&table, ikey, 0);
 }
-$get int32_t htint_get_i32(ht32_t table, int32_t ikey) {
+$fun int32_t htint_get_i32(ht32_t table, int32_t ikey) {
     return table.data[htint(&table, ikey, 0)].val;
 }
-$get float32_t htint_get_f32(ht32_t table, int32_t ikey) {
+$fun float32_t htint_get_f32(ht32_t table, int32_t ikey) {
     int32_t replica = table.data[htint(&table, ikey, 0)].val;
     float32_t val = 0;
-    ale_memcpy(&val, &replica, sizeof(replica)); //type prunning
+    memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val;
 }
 
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
-$set int32_t htint_set_idx(ht32_t table[1], int32_t ikey) {
-    return htint(table, ikey, 1);
+$proc htint_set_idx(ht32_t table[1], int32_t ikey) {
+    htint(table, ikey, 1);
 }
-$set int32_t htint_set_i32(ht32_t table[1], int32_t ikey, int32_t ival) {
+$proc htint_set_i32(ht32_t table[1], int32_t ikey, int32_t ival) {
     table->data[htint(table, ikey, 1)].val = ival;
-    return ival;
 }
-$set float32_t htint_set_f32(ht32_t table[1], int32_t ikey, float32_t dval) {
+$proc htint_set_f32(ht32_t table[1], int32_t ikey, float32_t dval) {
     int32_t replica;
-    ale_memcpy(&replica, &dval, sizeof(replica)); //type prunning
+    memcpy(&replica, &dval, sizeof(replica)); //type prunning
 
     table->data[htint(table, ikey, 1)].val = replica;
-    return dval;
 }
 $fun entry32_t * htint_data_as_int32(ht32_t table[1]) {
     return (entry32_t *) table->data;
@@ -599,39 +573,39 @@ $fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
 }
 
 // FILES
-$fun size_t ale_fread_noex(void * __dst, size_t __sz, size_t __n, FILE * __f) {
+$fun size_t fread_noex(void * __dst, size_t __sz, size_t __n, FILE * __f) {
     #ifdef __cplusplus
-        try { return ale_fread(__dst, __sz, __n, __f); } catch(...) {return 0;}
+        try { return fread(__dst, __sz, __n, __f); } catch(...) {return 0;}
     #endif 
-              return ale_fread(__dst, __sz, __n, __f);
+              return fread(__dst, __sz, __n, __f);
 }
 
 $fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
     mstr_t contents = 0;
 
     {FILE *f = 0; int32_t err = 
-    ale_fopen_s(&f, filename, "rb");
+    fopen_s(&f, filename, "rb");
     
         if (err) {
             return contents;
         }
     
-        ale_fseek(f, 0, SEEK_END);
-        int32_t fsize = ale_ftell(f);
-        ale_fseek(f, 0, SEEK_SET);
+        fseek(f, 0, SEEK_END);
+        int32_t fsize = ftell(f);
+        fseek(f, 0, SEEK_SET);
 
         contents = (mstr_t) alloc(arena, 1LL, fsize+1);
         if (!contents) {
-            ale_fclose(f);
+            fclose(f);
             return contents;
         }
-        int32_t bytesread = (int32_t) ale_fread_noex(contents, 1LL, fsize, f);
+        int32_t bytesread = (int32_t) fread_noex(contents, 1LL, fsize, f);
         if (bytesread != fsize) {
             ale_printf("could not read fsize:%d bytes, bytesread:%d ", fsize, bytesread);
         }
         contents[fsize] = 0;
 
-    ale_fclose(f);
+    fclose(f);
     }
     
     return contents;
@@ -657,9 +631,9 @@ $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
 }
 
 static int void_compare_strings(const void *a, const void *b) {
-    return ale_strcmp(*(cstr_t *)a, *(cstr_t *)b);
+    return strcmp(*(cstr_t *)a, *(cstr_t *)b);
 }
-$get b32_t is_empty_string(cstr_t str) {
+$fun b32_t is_empty_string(cstr_t str) {
     for (cstr_t cursor = str; *cursor != '\0'; ++cursor) {
         if (*cursor != ' ') {
             return False;

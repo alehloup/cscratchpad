@@ -15,12 +15,12 @@ int32_t main(int32_t argc, cstr_t *argv) {{
     ale_printf("Começando beg:%p end:%p total:%lldMB\n", 
         perm.beg, perm.end, (perm.end - perm.beg)/1048576);
 
-    teste *woa = (typeof(woa)) alloc(&perm, sizeof(teste), alignof(teste), 1);
+    teste *woa = (typeof(woa)) alloc1(&perm, sizeof(teste));
     teste temp = {4, 5, 6};
     *woa =temp;
     ale_printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);
 
-    teste *vetor = (typeof(vetor)) alloc(&perm, sizeof(teste), alignof(teste), 3);
+    teste *vetor = (typeof(vetor)) alloc(&perm, sizeof(teste), 3);
     for(int32_t i = 0, j = 0; i < 3; ++i) {
         teste newel = {j++, j++, j++};
         vetor[i] = newel;

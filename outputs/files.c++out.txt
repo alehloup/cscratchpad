@@ -1,10 +1,12 @@
-ca 21
+dst:00007ff6db418040, sz: 1 * 27 == 27ca 21
 
 2d6+6
 
 fogo25
 
 🐺
+
+pos sort
 0: 2d6+6
 1: ca 21
 2: fogo25

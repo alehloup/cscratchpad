@@ -21,7 +21,7 @@ int32_t main(int32_t argc, cstr_t *argv) {
     ale_printf(format, _$1, _$1, _$1, _$2, _$1);
     ale_printf("\n");
 
-    shellrun(buffer, format, _$1, _$1, _$1, _$2, _$1);
+    shellrun(sizeof(buffer), buffer, format, _$1, _$1, _$1, _$2, _$1);
 
     return 0;
 }

@@ -10,8 +10,8 @@
 #define ale_strlen strlen
 #define ale_strcmp strcmp
 #include <stdio.h>
-#define ale_vsprintf vsprintf
-#define ale_fopen fopen
+#define ale_vsprintf_s vsprintf_s
+#define ale_fopen_s fopen_s
 #define ale_fseek fseek
 #define ale_ftell ftell
 #define ale_fread fread
@@ -27,9 +27,9 @@
 #endif
 
 // ========================================================
-#include <stdalign.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <assert.h>
 
 #define _Mega_Bytes 1048576 // malloc(52*_Mega_Bytes)
 
@@ -56,7 +56,7 @@ typedef s8_struct * s8str_t; // slice string
         ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
         ale_printf(__VA_ARGS__);                         \
         ale_printf(" !!\n");                             \
-        __builtin_unreachable();                         \
+        assert(_cond_);/*__builtin_unreachable();*/      \
     }
 
 // Simple attributes
@@ -68,21 +68,21 @@ typedef s8_struct * s8str_t; // slice string
 #define $pure ale_attr(pure, warn_unused_result)
 
 // Parametric attributes
-#define $format(paramidx_format, paramidx_varargs) \
-    ale_attr(format (printf, paramidx_format, paramidx_varargs))
-#define $read_buffer(paramidx_buffer, paramidx_bufferlen) \
+#define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
+    ale_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), format(printf, paramidx_format, paramidx_varargs))
+#define $read_buffer(paramidx_bufferlen, paramidx_buffer) \
     ale_attr(nonnull, warn_unused_result, access(read_only, paramidx_buffer, paramidx_bufferlen))
-#define $malloc(paramidx_elementsize, paramidx_elementcount, paramidx_elementalign) \
-    ale_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), alloc_align(paramidx_elementalign), nonnull, warn_unused_result, no_sanitize ("leak"))
+#define $malloc(paramidx_elementsize, paramidx_elementcount) \
+    ale_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), nonnull, warn_unused_result, no_sanitize ("leak"))
 
 // SHELL
-$format(/*format*/2, /*varargs*/3) 
-int32_t shellrun(char buffer [512], cstr_t format, ...) {
+$format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
+int32_t shellrun(int32_t bufferlen, char buffer [512], cstr_t format, ...) {
     ale_memset(buffer, '\0', 512);
 
     va_list args; va_start(args, format);
 
-    ale_vsprintf(buffer, format, args);
+    ale_vsprintf_s(buffer, bufferlen, format, args);
     return ale_system(buffer);
 }
 
@@ -110,19 +110,19 @@ $fun int32_t rnd(uint64_t seed[1]) {
 // ARENA
 typedef struct arena_t{ uint8_t *beg; uint8_t *end; }arena_t;
 
-$read_buffer(/*buffer*/2, /*bufferlen*/1) 
+$read_buffer(/*bufferlen*/1, /*buffer*/2) 
 arena_t newarena(int64_t buffer_len, uint8_t buffer[]) {
-    arena_t arena = {};
+    arena_t arena = {0, 0};
     arena.beg = (uint8_t *)buffer;
     arena.end = arena.beg ? arena.beg + buffer_len : 0;
     return arena;
 }
 
-// Arena Allocator that always zeroes the memory
-$malloc(/*size*/2, /*count*/4, /*align*/3)
-void * alloc(arena_t arena[1], int64_t size, int64_t align, int64_t count) {
+// Arena Allocator that always zeroes the memory, always 8 aligned
+$malloc(/*size*/2, /*count*/3)
+void * alloc(arena_t arena[1], int64_t size, int64_t count) {
     int64_t total = size * count;
-    int64_t pad = MODPWR2(- (int64_t)arena->beg, align); //mod -x gives n for next align
+    int64_t pad = MODPWR2(- (int64_t)arena->beg, 8); //mod -x gives n for next align
 
     ale_assert(total < (arena->end - arena->beg - pad),
         "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", (long long int)(total), (long long int)(arena->end - arena->beg - pad));
@@ -132,8 +132,8 @@ void * alloc(arena_t arena[1], int64_t size, int64_t align, int64_t count) {
     
     return ale_memset(p, 0, total);
 }
-$fun void * alloc1(arena_t arena[1], int64_t size, int64_t align) {
-    return alloc(arena, size, align, 1);
+$fun void * alloc1(arena_t arena[1], int64_t size) {
+    return alloc(arena, size, 1);
 }
 
 // VECTOR (dynamic array)
@@ -143,18 +143,17 @@ $proc vec64_grow(vector64_t dynamic_array[1],  arena_t arena[1]) {
     static const int32_t DYNA_FIRST_SIZE = 64;
 
     if (!dynamic_array->data) {
-        int64_t *DYNA_START = dynamic_array->data = (int64_t *)
-            alloc(arena, sizeof(int64_t), alignof(int64_t), dynamic_array->cap = DYNA_FIRST_SIZE); 
+        /*       DYNA_START */ dynamic_array->data = (int64_t *)
+            alloc(arena, 8LL, dynamic_array->cap = DYNA_FIRST_SIZE); 
     } else if (arena->beg == ((uint8_t *) &(dynamic_array->data[dynamic_array->cap]))) { 
-        // EXTEND
         int64_t *DYNA_EXTEND = (int64_t *)
-            alloc(arena, sizeof(int64_t), 1, dynamic_array->cap);
+            alloc(arena, 8LL, dynamic_array->cap);
+        ale_assert(DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap]), "extend misaligned");
         dynamic_array->cap *= 2;
     } else {
-        // RELOC
         int64_t *DYNA_RELOC = (int64_t *)
-            alloc(arena, sizeof(int64_t), alignof(int64_t), dynamic_array->cap *= 2);
-        ale_memcpy(DYNA_RELOC, dynamic_array->data, sizeof(int64_t)*dynamic_array->len);
+            alloc(arena, 8LL, dynamic_array->cap *= 2);
+        ale_memcpy(DYNA_RELOC, dynamic_array->data, 8LL*dynamic_array->len);
         dynamic_array->data = DYNA_RELOC;
     }
 }
@@ -165,18 +164,17 @@ $proc vec32_grow(vector32_t dynamic_array[1], arena_t arena[1]) {
     static const int32_t DYNA_FIRST_SIZE = 64;
 
     if (!dynamic_array->data) {
-        int32_t *DYNA_START = dynamic_array->data = (int32_t *)
-            alloc(arena, sizeof(int32_t), alignof(int32_t), dynamic_array->cap = DYNA_FIRST_SIZE); 
+        /*       DYNA_START */ dynamic_array->data = (int32_t *)
+            alloc(arena, 4LL, dynamic_array->cap = DYNA_FIRST_SIZE); 
     } else if (arena->beg == ((uint8_t *) &(dynamic_array->data[dynamic_array->cap]))) { 
-        // EXTEND
         int32_t *DYNA_EXTEND = (int32_t *)
-            alloc(arena, sizeof(int32_t), 1, dynamic_array->cap);
+            alloc(arena, 4LL, dynamic_array->cap);
+        ale_assert(DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap]), "extend misaligned");
         dynamic_array->cap *= 2;
     } else {
-        // RELOC
         int32_t *DYNA_RELOC = (int32_t *)
-            alloc(arena, sizeof(int32_t), alignof(int32_t), dynamic_array->cap *= 2);
-        ale_memcpy(DYNA_RELOC, dynamic_array->data, sizeof(int32_t)*dynamic_array->len);
+            alloc(arena, 4LL, dynamic_array->cap *= 2);
+        ale_memcpy(DYNA_RELOC, dynamic_array->data, 4LL*dynamic_array->len);
         dynamic_array->data = DYNA_RELOC;
     }
 }
@@ -260,15 +258,6 @@ $fun int64_t * vec_data_as_i64(vector64_t dynamic_array[1]) {
 $fun float64_t * vec_data_as_f64(vector64_t dynamic_array[1]) {
     return (float64_t *) dynamic_array->data;
 }
-$fun cstr_t * vec_data_as_string(vector64_t dynamic_array[1]) {
-    return (cstr_t *) dynamic_array->data;
-}
-$fun void * * vec_data_as_ptr(vector64_t dynamic_array[1]) {
-    return (void * *) dynamic_array->data;
-}
-$fun s8str_t * vec_data_as_s8str(vector64_t dynamic_array[1]) {
-    return (s8str_t *) dynamic_array->data;
-}
 $fun int32_t * vec_data_as_i32(vector32_t dynamic_array[1]) {
     return (int32_t *) dynamic_array->data;
 }
@@ -328,13 +317,13 @@ $fun ht64_t new_ht64(arena_t arena[1], int32_t expected_maxn) {
     ale_assert(ht_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     ht64_t *ht = (ht64_t*)
-        alloc(arena, sizeof(ht64_t), alignof(ht64_t), 1);
+        alloc1(arena, sizeof(ht64_t));
     
     ht->shift = 64 - ht_expo;
     ht->mask = (1 << ht_expo) - 1;
     ht->len = 0;
     ht->data = (entry64_t *)
-        alloc(arena, sizeof(entry64_t), alignof(entry64_t), ht->mask + 1);
+        alloc(arena, sizeof(entry64_t), ht->mask + 1);
 
     return *ht;
 }
@@ -350,13 +339,13 @@ $fun ht32_t new_ht32(arena_t arena[1], int32_t expected_maxn) {
     ale_assert(ht_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     ht32_t *ht = (ht32_t*)
-        alloc(arena, sizeof(ht32_t), alignof(ht32_t), 1);
+        alloc1(arena, sizeof(ht32_t));
     
     ht->shift = 64 - ht_expo;
     ht->mask = (1 << ht_expo) - 1;
     ht->len = 0;
     ht->data = (entry32_t *)
-        alloc(arena, sizeof(entry32_t), alignof(entry32_t), ht->mask + 1);
+        alloc(arena, sizeof(entry32_t), ht->mask + 1);
 
     return *ht;
 }
@@ -610,7 +599,7 @@ $fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
 }
 
 // FILES
-$fun size_t ale_fread_noex(void * __restrict__ __dst, size_t __sz, size_t __n, FILE * __restrict__ __f) {
+$fun size_t ale_fread_noex(void * __dst, size_t __sz, size_t __n, FILE * __f) {
     #ifdef __cplusplus
         try { return ale_fread(__dst, __sz, __n, __f); } catch(...) {return 0;}
     #endif 
@@ -620,10 +609,10 @@ $fun size_t ale_fread_noex(void * __restrict__ __dst, size_t __sz, size_t __n, F
 $fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
     mstr_t contents = 0;
 
-    {FILE *f = 
-    ale_fopen(filename, "rb");
+    {FILE *f = 0; int32_t err = 
+    ale_fopen_s(&f, filename, "rb");
     
-        if (!f) {
+        if (err) {
             return contents;
         }
     
@@ -631,12 +620,12 @@ $fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
         int32_t fsize = ale_ftell(f);
         ale_fseek(f, 0, SEEK_SET);
 
-        contents = (mstr_t) alloc(arena, sizeof(char), alignof(char), fsize+1);
+        contents = (mstr_t) alloc(arena, 1LL, fsize+1);
         if (!contents) {
             ale_fclose(f);
             return contents;
         }
-        int32_t bytesread = (int32_t) ale_fread_noex(contents, sizeof(char), fsize, f);
+        int32_t bytesread = (int32_t) ale_fread_noex(contents, 1LL, fsize, f);
         if (bytesread != fsize) {
             ale_printf("could not read fsize:%d bytes, bytesread:%d ", fsize, bytesread);
         }
@@ -667,7 +656,7 @@ $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
     return lines;
 }
 
-$pure int void_compare_strings(const void *a, const void *b) {
+static int void_compare_strings(const void *a, const void *b) {
     return ale_strcmp(*(cstr_t *)a, *(cstr_t *)b);
 }
 $get b32_t is_empty_string(cstr_t str) {

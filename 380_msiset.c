@@ -21,7 +21,7 @@ RandomizedSet * randomizedSetCreate() {
 
     arena = newarena(sizeof(memory), memory);
     
-    RandomizedSet *S = (RandomizedSet *) alloc1(&arena, sizeof(RandomizedSet));
+    RandomizedSet *S = (RandomizedSet *) alloc(&arena, sizeof(RandomizedSet), 1);
     S->arena = &arena;
 
     S->table = new_ht32(&arena, 200000);

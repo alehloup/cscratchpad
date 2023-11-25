@@ -15,7 +15,7 @@ int32_t main() {{
     ale_printf("Começando beg:%p end:%p total:%lldMB\n", 
         perm.beg, perm.end, (perm.end - perm.beg)/1048576);
 
-    teste *woa = (typeof(woa)) alloc1(&perm, sizeof(teste));
+    teste *woa = (typeof(woa)) alloc(&perm, sizeof(teste), 1);
     teste temp = {4, 5, 6};
     *woa =temp;
     ale_printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);

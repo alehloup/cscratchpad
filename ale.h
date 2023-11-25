@@ -148,9 +148,6 @@ void * alloc(arena_t arena[1], int64_t size, int64_t count) {
     
     return memset(p, 0, total);
 }
-$fun void * alloc1(arena_t arena[1], int64_t size) {
-    return alloc(arena, size, 1);
-}
 
 /*
     ==================== DATA STRUCTURES ====================
@@ -304,7 +301,7 @@ $fun ht64_t new_ht64(arena_t arena[1], int32_t expected_maxn) {
     ale_assert(ht_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     ht64_t *ht = (ht64_t*)
-        alloc1(arena, sizeof(ht64_t));
+        alloc(arena, sizeof(ht64_t), 1);
     
     ht->shift = 64 - ht_expo;
     ht->mask = (1 << ht_expo) - 1;
@@ -326,7 +323,7 @@ $fun ht32_t new_ht32(arena_t arena[1], int32_t expected_maxn) {
     ale_assert(ht_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
 
     ht32_t *ht = (ht32_t*)
-        alloc1(arena, sizeof(ht32_t));
+        alloc(arena, sizeof(ht32_t), 1);
     
     ht->shift = 64 - ht_expo;
     ht->mask = (1 << ht_expo) - 1;

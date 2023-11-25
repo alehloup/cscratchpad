@@ -5,7 +5,7 @@
 void test_vlamatrix(arena_t scratch) {
     ale_printf("=========== MATRIXs ===========\n");
 
-    int64_t (*mat)[10][10] = (int64_t (*)[10][10]) alloc1(&scratch, sizeof(int64_t [10][10]));
+    int64_t (*mat)[10][10] = (int64_t (*)[10][10]) alloc(&scratch, sizeof(int64_t [10][10]), 1);
 
     // test_size_cvla(10, 10, mat); // only works in C
 
@@ -30,7 +30,6 @@ void test_vec_push_str(arena_t scratch) {
     
     for (int i = 0; i < 52; ++i) {
         vec_push_str(&d, &scratch, "sAl");
-        //int8_t * force_reloc = (int8_t *) alloc1(&scratch, sizeof(int8_t));
         vec_push_str(&d, &scratch, "sSa");
         vec_push_str(&d, &scratch, "sEv");
     }
@@ -53,7 +52,7 @@ void test_vec_push_i32(arena_t scratch) {
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_i32(&d, &scratch, i+32000);
-        int8_t * force_reloc = (int8_t *) alloc1(&scratch, sizeof(int8_t));
+        int8_t * force_reloc = (int8_t *) alloc(&scratch, sizeof(int8_t), 1);
         *force_reloc = 52;
     }
 
@@ -76,7 +75,6 @@ void test_vec_push_i64(arena_t scratch) {
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_i64(&d, &scratch, i+64000);
-        //int8_t * force_reloc = (int8_t *) alloc1(&scratch, sizeof(int8_t));
     }
 
     ale_printf("POP: %lld\n", vec_pop_i64(&d));
@@ -99,7 +97,6 @@ void test_vec_push_f32(arena_t scratch) {
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_f32(&d, &scratch, ((float32_t)i / 2.0f) + 0.0032f);
-        //int8_t * force_reloc = (int8_t *) alloc1(&scratch, sizeof(int8_t));
     }
 
     ale_printf("POP: %f\n", (float64_t) vec_pop_f32(&d));
@@ -121,7 +118,6 @@ void test_vec_push_f64(arena_t scratch) {
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_f64(&d, &scratch, (i / 2.0)+0.0064);
-        //int8_t * force_reloc = (int8_t *) alloc1(&scratch, sizeof(int8_t));
     }
 
     ale_printf("POP: %lf\n", vec_pop_f64(&d));

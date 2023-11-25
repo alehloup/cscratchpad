@@ -2,22 +2,8 @@
 
 #include <assert.h>  // standard assert
 #include <stdarg.h>  // allows variadic functions
-#include <stdint.h>  // explicit size intes
+#include <stdint.h>  // explicit size ints
 #include <string.h>  // memory operations
-#include <stdio.h>   // files and system
-#include <stdlib.h>  // malloc is not used
-
-#define ale_printf printf
-// #define ale_printf(format, ...) ; // uncomment for removing prints
-
-// Allows assert to print messages if printf is enabled
-#define ale_assert(_cond_, ...)                          \
-    if (!(_cond_)) {                                     \
-        ale_printf("\n!! [%s:%d] ", __FILE__, __LINE__); \
-        ale_printf(__VA_ARGS__);                         \
-        ale_printf(" !!\n");                             \
-        assert(_cond_);/*__builtin_unreachable();*/      \
-    }
 
 /*
     ==================== TYPES ====================
@@ -140,8 +126,7 @@ void * alloc(arena_t arena[1], int64_t size, int64_t count) {
     int64_t total = size * count;
     int64_t pad = MODPWR2(- (int64_t)arena->beg, 8); //mod -x gives n for next align
 
-    ale_assert(total < (arena->end - arena->beg - pad),
-        "ARENA OUT OF MEMORY Ask:%lld Avail: %lld\n", (long long int)(total), (long long int)(arena->end - arena->beg - pad));
+    assert(total < (arena->end - arena->beg - pad) && "ARENA OUT OF MEMORY");
 
     uint8_t *p = arena->beg + pad;
     arena->beg += pad + total;
@@ -165,7 +150,7 @@ $proc vec64_grow(vector64_t dynamic_array[1],  arena_t arena[1]) {
     } else if (arena->beg == ((uint8_t *) &(dynamic_array->data[dynamic_array->cap]))) { 
         int64_t *DYNA_EXTEND = (int64_t *)
             alloc(arena, 8LL, dynamic_array->cap);
-        ale_assert(DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap]), "extend misaligned");
+        assert((DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap])) && "extend misaligned");
         dynamic_array->cap *= 2;
     } else {
         int64_t *DYNA_RELOC = (int64_t *)
@@ -186,7 +171,7 @@ $proc vec32_grow(vector32_t dynamic_array[1], arena_t arena[1]) {
     } else if (arena->beg == ((uint8_t *) &(dynamic_array->data[dynamic_array->cap]))) { 
         int32_t *DYNA_EXTEND = (int32_t *)
             alloc(arena, 4LL, dynamic_array->cap);
-        ale_assert(DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap]), "extend misaligned");
+        assert((DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap])) && "extend misaligned");
         dynamic_array->cap *= 2;
     } else {
         int32_t *DYNA_RELOC = (int32_t *)
@@ -235,7 +220,7 @@ $proc vec_push_f32(vector32_t dynamic_array[1], arena_t arena[1], float32_t floa
 
 // Vector Pop
 $fun int64_t vec_pop_i64(vector64_t dynamic_array[1]) {
-    ale_assert(dynamic_array->len > 0, "POP ON 64bit EMPTY ARRAY");
+    assert(dynamic_array->len > 0 && "POP ON 64bit EMPTY ARRAY");
 
     return dynamic_array->data[--dynamic_array->len];
 }
@@ -256,7 +241,7 @@ $fun s8str_t vec_pop_s8str(vector64_t dynamic_array[1]) {
      return (s8str_t) vec_pop_i64(dynamic_array);
 }
 $fun int32_t vec_pop_i32(vector32_t dynamic_array[1]) {
-    ale_assert(dynamic_array->len > 0, "POP ON 32bit EMPTY ARRAY");
+    assert(dynamic_array->len > 0 && "POP ON 32bit EMPTY ARRAY");
 
     return dynamic_array->data[--dynamic_array->len];
 }
@@ -298,7 +283,7 @@ typedef struct ht64_t{
 
 $fun ht64_t new_ht64(arena_t arena[1], int32_t expected_maxn) {
     const int32_t ht_expo = fit_pwr2_exp(expected_maxn + 64);
-    ale_assert(ht_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
+    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
 
     ht64_t *ht = (ht64_t*)
         alloc(arena, sizeof(ht64_t), 1);
@@ -320,7 +305,7 @@ typedef struct ht32_t{
 
 $fun ht32_t new_ht32(arena_t arena[1], int32_t expected_maxn) {
     const int32_t ht_expo = fit_pwr2_exp(expected_maxn + 64);
-    ale_assert(ht_expo <= 24, "%d IS TOO BIG FOR MSI, MAX IS 2^24 - 1", expected_maxn);
+    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
 
     ht32_t *ht = (ht32_t*)
         alloc(arena, sizeof(ht32_t), 1);
@@ -356,7 +341,7 @@ $fun int32_t htnum(
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < mask - 2, "MSI KI HT IS FULL");
+        assert(ht->len < mask - 2 && "MSI KI HT IS FULL");
         data[index].key = keyi64;
         ++ht->len;
     }
@@ -442,7 +427,7 @@ $fun int32_t htstr(
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < mask - 2, "MSI KS HT IS FULL");
+        assert(ht->len < mask - 2 && "MSI KS HT IS FULL");
         data[index].key = (int64_t) keycstr;
         ++ht->len;
     }
@@ -528,7 +513,7 @@ $fun int32_t htint(
     }
 
     if (data[index].key == 0 && create_if_not_found) {
-        ale_assert(ht->len < mask - 2, "MSI KI32 HT IS FULL");
+        assert(ht->len < mask - 2 && "MSI KI32 HT IS FULL");
         data[index].key = keyi32;
         ++ht->len;
     }
@@ -573,58 +558,8 @@ $fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
 }
 
 /*
-    ==================== INPUT/OUTPUT IO ====================
+    ==================== TEXT / STRINGS ====================
 */
-
-// SHELL
-$format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
-int32_t shellrun(int32_t bufferlen, char buffer [512], cstr_t format, ...) {
-    memset(buffer, '\0', 512);
-
-    va_list args; va_start(args, format);
-
-    vsprintf_s(buffer, bufferlen, format, args);
-    return system(buffer);
-}
-
-// FILES
-$fun size_t fread_noex(void * __dst, size_t __sz, size_t __n, FILE * __f) {
-    #ifdef __cplusplus
-        try { return fread(__dst, __sz, __n, __f); } catch(...) {return 0;}
-    #endif 
-              return fread(__dst, __sz, __n, __f);
-}
-
-$fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
-    mstr_t contents = 0;
-
-    {FILE *f = 0; int32_t err = 
-    fopen_s(&f, filename, "rb");
-    
-        if (err) {
-            return contents;
-        }
-    
-        fseek(f, 0, SEEK_END);
-        int32_t fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
-        contents = (mstr_t) alloc(arena, 1LL, fsize+1);
-        if (!contents) {
-            fclose(f);
-            return contents;
-        }
-        int32_t bytesread = (int32_t) fread_noex(contents, 1LL, fsize, f);
-        if (bytesread != fsize) {
-            ale_printf("could not read fsize:%d bytes, bytesread:%d ", fsize, bytesread);
-        }
-        contents[fsize] = 0;
-
-    fclose(f);
-    }
-    
-    return contents;
-}
 
 // Alters a text by converting \n to \0 and pushing each line as a cstr_t in the returned vector
 $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
@@ -677,3 +612,6 @@ $fun vector64_t slice_into_nonempty_lines(arena_t arena[1], mstr_t text_to_alter
 
     return lines;
 }
+
+
+

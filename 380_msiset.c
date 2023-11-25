@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "ale.h"
 
 typedef struct {
@@ -99,7 +100,7 @@ int randomizedSetGetRandom(RandomizedSet* obj) {
 
 void randomizedSetFree(RandomizedSet* obj) {
     if (!obj) {
-        ale_printf("Obj is null!");
+        printf("Obj is null!");
     }
     obj->arena->beg = 0;
     obj->arena->end = 0;
@@ -107,16 +108,16 @@ void randomizedSetFree(RandomizedSet* obj) {
 
 void printb32_t(int b) {
     if (b) {
-        ale_printf("true, ");
+        printf("true, ");
     }
     else {
-        ale_printf("false, ");
+        printf("false, ");
     };
 }
 
 void test() {
     RandomizedSet* obj = randomizedSetCreate();
-    ale_printf("[[], ");
+    printf("[[], ");
 
     printb32_t(randomizedSetInsert(obj, 1));
 
@@ -124,13 +125,13 @@ void test() {
 
     printb32_t(randomizedSetInsert(obj, 2));
 
-    ale_printf("%d, ", randomizedSetGetRandom(obj));
+    printf("%d, ", randomizedSetGetRandom(obj));
 
     printb32_t(randomizedSetRemove(obj, 1));
 
     printb32_t(randomizedSetInsert(obj, 2));
     
-    ale_printf("]");
+    printf("]");
     randomizedSetFree(obj);
     
 }

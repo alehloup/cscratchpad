@@ -1,10 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "ale.h"
+#include "ale_io.h"
 
 int32_t main(int32_t argc, cstr_t *argv) {
     if (argc < 1) {
-        ale_printf("No args...");
+        printf("No args...");
     }
 
     char buffer[512];
@@ -18,8 +16,8 @@ int32_t main(int32_t argc, cstr_t *argv) {
             "tee \"./outputs/%s++out.txt\""
     );
 
-    ale_printf(format, _$1, _$1, _$1, _$2, _$1);
-    ale_printf("\n");
+    printf(format, _$1, _$1, _$1, _$2, _$1);
+    printf("\n");
 
     shellrun(sizeof(buffer), buffer, format, _$1, _$1, _$1, _$2, _$1);
 

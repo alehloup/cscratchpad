@@ -3,7 +3,7 @@
 #include "ale.h"
 
 void test_vlamatrix(arena_t scratch) {
-    ale_printf("=========== MATRIXs ===========\n");
+    printf("=========== MATRIXs ===========\n");
 
     int64_t (*mat)[10][10] = (int64_t (*)[10][10]) alloc(&scratch, sizeof(int64_t [10][10]), 1);
 
@@ -17,14 +17,14 @@ void test_vlamatrix(arena_t scratch) {
 
     for(int32_t i = 0; i < 10; ++i) {
         for(int32_t j = 0; j < 10; ++j) {
-            ale_printf("%lld ", (*mat)[i][j]);
+            printf("%lld ", (*mat)[i][j]);
         } 
-        ale_printf("\n");
+        printf("\n");
     }
 }
 
 void test_vec_push_str(arena_t scratch) {
-    ale_printf("=========== CSTRINGs ===========\n");
+    printf("=========== CSTRINGs ===========\n");
     
     vector64_t d = {0, 0, 0};
     
@@ -36,19 +36,19 @@ void test_vec_push_str(arena_t scratch) {
 
     int64_t *data = vec_data_as_i64(&d);
     for (int i = 0; i < d.len; ++i) {
-        ale_printf(" %d:%s ", i, (cstr_t) data[i]);
+        printf(" %d:%s ", i, (cstr_t) data[i]);
     }
 
-    ale_printf("Pop: %s\n", vec_pop_str(&d));
+    printf("Pop: %s\n", vec_pop_str(&d));
 }
 
 void test_vec_push_i32(arena_t scratch) {
-    ale_printf("=========== I32s ===========\n");
+    printf("=========== I32s ===========\n");
 
     vector32_t d = {0, 0, 0};
     
     vec_push_i32(&d, &scratch, 52+32000);
-    ale_printf("POP: %d\n", vec_pop_i32(&d));
+    printf("POP: %d\n", vec_pop_i32(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_i32(&d, &scratch, i+32000);
@@ -56,77 +56,77 @@ void test_vec_push_i32(arena_t scratch) {
         *force_reloc = 52;
     }
 
-    ale_printf("POP: %d\n", vec_pop_i32(&d));
+    printf("POP: %d\n", vec_pop_i32(&d));
 
     int32_t *data = vec_data_as_i32(&d);
     for(int32_t i = 0; i < d.len; ++i) {
-        ale_printf("%d ", data[i]);
+        printf("%d ", data[i]);
     } 
-    ale_printf("\n");
+    printf("\n");
 }
 
 void test_vec_push_i64(arena_t scratch) {
-    ale_printf("=========== I64s ===========\n");
+    printf("=========== I64s ===========\n");
 
     vector64_t d = {0, 0, 0};
     
     vec_push_i64(&d, &scratch, 52+64000);
-    ale_printf("POP: %lld\n", vec_pop_i64(&d));
+    printf("POP: %lld\n", vec_pop_i64(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_i64(&d, &scratch, i+64000);
     }
 
-    ale_printf("POP: %lld\n", vec_pop_i64(&d));
+    printf("POP: %lld\n", vec_pop_i64(&d));
 
     int64_t *data = vec_data_as_i64(&d);
 
     for(int32_t i = 0; i < d.len; ++i) {
-        ale_printf("%lld ", data[i]);
+        printf("%lld ", data[i]);
     } 
-    ale_printf("\n");
+    printf("\n");
 }
 
 void test_vec_push_f32(arena_t scratch) {
-    ale_printf("=========== FLOATs ===========\n");
+    printf("=========== FLOATs ===========\n");
 
     vector32_t d = {0, 0, 0};
     
     vec_push_f32(&d, &scratch, 5.2f + 0.0032f);
-    ale_printf("POP: %f\n", (float64_t) vec_pop_f32(&d));
+    printf("POP: %f\n", (float64_t) vec_pop_f32(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_f32(&d, &scratch, ((float32_t)i / 2.0f) + 0.0032f);
     }
 
-    ale_printf("POP: %f\n", (float64_t) vec_pop_f32(&d));
+    printf("POP: %f\n", (float64_t) vec_pop_f32(&d));
 
     float32_t *data = vec_data_as_f32(&d);
     for(int32_t i = 0; i < d.len; ++i) {
-        ale_printf("%f ", (float64_t) data[i]);
+        printf("%f ", (float64_t) data[i]);
     } 
-    ale_printf("\n");
+    printf("\n");
 }
 
 void test_vec_push_f64(arena_t scratch) {
-    ale_printf("=========== DOUBLEs ===========\n");
+    printf("=========== DOUBLEs ===========\n");
     
     vector64_t d = {0, 0, 0};
     
     vec_push_f64(&d, &scratch, 5.2+0.0064);
-    ale_printf("POP: %lf\n", vec_pop_f64(&d));
+    printf("POP: %lf\n", vec_pop_f64(&d));
 
     for(int32_t i = 0; i < 164; ++i) {
         vec_push_f64(&d, &scratch, (i / 2.0)+0.0064);
     }
 
-    ale_printf("POP: %lf\n", vec_pop_f64(&d));
+    printf("POP: %lf\n", vec_pop_f64(&d));
 
     float64_t *data = vec_data_as_f64(&d);
     for(int32_t i = 0; i < d.len; ++i) {
-        ale_printf("%lf ", data[i]);
+        printf("%lf ", data[i]);
     } 
-    ale_printf("\n");
+    printf("\n");
 }
 
 int32_t main() {

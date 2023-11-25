@@ -15,6 +15,7 @@
         "_mingw.h": "c",
         "corecrt_wstdlib.h": "c",
         "stdalign.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "ale_io.h": "c"
     }
 }

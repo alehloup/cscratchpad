@@ -1,4 +1,4 @@
-#include "ale.h"
+#include "ale_io.h"
 
 int main(void) {
     static uint8_t buffer[2*_Mega_Bytes];

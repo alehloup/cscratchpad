@@ -612,6 +612,3 @@ $fun vector64_t slice_into_nonempty_lines(arena_t arena[1], mstr_t text_to_alter
 
     return lines;
 }
-
-
-

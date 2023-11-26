@@ -1,0 +1,1 @@
+gcc @Flags (null) -o "./builds/(null).exe" && "./builds/(null).exe" | tee "./outputs/(null)out.txt"

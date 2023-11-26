@@ -12,15 +12,13 @@ typedef union union32_t{
     float32_t d;
 }union32_t;
 
-int32_t main(int32_t argc, const cstr_t *argv) {
+int32_t main() {
 
     union64_t x = { .s="Alex" };
 
     printf("\n%lld %f %s %p\n", x.i, x.d, x.s, x.p);
 
     int64_t ints[5] = {1, 2, 3, 4, 5};
-
-    int64_t *arr = ints;
 
     float64_t f = 5.2;
 

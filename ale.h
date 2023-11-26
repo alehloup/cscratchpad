@@ -1,7 +1,6 @@
 #pragma once
 
 #include <assert.h>  // standard assert
-#include <stdarg.h>  // allows variadic functions
 #include <stdint.h>  // explicit size ints
 #include <string.h>  // memory operations
 
@@ -38,6 +37,7 @@ typedef s8_struct * s8str_t; // slice string
 #define $math gcc_attr(const, warn_unused_result)
 #define $pure gcc_attr(pure, nonnull, warn_unused_result)
 #define $fun gcc_attr(nonnull, warn_unused_result)
+#define $nonnull gcc_attr(nonnull)
 #define $proc gcc_attr(nonnull) void
 // Parametric attributes
 #define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
@@ -327,7 +327,7 @@ $fun ht32_t new_ht32(arena_t arena[1], int32_t expected_maxn) {
 
 // MSI Hash Table with Integer64 as Key
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
-$fun int32_t htnum(
+$nonnull int32_t htnum(
     ht64_t ht[1] /* ht_ht */, 
     int64_t keyi64, int32_t create_if_not_found
 ) {
@@ -413,7 +413,7 @@ $fun entry_i64_ptr * htnum_data_as_ptr(ht64_t table[1]) {
 
 // MSI Hash Table with Cstring as Key
 // Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
-$fun int32_t htstr(
+$nonnull int32_t htstr(
     ht64_t ht[1] /* ht_ht */, 
     cstr_t keycstr, int32_t create_if_not_found
 ) {
@@ -499,7 +499,7 @@ $fun entry_str_ptr * htstr_data_as_ptr(ht64_t table[1]) {
 }
 
 // MSI Hash Table with Integer32 as Key
-$fun int32_t htint(
+$nonnull int32_t htint(
     ht32_t ht[1] /* ht_ht */, 
     int32_t keyi32, int32_t create_if_not_found
 ) {

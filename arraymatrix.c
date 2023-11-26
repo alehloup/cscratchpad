@@ -34,9 +34,9 @@ void test_vec_push_str(arena_t scratch) {
         vec_push_str(&d, &scratch, "sEv");
     }
 
-    int64_t *data = vec_data_as_i64(&d);
+    cstr_t *data = vec_data_as_cstr(&d);
     for (int i = 0; i < d.len; ++i) {
-        printf(" %d:%s ", i, (cstr_t) data[i]);
+        printf(" %d:%s ", i, data[i]);
     }
 
     printf("Pop: %s\n", vec_pop_str(&d));

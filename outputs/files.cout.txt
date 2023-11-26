@@ -1,12 +1,10 @@
-ca 21
+dst:00007ff7833fc040, sz: 1 * 34 == 34ca 21
 
 2d6+6
 
 fogo25
 
 🐺
-
-pos sort
 0: 2d6+6
 1: ca 21
 2: fogo25

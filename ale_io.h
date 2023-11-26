@@ -93,3 +93,10 @@ $nonnull b32_t lines_to_file(vector64_t lines, cstr_t filename) {
     }
     return True;
 }
+
+$proc vec_sort_cstr(vector64_t cstrings) {
+    qsort(
+        vec_data_as_cstr(&cstrings), (uint64_t) cstrings.len, 
+        sizeof(int64_t), void_compare_strings
+    );
+} 

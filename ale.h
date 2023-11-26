@@ -141,112 +141,112 @@ void * alloc(arena_t arena[1], int64_t size, int64_t count) {
 // VECTOR (dynamic array)
 typedef struct vector64_t{int32_t cap; int32_t len; int64_t *data;}vector64_t;
 
-$proc vec64_grow(vector64_t dynamic_array[1],  arena_t arena[1]) { 
-    static const int32_t DYNA_FIRST_SIZE = 64;
+$proc vec64_grow(vector64_t vector[1],  arena_t arena[1]) { 
+    static const int32_t VEC_FIRST_SIZE = 64;
 
-    if (!dynamic_array->data) {
-        /*       DYNA_START */ dynamic_array->data = (int64_t *)
-            alloc(arena, 8LL, dynamic_array->cap = DYNA_FIRST_SIZE); 
-    } else if (arena->beg == ((uint8_t *) &(dynamic_array->data[dynamic_array->cap]))) { 
-        int64_t *DYNA_EXTEND = (int64_t *)
-            alloc(arena, 8LL, dynamic_array->cap);
-        assert((DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap])) && "extend misaligned");
-        dynamic_array->cap *= 2;
+    if (!vector->data) {
+        /*       VEC_START */ vector->data = (int64_t *)
+            alloc(arena, 8LL, vector->cap = VEC_FIRST_SIZE); 
+    } else if (arena->beg == ((uint8_t *) &(vector->data[vector->cap]))) { 
+        int64_t *VEC_EXTEND = (int64_t *)
+            alloc(arena, 8LL, vector->cap);
+        assert((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
+        vector->cap *= 2;
     } else {
-        int64_t *DYNA_RELOC = (int64_t *)
-            alloc(arena, 8LL, dynamic_array->cap *= 2);
-        memcpy(DYNA_RELOC, dynamic_array->data, 8LL*dynamic_array->len);
-        dynamic_array->data = DYNA_RELOC;
+        int64_t *VEC_RELOC = (int64_t *)
+            alloc(arena, 8LL, vector->cap *= 2);
+        memcpy(VEC_RELOC, vector->data, 8LL*vector->len);
+        vector->data = VEC_RELOC;
     }
 }
 
 typedef struct vector32_t{int32_t cap; int32_t len; int32_t *data;}vector32_t;
 
-$proc vec32_grow(vector32_t dynamic_array[1], arena_t arena[1]) { 
-    static const int32_t DYNA_FIRST_SIZE = 64;
+$proc vec32_grow(vector32_t vector[1], arena_t arena[1]) { 
+    static const int32_t VEC_FIRST_SIZE = 64;
 
-    if (!dynamic_array->data) {
-        /*       DYNA_START */ dynamic_array->data = (int32_t *)
-            alloc(arena, 4LL, dynamic_array->cap = DYNA_FIRST_SIZE); 
-    } else if (arena->beg == ((uint8_t *) &(dynamic_array->data[dynamic_array->cap]))) { 
-        int32_t *DYNA_EXTEND = (int32_t *)
-            alloc(arena, 4LL, dynamic_array->cap);
-        assert((DYNA_EXTEND == &(dynamic_array->data[dynamic_array->cap])) && "extend misaligned");
-        dynamic_array->cap *= 2;
+    if (!vector->data) {
+        /*       VEC_START */ vector->data = (int32_t *)
+            alloc(arena, 4LL, vector->cap = VEC_FIRST_SIZE); 
+    } else if (arena->beg == ((uint8_t *) &(vector->data[vector->cap]))) { 
+        int32_t *VEC_EXTEND = (int32_t *)
+            alloc(arena, 4LL, vector->cap);
+        assert((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
+        vector->cap *= 2;
     } else {
-        int32_t *DYNA_RELOC = (int32_t *)
-            alloc(arena, 4LL, dynamic_array->cap *= 2);
-        memcpy(DYNA_RELOC, dynamic_array->data, 4LL*dynamic_array->len);
-        dynamic_array->data = DYNA_RELOC;
+        int32_t *VEC_RELOC = (int32_t *)
+            alloc(arena, 4LL, vector->cap *= 2);
+        memcpy(VEC_RELOC, vector->data, 4LL*vector->len);
+        vector->data = VEC_RELOC;
     }
 }
 
 // Vector Push
-$proc vec_push_i64(vector64_t dynamic_array[1], arena_t arena[1], int64_t int64) {
-    if (dynamic_array->len >= dynamic_array->cap) {
-        vec64_grow(dynamic_array, arena);
+$proc vec_push_i64(vector64_t vector[1], arena_t arena[1], int64_t int64) {
+    if (vector->len >= vector->cap) {
+        vec64_grow(vector, arena);
     }
 
-    dynamic_array->data[dynamic_array->len++] = int64;
+    vector->data[vector->len++] = int64;
 }
-$proc vec_push_f64(vector64_t dynamic_array[1], arena_t arena[1], float64_t float64) {
+$proc vec_push_f64(vector64_t vector[1], arena_t arena[1], float64_t float64) {
     int64_t replica;
     memcpy(&replica, &float64, sizeof(replica)); //type prunning
 
-    vec_push_i64(dynamic_array, arena, replica);
+    vec_push_i64(vector, arena, replica);
 }
-$proc vec_push_str(vector64_t dynamic_array[1], arena_t arena[1], cstr_t cstr) {
-    vec_push_i64(dynamic_array, arena, (int64_t) cstr);
+$proc vec_push_str(vector64_t vector[1], arena_t arena[1], cstr_t cstr) {
+    vec_push_i64(vector, arena, (int64_t) cstr);
 }
-$proc vec_push_ptr(vector64_t dynamic_array[1], arena_t arena[1], void * ptr) {
-    vec_push_i64(dynamic_array, arena, (int64_t) ptr);
+$proc vec_push_ptr(vector64_t vector[1], arena_t arena[1], void * ptr) {
+    vec_push_i64(vector, arena, (int64_t) ptr);
 }
-$proc vec_push_s8str(vector64_t dynamic_array[1], arena_t arena[1], s8str_t s8str) {
-    vec_push_i64(dynamic_array, arena, (int64_t) s8str);
+$proc vec_push_s8str(vector64_t vector[1], arena_t arena[1], s8str_t s8str) {
+    vec_push_i64(vector, arena, (int64_t) s8str);
 }
-$proc vec_push_i32(vector32_t dynamic_array[1], arena_t arena[1], int32_t int32) {
-    if (dynamic_array->len >= dynamic_array->cap) {
-        vec32_grow(dynamic_array, arena);
+$proc vec_push_i32(vector32_t vector[1], arena_t arena[1], int32_t int32) {
+    if (vector->len >= vector->cap) {
+        vec32_grow(vector, arena);
     }
 
-    dynamic_array->data[dynamic_array->len++] = int32;
+    vector->data[vector->len++] = int32;
 }
-$proc vec_push_f32(vector32_t dynamic_array[1], arena_t arena[1], float32_t float32) {
+$proc vec_push_f32(vector32_t vector[1], arena_t arena[1], float32_t float32) {
     int32_t replica;
     memcpy(&replica, &float32, sizeof(replica)); //type prunning
 
-    vec_push_i32(dynamic_array, arena, replica);
+    vec_push_i32(vector, arena, replica);
 }
 
 // Vector Pop
-$fun int64_t vec_pop_i64(vector64_t dynamic_array[1]) {
-    assert(dynamic_array->len > 0 && "POP ON 64bit EMPTY ARRAY");
+$fun int64_t vec_pop_i64(vector64_t vector[1]) {
+    assert(vector->len > 0 && "POP ON 64bit EMPTY ARRAY");
 
-    return dynamic_array->data[--dynamic_array->len];
+    return vector->data[--vector->len];
 }
-$fun float64_t vec_pop_f64(vector64_t dynamic_array[1]) {
-    int64_t replica = vec_pop_i64(dynamic_array);
+$fun float64_t vec_pop_f64(vector64_t vector[1]) {
+    int64_t replica = vec_pop_i64(vector);
     float64_t val = 0;
     memcpy(&val, &replica, sizeof(replica)); //type prunning
 
     return val; 
 }
-$fun cstr_t vec_pop_str(vector64_t dynamic_array[1]) {
-     return (cstr_t) vec_pop_i64(dynamic_array);
+$fun cstr_t vec_pop_str(vector64_t vector[1]) {
+     return (cstr_t) vec_pop_i64(vector);
 }
-$fun void * vec_pop_ptr(vector64_t dynamic_array[1]) {
-     return (void *) vec_pop_i64(dynamic_array);
+$fun void * vec_pop_ptr(vector64_t vector[1]) {
+     return (void *) vec_pop_i64(vector);
 }
-$fun s8str_t vec_pop_s8str(vector64_t dynamic_array[1]) {
-     return (s8str_t) vec_pop_i64(dynamic_array);
+$fun s8str_t vec_pop_s8str(vector64_t vector[1]) {
+     return (s8str_t) vec_pop_i64(vector);
 }
-$fun int32_t vec_pop_i32(vector32_t dynamic_array[1]) {
-    assert(dynamic_array->len > 0 && "POP ON 32bit EMPTY ARRAY");
+$fun int32_t vec_pop_i32(vector32_t vector[1]) {
+    assert(vector->len > 0 && "POP ON 32bit EMPTY ARRAY");
 
-    return dynamic_array->data[--dynamic_array->len];
+    return vector->data[--vector->len];
 }
-$fun float32_t vec_pop_f32(vector32_t dynamic_array[1]) {
-    int32_t replica = vec_pop_i32(dynamic_array);
+$fun float32_t vec_pop_f32(vector32_t vector[1]) {
+    int32_t replica = vec_pop_i32(vector);
     float32_t val = 0;
     memcpy(&val, &replica, sizeof(replica)); //type prunning
 
@@ -254,31 +254,31 @@ $fun float32_t vec_pop_f32(vector32_t dynamic_array[1]) {
 }
 
 // Vector as C Array
-$fun int64_t * vec_data_as_i64(vector64_t dynamic_array[1]) {
-    return (int64_t *) dynamic_array->data;
+$fun int64_t * vec_data_as_i64(vector64_t vector[1]) {
+    return (int64_t *) vector->data;
 }
-$fun float64_t * vec_data_as_f64(vector64_t dynamic_array[1]) {
+$fun float64_t * vec_data_as_f64(vector64_t vector[1]) {
     assert(sizeof(float64_t) == 8 && "ale.h vec_data_as_f64 assumes that a double == 64bits");
-    return (float64_t *) dynamic_array->data;
+    return (float64_t *) vector->data;
 }
-$fun cstr_t * vec_data_as_cstr(vector64_t dynamic_array[1]) {
+$fun cstr_t * vec_data_as_cstr(vector64_t vector[1]) {
     assert(sizeof(cstr_t) == 8 && "ale.h vec_data_as_cstr assumes that a pointer == 64bits");
-    return (cstr_t *) dynamic_array->data;
+    return (cstr_t *) vector->data;
 }
-$fun int32_t * vec_data_as_i32(vector32_t dynamic_array[1]) {
-    return (int32_t *) dynamic_array->data;
+$fun int32_t * vec_data_as_i32(vector32_t vector[1]) {
+    return (int32_t *) vector->data;
 }
-$fun float32_t * vec_data_as_f32(vector32_t dynamic_array[1]) {
+$fun float32_t * vec_data_as_f32(vector32_t vector[1]) {
     assert(sizeof(float32_t) == 4 && "ale.h vec_data_as_f32 assumes that a float == 32bits");
-    return (float32_t *) dynamic_array->data;
+    return (float32_t *) vector->data;
 }
 
 // Vector remove by last swap
-$proc vec64_rem(vector64_t dynamic_array[1], int32_t index) {
-    dynamic_array->data[index] = dynamic_array->data[--dynamic_array->len];
+$proc vec64_rem(vector64_t vector[1], int32_t index) {
+    vector->data[index] = vector->data[--vector->len];
 }
-$proc vec32_rem(vector32_t dynamic_array[1], int32_t index) {
-    dynamic_array->data[index] = dynamic_array->data[--dynamic_array->len];
+$proc vec32_rem(vector32_t vector[1], int32_t index) {
+    vector->data[index] = vector->data[--vector->len];
 }
 
 typedef struct entry64_t{int64_t key; int64_t val;}entry64_t;

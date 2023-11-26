@@ -258,18 +258,18 @@ $fun int64_t * vec_data_as_i64(vector64_t dynamic_array[1]) {
     return (int64_t *) dynamic_array->data;
 }
 $fun float64_t * vec_data_as_f64(vector64_t dynamic_array[1]) {
-    assert(sizeof(float64_t) == 8 && "ale.h assumes that a double == 64bits");
+    assert(sizeof(float64_t) == 8 && "ale.h vec_data_as_f64 assumes that a double == 64bits");
     return (float64_t *) dynamic_array->data;
 }
 $fun cstr_t * vec_data_as_cstr(vector64_t dynamic_array[1]) {
-    assert(sizeof(cstr_t) == 8 && "ale.h assumes that a pointer == 64bits");
+    assert(sizeof(cstr_t) == 8 && "ale.h vec_data_as_cstr assumes that a pointer == 64bits");
     return (cstr_t *) dynamic_array->data;
 }
 $fun int32_t * vec_data_as_i32(vector32_t dynamic_array[1]) {
     return (int32_t *) dynamic_array->data;
 }
 $fun float32_t * vec_data_as_f32(vector32_t dynamic_array[1]) {
-    assert(sizeof(float32_t) == 4 && "ale.h assumes that a double == 32bits");
+    assert(sizeof(float32_t) == 4 && "ale.h vec_data_as_f32 assumes that a float == 32bits");
     return (float32_t *) dynamic_array->data;
 }
 

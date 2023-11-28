@@ -39,13 +39,16 @@ typedef s8_struct * s8str_t; // slice string
 #define $fun gcc_attr(nonnull, warn_unused_result)
 #define $nonnull gcc_attr(nonnull)
 #define $proc gcc_attr(nonnull) void
-// Parametric attributes
-#define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
-    gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), format(printf, paramidx_format, paramidx_varargs))
-#define $read_buffer(paramidx_bufferlen, paramidx_buffer) \
-    gcc_attr(nonnull, warn_unused_result, access(read_only, paramidx_buffer, paramidx_bufferlen))
+// Standard functions attributes
 #define $malloc(paramidx_elementsize, paramidx_elementcount) \
     gcc_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), nonnull, warn_unused_result, no_sanitize ("leak"))
+#define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
+    gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), format(printf, paramidx_format, paramidx_varargs))
+// Buffer attributes
+#define $fun_rbuffer(paramidx_bufferlen, paramidx_buffer) \
+    gcc_attr(nonnull, warn_unused_result, access(read_only, paramidx_buffer, paramidx_bufferlen))
+#define $proc_rbuffer(paramidx_bufferlen, paramidx_buffer) \
+    gcc_attr(nonnull, access(read_only, paramidx_buffer, paramidx_bufferlen)) void 
 
 /*
     ==================== MATH ====================
@@ -112,7 +115,7 @@ $math int32_t fit_pwr2_exp(int32_t size) {
 // ARENA
 typedef struct arena_t{ uint8_t *beg; uint8_t *end; }arena_t;
 
-$read_buffer(/*bufferlen*/1, /*buffer*/2) 
+$fun_rbuffer(/*bufferlen*/1, /*buffer*/2) 
 arena_t newarena(int64_t buffer_len, uint8_t buffer[]) {
     arena_t arena = {0, 0};
     arena.beg = (uint8_t *)buffer;

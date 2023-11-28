@@ -3,8 +3,28 @@
 $proc_rbuffer(1, 2) 
 _2(int32_t lineslen, cstr_t lines[]) {
 
+    // eu - oponente:
+    //     pedra (1) - papel (2) = -1  (perdi)
+    //     pedra (1) - tesoura(3) = -2 (ganhei)
+
+	// papel(2) - pedra(1) = 1 (ganhei)
+	// papel(2) - tesoura(3) = -1 (perdi)
+
+	// tesoura(3) - pedra(1) = 2 (perdi)
+	// tesoura(3) - papel(2) = 1 (ganhei)
+
+    // Ganhei: 1, -2
+    // Perdi: -1, 2
+    // Empate: 0
+
+    int value[3] = {1, 2, 3};
+
     for (int i = 0; i < lineslen; ++i) {
-        printf("%s\n", lines[i]);
+        if (!is_empty_string(lines[i])) {
+            int op = value[lines[i][0] - 'A'], me = value[lines[i][2] - 'X'];
+            
+            printf("%d %d\n", op, me);
+        }
     }
 }
 
@@ -42,7 +62,7 @@ int main() {
     vector64_t lines = file_to_lines(&arena, "aoc.txt");
     cstr_t *data = vec_data_as_cstr(&lines);
 
-    _1(lines.len, data);
+    _2(lines.len, data);
 
     return 0;
 }

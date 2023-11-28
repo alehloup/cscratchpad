@@ -567,10 +567,24 @@ $fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
     ==================== TEXT / STRINGS ====================
 */
 
+static int void_compare_strings(const void *a, const void *b) {
+    return strcmp(*(cstr_t *)a, *(cstr_t *)b);
+}
+
+$fun b32_t is_empty_string(cstr_t str) {
+    for (cstr_t cursor = str; *cursor != '\0'; ++cursor) {
+        if (*cursor != ' ') {
+            return False;
+        }
+    }
+    return True;
+}
+
 // Alters a text by converting \n to \0 and pushing each line as a cstr_t in the returned vector
 $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
     vector64_t lines = {0, 0, 0};
     
+    mstr_t last_line = "";
     for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
             *cursor = '\0';
@@ -579,23 +593,15 @@ $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
             *cursor = '\0';
             
             vec_push_str(&lines,  arena, current);
+            last_line = current;
             current = cursor+1;
         }
     }
+    if (!is_empty_string(last_line)) {
+        vec_push_str(&lines,  arena, "");
+    }
 
     return lines;
-}
-
-static int void_compare_strings(const void *a, const void *b) {
-    return strcmp(*(cstr_t *)a, *(cstr_t *)b);
-}
-$fun b32_t is_empty_string(cstr_t str) {
-    for (cstr_t cursor = str; *cursor != '\0'; ++cursor) {
-        if (*cursor != ' ') {
-            return False;
-        }
-    }
-    return True;
 }
 
 // Alters a text by converting \n to \0 and pushing each nonempty line as a cstr_t in the returned vector

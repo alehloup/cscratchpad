@@ -40,18 +40,29 @@ $fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
         int32_t fsize = ftell(f);
         fseek(f, 0, SEEK_SET);
 
-        contents = (mstr_t) alloc(arena, 1LL, fsize+1);
+        contents = (mstr_t) alloc(arena, 1LL, fsize+2);
         assert(contents && "Could not allocate buffer");
 
         int64_t bytesread = fread_noex(contents, 1LL, fsize, f);
         assert(bytesread == fsize && "could not read fsize#bytes"); 
         
-        contents[fsize] = 0;
+        contents[fsize] = contents[fsize-1] != '\n' ? '\n' : '\0';
+        contents[fsize+1] = '\0';
 
     fclose(f);
     }
     
     return contents;
+}
+
+$fun vector64_t file_to_lines(arena_t arena[1], cstr_t filename) {
+    mstr_t buffer = file_to_buffer(arena, filename);
+    return slice_into_lines(arena, buffer);
+}
+
+$fun vector64_t file_to_nonempty_lines(arena_t arena[1], cstr_t filename) {
+    mstr_t buffer = file_to_buffer(arena, filename);
+    return slice_into_nonempty_lines(arena, buffer);
 }
 
 $nonnull b32_t buffer_to_file(cstr_t buffer, cstr_t filename) {

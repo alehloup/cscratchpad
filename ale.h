@@ -580,6 +580,29 @@ $fun b32_t is_empty_string(cstr_t str) {
     return True;
 }
 
+$fun b32_t is_digit(char character) {
+    return character >= '0' && character <= '9';
+}
+
+$fun int64_t cstr_to_num(cstr_t str) {
+    int64_t num = 0, power = 1;
+    for (int64_t i = strlen(str) - 1; i >= 0; --i) {
+        char character = str[i];
+
+        if (character == '-') {
+            return -num;
+        }
+        
+        if (is_digit(character)) {
+            num += (character - '0') * power;
+            power *= 10;
+        } else {
+            return num;
+        }
+    }
+    return num;
+}
+
 // Alters a text by converting \n to \0 and pushing each line as a cstr_t in the returned vector
 $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
     vector64_t lines = {0, 0, 0};

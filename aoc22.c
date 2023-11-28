@@ -23,7 +23,7 @@ $proc _1(arena_t arena[1]) {
             cur = 0;
             continue;
         }
-        cur += strtol(line, 0, 10);
+        cur += cstr_to_num(line);
     }
     printf("%lld + %lld + %lld = %lld\n", 
         best3[0], best3[1], best3[2], best3[0] + best3[1] + best3[2]);

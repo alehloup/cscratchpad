@@ -1,20 +1,19 @@
 -Ofast -flto -march=native -mtune=native -ftrivial-auto-var-init=zero
--fstack-protector-strong -fstack-clash-protection -fcf-protection=full
+-static-pie -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
 
--static-pie -g3 -D_GLIBCXX_ASSERTIONS -fanalyzer -Wall -Wextra -Wpedantic -Werror 
--Wno-unused-function
-
--D_FORTIFY_SOURCE=3 -Wstringop-overflow=4 -Wuse-after-free=3 -Warray-bounds=2 
+-g3 -D_GLIBCXX_ASSERTIONS 
+-D_FORTIFY_SOURCE=3 -fanalyzer -Wall -Wextra -Wpedantic -Werror
+-Wstringop-overflow=4 -Wuse-after-free=3 -Warray-bounds=2 
 -Wformat=2 -Wformat-truncation=2 -Wformat-overflow=2 
 
--Wuninitialized -Wstrict-aliasing -Wcast-align=strict -Wnull-dereference
--Wshadow -Wundef -Wconversion -Wdouble-promotion -Wformat-signedness
--Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 
+-Wuninitialized -Wstrict-aliasing -Wcast-align=strict -Wnull-dereference 
 -fstrict-flex-arrays -Warray-parameter -Wvla -Wvla-parameter
+-Wshadow -Wundef -Wconversion -Wdouble-promotion -Wformat-signedness 
+-Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 
 
--fsanitize-trap -fsanitize-undefined-trap-on-error 
--fsanitize=undefined -fsanitize=bounds-strict -fsanitize=alignment -fsanitize=object-size
+-fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=undefined 
+-fsanitize=alignment -fsanitize=object-size -fsanitize=builtin
 -fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute 
--fsanitize=builtin -fsanitize-address-use-after-scope -fsanitize=unreachable
+-fsanitize=bounds-strict -fsanitize-address-use-after-scope -fsanitize=unreachable
 
 libwinsane.o

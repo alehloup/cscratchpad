@@ -30,7 +30,7 @@ typedef s8_struct * s8str_t; // slice string
     #define gcc_attr(...) //do NOT use attributes in MSVC
 #endif
 #ifndef _MSC_VER
-    #define gcc_attr(...) __attribute((__VA_ARGS__)) // Use attributes in GCC and Clang
+    #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
 #endif
 // Simple attributes
 #define $math gcc_attr(const, warn_unused_result) static
@@ -575,7 +575,7 @@ $fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
     ==================== TEXT / STRINGS ====================
 */
 
-static int void_compare_strings(const void *a, const void *b) {
+$fun int void_compare_strings(const void *a, const void *b) {
     return strcmp(*(cstr_t *)a, *(cstr_t *)b);
 }
 

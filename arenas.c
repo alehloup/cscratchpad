@@ -10,7 +10,7 @@ typedef struct teste{
 
 i32 main() {{
 
-    arena_t perm = newarena(1, (u8 *)calloc(1, 1));
+    arena_t perm = newarena(1*_MBs, (u8 *)calloc(1*_MBs, 1));
 
     printf("Começando beg:%p end:%p total:%lldMB\n", 
         perm.beg, perm.end, (perm.end - perm.beg)/1048576);

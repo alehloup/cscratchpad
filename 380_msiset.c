@@ -17,7 +17,7 @@ void print_cache(RandomizedSet* obj) {
 }
 
 RandomizedSet * randomizedSetCreate() {
-    static u8 memory[4*_Mega_Bytes] = {0};
+    static u8 memory[4*_MBs] = {0};
     static arena_t arena = {0, 0};
 
     arena = newarena(sizeof(memory), memory);

@@ -135,7 +135,7 @@ void test_vec_push_f64(arena_t scratch) {
 
 i32 main() {
 
-    arena_t scratch = newarena(8*_Mega_Bytes, (u8 *) calloc(8*_Mega_Bytes, 1));
+    arena_t scratch = newarena(8*_MBs, (u8 *) calloc(8*_MBs, 1));
     
     test_vlamatrix(scratch);
     test_vec_push_str(scratch);

@@ -80,7 +80,7 @@ void test_big_ht_i64(arena_t scratch) {
 }
 
 i32 main() {
-    static u8 bufferzao[2*_Mega_Bytes] = {0};
+    static u8 bufferzao[2*_MBs] = {0};
     arena_t scratch = newarena(sizeof(bufferzao), bufferzao);
     test_ht_i64(scratch);
     printf("\n");

@@ -1,18 +1,10 @@
 #pragma once
 
-// free-standing assert
-#ifdef _MSC_VER
-#define _assert_(c) if (!(c)) __debugbreak() // __assume(0)
-#endif
-#ifndef _MSC_VER
-#define _assert_(c) if (!(c)) __builtin_trap() // __builtin_unreachable()
-#endif
-
 /*
     ==================== TYPES ====================
 */
 
-#define _Mega_Bytes 1048576 // malloc(52*_Mega_Bytes)
+#define _MBs 1048576 // malloc(52*_MBs)
 
 // Int
 typedef unsigned char u8;
@@ -36,12 +28,16 @@ typedef char * mstr; // modifiable string
 typedef struct s8_struct{ i32 len; mstr data; }s8_struct; // slice struct
 typedef s8_struct * s8str; // slice string
 
+// MSVC .vs. GCC
 #ifdef _MSC_VER
+    #define _assert_(c) if (!(c)) __debugbreak() // __assume(0)
     #define gcc_attr(...) //do NOT use attributes in MSVC
 #endif
 #ifndef _MSC_VER
+    #define _assert_(c) if (!(c)) __builtin_trap() // __builtin_unreachable()
     #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
 #endif
+
 // Simple attributes
 #define $math gcc_attr(const, warn_unused_result) static
 #define $pure gcc_attr(pure, nonnull, warn_unused_result) static

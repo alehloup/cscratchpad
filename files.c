@@ -1,7 +1,7 @@
 #include "ale_io.h"
 
 i32 main(void) {
-    static u8 buffer[2*_Mega_Bytes];
+    static u8 buffer[2*_MBs];
 
     arena_t perm = newarena(sizeof(buffer), buffer);
     

@@ -12,7 +12,7 @@
 // SHELL
 $format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
 i32 shellrun(i32 bufferlen, char buffer [512], cstr format, ...) {
-    memset(buffer, '\0', 512);
+    zeromem((u8 *) buffer, 512);
 
     va_list args; va_start(args, format);
 
@@ -21,7 +21,7 @@ i32 shellrun(i32 bufferlen, char buffer [512], cstr format, ...) {
 }
 
 // FILES
-$fun i64 fread_noex(void * __dst, i64 __sz, i64 __n, FILE * __f) {
+$fun i64 fread_noex(mstr __dst, i64 __sz, i64 __n, FILE * __f) {
     #ifdef __cplusplus
         try { return (i64) fread(__dst, (u64) __sz, (u64) __n, __f); } catch(...) {return 0;}
     #endif 

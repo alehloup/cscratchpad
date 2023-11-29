@@ -28,27 +28,33 @@ typedef struct s8_struct{ int32_t len; mstr_t data; }s8_struct; // slice struct
 typedef s8_struct * s8str_t; // slice string
 
 #ifdef _MSC_VER
-    #define gcc_attr(...) static //do NOT use attributes in MSVC
+    #define gcc_attr(...) //do NOT use attributes in MSVC
 #endif
 #ifndef _MSC_VER
-    #define gcc_attr(...) __attribute((__VA_ARGS__)) static // Use attributes in GCC and Clang
+    #define gcc_attr(...) __attribute((__VA_ARGS__)) // Use attributes in GCC and Clang
 #endif
 // Simple attributes
-#define $math gcc_attr(const, warn_unused_result)
-#define $pure gcc_attr(pure, nonnull, warn_unused_result)
-#define $fun gcc_attr(nonnull, warn_unused_result)
-#define $nonnull gcc_attr(nonnull)
-#define $proc gcc_attr(nonnull) void
+#define $math gcc_attr(const, warn_unused_result) static
+#define $pure gcc_attr(pure, nonnull, warn_unused_result) static
+#define $fun gcc_attr(nonnull, warn_unused_result) static
+#define $nonnull gcc_attr(nonnull) static
+#define $proc gcc_attr(nonnull) static void
 // Standard functions attributes
+#define $main \
+    gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) int
 #define $malloc(paramidx_elementsize, paramidx_elementcount) \
-    gcc_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), nonnull, warn_unused_result, no_sanitize ("leak"))
+    gcc_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), \
+        nonnull, warn_unused_result, no_sanitize ("leak")) static
 #define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
-    gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), format(printf, paramidx_format, paramidx_varargs))
+    gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), \
+        format(printf, paramidx_format, paramidx_varargs)) static
 // Buffer attributes
 #define $fun_rbuffer(paramidx_bufferlen, paramidx_buffer) \
-    gcc_attr(nonnull, warn_unused_result, access(read_only, paramidx_buffer, paramidx_bufferlen))
+    gcc_attr(nonnull, warn_unused_result, \
+        access(read_only, paramidx_buffer, paramidx_bufferlen)) static
 #define $proc_rbuffer(paramidx_bufferlen, paramidx_buffer) \
-    gcc_attr(nonnull, access(read_only, paramidx_buffer, paramidx_bufferlen)) void 
+    gcc_attr(nonnull, \
+        access(read_only, paramidx_buffer, paramidx_bufferlen)) static void 
 
 /*
     ==================== MATH ====================
@@ -610,7 +616,7 @@ $fun int64_t cstr_to_num(cstr_t str) {
 $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
     vector64_t lines = {0, 0, 0};
     
-    mstr_t last_line = "";
+    cstr_t last_line = "";
     for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
             *cursor = '\0';

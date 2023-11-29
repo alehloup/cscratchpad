@@ -1,10 +1,10 @@
--O3 -flto -march=native -mtune=native -ftrivial-auto-var-init=zero
+-Ofast -flto -march=native -mtune=native -ftrivial-auto-var-init=zero
 
 -static-pie -g3 
 
 -fanalyzer -Wall -Wextra -Wpedantic -Werror -Wno-unused-function -Wshadow -Wundef
 -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
--Wuninitialized -D_GLIBCXX_ASSERTIONS 
+-Wuninitialized -Wstrict-aliasing -D_GLIBCXX_ASSERTIONS 
 
 -fsanitize-trap -fsanitize-undefined-trap-on-error 
 -fsanitize=undefined -fsanitize=bounds-strict -fsanitize=alignment -fsanitize=object-size
@@ -17,7 +17,7 @@
 
 -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 
 
--Warray-bounds=2 -fstrict-flex-arrays -Wstrict-aliasing -Warray-parameter -Wvla-larger-than=0 -Wvla-parameter
+-Warray-bounds=2 -fstrict-flex-arrays -Warray-parameter -Wvla -Wvla-parameter
  
 -Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2 -Wformat-signedness
 

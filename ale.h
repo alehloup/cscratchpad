@@ -99,6 +99,28 @@ $math int32_t ht_lookup(
     return (int64_t) ((index + step) & mask);
 }
 
+//Conversions from/to float
+typedef union i64_f64_union{int64_t as_int; float64_t as_float;}i64_f64_union;
+$math float64_t i64_to_f64(int64_t int64) {
+    i64_f64_union u = {int64};
+    return u.as_float;
+}
+$math int64_t f64_to_i64(float64_t float64) {
+    i64_f64_union u = {0};
+    u.as_float = float64;
+    return u.as_int;
+}
+typedef union i32_f32_union{int32_t as_int; float32_t as_float;}i32_f32_union;
+$math float32_t i32_to_f32(int32_t int32) {
+    i32_f32_union u = {int32};
+    return u.as_float;
+}
+$math int32_t f32_to_i32(float32_t float32) {
+    i32_f32_union u = {0};
+    u.as_float = float32;
+    return u.as_int;
+}
+
 // bitmask for optimized Mod for power 2 numbers
 $math int64_t MODPWR2(int64_t number, int64_t modval) {
     return (number) & (modval - 1);
@@ -198,10 +220,7 @@ $proc vec_push_i64(vector64_t vector[1], arena_t arena[1], int64_t int64) {
     vector->data[vector->len++] = int64;
 }
 $proc vec_push_f64(vector64_t vector[1], arena_t arena[1], float64_t float64) {
-    int64_t replica;
-    memcpy(&replica, &float64, sizeof(replica)); //type prunning
-
-    vec_push_i64(vector, arena, replica);
+    vec_push_i64(vector, arena, f64_to_i64(float64));
 }
 $proc vec_push_str(vector64_t vector[1], arena_t arena[1], cstr_t cstr) {
     vec_push_i64(vector, arena, (int64_t) cstr);
@@ -220,10 +239,7 @@ $proc vec_push_i32(vector32_t vector[1], arena_t arena[1], int32_t int32) {
     vector->data[vector->len++] = int32;
 }
 $proc vec_push_f32(vector32_t vector[1], arena_t arena[1], float32_t float32) {
-    int32_t replica;
-    memcpy(&replica, &float32, sizeof(replica)); //type prunning
-
-    vec_push_i32(vector, arena, replica);
+    vec_push_i32(vector, arena, f32_to_i32(float32));
 }
 
 // Vector Pop
@@ -233,11 +249,7 @@ $fun int64_t vec_pop_i64(vector64_t vector[1]) {
     return vector->data[--vector->len];
 }
 $fun float64_t vec_pop_f64(vector64_t vector[1]) {
-    int64_t replica = vec_pop_i64(vector);
-    float64_t val = 0;
-    memcpy(&val, &replica, sizeof(replica)); //type prunning
-
-    return val; 
+    return i64_to_f64(vec_pop_i64(vector));
 }
 $fun cstr_t vec_pop_str(vector64_t vector[1]) {
      return (cstr_t) vec_pop_i64(vector);
@@ -254,11 +266,7 @@ $fun int32_t vec_pop_i32(vector32_t vector[1]) {
     return vector->data[--vector->len];
 }
 $fun float32_t vec_pop_f32(vector32_t vector[1]) {
-    int32_t replica = vec_pop_i32(vector);
-    float32_t val = 0;
-    memcpy(&val, &replica, sizeof(replica)); //type prunning
-
-    return val; 
+    return i32_to_f32(vec_pop_i32(vector));
 }
 
 // Vector as C Array
@@ -371,11 +379,7 @@ $fun int64_t htnum_get_i64(ht64_t table, int64_t ikey) {
     return table.data[htnum(&table, ikey, 0)].val;
 }
 $fun float64_t htnum_get_f64(ht64_t table, int64_t ikey) {
-    int64_t replica = table.data[htnum(&table, ikey, 0)].val;
-    float64_t val = 0;
-    memcpy(&val, &replica, sizeof(replica)); //type prunning
-
-    return val;
+    return i64_to_f64(table.data[htnum(&table, ikey, 0)].val);
 }
 $fun cstr_t htnum_get_str(ht64_t table, int64_t ikey) {
     return (cstr_t) table.data[htnum(&table, ikey, 0)].val;
@@ -392,10 +396,7 @@ $proc htnum_set_i64(ht64_t table[1], int64_t ikey, int64_t ival) {
     table->data[htnum(table, ikey, 1)].val = ival;
 }
 $proc htnum_set_f64(ht64_t table[1], int64_t ikey, float64_t dval) {
-    int64_t replica;
-    memcpy(&replica, &dval, sizeof(replica)); //type prunning
-
-    table->data[htnum(table, ikey, 1)].val = replica;
+    table->data[htnum(table, ikey, 1)].val = f64_to_i64(dval);
 }
 $proc htnum_set_str(ht64_t table[1], int64_t ikey, cstr_t sval) {
     table->data[htnum(table, ikey, 1)].val = (int64_t) sval;
@@ -456,11 +457,7 @@ $fun int64_t htstr_get_i64(ht64_t table, cstr_t skey) {
     return (int64_t) table.data[htstr(&table, skey, 0)].val;
 }
 $fun float64_t htstr_get_f64(ht64_t table, cstr_t skey) {
-    int64_t replica = table.data[htstr(&table, skey, 0)].val;
-    float64_t val = 0;
-    memcpy(&val, &replica, sizeof(replica)); //type prunning
-
-    return val;
+    return i64_to_f64(table.data[htstr(&table, skey, 0)].val);
 }
 $fun cstr_t htstr_get_str(ht64_t table, cstr_t skey) {
     return (cstr_t) table.data[htstr(&table, skey, 0)].val;
@@ -477,10 +474,7 @@ $proc htstr_set_i64(ht64_t table[1], cstr_t skey, int64_t ival) {
     table->data[htstr(table, skey, 1)].val = ival;
 }
 $proc htstr_set_f64(ht64_t table[1], cstr_t skey, float64_t dval) {
-    int64_t replica;
-    memcpy(&replica, &dval, sizeof(replica)); //type prunning
-
-    table->data[htstr(table, skey, 1)].val = replica;
+    table->data[htstr(table, skey, 1)].val = f64_to_i64(dval);
 }
 $proc htstr_set_str(ht64_t table[1], cstr_t skey, cstr_t sval) {
     table->data[htstr(table, skey, 1)].val = (int64_t) sval;
@@ -543,11 +537,7 @@ $fun int32_t htint_get_i32(ht32_t table, int32_t ikey) {
     return table.data[htint(&table, ikey, 0)].val;
 }
 $fun float32_t htint_get_f32(ht32_t table, int32_t ikey) {
-    int32_t replica = table.data[htint(&table, ikey, 0)].val;
-    float32_t val = 0;
-    memcpy(&val, &replica, sizeof(replica)); //type prunning
-
-    return val;
+    return i32_to_f32(table.data[htint(&table, ikey, 0)].val);
 }
 
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
@@ -557,11 +547,8 @@ $proc htint_set_idx(ht32_t table[1], int32_t ikey) {
 $proc htint_set_i32(ht32_t table[1], int32_t ikey, int32_t ival) {
     table->data[htint(table, ikey, 1)].val = ival;
 }
-$proc htint_set_f32(ht32_t table[1], int32_t ikey, float32_t dval) {
-    int32_t replica;
-    memcpy(&replica, &dval, sizeof(replica)); //type prunning
-
-    table->data[htint(table, ikey, 1)].val = replica;
+$proc htint_set_f32(ht32_t table[1], int32_t ikey, float32_t float32) {
+    table->data[htint(table, ikey, 1)].val = f32_to_i32(float32);
 }
 $fun entry32_t * htint_data_as_int32(ht32_t table[1]) {
     return (entry32_t *) table->data;

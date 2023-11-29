@@ -17,15 +17,21 @@ _2(int32_t lineslen, cstr_t lines[]) {
     // Perdi: -1, 2
     // Empate: 0
 
-    int value[3] = {1, 2, 3};
+    cstr_t hands[4] = {"", "ROCK", "PAPER", "SCISSORS"};
+    int hand_score[3] = {/*rock*/ 1, /*paper*/2, /*scissors*/3};
+    static const int won=6, draw=3, lost=0;
+    int res_score[5] = {won, lost, draw, won, lost};
+    int score = 0;
 
     for (int i = 0; i < lineslen; ++i) {
         if (!is_empty_string(lines[i])) {
-            int op = value[lines[i][0] - 'A'], me = value[lines[i][2] - 'X'];
-            
-            printf("%d %d\n", op, me);
+            int op = hand_score[lines[i][0] - 'A'], me = hand_score[lines[i][2] - 'X'];
+            int res = res_score[me - op + 2];
+            score += (me + res);
+            printf("%d eu:%s X op:%s | %d + %d (%d)\n", i+1, hands[me], hands[op], me, res, me+res);
         }
     }
+    printf("Max Score: %d\n", score);
 }
 
 $proc_rbuffer(1, 2)

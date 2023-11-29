@@ -10,14 +10,14 @@ typedef struct {
 
 void print_cache(RandomizedSet* obj) {
     printf("|Cache . .");
-    for(int i = 0; i < obj->cache.len; ++i) {
+    for(i32 i = 0; i < obj->cache.len; ++i) {
         printf(" %d:%d ", i, obj->cache.data[i]);
     }
     printf("| ");
 }
 
 RandomizedSet * randomizedSetCreate() {
-    static uint8_t memory[4*_Mega_Bytes] = {0};
+    static u8 memory[4*_Mega_Bytes] = {0};
     static arena_t arena = {0, 0};
 
     arena = newarena(sizeof(memory), memory);
@@ -30,7 +30,7 @@ RandomizedSet * randomizedSetCreate() {
     return S;
 }
 
-b32_t randomizedSetInsert(RandomizedSet* obj, int val) {
+b32_t randomizedSetInsert(RandomizedSet* obj, i32 val) {
     b32_t ret = False;
     if (val == 0) {
         ret = !obj->cache.data[0];
@@ -38,7 +38,7 @@ b32_t randomizedSetInsert(RandomizedSet* obj, int val) {
         return ret;
     }
 
-    int32_t msiidx = htint_get_idx(obj->table, val);
+    i32 msiidx = htint_get_idx(obj->table, val);
     entry32_t entry = obj->table.data[msiidx];
     if (entry.val) {
         return False;
@@ -53,7 +53,7 @@ b32_t randomizedSetInsert(RandomizedSet* obj, int val) {
     return True;
 }
 
-b32_t randomizedSetRemove(RandomizedSet* obj, int val) {
+b32_t randomizedSetRemove(RandomizedSet* obj, i32 val) {
     if (val == 0) {
         if (obj->cache.data[0]) {
             obj->cache.data[0] = 0;
@@ -62,10 +62,10 @@ b32_t randomizedSetRemove(RandomizedSet* obj, int val) {
         return False;
     }
 
-    int32_t msiidx = htint_get_idx(obj->table, val);
+    i32 msiidx = htint_get_idx(obj->table, val);
     
     if (obj->table.data[msiidx].val) {
-        int32_t idxval = obj->table.data[msiidx].val;
+        i32 idxval = obj->table.data[msiidx].val;
         obj->table.data[msiidx].val = 0;
 
         idxval = idxval < obj->cache.len ? idxval : obj->cache.len - 1;
@@ -84,14 +84,14 @@ b32_t randomizedSetRemove(RandomizedSet* obj, int val) {
     return False;
 }
 
-int randomizedSetGetRandom(RandomizedSet* obj) {
-    static uint64_t seed = 11111111111l;
-    int32_t range = obj->cache.len - 1;
+i32 randomizedSetGetRandom(RandomizedSet* obj) {
+    static u64 seed = 11111111111l;
+    i32 range = obj->cache.len - 1;
     if (obj->cache.data[0]) {
         ++range;
     }
 
-    int32_t choosen = (rnd(&seed) % range) + 1;
+    i32 choosen = (rnd(&seed) % range) + 1;
     if (choosen == obj->cache.len) {
         return False;
     }
@@ -106,7 +106,7 @@ void randomizedSetFree(RandomizedSet* obj) {
     obj->arena->end = 0;
 }
 
-void printb32_t(int b) {
+void printb32_t(i32 b) {
     if (b) {
         printf("true, ");
     }
@@ -136,7 +136,7 @@ void test() {
     
 }
 
-int32_t main() {
+i32 main() {
     test();
     return 0;
 }

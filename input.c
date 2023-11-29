@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int32_t main() {
+i32 main() {
 
     static char s1[64] = {0};
     static char s2[64] = {0};

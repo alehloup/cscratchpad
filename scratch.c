@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include "ale.h"
 
-void print_mem(void * ptr, int32_t len) {
-    uint8_t * mem = (uint8_t *) ptr;
+void print_mem(void * ptr, i32 len) {
+    u8 * mem = (u8 *) ptr;
 
     printf("\n");
-    printf("[%lld] ", (int64_t) ptr);
-    for (int i = 0; i < len; ++i) {
+    printf("[%lld] ", (i64) ptr);
+    for (i32 i = 0; i < len; ++i) {
         if (i > 0 && i % 8 == 0) {
             printf(" ;; ");
         }
@@ -16,10 +16,10 @@ void print_mem(void * ptr, int32_t len) {
     printf("\n");
 }
 
-$main main(int argslen, cstr_t args[]) {
-    assert(argslen > 0);
+$main main(i32 argslen, cstr args[]) {
+    _assert_(argslen > 0);
 
-    cstr_t x = args[0];
+    cstr x = args[0];
     printf("%s", x);
     
     return 0;

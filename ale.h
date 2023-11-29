@@ -1,8 +1,12 @@
 #pragma once
 
-#include <assert.h>  // standard assert
-#include <stdint.h>  // explicit size ints
-#include <string.h>  // memory operations
+// free-standing assert
+#ifdef _MSC_VER
+#define _assert_(c) if (!(c)) __debugbreak() // __assume(0)
+#endif
+#ifndef _MSC_VER
+#define _assert_(c) if (!(c)) __builtin_trap() // __builtin_unreachable()
+#endif
 
 /*
     ==================== TYPES ====================
@@ -10,21 +14,27 @@
 
 #define _Mega_Bytes 1048576 // malloc(52*_Mega_Bytes)
 
+// Int
+typedef unsigned char u8;
+typedef unsigned long long u64;
+typedef int i32;
+typedef long long i64;
+
 // Float
-typedef float float32_t;
-typedef double float64_t;
+typedef float f32;
+typedef double f64;
 
 // Bool
-typedef int32_t b32_t;     // int to be used as boolean
+typedef i32 b32_t;     // i32 to be used as boolean
 static const b32_t True = 1;
 static const b32_t False = 0;
 
 // String
-typedef const char * cstr_t; // const string
-typedef char * mstr_t; // modifiable string
+typedef const char * cstr; // const string
+typedef char * mstr; // modifiable string
 
-typedef struct s8_struct{ int32_t len; mstr_t data; }s8_struct; // slice struct
-typedef s8_struct * s8str_t; // slice string
+typedef struct s8_struct{ i32 len; mstr data; }s8_struct; // slice struct
+typedef s8_struct * s8str; // slice string
 
 #ifdef _MSC_VER
     #define gcc_attr(...) //do NOT use attributes in MSVC
@@ -40,7 +50,7 @@ typedef s8_struct * s8str_t; // slice string
 #define $proc gcc_attr(nonnull) static void
 // Standard functions attributes
 #define $main \
-    gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) int
+    gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) i32
 #define $malloc(paramidx_elementsize, paramidx_elementcount) \
     gcc_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), \
         nonnull, warn_unused_result, no_sanitize ("leak")) static
@@ -54,520 +64,38 @@ typedef s8_struct * s8str_t; // slice string
 #define $proc_rbuffer(paramidx_bufferlen, paramidx_buffer) \
     gcc_attr(nonnull, \
         access(read_only, paramidx_buffer, paramidx_bufferlen)) static void 
+#define $fun_wbuffer(paramidx_bufferlen, paramidx_buffer) \
+    gcc_attr(nonnull, warn_unused_result, \
+        access(write_only, paramidx_buffer, paramidx_bufferlen)) static
+#define $proc_wbuffer(paramidx_bufferlen, paramidx_buffer) \
+    gcc_attr(nonnull, \
+        access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
 
 /*
-    ==================== MATH ====================
+    STRINGS
 */
 
-// Random
-$fun int32_t rnd(uint64_t seed[1]) {
-    *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
-    int32_t shift = (int32_t) (29 - (uint32_t)(*seed >> 61));
-    
-    return ((int32_t) (*seed >> shift)) & 2147483647;
-}
-
-// Hash
-$pure int64_t hash_str(cstr_t str) {
-    cstr_t sp = (cstr_t) str;
-
-    uint64_t h = 0x7A5662DCDF;
-    while(*sp) { 
-        h ^= (*(sp++)) & 255; h *= 1111111111111111111;
+$fun i64 cstrlen(cstr cstring) {
+    i64 len;
+    for (len = 0; *cstring != '\0'; ++cstring, ++len) {
+        /* Empty Body */
     }
-
-    return (int64_t) ((h ^ (h >> 32)) >> 1);
-}
-$math int64_t hash_i64(int64_t integer64) {
-    uint64_t x = (uint64_t)integer64;
-    x *= 0x94d049bb133111eb; 
-    x ^= (x >> 30); 
-    x *= 0xbf58476d1ce4e5b9; 
-    
-    return (int64_t) ((x ^ (x >> 31)) >> 1);
+    return len;
 }
 
-// Mask-Step-Index (MSI) lookup
-$math int32_t ht_lookup(
-    uint64_t hash, // 1st hash acts as base location
-    int32_t index, // 2nd "hash" steps over the "list of elements" from base-location
-    int32_t mask, // trims number to < ht_capacity
-    int32_t shift // use |exp| bits for step 
-)
-{
-    int32_t step = (int32_t)(hash >> shift) | 1;
-    return (int64_t) ((index + step) & mask);
-}
-
-//Conversions from/to float
-typedef union i64_f64_union{int64_t as_int; float64_t as_float;}i64_f64_union;
-$math float64_t i64_to_f64(int64_t int64) {
-    i64_f64_union u = {int64};
-    return u.as_float;
-}
-$math int64_t f64_to_i64(float64_t float64) {
-    i64_f64_union u = {0};
-    u.as_float = float64;
-    return u.as_int;
-}
-typedef union i32_f32_union{int32_t as_int; float32_t as_float;}i32_f32_union;
-$math float32_t i32_to_f32(int32_t int32) {
-    i32_f32_union u = {int32};
-    return u.as_float;
-}
-$math int32_t f32_to_i32(float32_t float32) {
-    i32_f32_union u = {0};
-    u.as_float = float32;
-    return u.as_int;
-}
-
-// bitmask for optimized Mod for power 2 numbers
-$math int64_t MODPWR2(int64_t number, int64_t modval) {
-    return (number) & (modval - 1);
-}
-
-// Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
-$math int32_t fit_pwr2_exp(int32_t size) {
-    int32_t exp=2; int32_t val=4; ++size;
-    while (val < size) {
-        ++exp; val*=2;
+$fun i32 cstrcmp(cstr cstr1, cstr cstr2) {
+    for (; *cstr1 != '\0' && *cstr1 == *cstr2; ++cstr1, ++cstr2) {
+        /* Empty Body */
     }
-    return exp;
+    return *cstr1 - *cstr2;
 }
 
-/*
-    ==================== ARENA ALLOCATION ====================
-*/
-
-// ARENA
-typedef struct arena_t{ uint8_t *beg; uint8_t *end; }arena_t;
-
-$fun_rbuffer(/*bufferlen*/1, /*buffer*/2) 
-arena_t newarena(int64_t buffer_len, uint8_t buffer[]) {
-    arena_t arena = {0, 0};
-    arena.beg = (uint8_t *)buffer;
-    arena.end = arena.beg ? arena.beg + buffer_len : 0;
-    return arena;
+$fun i32 void_compare_strings(const void *a, const void *b) {
+    return cstrcmp(*(cstr *)a, *(cstr *)b);
 }
 
-// Arena Allocator that always zeroes the memory, always 8 aligned
-$malloc(/*size*/2, /*count*/3)
-void * alloc(arena_t arena[1], int64_t size, int64_t count) {
-    int64_t total = size * count;
-    int64_t pad = MODPWR2(- (int64_t)arena->beg, 8); //mod -x gives n for next align
-
-    assert(total < (arena->end - arena->beg - pad) && "ARENA OUT OF MEMORY");
-
-    uint8_t *p = arena->beg + pad;
-    arena->beg += pad + total;
-    
-    return memset(p, 0, (uint64_t) total);
-}
-
-/*
-    ==================== DATA STRUCTURES ====================
-*/
-
-// VECTOR (dynamic array)
-typedef struct vector64_t{int32_t cap; int32_t len; int64_t *data;}vector64_t;
-
-$proc vec64_grow(vector64_t vector[1],  arena_t arena[1]) { 
-    static const int32_t VEC_FIRST_SIZE = 64;
-
-    if (!vector->data) {
-        /*       VEC_START */ vector->data = (int64_t *)
-            alloc(arena, 8LL, vector->cap = VEC_FIRST_SIZE); 
-    } else if (arena->beg == ((uint8_t *) &(vector->data[vector->cap]))) { 
-        int64_t *VEC_EXTEND = (int64_t *)
-            alloc(arena, 8LL, vector->cap);
-        assert((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
-        vector->cap *= 2;
-    } else {
-        int64_t *VEC_RELOC = (int64_t *)
-            alloc(arena, 8LL, vector->cap *= 2);
-        memcpy(VEC_RELOC, vector->data, (uint64_t) (8LL*vector->len));
-        vector->data = VEC_RELOC;
-    }
-}
-
-typedef struct vector32_t{int32_t cap; int32_t len; int32_t *data;}vector32_t;
-
-$proc vec32_grow(vector32_t vector[1], arena_t arena[1]) { 
-    static const int32_t VEC_FIRST_SIZE = 64;
-
-    if (!vector->data) {
-        /*       VEC_START */ vector->data = (int32_t *)
-            alloc(arena, 4LL, vector->cap = VEC_FIRST_SIZE); 
-    } else if (arena->beg == ((uint8_t *) &(vector->data[vector->cap]))) { 
-        int32_t *VEC_EXTEND = (int32_t *)
-            alloc(arena, 4LL, vector->cap);
-        assert((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
-        vector->cap *= 2;
-    } else {
-        int32_t *VEC_RELOC = (int32_t *)
-            alloc(arena, 4LL, vector->cap *= 2);
-        memcpy(VEC_RELOC, vector->data, (uint64_t) (4LL*vector->len));
-        vector->data = VEC_RELOC;
-    }
-}
-
-// Vector Push
-$proc vec_push_i64(vector64_t vector[1], arena_t arena[1], int64_t int64) {
-    if (vector->len >= vector->cap) {
-        vec64_grow(vector, arena);
-    }
-
-    vector->data[vector->len++] = int64;
-}
-$proc vec_push_f64(vector64_t vector[1], arena_t arena[1], float64_t float64) {
-    vec_push_i64(vector, arena, f64_to_i64(float64));
-}
-$proc vec_push_str(vector64_t vector[1], arena_t arena[1], cstr_t cstr) {
-    vec_push_i64(vector, arena, (int64_t) cstr);
-}
-$proc vec_push_ptr(vector64_t vector[1], arena_t arena[1], void * ptr) {
-    vec_push_i64(vector, arena, (int64_t) ptr);
-}
-$proc vec_push_s8str(vector64_t vector[1], arena_t arena[1], s8str_t s8str) {
-    vec_push_i64(vector, arena, (int64_t) s8str);
-}
-$proc vec_push_i32(vector32_t vector[1], arena_t arena[1], int32_t int32) {
-    if (vector->len >= vector->cap) {
-        vec32_grow(vector, arena);
-    }
-
-    vector->data[vector->len++] = int32;
-}
-$proc vec_push_f32(vector32_t vector[1], arena_t arena[1], float32_t float32) {
-    vec_push_i32(vector, arena, f32_to_i32(float32));
-}
-
-// Vector Pop
-$fun int64_t vec_pop_i64(vector64_t vector[1]) {
-    assert(vector->len > 0 && "POP ON 64bit EMPTY ARRAY");
-
-    return vector->data[--vector->len];
-}
-$fun float64_t vec_pop_f64(vector64_t vector[1]) {
-    return i64_to_f64(vec_pop_i64(vector));
-}
-$fun cstr_t vec_pop_str(vector64_t vector[1]) {
-     return (cstr_t) vec_pop_i64(vector);
-}
-$fun void * vec_pop_ptr(vector64_t vector[1]) {
-     return (void *) vec_pop_i64(vector);
-}
-$fun s8str_t vec_pop_s8str(vector64_t vector[1]) {
-     return (s8str_t) vec_pop_i64(vector);
-}
-$fun int32_t vec_pop_i32(vector32_t vector[1]) {
-    assert(vector->len > 0 && "POP ON 32bit EMPTY ARRAY");
-
-    return vector->data[--vector->len];
-}
-$fun float32_t vec_pop_f32(vector32_t vector[1]) {
-    return i32_to_f32(vec_pop_i32(vector));
-}
-
-// Vector as C Array
-$fun int64_t * vec_data_as_i64(vector64_t vector[1]) {
-    return (int64_t *) vector->data;
-}
-$fun float64_t * vec_data_as_f64(vector64_t vector[1]) {
-    assert(sizeof(float64_t) == 8 && "ale.h vec_data_as_f64 assumes that a double == 64bits");
-    return (float64_t *) vector->data;
-}
-$fun cstr_t * vec_data_as_cstr(vector64_t vector[1]) {
-    assert(sizeof(cstr_t) == 8 && "ale.h vec_data_as_cstr assumes that a pointer == 64bits");
-    return (cstr_t *) vector->data;
-}
-$fun int32_t * vec_data_as_i32(vector32_t vector[1]) {
-    return (int32_t *) vector->data;
-}
-$fun float32_t * vec_data_as_f32(vector32_t vector[1]) {
-    assert(sizeof(float32_t) == 4 && "ale.h vec_data_as_f32 assumes that a float == 32bits");
-    return (float32_t *) vector->data;
-}
-
-// Vector remove by last swap
-$proc vec64_rem(vector64_t vector[1], int32_t index) {
-    vector->data[index] = vector->data[--vector->len];
-}
-$proc vec32_rem(vector32_t vector[1], int32_t index) {
-    vector->data[index] = vector->data[--vector->len];
-}
-
-typedef struct entry64_t{int64_t key; int64_t val;}entry64_t;
-typedef struct ht64_t{
-    int32_t shift;int32_t mask; int32_t len;
-    entry64_t *data;
-}ht64_t;
-
-$fun ht64_t new_ht64(arena_t arena[1], int32_t expected_maxn) {
-    const int32_t ht_expo = fit_pwr2_exp(expected_maxn + 64);
-    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
-
-    ht64_t *ht = (ht64_t*)
-        alloc(arena, sizeof(ht64_t), 1);
-    
-    ht->shift = 64 - ht_expo;
-    ht->mask = (1 << ht_expo) - 1;
-    ht->len = 0;
-    ht->data = (entry64_t *)
-        alloc(arena, sizeof(entry64_t), ht->mask + 1);
-
-    return *ht;
-}
-
-typedef struct entry32_t{int32_t key; int32_t val;}entry32_t;
-typedef struct ht32_t{
-    int32_t shift;int32_t mask; int32_t len;
-    entry32_t *data;
-}ht32_t;
-
-$fun ht32_t new_ht32(arena_t arena[1], int32_t expected_maxn) {
-    const int32_t ht_expo = fit_pwr2_exp(expected_maxn + 64);
-    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
-
-    ht32_t *ht = (ht32_t*)
-        alloc(arena, sizeof(ht32_t), 1);
-    
-    ht->shift = 64 - ht_expo;
-    ht->mask = (1 << ht_expo) - 1;
-    ht->len = 0;
-    ht->data = (entry32_t *)
-        alloc(arena, sizeof(entry32_t), ht->mask + 1);
-
-    return *ht;
-}
-
-// MSI Hash Table with Integer64 as Key
-// Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
-$nonnull int32_t htnum(
-    ht64_t ht[1] /* ht_ht */, 
-    int64_t keyi64, int32_t create_if_not_found
-) {
-    entry64_t *data = ht->data;
-
-    uint64_t hash = (uint64_t) hash_i64(keyi64);
-    int32_t index = (int32_t)hash;
-    int32_t mask = ht->mask;
-    int32_t shift = ht->shift;
-    
-    for(
-        index = ht_lookup(hash, index, mask, shift);
-        data[index].key != 0 && data[index].key != keyi64; 
-        index = ht_lookup(hash, index, mask, shift)
-    ) {
-        /* empty body */
-    }
-
-    if (data[index].key == 0 && create_if_not_found) {
-        assert(ht->len < mask - 2 && "MSI KI HT IS FULL");
-        data[index].key = keyi64;
-        ++ht->len;
-    }
-
-    return index; // index of entry found OR entry empty
-}
-
-// Returns the index of |ikey| in the msi |table|
-$fun int32_t htnum_get_idx(ht64_t table, int64_t ikey) {
-    return htnum(&table, ikey, 0);
-}
-$fun int64_t htnum_get_i64(ht64_t table, int64_t ikey) {
-    return table.data[htnum(&table, ikey, 0)].val;
-}
-$fun float64_t htnum_get_f64(ht64_t table, int64_t ikey) {
-    return i64_to_f64(table.data[htnum(&table, ikey, 0)].val);
-}
-$fun cstr_t htnum_get_str(ht64_t table, int64_t ikey) {
-    return (cstr_t) table.data[htnum(&table, ikey, 0)].val;
-}
-$fun void * htnum_get_ptr(ht64_t table, int64_t ikey) {
-    return (void *) table.data[htnum(&table, ikey, 0)].val;
-}
-
-// Creates key if not found, then returns the index of |ikey| in the msi |table|
-$proc htnum_set_idx(ht64_t table[1], int64_t ikey) {
-    htnum(table, ikey, 1);
-}
-$proc htnum_set_i64(ht64_t table[1], int64_t ikey, int64_t ival) {
-    table->data[htnum(table, ikey, 1)].val = ival;
-}
-$proc htnum_set_f64(ht64_t table[1], int64_t ikey, float64_t dval) {
-    table->data[htnum(table, ikey, 1)].val = f64_to_i64(dval);
-}
-$proc htnum_set_str(ht64_t table[1], int64_t ikey, cstr_t sval) {
-    table->data[htnum(table, ikey, 1)].val = (int64_t) sval;
-}
-$proc htnum_set_ptr(ht64_t table[1], int64_t ikey, void * pval) {
-    table->data[htnum(table, ikey, 1)].val = (int64_t) pval;
-}
-$fun entry64_t * htnum_data_as_int64(ht64_t table[1]) {
-    return (entry64_t *) table->data;
-}
-typedef struct entry_i64_f64{int64_t key; float64_t val;}entry_i64_f64;
-$fun entry_i64_f64 * htnum_data_as_f64(ht64_t table[1]) {
-    return (entry_i64_f64 *) table->data;
-}
-typedef struct entry_i64_str{int64_t key; cstr_t val;}entry_i64_str;
-$fun entry_i64_str * htnum_data_as_str(ht64_t table[1]) {
-    return (entry_i64_str *) table->data;
-}
-typedef struct entry_i64_ptr{int64_t key; void * val;}entry_i64_ptr;
-$fun entry_i64_ptr * htnum_data_as_ptr(ht64_t table[1]) {
-    return (entry_i64_ptr *) table->data;
-}
-
-// MSI Hash Table with Cstring as Key
-// Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
-$nonnull int32_t htstr(
-    ht64_t ht[1] /* ht_ht */, 
-    cstr_t keycstr, int32_t create_if_not_found
-) {
-    entry64_t *data = ht->data;
-
-    uint64_t hash = (uint64_t) hash_str(keycstr);
-    int32_t index = (int32_t)hash;
-    int32_t mask = ht->mask;
-    int32_t shift = ht->shift;
-    
-    for(
-        index = ht_lookup(hash, index, mask, shift);
-        data[index].key != 0 && strcmp((cstr_t) data[index].key, keycstr);
-        index = ht_lookup(hash, index, mask, shift)
-    ) {
-        /* empty body */
-    }
-
-    if (data[index].key == 0 && create_if_not_found) {
-        assert(ht->len < mask - 2 && "MSI KS HT IS FULL");
-        data[index].key = (int64_t) keycstr;
-        ++ht->len;
-    }
-
-    return index; // index of entry found OR entry empty
-}
-// Returns the index of |ikey| in the msi |table|
-$fun int32_t htstr_get_idx(ht64_t table, cstr_t skey) {
-    return htstr(&table, skey, 0);
-}
-$fun int64_t htstr_get_i64(ht64_t table, cstr_t skey) {
-    return (int64_t) table.data[htstr(&table, skey, 0)].val;
-}
-$fun float64_t htstr_get_f64(ht64_t table, cstr_t skey) {
-    return i64_to_f64(table.data[htstr(&table, skey, 0)].val);
-}
-$fun cstr_t htstr_get_str(ht64_t table, cstr_t skey) {
-    return (cstr_t) table.data[htstr(&table, skey, 0)].val;
-}
-$fun void * htstr_get_ptr(ht64_t table, cstr_t skey) {
-    return (void *) table.data[htstr(&table, skey, 0)].val;
-}
-
-// Creates key if not found, then returns the index of |skey| in the msi |table|
-$proc htstr_set_idx(ht64_t table[1], cstr_t skey) {
-    htstr(table, skey, 1);
-}
-$proc htstr_set_i64(ht64_t table[1], cstr_t skey, int64_t ival) {
-    table->data[htstr(table, skey, 1)].val = ival;
-}
-$proc htstr_set_f64(ht64_t table[1], cstr_t skey, float64_t dval) {
-    table->data[htstr(table, skey, 1)].val = f64_to_i64(dval);
-}
-$proc htstr_set_str(ht64_t table[1], cstr_t skey, cstr_t sval) {
-    table->data[htstr(table, skey, 1)].val = (int64_t) sval;
-}
-$proc htstr_set_ptr(ht64_t table[1], cstr_t skey, void * pval) {
-    table->data[htstr(table, skey, 1)].val = (int64_t) pval;
-}
-
-typedef struct entry_str_i64{cstr_t key; int64_t val;}entry_str_i64;
-$fun entry_str_i64 * htstr_data_as_int64(ht64_t table[1]) {
-    return (entry_str_i64 *) table->data;
-}
-typedef struct entry_str_f64{cstr_t key; float64_t val;}entry_str_f64;
-$fun entry_str_f64 * htstr_data_as_f64(ht64_t table[1]) {
-    return (entry_str_f64 *) table->data;
-}
-typedef struct entry_str_str{cstr_t key; cstr_t val;}entry_str_str;
-$fun entry_str_str * htstr_data_as_str(ht64_t table[1]) {
-    return (entry_str_str *) table->data;
-}
-typedef struct entry_str_ptr{cstr_t key; void * val;}entry_str_ptr;
-$fun entry_str_ptr * htstr_data_as_ptr(ht64_t table[1]) {
-    return (entry_str_ptr *) table->data;
-}
-
-// MSI Hash Table with Integer32 as Key
-$nonnull int32_t htint(
-    ht32_t ht[1] /* ht_ht */, 
-    int32_t keyi32, int32_t create_if_not_found
-) {
-    entry32_t *data = ht->data;
-
-    uint64_t hash = (uint64_t) hash_i64(keyi32);
-    int32_t index = (int32_t)hash;
-    int32_t mask = ht->mask;
-    int32_t shift = ht->shift;
-    
-    for(
-        index = ht_lookup(hash, index, mask, shift);
-        data[index].key != 0 && data[index].key != keyi32; 
-        index = ht_lookup(hash, index, mask, shift)
-    ) {
-        /* empty body */
-    }
-
-    if (data[index].key == 0 && create_if_not_found) {
-        assert(ht->len < mask - 2 && "MSI KI32 HT IS FULL");
-        data[index].key = keyi32;
-        ++ht->len;
-    }
-
-    return index; // index of entry found OR entry empty
-}
-
-// Returns the index of |ikey| in the msi |table|
-$fun int32_t htint_get_idx(ht32_t table, int32_t ikey) {
-    return htint(&table, ikey, 0);
-}
-$fun int32_t htint_get_i32(ht32_t table, int32_t ikey) {
-    return table.data[htint(&table, ikey, 0)].val;
-}
-$fun float32_t htint_get_f32(ht32_t table, int32_t ikey) {
-    return i32_to_f32(table.data[htint(&table, ikey, 0)].val);
-}
-
-// Creates key if not found, then returns the index of |ikey| in the msi |table|
-$proc htint_set_idx(ht32_t table[1], int32_t ikey) {
-    htint(table, ikey, 1);
-}
-$proc htint_set_i32(ht32_t table[1], int32_t ikey, int32_t ival) {
-    table->data[htint(table, ikey, 1)].val = ival;
-}
-$proc htint_set_f32(ht32_t table[1], int32_t ikey, float32_t float32) {
-    table->data[htint(table, ikey, 1)].val = f32_to_i32(float32);
-}
-$fun entry32_t * htint_data_as_int32(ht32_t table[1]) {
-    return (entry32_t *) table->data;
-}
-typedef struct entry_i32_f32{int32_t key; float32_t val;}entry_i32_f32;
-$fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
-    return (entry_i32_f32 *) table->data;
-}
-
-/*
-    ==================== TEXT / STRINGS ====================
-*/
-
-$fun int void_compare_strings(const void *a, const void *b) {
-    return strcmp(*(cstr_t *)a, *(cstr_t *)b);
-}
-
-$fun b32_t is_empty_string(cstr_t str) {
-    for (cstr_t cursor = str; *cursor != '\0'; ++cursor) {
+$fun b32_t is_empty_string(cstr str) {
+    for (cstr cursor = str; *cursor != '\0'; ++cursor) {
         if (*cursor != ' ') {
             return False;
         }
@@ -579,9 +107,9 @@ $fun b32_t is_digit(char character) {
     return character >= '0' && character <= '9';
 }
 
-$fun int64_t cstr_to_num(cstr_t str) {
-    int64_t num = 0, power = 1;
-    for (int64_t i = (int64_t) (strlen(str) - 1); i >= 0; --i) {
+$fun i64 cstr_to_num(cstr str) {
+    i64 num = 0, power = 1;
+    for (i64 i = cstrlen(str) - 1; i >= 0; --i) {
         char character = str[i];
 
         if (character == '-') {
@@ -598,12 +126,532 @@ $fun int64_t cstr_to_num(cstr_t str) {
     return num;
 }
 
-// Alters a text by converting \n to \0 and pushing each line as a cstr_t in the returned vector
-$fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
+/*
+    ==================== MATH ====================
+*/
+
+// Random
+$fun i32 rnd(u64 seed[1]) {
+    *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
+    i32 shift = (i32) (29 - (i32)(*seed >> 61));
+    
+    return ((i32) (*seed >> shift)) & 2147483647;
+}
+
+// Hash
+$pure i64 hash_str(cstr str) {
+    cstr sp = (cstr) str;
+
+    u64 h = 0x7A5662DCDF;
+    while(*sp) { 
+        h ^= (*(sp++)) & 255; h *= 1111111111111111111;
+    }
+
+    return (i64) ((h ^ (h >> 32)) >> 1);
+}
+$math i64 hash_i64(i64 integer64) {
+    u64 x = (u64)integer64;
+    x *= 0x94d049bb133111eb; 
+    x ^= (x >> 30); 
+    x *= 0xbf58476d1ce4e5b9; 
+    
+    return (i64) ((x ^ (x >> 31)) >> 1);
+}
+
+// Mask-Step-Index (MSI) lookup
+$math i32 ht_lookup(
+    u64 hash, // 1st hash acts as base location
+    i32 index, // 2nd "hash" steps over the "list of elements" from base-location
+    i32 mask, // trims number to < ht_capacity
+    i32 shift // use |exp| bits for step 
+)
+{
+    i32 step = (i32)(hash >> shift) | 1;
+    return (i64) ((index + step) & mask);
+}
+
+//Conversions from/to float
+typedef union i64_f64_union{i64 as_int; f64 as_float;}i64_f64_union;
+$math f64 i64_to_f64(i64 int64) {
+    i64_f64_union u = {int64};
+    return u.as_float;
+}
+$math i64 f64_to_i64(f64 float64) {
+    i64_f64_union u = {0};
+    u.as_float = float64;
+    return u.as_int;
+}
+typedef union i32_f32_union{i32 as_int; f32 as_float;}i32_f32_union;
+$math f32 i32_to_f32(i32 int32) {
+    i32_f32_union u = {int32};
+    return u.as_float;
+}
+$math i32 f32_to_i32(f32 float32) {
+    i32_f32_union u = {0};
+    u.as_float = float32;
+    return u.as_int;
+}
+
+// bitmask for optimized Mod for power 2 numbers
+$math i64 MODPWR2(i64 number, i64 modval) {
+    return (number) & (modval - 1);
+}
+
+// Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
+$math i32 fit_pwr2_exp(i32 size) {
+    i32 exp=2; i32 val=4; ++size;
+    while (val < size) {
+        ++exp; val*=2;
+    }
+    return exp;
+}
+
+/*
+    ==================== ARENA ALLOCATION ====================
+*/
+
+// ARENA
+typedef struct arena_t{ u8 *beg; u8 *end; }arena_t;
+
+$fun_rbuffer(/*bufferlen*/1, /*buffer*/2) 
+arena_t newarena(i64 buffer_len, u8 buffer[]) {
+    arena_t arena = {0, 0};
+    arena.beg = (u8 *)buffer;
+    arena.end = arena.beg ? arena.beg + buffer_len : 0;
+    return arena;
+}
+
+$fun_wbuffer(/*bufferlen*/2, /*buffer*/1) 
+u8 * zeromem(u8 __dst[1], i64 __n) {
+    for (i64 i = 0; i < __n; ++i) {
+        __dst[i] = 0;
+    }
+    return __dst;
+}
+
+// Arena Allocator that always zeroes the memory, always 8 aligned
+$malloc(/*size*/2, /*count*/3)
+void * alloc(arena_t arena[1], i64 size, i64 count) {
+    i64 total = size * count;
+    i64 pad = MODPWR2(- (i64)arena->beg, 8); //mod -x gives n for next align
+
+    _assert_(total < (arena->end - arena->beg - pad) && "ARENA OUT OF MEMORY");
+
+    u8 *p = arena->beg + pad;
+    arena->beg += pad + total;
+    
+    return (void *) zeromem(p, total);
+}
+
+$proc copymem64(i64 * __restrict__ dst64, const i64 * __restrict__ src64, i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        dst64[i] = src64[i];
+    }
+}
+$proc copymem32(i32 * __restrict__ dst32, const i32 * __restrict__ src32, i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        dst32[i] = src32[i];
+    }
+}
+
+/*
+    ==================== DATA STRUCTURES ====================
+*/
+
+// VECTOR (dynamic array)
+typedef struct vector64_t{i32 cap; i32 len; i64 *data;}vector64_t;
+
+$proc vec64_grow(vector64_t vector[1],  arena_t arena[1]) { 
+    static const i32 VEC_FIRST_SIZE = 64;
+
+    if        ("VEC START" && !vector->data) {
+        vector->data = (i64 *) alloc(arena, 8LL, vector->cap = VEC_FIRST_SIZE); 
+    } else if ("VEC EXTEND" && arena->beg == ((u8 *) &(vector->data[vector->cap]))) { 
+        i64 *VEC_EXTEND = (i64 *) alloc(arena, 8LL, vector->cap);
+        _assert_((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
+        vector->cap *= 2;
+    } else if ("VEC RELOC") {
+        i64 *VEC_RELOC = (i64 *) alloc(arena, 8LL, vector->cap *= 2);
+        copymem64(VEC_RELOC, vector->data, vector->len);
+        vector->data = VEC_RELOC;
+    }
+}
+
+typedef struct vector32_t{i32 cap; i32 len; i32 *data;}vector32_t;
+
+$proc vec32_grow(vector32_t vector[1], arena_t arena[1]) { 
+    static const i32 VEC_FIRST_SIZE = 64;
+
+    if        ("VEC START" && !vector->data) { 
+        vector->data = (i32 *) alloc(arena, 4LL, vector->cap = VEC_FIRST_SIZE); 
+    } else if ("VEC EXTEND" && arena->beg == ((u8 *) &(vector->data[vector->cap]))) { 
+        i32 *VEC_EXTEND = (i32 *) alloc(arena, 4LL, vector->cap);
+        _assert_((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
+        vector->cap *= 2;
+    } else if ("VEC RELOC") {
+        i32 *VEC_RELOC = (i32 *) alloc(arena, 4LL, vector->cap *= 2);
+        copymem32(VEC_RELOC, vector->data, vector->len);
+        vector->data = VEC_RELOC;
+    }
+}
+
+// Vector Push
+$proc vec_push_i64(vector64_t vector[1], arena_t arena[1], i64 int64) {
+    if (vector->len >= vector->cap) {
+        vec64_grow(vector, arena);
+    }
+
+    vector->data[vector->len++] = int64;
+}
+$proc vec_push_f64(vector64_t vector[1], arena_t arena[1], f64 float64) {
+    vec_push_i64(vector, arena, f64_to_i64(float64));
+}
+$proc vec_push_str(vector64_t vector[1], arena_t arena[1], cstr cstring) {
+    vec_push_i64(vector, arena, (i64) cstring);
+}
+$proc vec_push_ptr(vector64_t vector[1], arena_t arena[1], void * ptr) {
+    vec_push_i64(vector, arena, (i64) ptr);
+}
+$proc vec_push_s8str(vector64_t vector[1], arena_t arena[1], s8str s8string) {
+    vec_push_i64(vector, arena, (i64) s8string);
+}
+$proc vec_push_i32(vector32_t vector[1], arena_t arena[1], i32 int32) {
+    if (vector->len >= vector->cap) {
+        vec32_grow(vector, arena);
+    }
+
+    vector->data[vector->len++] = int32;
+}
+$proc vec_push_f32(vector32_t vector[1], arena_t arena[1], f32 float32) {
+    vec_push_i32(vector, arena, f32_to_i32(float32));
+}
+
+// Vector Pop
+$fun i64 vec_pop_i64(vector64_t vector[1]) {
+    _assert_(vector->len > 0 && "POP ON 64bit EMPTY ARRAY");
+
+    return vector->data[--vector->len];
+}
+$fun f64 vec_pop_f64(vector64_t vector[1]) {
+    return i64_to_f64(vec_pop_i64(vector));
+}
+$fun cstr vec_pop_str(vector64_t vector[1]) {
+     return (cstr) vec_pop_i64(vector);
+}
+$fun void * vec_pop_ptr(vector64_t vector[1]) {
+     return (void *) vec_pop_i64(vector);
+}
+$fun s8str vec_pop_s8str(vector64_t vector[1]) {
+     return (s8str) vec_pop_i64(vector);
+}
+$fun i32 vec_pop_i32(vector32_t vector[1]) {
+    _assert_(vector->len > 0 && "POP ON 32bit EMPTY ARRAY");
+
+    return vector->data[--vector->len];
+}
+$fun f32 vec_pop_f32(vector32_t vector[1]) {
+    return i32_to_f32(vec_pop_i32(vector));
+}
+
+// Vector as C Array
+$fun i64 * vec_data_as_i64(vector64_t vector[1]) {
+    return (i64 *) vector->data;
+}
+$fun f64 * vec_data_as_f64(vector64_t vector[1]) {
+    _assert_(sizeof(f64) == 8 && "ale.h vec_data_as_f64 assumes that a double == 64bits");
+    return (f64 *) vector->data;
+}
+$fun cstr * vec_data_as_cstr(vector64_t vector[1]) {
+    _assert_(sizeof(cstr) == 8 && "ale.h vec_data_as_cstr assumes that a pointer == 64bits");
+    return (cstr *) vector->data;
+}
+$fun i32 * vec_data_as_i32(vector32_t vector[1]) {
+    return (i32 *) vector->data;
+}
+$fun f32 * vec_data_as_f32(vector32_t vector[1]) {
+    _assert_(sizeof(f32) == 4 && "ale.h vec_data_as_f32 assumes that a float == 32bits");
+    return (f32 *) vector->data;
+}
+
+// Vector remove by last swap
+$proc vec64_rem(vector64_t vector[1], i32 index) {
+    vector->data[index] = vector->data[--vector->len];
+}
+$proc vec32_rem(vector32_t vector[1], i32 index) {
+    vector->data[index] = vector->data[--vector->len];
+}
+
+typedef struct entry64_t{i64 key; i64 val;}entry64_t;
+typedef struct ht64_t{
+    i32 shift;i32 mask; i32 len;
+    entry64_t *data;
+}ht64_t;
+
+$fun ht64_t new_ht64(arena_t arena[1], i32 expected_maxn) {
+    const i32 ht_expo = fit_pwr2_exp(expected_maxn + 64);
+    _assert_(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
+
+    ht64_t *ht = (ht64_t*)
+        alloc(arena, sizeof(ht64_t), 1);
+    
+    ht->shift = 64 - ht_expo;
+    ht->mask = (1 << ht_expo) - 1;
+    ht->len = 0;
+    ht->data = (entry64_t *)
+        alloc(arena, sizeof(entry64_t), ht->mask + 1);
+
+    return *ht;
+}
+
+typedef struct entry32_t{i32 key; i32 val;}entry32_t;
+typedef struct ht32_t{
+    i32 shift;i32 mask; i32 len;
+    entry32_t *data;
+}ht32_t;
+
+$fun ht32_t new_ht32(arena_t arena[1], i32 expected_maxn) {
+    const i32 ht_expo = fit_pwr2_exp(expected_maxn + 64);
+    _assert_(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
+
+    ht32_t *ht = (ht32_t*)
+        alloc(arena, sizeof(ht32_t), 1);
+    
+    ht->shift = 64 - ht_expo;
+    ht->mask = (1 << ht_expo) - 1;
+    ht->len = 0;
+    ht->data = (entry32_t *)
+        alloc(arena, sizeof(entry32_t), ht->mask + 1);
+
+    return *ht;
+}
+
+// MSI Hash Table with Integer64 as Key
+// Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
+$nonnull i32 htnum(
+    ht64_t ht[1] /* ht_ht */, 
+    i64 keyi64, i32 create_if_not_found
+) {
+    entry64_t *data = ht->data;
+
+    u64 hash = (u64) hash_i64(keyi64);
+    i32 index = (i32)hash;
+    i32 mask = ht->mask;
+    i32 shift = ht->shift;
+    
+    for(
+        index = ht_lookup(hash, index, mask, shift);
+        data[index].key != 0 && data[index].key != keyi64; 
+        index = ht_lookup(hash, index, mask, shift)
+    ) {
+        /* empty body */
+    }
+
+    if (data[index].key == 0 && create_if_not_found) {
+        _assert_(ht->len < mask - 2 && "MSI KI HT IS FULL");
+        data[index].key = keyi64;
+        ++ht->len;
+    }
+
+    return index; // index of entry found OR entry empty
+}
+
+// Returns the index of |ikey| in the msi |table|
+$fun i32 htnum_get_idx(ht64_t table, i64 ikey) {
+    return htnum(&table, ikey, 0);
+}
+$fun i64 htnum_get_i64(ht64_t table, i64 ikey) {
+    return table.data[htnum(&table, ikey, 0)].val;
+}
+$fun f64 htnum_get_f64(ht64_t table, i64 ikey) {
+    return i64_to_f64(table.data[htnum(&table, ikey, 0)].val);
+}
+$fun cstr htnum_get_str(ht64_t table, i64 ikey) {
+    return (cstr) table.data[htnum(&table, ikey, 0)].val;
+}
+$fun void * htnum_get_ptr(ht64_t table, i64 ikey) {
+    return (void *) table.data[htnum(&table, ikey, 0)].val;
+}
+
+// Creates key if not found, then returns the index of |ikey| in the msi |table|
+$proc htnum_set_idx(ht64_t table[1], i64 ikey) {
+    htnum(table, ikey, 1);
+}
+$proc htnum_set_i64(ht64_t table[1], i64 ikey, i64 ival) {
+    table->data[htnum(table, ikey, 1)].val = ival;
+}
+$proc htnum_set_f64(ht64_t table[1], i64 ikey, f64 dval) {
+    table->data[htnum(table, ikey, 1)].val = f64_to_i64(dval);
+}
+$proc htnum_set_str(ht64_t table[1], i64 ikey, cstr sval) {
+    table->data[htnum(table, ikey, 1)].val = (i64) sval;
+}
+$proc htnum_set_ptr(ht64_t table[1], i64 ikey, void * pval) {
+    table->data[htnum(table, ikey, 1)].val = (i64) pval;
+}
+$fun entry64_t * htnum_data_as_int64(ht64_t table[1]) {
+    return (entry64_t *) table->data;
+}
+typedef struct entry_i64_f64{i64 key; f64 val;}entry_i64_f64;
+$fun entry_i64_f64 * htnum_data_as_f64(ht64_t table[1]) {
+    return (entry_i64_f64 *) table->data;
+}
+typedef struct entry_i64_str{i64 key; cstr val;}entry_i64_str;
+$fun entry_i64_str * htnum_data_as_str(ht64_t table[1]) {
+    return (entry_i64_str *) table->data;
+}
+typedef struct entry_i64_ptr{i64 key; void * val;}entry_i64_ptr;
+$fun entry_i64_ptr * htnum_data_as_ptr(ht64_t table[1]) {
+    return (entry_i64_ptr *) table->data;
+}
+
+// MSI Hash Table with Cstring as Key
+// Finds the index of |keycstr| in the msi |table|, creates key if |create_if_not_found| is true
+$nonnull i32 htstr(
+    ht64_t ht[1] /* ht_ht */, 
+    cstr keycstr, i32 create_if_not_found
+) {
+    entry64_t *data = ht->data;
+
+    u64 hash = (u64) hash_str(keycstr);
+    i32 index = (i32)hash;
+    i32 mask = ht->mask;
+    i32 shift = ht->shift;
+    
+    for(
+        index = ht_lookup(hash, index, mask, shift);
+        data[index].key != 0 && cstrcmp((cstr) data[index].key, keycstr);
+        index = ht_lookup(hash, index, mask, shift)
+    ) {
+        /* empty body */
+    }
+
+    if (data[index].key == 0 && create_if_not_found) {
+        _assert_(ht->len < mask - 2 && "MSI KS HT IS FULL");
+        data[index].key = (i64) keycstr;
+        ++ht->len;
+    }
+
+    return index; // index of entry found OR entry empty
+}
+// Returns the index of |ikey| in the msi |table|
+$fun i32 htstr_get_idx(ht64_t table, cstr skey) {
+    return htstr(&table, skey, 0);
+}
+$fun i64 htstr_get_i64(ht64_t table, cstr skey) {
+    return (i64) table.data[htstr(&table, skey, 0)].val;
+}
+$fun f64 htstr_get_f64(ht64_t table, cstr skey) {
+    return i64_to_f64(table.data[htstr(&table, skey, 0)].val);
+}
+$fun cstr htstr_get_str(ht64_t table, cstr skey) {
+    return (cstr) table.data[htstr(&table, skey, 0)].val;
+}
+$fun void * htstr_get_ptr(ht64_t table, cstr skey) {
+    return (void *) table.data[htstr(&table, skey, 0)].val;
+}
+
+// Creates key if not found, then returns the index of |skey| in the msi |table|
+$proc htstr_set_idx(ht64_t table[1], cstr skey) {
+    htstr(table, skey, 1);
+}
+$proc htstr_set_i64(ht64_t table[1], cstr skey, i64 ival) {
+    table->data[htstr(table, skey, 1)].val = ival;
+}
+$proc htstr_set_f64(ht64_t table[1], cstr skey, f64 dval) {
+    table->data[htstr(table, skey, 1)].val = f64_to_i64(dval);
+}
+$proc htstr_set_str(ht64_t table[1], cstr skey, cstr sval) {
+    table->data[htstr(table, skey, 1)].val = (i64) sval;
+}
+$proc htstr_set_ptr(ht64_t table[1], cstr skey, void * pval) {
+    table->data[htstr(table, skey, 1)].val = (i64) pval;
+}
+
+typedef struct entry_str_i64{cstr key; i64 val;}entry_str_i64;
+$fun entry_str_i64 * htstr_data_as_int64(ht64_t table[1]) {
+    return (entry_str_i64 *) table->data;
+}
+typedef struct entry_str_f64{cstr key; f64 val;}entry_str_f64;
+$fun entry_str_f64 * htstr_data_as_f64(ht64_t table[1]) {
+    return (entry_str_f64 *) table->data;
+}
+typedef struct entry_str_str{cstr key; cstr val;}entry_str_str;
+$fun entry_str_str * htstr_data_as_str(ht64_t table[1]) {
+    return (entry_str_str *) table->data;
+}
+typedef struct entry_str_ptr{cstr key; void * val;}entry_str_ptr;
+$fun entry_str_ptr * htstr_data_as_ptr(ht64_t table[1]) {
+    return (entry_str_ptr *) table->data;
+}
+
+// MSI Hash Table with Integer32 as Key
+$nonnull i32 htint(
+    ht32_t ht[1] /* ht_ht */, 
+    i32 keyi32, i32 create_if_not_found
+) {
+    entry32_t *data = ht->data;
+
+    u64 hash = (u64) hash_i64(keyi32);
+    i32 index = (i32)hash;
+    i32 mask = ht->mask;
+    i32 shift = ht->shift;
+    
+    for(
+        index = ht_lookup(hash, index, mask, shift);
+        data[index].key != 0 && data[index].key != keyi32; 
+        index = ht_lookup(hash, index, mask, shift)
+    ) {
+        /* empty body */
+    }
+
+    if (data[index].key == 0 && create_if_not_found) {
+        _assert_(ht->len < mask - 2 && "MSI KI32 HT IS FULL");
+        data[index].key = keyi32;
+        ++ht->len;
+    }
+
+    return index; // index of entry found OR entry empty
+}
+
+// Returns the index of |ikey| in the msi |table|
+$fun i32 htint_get_idx(ht32_t table, i32 ikey) {
+    return htint(&table, ikey, 0);
+}
+$fun i32 htint_get_i32(ht32_t table, i32 ikey) {
+    return table.data[htint(&table, ikey, 0)].val;
+}
+$fun f32 htint_get_f32(ht32_t table, i32 ikey) {
+    return i32_to_f32(table.data[htint(&table, ikey, 0)].val);
+}
+
+// Creates key if not found, then returns the index of |ikey| in the msi |table|
+$proc htint_set_idx(ht32_t table[1], i32 ikey) {
+    htint(table, ikey, 1);
+}
+$proc htint_set_i32(ht32_t table[1], i32 ikey, i32 ival) {
+    table->data[htint(table, ikey, 1)].val = ival;
+}
+$proc htint_set_f32(ht32_t table[1], i32 ikey, f32 float32) {
+    table->data[htint(table, ikey, 1)].val = f32_to_i32(float32);
+}
+$fun entry32_t * htint_data_as_int32(ht32_t table[1]) {
+    return (entry32_t *) table->data;
+}
+typedef struct entry_i32_f32{i32 key; f32 val;}entry_i32_f32;
+$fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
+    return (entry_i32_f32 *) table->data;
+}
+
+/*
+    ==================== TEXT ====================
+*/
+
+// Alters a text by converting \n to \0 and pushing each line as a cstr in the returned vector
+$fun vector64_t slice_into_lines(arena_t arena[1], mstr text_to_alter) {
     vector64_t lines = {0, 0, 0};
     
-    cstr_t last_line = "";
-    for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
+    cstr last_line = "";
+    for (mstr cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
             *cursor = '\0';
         }
@@ -622,11 +670,11 @@ $fun vector64_t slice_into_lines(arena_t arena[1], mstr_t text_to_alter) {
     return lines;
 }
 
-// Alters a text by converting \n to \0 and pushing each nonempty line as a cstr_t in the returned vector
-$fun vector64_t slice_into_nonempty_lines(arena_t arena[1], mstr_t text_to_alter) {
+// Alters a text by converting \n to \0 and pushing each nonempty line as a cstr in the returned vector
+$fun vector64_t slice_into_nonempty_lines(arena_t arena[1], mstr text_to_alter) {
     vector64_t lines = {0, 0, 0};
     
-    for (mstr_t cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
+    for (mstr cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
         if (*cursor == '\r') {
             *cursor = '\0';
         }

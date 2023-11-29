@@ -16,7 +16,7 @@ void test_ht_str(arena_t scratch) {
     printf("Não pegou: %s\n", htstr_get_str(ht, "Karol"));
 
     entry_str_str *data = htstr_data_as_str(&ht);
-    for(int32_t i = 0; i < ht.mask; ++i) {
+    for(i32 i = 0; i < ht.mask; ++i) {
         if  (! data[i].key) {
             continue;
         }
@@ -40,7 +40,7 @@ void test_ht_i64(arena_t arena) {
     printf("não pegou: %s\n", htnum_get_str(ht, 3));
 
     entry_i64_str *data = htnum_data_as_str(&ht);
-    for(int32_t i = 0; i < ht.mask; ++i) {
+    for(i32 i = 0; i < ht.mask; ++i) {
         if  ( ! data[i].key) {
             continue;
         }
@@ -54,33 +54,33 @@ void test_ht_i64(arena_t arena) {
 void test_big_ht_i64(arena_t scratch) {
     ht64_t ht = new_ht64(&scratch, 128);
 
-    for(int i = 0; i < 128; ++i) {
+    for(i32 i = 0; i < 128; ++i) {
         htnum_set_i64(&ht, i, i);
     }
 
     entry64_t *data = htnum_data_as_int64(&ht);
-    for(int32_t i = 0; i < ht.len; ++i) {
-        int32_t idx = htnum_get_idx(ht, i);
+    for(i32 i = 0; i < ht.len; ++i) {
+        i32 idx = htnum_get_idx(ht, i);
         
         printf("[%d]", idx);
         printf("%lld: %lld", data[idx].key, data[idx].val);
         printf(", ");
 
-        assert(data[idx].key == data[idx].val && "should be equal!");
+        _assert_(data[idx].key == data[idx].val && "should be equal!");
     }
 
-    for(int32_t i = ht.len; i < ht.mask; ++i) {
-        int32_t idx = htnum_get_idx(ht, i);
+    for(i32 i = ht.len; i < ht.mask; ++i) {
+        i32 idx = htnum_get_idx(ht, i);
 
-        assert(data[idx].key == 0 && "should be empty!");
+        _assert_(data[idx].key == 0 && "should be empty!");
     }
 
 
     printf("\n");
 }
 
-int32_t main() {
-    static uint8_t bufferzao[2*_Mega_Bytes] = {0};
+i32 main() {
+    static u8 bufferzao[2*_Mega_Bytes] = {0};
     arena_t scratch = newarena(sizeof(bufferzao), bufferzao);
     test_ht_i64(scratch);
     printf("\n");

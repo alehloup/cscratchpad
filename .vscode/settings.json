@@ -16,6 +16,7 @@
         "corecrt_wstdlib.h": "c",
         "stdalign.h": "c",
         "stdbool.h": "c",
-        "ale_io.h": "c"
+        "ale_io.h": "c",
+        "_assert_.h": "c"
     }
 }

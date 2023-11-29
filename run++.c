@@ -1,12 +1,12 @@
 #include "ale_io.h"
 
-int32_t main(int32_t argc, cstr_t *argv) {
+i32 main(i32 argc, cstr *argv) {
     if (argc < 1) {
         printf("No args...");
     }
 
     char buffer[512];
-    cstr_t _$1 = argv[1];
+    cstr _$1 = argv[1];
 
     printf(
         (

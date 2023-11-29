@@ -1,7 +1,7 @@
 #include "ale_io.h"
 
 $proc_rbuffer(1, 2) 
-_2(int32_t lineslen, cstr_t lines[]) {
+_2(i32 lineslen, cstr lines[]) {
 
     // eu - oponente:
     //     pedra (1) - papel (2) = -1  (perdi)
@@ -17,16 +17,16 @@ _2(int32_t lineslen, cstr_t lines[]) {
     // Perdi: -1, 2
     // Empate: 0
 
-    cstr_t hands[4] = {"", "ROCK", "PAPER", "SCISSORS"};
-    int hand_score[3] = {/*rock*/ 1, /*paper*/2, /*scissors*/3};
-    static const int won=6, draw=3, lost=0;
-    int res_score[5] = {won, lost, draw, won, lost};
-    int score = 0;
+    cstr hands[4] = {"", "ROCK", "PAPER", "SCISSORS"};
+    i32 hand_score[3] = {/*rock*/ 1, /*paper*/2, /*scissors*/3};
+    static const i32 won=6, draw=3, lost=0;
+    i32 res_score[5] = {won, lost, draw, won, lost};
+    i32 score = 0;
 
-    for (int i = 0; i < lineslen; ++i) {
+    for (i32 i = 0; i < lineslen; ++i) {
         if (!is_empty_string(lines[i])) {
-            int op = hand_score[lines[i][0] - 'A'], me = hand_score[lines[i][2] - 'X'];
-            int res = res_score[me - op + 2];
+            i32 op = hand_score[lines[i][0] - 'A'], me = hand_score[lines[i][2] - 'X'];
+            i32 res = res_score[me - op + 2];
             score += (me + res);
             printf("%d eu:%s X op:%s | %d + %d (%d)\n", i+1, hands[me], hands[op], me, res, me+res);
         }
@@ -35,11 +35,11 @@ _2(int32_t lineslen, cstr_t lines[]) {
 }
 
 $proc_rbuffer(1, 2)
-_1(int32_t lineslen, cstr_t lines[]) {
-    int64_t best3[3] = {0, 0, 0};
-    int64_t cur = 0, elf = 0;
-    for (int i = 0; i < lineslen; ++i) {
-        cstr_t line = lines[i];
+_1(i32 lineslen, cstr lines[]) {
+    i64 best3[3] = {0, 0, 0};
+    i64 cur = 0, elf = 0;
+    for (i32 i = 0; i < lineslen; ++i) {
+        cstr line = lines[i];
         if (is_empty_string(line)) {
             if (cur > best3[0]) {
                 best3[2] = best3[1];
@@ -61,12 +61,12 @@ _1(int32_t lineslen, cstr_t lines[]) {
         best3[0], best3[1], best3[2], best3[0] + best3[1] + best3[2]);
 }
 
-int main() {
-    static uint8_t mem[128*_Mega_Bytes] = {0};
+i32 main() {
+    static u8 mem[128*_Mega_Bytes] = {0};
     arena_t arena = newarena(128*_Mega_Bytes, mem);
 
     vector64_t lines = file_to_lines(&arena, "aoc.txt");
-    cstr_t *data = vec_data_as_cstr(&lines);
+    cstr *data = vec_data_as_cstr(&lines);
 
     _2(lines.len, data);
 

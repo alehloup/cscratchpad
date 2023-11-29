@@ -1,18 +1,18 @@
 #include "ale_io.h"
 
-int main(void) {
-    static uint8_t buffer[2*_Mega_Bytes];
+i32 main(void) {
+    static u8 buffer[2*_Mega_Bytes];
 
     arena_t perm = newarena(sizeof(buffer), buffer);
     
-    mstr_t contents = file_to_buffer(&perm, "exemplo.txt");
+    mstr contents = file_to_buffer(&perm, "exemplo.txt");
     printf("%s", contents);
 
     vector64_t lines = slice_into_nonempty_lines(&perm, contents);
     vec_sort_cstr(lines);
 
-    cstr_t *data = vec_data_as_cstr(&lines);
-    for (int i = 0; i < lines.len; ++i) {
+    cstr *data = vec_data_as_cstr(&lines);
+    for (i32 i = 0; i < lines.len; ++i) {
         printf("%d: %s\n", i, data[i]);
     }
 

@@ -21,7 +21,6 @@ static const b32_t False = 0;
 
 // String
 typedef const char * cstr_t; // const string
-typedef const char * const sstr_t; // static string
 typedef char * mstr_t; // modifiable string
 
 typedef struct s8_struct{ int32_t len; mstr_t data; }s8_struct; // slice struct
@@ -36,8 +35,8 @@ typedef s8_struct * s8str_t; // slice string
 // Simple attributes
 #define $math gcc_attr(const, warn_unused_result) static
 #define $pure gcc_attr(pure, nonnull, warn_unused_result) static
-#define $fun gcc_attr(nonnull, warn_unused_result) static
 #define $nonnull gcc_attr(nonnull) static
+#define $fun gcc_attr(nonnull, warn_unused_result) static
 #define $proc gcc_attr(nonnull) static void
 // Standard functions attributes
 #define $main \
@@ -63,7 +62,7 @@ typedef s8_struct * s8str_t; // slice string
 // Random
 $fun int32_t rnd(uint64_t seed[1]) {
     *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
-    int32_t shift = 29 - (uint32_t)(*seed >> 61);
+    int32_t shift = (int32_t) (29 - (uint32_t)(*seed >> 61));
     
     return ((int32_t) (*seed >> shift)) & 2147483647;
 }
@@ -77,7 +76,7 @@ $pure int64_t hash_str(cstr_t str) {
         h ^= (*(sp++)) & 255; h *= 1111111111111111111;
     }
 
-    return (h ^ (h >> 32)) >> 1;
+    return (int64_t) ((h ^ (h >> 32)) >> 1);
 }
 $math int64_t hash_i64(int64_t integer64) {
     uint64_t x = (uint64_t)integer64;
@@ -85,7 +84,7 @@ $math int64_t hash_i64(int64_t integer64) {
     x ^= (x >> 30); 
     x *= 0xbf58476d1ce4e5b9; 
     
-    return (x ^ (x >> 31)) >> 1;
+    return (int64_t) ((x ^ (x >> 31)) >> 1);
 }
 
 // Mask-Step-Index (MSI) lookup
@@ -96,8 +95,8 @@ $math int32_t ht_lookup(
     int32_t shift // use |exp| bits for step 
 )
 {
-    uint32_t step = (uint32_t)(hash >> shift) | 1;
-    return (index + step) & mask;
+    int32_t step = (int32_t)(hash >> shift) | 1;
+    return (int64_t) ((index + step) & mask);
 }
 
 // bitmask for optimized Mod for power 2 numbers
@@ -140,7 +139,7 @@ void * alloc(arena_t arena[1], int64_t size, int64_t count) {
     uint8_t *p = arena->beg + pad;
     arena->beg += pad + total;
     
-    return memset(p, 0, total);
+    return memset(p, 0, (uint64_t) total);
 }
 
 /*
@@ -164,7 +163,7 @@ $proc vec64_grow(vector64_t vector[1],  arena_t arena[1]) {
     } else {
         int64_t *VEC_RELOC = (int64_t *)
             alloc(arena, 8LL, vector->cap *= 2);
-        memcpy(VEC_RELOC, vector->data, 8LL*vector->len);
+        memcpy(VEC_RELOC, vector->data, (uint64_t) (8LL*vector->len));
         vector->data = VEC_RELOC;
     }
 }
@@ -185,7 +184,7 @@ $proc vec32_grow(vector32_t vector[1], arena_t arena[1]) {
     } else {
         int32_t *VEC_RELOC = (int32_t *)
             alloc(arena, 4LL, vector->cap *= 2);
-        memcpy(VEC_RELOC, vector->data, 4LL*vector->len);
+        memcpy(VEC_RELOC, vector->data, (uint64_t) (4LL*vector->len));
         vector->data = VEC_RELOC;
     }
 }
@@ -595,7 +594,7 @@ $fun b32_t is_digit(char character) {
 
 $fun int64_t cstr_to_num(cstr_t str) {
     int64_t num = 0, power = 1;
-    for (int64_t i = strlen(str) - 1; i >= 0; --i) {
+    for (int64_t i = (int64_t) (strlen(str) - 1); i >= 0; --i) {
         char character = str[i];
 
         if (character == '-') {

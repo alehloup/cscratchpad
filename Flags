@@ -1,24 +1,20 @@
 -Ofast -flto -march=native -mtune=native -ftrivial-auto-var-init=zero
+-fstack-protector-strong -fstack-clash-protection -fcf-protection=full
 
--static-pie -g3 
+-static-pie -g3 -D_GLIBCXX_ASSERTIONS -fanalyzer -Wall -Wextra -Wpedantic -Werror 
+-Wno-unused-function
 
--fanalyzer -Wall -Wextra -Wpedantic -Werror -Wno-unused-function -Wshadow -Wundef
--D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
--Wuninitialized -Wstrict-aliasing -D_GLIBCXX_ASSERTIONS 
+-D_FORTIFY_SOURCE=3 -Wstringop-overflow=4 -Wuse-after-free=3 -Warray-bounds=2 
+-Wformat=2 -Wformat-truncation=2 -Wformat-overflow=2 
+
+-Wuninitialized -Wstrict-aliasing -Wcast-align=strict -Wnull-dereference
+-Wshadow -Wundef -Wconversion -Wdouble-promotion -Wformat-signedness
+-Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 
+-fstrict-flex-arrays -Warray-parameter -Wvla -Wvla-parameter
 
 -fsanitize-trap -fsanitize-undefined-trap-on-error 
 -fsanitize=undefined -fsanitize=bounds-strict -fsanitize=alignment -fsanitize=object-size
 -fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute 
 -fsanitize=builtin -fsanitize-address-use-after-scope -fsanitize=unreachable
-
--Wstringop-overflow=4 -Wnull-dereference -Wuse-after-free=3 -Wcast-align=strict 
-
--Wconversion -Wno-sign-conversion -Wdouble-promotion 
-
--Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 
-
--Warray-bounds=2 -fstrict-flex-arrays -Warray-parameter -Wvla -Wvla-parameter
- 
--Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2 -Wformat-signedness
 
 libwinsane.o

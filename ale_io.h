@@ -16,16 +16,16 @@ int32_t shellrun(int32_t bufferlen, char buffer [512], cstr_t format, ...) {
 
     va_list args; va_start(args, format);
 
-    vsprintf_s(buffer, bufferlen, format, args);
+    vsprintf_s(buffer, (uint64_t) bufferlen, format, args);
     return system(buffer);
 }
 
 // FILES
-$fun size_t fread_noex(void * __dst, size_t __sz, size_t __n, FILE * __f) {
+$fun int64_t fread_noex(void * __dst, int64_t __sz, int64_t __n, FILE * __f) {
     #ifdef __cplusplus
-        try { return fread(__dst, __sz, __n, __f); } catch(...) {return 0;}
+        try { return (int64_t) fread(__dst, (uint64_t) __sz, (uint64_t) __n, __f); } catch(...) {return 0;}
     #endif 
-              return fread(__dst, __sz, __n, __f);
+              return (int64_t) fread(__dst, (uint64_t) __sz, (uint64_t) __n, __f);
 }
 
 $fun mstr_t file_to_buffer(arena_t arena[1], cstr_t filename) {
@@ -71,8 +71,8 @@ $nonnull b32_t buffer_to_file(cstr_t buffer, cstr_t filename) {
 
         assert(!err && "Could not open file for writting");
 
-        int64_t fsize = strlen(buffer);
-        int64_t bytes_written = fwrite(buffer, 1, fsize, f);
+        int64_t fsize = (int64_t) strlen(buffer);
+        int64_t bytes_written = (int64_t) fwrite(buffer, 1, (uint64_t) fsize, f);
         assert(bytes_written == fsize && "could not write fsize#bytes");
 
     fclose(f);
@@ -94,9 +94,9 @@ $nonnull b32_t lines_to_file(vector64_t lines, cstr_t filename) {
         for (int i = 0; i < lines.len; ++i) {
             line = data[i]; 
 
-            fsize = strlen(line);
-            bytes_written = fwrite(line, 1, fsize, f);
-            bytes_written += fwrite("\n", 1, 1, f);
+            fsize = (int64_t) strlen(line);
+            bytes_written = (int64_t) fwrite(line, 1, (uint64_t) fsize, f);
+            bytes_written += (int64_t) fwrite("\n", 1, 1, f);
             assert(bytes_written == fsize + 1 && "could not write fsize#bytes");
         }
 

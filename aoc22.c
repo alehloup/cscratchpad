@@ -1,7 +1,7 @@
 #include "ale_io.h"
 
-$proc_rbuffer(1, 2) 
-_2(i32 lineslen, cstr lines[]) {
+_proc_rbuffer(1, 2) 
+aoc2(i32 lineslen, cstr lines[]) {
 
     // eu - oponente:
     //     pedra (1) - papel (2) = -1  (perdi)
@@ -34,8 +34,8 @@ _2(i32 lineslen, cstr lines[]) {
     printf("Max Score: %d\n", score);
 }
 
-$proc_rbuffer(1, 2)
-_1(i32 lineslen, cstr lines[]) {
+_proc_rbuffer(1, 2)
+aoc1(i32 lineslen, cstr lines[]) {
     i64 best3[3] = {0, 0, 0};
     i64 cur = 0, elf = 0;
     for (i32 i = 0; i < lineslen; ++i) {
@@ -62,13 +62,13 @@ _1(i32 lineslen, cstr lines[]) {
 }
 
 i32 main() {
-    static u8 mem[128*_MBs] = {0};
-    arena_t arena = newarena(128*_MBs, mem);
+    static u8 mem[128*MBs_] = {0};
+    arena_t arena = newarena(128*MBs_, mem);
 
     vector64_t lines = file_to_lines(&arena, "aoc.txt");
     cstr *data = vec_data_as_cstr(&lines);
 
-    _2(lines.len, data);
+    aoc2(lines.len, data);
 
     return 0;
 }

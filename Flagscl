@@ -1,0 +1,22 @@
+-Ofast -flto -fuse-ld=lld -march=native -ftrivial-auto-var-init=zero
+-fcf-protection=full
+
+-DEBUG -Z7 -D_GLIBCXX_ASSERTIONS 
+-D_FORTIFY_SOURCE=3 -Wall -Wextra -Wpedantic -Werror
+ -Warray-bounds -Wformat=2
+
+-Wuninitialized -Wstrict-aliasing -Wcast-align -Wnull-dereference 
+-Warray-parameter -Wvla -Wvla-parameter
+-Wshadow -Wundef -Wconversion -Wdouble-promotion
+-Wswitch-default -Wswitch-enum 
+
+-fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=undefined 
+-fsanitize=alignment -fsanitize=object-size -fsanitize=builtin
+-fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute 
+-fsanitize=bounds -fsanitize=unreachable
+
+-Wno-unsafe-buffer-usage -Wno-declaration-after-statement -Wno-string-conversion
+-Wno-bad-function-cast -Wno-strict-prototypes -Wno-unused-function
+-Wno-unsequenced -Wno-missing-prototypes
+
+/std:c11

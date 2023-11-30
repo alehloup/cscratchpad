@@ -17,6 +17,10 @@
         "stdalign.h": "c",
         "stdbool.h": "c",
         "ale_io.h": "c",
-        "_assert_.h": "c"
+        "assert.h": "c",
+        "random": "c",
+        "assert.h": "c",
+        "crtdefs.h": "c",
+        "corecrt.h": "c"
     }
 }

@@ -10,17 +10,17 @@ typedef struct teste{
 
 i32 main() {{
 
-    arena_t perm = newarena(1*_MBs, (u8 *)calloc(1*_MBs, 1));
+    arena_t perm = newarena(1*MBs_, (u8 *)calloc(1*MBs_, 1));
 
     printf("Começando beg:%p end:%p total:%lldMB\n", 
-        perm.beg, perm.end, (perm.end - perm.beg)/1048576);
+        (void *) perm.beg, (void *) perm.end, (perm.end - perm.beg)/1048576);
 
-    teste *woa = (typeof(woa)) alloc(&perm, sizeof(teste), 1);
+    teste *woa = (teste *) alloc(&perm, sizeof(teste), 1);
     teste temp = {4, 5, 6};
     *woa =temp;
     printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);
 
-    teste *vetor = (typeof(vetor)) alloc(&perm, sizeof(teste), 3);
+    teste *vetor = (teste *) alloc(&perm, sizeof(teste), 3);
     for(i32 i = 0, j = 0; i < 3; ++i) {
         teste newel = {j++, j++, j++};
         vetor[i] = newel;

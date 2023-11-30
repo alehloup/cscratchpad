@@ -66,13 +66,13 @@ void test_big_ht_i64(arena_t scratch) {
         printf("%lld: %lld", data[idx].key, data[idx].val);
         printf(", ");
 
-        _assert_(data[idx].key == data[idx].val && "should be equal!");
+        assert(data[idx].key == data[idx].val && "should be equal!");
     }
 
     for(i32 i = ht.len; i < ht.mask; ++i) {
         i32 idx = htnum_get_idx(ht, i);
 
-        _assert_(data[idx].key == 0 && "should be empty!");
+        assert(data[idx].key == 0 && "should be empty!");
     }
 
 
@@ -80,7 +80,7 @@ void test_big_ht_i64(arena_t scratch) {
 }
 
 i32 main() {
-    static u8 bufferzao[2*_MBs] = {0};
+    static u8 bufferzao[2*MBs_] = {0};
     arena_t scratch = newarena(sizeof(bufferzao), bufferzao);
     test_ht_i64(scratch);
     printf("\n");

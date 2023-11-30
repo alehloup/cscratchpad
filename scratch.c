@@ -16,8 +16,8 @@ void print_mem(void * ptr, i32 len) {
     printf("\n");
 }
 
-$main main(i32 argslen, cstr args[]) {
-    _assert_(argslen > 0);
+_main main(i32 argslen, cstr args[]) {
+    assert(argslen > 0);
 
     cstr x = args[0];
     printf("%s", x);

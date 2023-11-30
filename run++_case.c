@@ -6,7 +6,7 @@ i32 main(i32 argc, cstr *argv) {
     }
 
     char buffer[512];
-    cstr _$1 = argv[1], _$2 = argv[2];
+    cstr __1 = argv[1], __2 = argv[2];
 
     printf(
         (
@@ -16,7 +16,7 @@ i32 main(i32 argc, cstr *argv) {
             " | "
             "tee \"./outputs/%s++out.txt\""
         ), 
-    _$1, _$1, _$1, _$2, _$1);
+    __1, __1, __1, __2, __1);
     printf("\n");
 
     shellrun(sizeof(buffer), buffer,
@@ -27,7 +27,7 @@ i32 main(i32 argc, cstr *argv) {
             " | "
             "tee \"./outputs/%s++out.txt\""
         ),
-    _$1, _$1, _$1, _$2, _$1);
+    __1, __1, __1, __2, __1);
 
     return 0;
 }

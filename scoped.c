@@ -3,7 +3,7 @@
 
 static char MACRO_scoped__;
 //TRICK scope that "opens" at start, and "closes" at end 
-#define scoped(start, end) MACRO_scoped__ = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
+#define scoped(start, end) MACRO_scoped = 1; for(start; MACRO_scoped__; (--MACRO_scoped__), end)
 
 i32 main() {
 

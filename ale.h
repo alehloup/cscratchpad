@@ -6,6 +6,11 @@
 
 #define _MBs 1048576 // malloc(52*_MBs)
 
+// Bool
+typedef int b32_t; // Boolean
+static const b32_t True = 1;
+static const b32_t False = 0;
+
 // Int
 typedef unsigned char u8;
 typedef unsigned long long u64;
@@ -15,11 +20,6 @@ typedef long long i64;
 // Float
 typedef float f32;
 typedef double f64;
-
-// Bool
-typedef i32 b32_t;     // i32 to be used as boolean
-static const b32_t True = 1;
-static const b32_t False = 0;
 
 // String
 typedef const char * cstr; // const string
@@ -48,8 +48,8 @@ typedef s8_struct * s8str; // slice string
 #define $main \
     gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) i32
 #define $malloc(paramidx_elementsize, paramidx_elementcount) \
-    gcc_attr(malloc, alloc_size(paramidx_elementsize, paramidx_elementcount), \
-        nonnull, warn_unused_result, no_sanitize ("leak")) static
+    gcc_attr(malloc, assume_aligned(8), alloc_size(paramidx_elementsize, paramidx_elementcount), \
+        nonnull, warn_unused_result) static
 #define $format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
     gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), \
         format(printf, paramidx_format, paramidx_varargs)) static
@@ -71,7 +71,7 @@ typedef s8_struct * s8str; // slice string
     STRINGS
 */
 
-$fun i64 cstrlen(cstr cstring) {
+$pure i64 cstrlen(cstr cstring) {
     i64 len;
     for (len = 0; *cstring != '\0'; ++cstring, ++len) {
         /* Empty Body */
@@ -79,18 +79,18 @@ $fun i64 cstrlen(cstr cstring) {
     return len;
 }
 
-$fun i32 cstrcmp(cstr cstr1, cstr cstr2) {
+$pure i32 cstrcmp(cstr cstr1, cstr cstr2) {
     for (; *cstr1 != '\0' && *cstr1 == *cstr2; ++cstr1, ++cstr2) {
         /* Empty Body */
     }
     return *cstr1 - *cstr2;
 }
 
-$fun i32 void_compare_strings(const void *a, const void *b) {
+$pure i32 void_compare_strings(const void *a, const void *b) {
     return cstrcmp(*(cstr *)a, *(cstr *)b);
 }
 
-$fun b32_t is_empty_string(cstr str) {
+$pure b32_t is_empty_string(cstr str) {
     for (cstr cursor = str; *cursor != '\0'; ++cursor) {
         if (*cursor != ' ') {
             return False;
@@ -99,11 +99,11 @@ $fun b32_t is_empty_string(cstr str) {
     return True;
 }
 
-$fun b32_t is_digit(char character) {
+$math b32_t is_digit(char character) {
     return character >= '0' && character <= '9';
 }
 
-$fun i64 cstr_to_num(cstr str) {
+$pure i64 cstr_to_num(cstr str) {
     i64 num = 0, power = 1;
     for (i64 i = cstrlen(str) - 1; i >= 0; --i) {
         char character = str[i];
@@ -127,7 +127,7 @@ $fun i64 cstr_to_num(cstr str) {
 */
 
 // Random
-$fun i32 rnd(u64 seed[1]) {
+$pure i32 rnd(u64 seed[1]) {
     *seed = *seed * 0x9b60933458e17d7dLL + 0xd737232eeccdf7edLL;
     i32 shift = (i32) (29 - (i32)(*seed >> 61));
     
@@ -218,7 +218,7 @@ arena_t newarena(i64 buffer_len, u8 buffer[]) {
 }
 
 $fun_wbuffer(/*bufferlen*/2, /*buffer*/1) 
-u8 * zeromem(u8 __dst[1], i64 __n) {
+u8 * zeromem(u8 * __restrict __dst, i64 __n) {
     for (i64 i = 0; i < __n; ++i) {
         __dst[i] = 0;
     }
@@ -239,12 +239,14 @@ void * alloc(arena_t arena[1], i64 size, i64 count) {
     return (void *) zeromem(p, total);
 }
 
-$proc copymem64(i64 * __restrict__ dst64, const i64 * __restrict__ src64, i64 count) {
+$proc_wbuffer(/*bufferlen*/ 3, /*buffer*/ 1) 
+copymem64(i64 * __restrict dst64, const i64 * __restrict src64, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst64[i] = src64[i];
     }
 }
-$proc copymem32(i32 * __restrict__ dst32, const i32 * __restrict__ src32, i64 count) {
+$proc_wbuffer(/*bufferlen*/ 3, /*buffer*/ 1) 
+copymem32(i32 * __restrict dst32, const i32 * __restrict src32, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst32[i] = src32[i];
     }

@@ -15,5 +15,3 @@
 -fsanitize=alignment -fsanitize=object-size -fsanitize=builtin
 -fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute 
 -fsanitize=bounds-strict -fsanitize-address-use-after-scope -fsanitize=unreachable
-
-libwinsane.o

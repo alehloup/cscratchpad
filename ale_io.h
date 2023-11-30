@@ -3,7 +3,16 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "ale.h"
+
+/*
+    TIME / BENCHMARK
+*/
+_fun f64 seconds_since(clock_t start)
+{
+    return (f64)(clock() - start) / CLOCKS_PER_SEC;
+}
 
 /*
     ==================== INPUT/OUTPUT IO ====================

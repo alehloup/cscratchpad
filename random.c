@@ -1,17 +1,20 @@
-#include <stdio.h>
-#include "ale.h"
+#include "ale_io.h"
 
 i32 main() {
     u64 seed = 41635984;
 
     #define N 20
     i32 counts[N] = {0};
+
+    clock_t start = clock();
     for(i32 i = 0; i < 1000000000; ++i) {
         counts[rnd(&seed) % N] +=1;
     }
+    f64 elapsed = seconds_since(start);
     for(i32 i = 0; i < N; ++i) {
         printf("%d: %d\n", i+1, counts[i]);
     }
+    printf("Executado em: %f segundos \n", elapsed);
 
     return 0;
 }

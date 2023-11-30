@@ -17,12 +17,16 @@ aoc2(i32 lineslen, cstr lines[]) {
     // Perdi: -1, 2
     // Empate: 0
 
+    static const i8 won=6, draw=3, lost=0;
     cstr hands[4] = {"", "ROCK", "PAPER", "SCISSORS"};
-    i32 hand_score[3] = {/*rock*/ 1, /*paper*/2, /*scissors*/3};
-    static const i32 won=6, draw=3, lost=0;
-    i32 res_score[5] = {won, lost, draw, won, lost};
-    i32 score = 0;
+    i8 hand_score[3] = {/*rock*/ 1, /*paper*/2, /*scissors*/3};
+    i8 res_score[5] = /*me - op + 2 = */ {won, lost, draw, won, lost};
 
+    // win = (op % 3) + 1
+    // draw = op 
+    // lose = op - 1; lose = lose == 0 ? 3 : lose
+
+    i32 score = 0;
     for (i32 i = 0; i < lineslen; ++i) {
         if (!is_empty_string(lines[i])) {
             i32 op = hand_score[lines[i][0] - 'A'], me = hand_score[lines[i][2] - 'X'];

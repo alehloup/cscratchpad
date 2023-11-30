@@ -14,6 +14,7 @@ static const b32_t False = 0;
 // Int
 typedef unsigned char u8;
 typedef unsigned long long u64;
+typedef signed char i8;
 typedef int i32;
 typedef long long i64;
 

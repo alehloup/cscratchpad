@@ -1,7 +1,7 @@
 -Ofast -flto -fuse-ld=lld -march=native -ftrivial-auto-var-init=zero
 -fcf-protection=full
 
--DEBUG -Z7 -D_GLIBCXX_ASSERTIONS 
+-DEBUG /Z7 /W4 /wd4146 /wd4245 /RTCcsu -D_GLIBCXX_ASSERTIONS 
 -D_FORTIFY_SOURCE=3 -Wall -Wextra -Wpedantic -Werror
  -Warray-bounds -Wformat=2
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#define assert(c) if(!(c)) __asm__("int3")
-
 /*
     ==================== TYPES ====================
 */
@@ -32,9 +30,11 @@ typedef s8_struct * s8str; // slice string
 
 // MSVC .vs. GCC
 #ifdef _MSC_VER
+    #define assert(c) if(!(c)) __debugbreak()
     #define gcc_attr(...) //do NOT use attributes in MSVC
 #endif
 #ifndef _MSC_VER
+    #define assert(c) if(!(c)) __builtin_trap()
     #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
 #endif
 

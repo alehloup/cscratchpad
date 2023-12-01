@@ -1,4 +1,4 @@
-#include <stdlib.h>
+// #include <stdlib.h>
 #include <stdio.h>
 #include "ale.h"
 
@@ -10,22 +10,23 @@ typedef struct teste{
 
 i32 main(void) {
 
-    arena_t perm = newarena(1, (u8 *)calloc(1, 1));
+    static u8 buf[1] = {0};
+    arena_t perm = newarena(1, buf);
 
-    printf("Começando beg:%p end:%p total:%lldMB\n", 
-        (void *) perm.beg, (void *) perm.end, (perm.end - perm.beg)/1048576);
+    // printf("Começando beg:%p end:%p total:%lldMB\n", 
+    //     (void *) perm.beg, (void *) perm.end, (perm.end - perm.beg)/1048576);
 
     teste *woa = (teste *) alloc(&perm, sizeof(teste), 1);
     teste temp = {4, 5, 6};
     *woa =temp;
-    printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);
+    // printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);
 
     teste *vetor = (teste *) alloc(&perm, sizeof(teste), 3);
     for(i32 i = 0, j = 0; i < 3; ++i) {
         teste newel = {j, j+1, j+2};
         j += 3;
         vetor[i] = newel;
-        printf("%d Ints: %d %lld %d\n", i, vetor[i].x, vetor[i].y, vetor[i].z);
+        // printf("%d Ints: %d %lld %d\n", i, vetor[i].x, vetor[i].y, vetor[i].z);
     }
 
     return 0;

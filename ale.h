@@ -1,42 +1,24 @@
 #pragma once
 
 /*
-    ==================== TYPES ====================
-*/
-
-#define MBs_ 1048576 // malloc(52*MBs_)
-
-// Bool
-typedef int b32; // Boolean
-static const b32 True = 1;
-static const b32 False = 0;
-
-// Int
-typedef unsigned char u8;
-typedef unsigned long long u64;
-typedef signed char i8;
-typedef int i32;
-typedef long long i64;
-
-// Float
-typedef float f32;
-typedef double f64;
-
-// String
-typedef const char * const cstr; // const string const pointer
-typedef char * mstr; // modifiable string
-typedef const char * pstr; // const string
-
-typedef struct s8_struct{ i32 len; mstr data; }s8_struct; // slice struct
-typedef s8_struct * s8str; // slice string
-
-// MSVC .vs. GCC
+    ==================== COMPILER SPECIFIC ====================
+*/ 
+#ifdef stdout
+    // Print Assert if stdio.h was included
+    #define diagnostic_ printf("ASSERT FAILED %s:%s:%d", __FILE__, __func__, __LINE__)
+#endif
+#ifndef stdout
+    static int assert_trapped_ = 0;
+    #define diagnostic_ assert_trapped_ = 1
+#endif
 #ifdef _MSC_VER
-    #define assert(c) if(!(c)) __debugbreak()
+    // MSVC
+    #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
     #define gcc_attr(...) //do NOT use attributes in MSVC
 #endif
 #ifndef _MSC_VER
-    #define assert(c) if(!(c)) __builtin_trap()
+    // GCC Clang
+    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
     #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
 #endif
 
@@ -70,6 +52,36 @@ typedef s8_struct * s8str; // slice string
         access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
 
 /*
+    ==================== TYPES ====================
+*/
+
+#define MBs_ 1048576 // malloc(52*MBs_)
+
+// Bool
+typedef int b32; // Boolean
+static const b32 True = 1;
+static const b32 False = 0;
+
+// Int
+typedef unsigned char u8;
+typedef unsigned long long u64;
+typedef signed char i8;
+typedef int i32;
+typedef long long i64;
+
+// Float
+typedef float f32;
+typedef double f64;
+
+// String
+typedef const char * const cstr; // const string const pointer
+typedef char * mstr; // modifiable string
+typedef const char * pstr; // const string
+
+typedef struct s8_struct{ i32 len; mstr data; }s8_struct; // slice struct
+typedef s8_struct * s8str; // slice string
+
+/*
     STRINGS
 */
 
@@ -90,7 +102,7 @@ _pure i32 cstrcmp(cstr cstr1, cstr cstr2) {
 }
 
 _pure i32 void_compare_strings(const void *a, const void *b) {
-    return cstrcmp(*(cstr const *)a, *(cstr const *)b);
+    return cstrcmp(*(cstr *)a, *(cstr *)b);
 }
 
 _pure b32 is_empty_string(cstr string) {

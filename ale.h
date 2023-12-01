@@ -95,10 +95,32 @@ _pure i64 cstrlen(cstr cstring) {
 
 _pure i32 cstrcmp(cstr cstr1, cstr cstr2) {
     i64 i = 0;
-    for (i = 0; cstr1[i] && cstr1[i] == cstr2[i]; ++i) {
+    for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
         /* Empty Body */
     }
     return cstr1[i] - cstr2[i];
+}
+
+_pure b32 startswith(cstr string, cstr prefix) {
+    i64 i = 0;
+    if (!prefix[0]) {
+        return True;
+    }
+    if (!string[0]) {
+        return False;
+    }
+
+    for (i = 0; string[i] && prefix[i] && string[i] == prefix[i]; ++i) {
+        /* Empty Body */
+    }
+
+    if (!string[i] && prefix[i]) { 
+        return False;
+    } else if (!prefix[i]) {
+        return True;
+    } else {
+        return False;
+    }
 }
 
 _pure i32 void_compare_strings(const void *a, const void *b) {
@@ -116,6 +138,23 @@ _pure b32 is_empty_string(cstr string) {
 
 _math b32 is_digit(char character) {
     return character >= '0' && character <= '9';
+}
+
+// Returns the digit value, if as character or in english lowercase name, or -1 if its not a digit
+_fun i8 named_digit(cstr string) {
+    if (string[0] && is_digit(string[0])) {
+        return string[0] - '0';
+    }
+
+    cstr named[] = {"zero", "one", "two", "three", "four", 
+                    "five", "six", "seven", "eight", "nine"};
+    for (i8 i = 0; i < 10; ++i) {
+        if (startswith(string, named[i])) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 _pure i64 cstr_to_num(cstr str) {

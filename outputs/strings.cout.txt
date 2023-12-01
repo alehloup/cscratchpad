@@ -1,2 +1,10 @@
 -10
 Alex4 Sarah5 Z0
+Sarah Sakamoto Starts with Sarah : 1
+Sarah Sakamoto Starts with Sara  : 0
+Sakamoto com outras palavras Starts with Sakamoto : 1
+5dois : 5
+three6433 : 3
+nine3453 : 9
+woa : -1
+zero5 : 0

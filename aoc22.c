@@ -3,19 +3,19 @@
 _proc_rbuffer(1, 2) 
 aoc2(i32 lineslen, cstr lines[]) {
 
-    // eu - oponente:
-    //     pedra (1) - papel (2) = -1  (perdi)
-    //     pedra (1) - tesoura(3) = -2 (ganhei)
+    // me - opp onent:
+    //     rock (1) - paper (2) = -1  (lost)
+    //     rock (1) - scissors(3) = -2 (won)
 
-	// papel(2) - pedra(1) = 1 (ganhei)
-	// papel(2) - tesoura(3) = -1 (perdi)
+	// paper(2) - rock(1) = 1 (won)
+	// paper(2) - scissors(3) = -1 (lost)
 
-	// tesoura(3) - pedra(1) = 2 (perdi)
-	// tesoura(3) - papel(2) = 1 (ganhei)
+	// scissors(3) - rock(1) = 2 (lost)
+	// scissors(3) - paper(2) = 1 (won)
 
-    // Ganhei: 1, -2
-    // Perdi: -1, 2
-    // Empate: 0
+    // won: 1, -2
+    // lost: -1, 2
+    // draw: 0
 
     static const i8 won=6, draw=3, lost=0;
     cstr hands[4] = {"", "ROCK", "PAPER", "SCISSORS"};
@@ -29,10 +29,19 @@ aoc2(i32 lineslen, cstr lines[]) {
     i32 score = 0;
     for (i32 i = 0; i < lineslen; ++i) {
         if (!is_empty_string(lines[i])) {
-            i32 op = hand_score[lines[i][0] - 'A'], me = hand_score[lines[i][2] - 'X'];
+            i32 op = hand_score[lines[i][0] - 'A'], me = 0;
+            char turnout = lines[i][2];
+
+            switch(turnout) {
+                case 'Z': me = (op % 3) + 1; break; // win
+                case 'Y': me = op; break; // draw
+                case 'X': me = op - 1; me = me == 0 ? 3 : me; break; // lose
+                default: assert(lines[i][2] == 'X');
+            }
+
             i32 res = res_score[me - op + 2];
             score += (me + res);
-            printf("%d eu:%s X op:%s | %d + %d (%d)\n", i+1, hands[me], hands[op], me, res, me+res);
+            printf("%d eu:%s (%c) op:%s | %d + %d (%d)\n", i+1, hands[me], turnout, hands[op], me, res, me+res);
         }
     }
     printf("Max Score: %d\n", score);

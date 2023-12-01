@@ -21,16 +21,18 @@ _fun f64 seconds_since(clock_t start)
 // SHELL
 _format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
 i32 shellrun(i32 bufferlen, char buffer [512], cstr format, ...) {
-    zeromem((u8 *) buffer, 512);
+    va_list args;
+    u8 *buf = zeromem((u8 *) buffer, 512);
+    assert(buf == (u8 *)buffer && "zeromem returned different address!");
 
-    va_list args; va_start(args, format);
+    va_start(args, format);
 
     vsprintf_s(buffer, (u64) bufferlen, format, args);
     return system(buffer);
 }
 
 // FILES
-_fun i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
+_fun i64 fread_noex(char dst[1], i64 sz, i64 count, FILE * f) {
     #ifdef __cplusplus
         try { return (i64) fread(dst, (u64) sz, (u64) count, f); } catch(...) {return 0;}
     #endif 
@@ -45,24 +47,28 @@ _fun i64 fwrite_noex(cstr Str, i64 Size, i64 Count, FILE * File) {
 
 _fun mstr file_to_buffer(arena_t arena[1], cstr filename) {
     mstr contents = 0;
+    i64 fsize = 0;
 
-    {FILE *f = 0; i32 err = 
+    {
+        FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "rb");
     
         assert(!err && "Could not open file for reading");
     
         fseek(f, 0, SEEK_END);
-        i32 fsize = ftell(f);
+        fsize = ftell(f);
         fseek(f, 0, SEEK_SET);
 
         contents = (mstr) alloc(arena, 1LL, fsize+2);
         assert(contents && "Could not allocate buffer");
 
-        i64 bytesread = fread_noex(contents, 1LL, fsize, f);
-        assert(bytesread == fsize && "could not read fsize#bytes"); 
-        
-        contents[fsize] = contents[fsize-1] != '\n' ? '\n' : '\0';
-        contents[fsize+1] = '\0';
+        {
+            i64 bytesread = fread_noex(contents, 1LL, fsize, f);
+            assert(bytesread == fsize && "could not read fsize#bytes"); 
+            
+            contents[fsize] = contents[fsize-1] != '\n' ? '\n' : '\0';
+            contents[fsize+1] = '\0';
+        }
 
     fclose(f);
     }
@@ -80,39 +86,44 @@ _fun vector64_t file_to_nonempty_lines(arena_t arena[1], cstr filename) {
     return slice_into_nonempty_lines(arena, buffer);
 }
 
-_nonnull b32_t buffer_to_file(cstr buffer, cstr filename) {
-    {FILE *f = 0; i32 err = 
+_nonnull b32 buffer_to_file(cstr buffer, cstr filename) {
+    {
+        FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
 
         assert(!err && "Could not open file for writting");
 
-        i64 fsize = cstrlen(buffer);
-        i64 bytes_written = fwrite_noex(buffer, 1, fsize, f);
-        assert(bytes_written == fsize && "could not write fsize#bytes");
+        {
+            i64 fsize = cstrlen(buffer);
+            i64 bytes_written = fwrite_noex(buffer, 1, fsize, f);
+            assert(bytes_written == fsize && "could not write fsize#bytes");
+        }
 
     fclose(f);
     }
     return True;
 }
 
-_nonnull b32_t lines_to_file(vector64_t lines, cstr filename) {
-    {FILE *f = 0; i32 err = 
+_nonnull b32 lines_to_file(vector64_t lines, cstr filename) {
+    {
+        FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
 
         assert(!err && "Could not open file for writting");
 
-        cstr *data = vec_data_as_cstr(&lines);
-        i64 bytes_written = 0;
-        cstr line = "";
-        i64 fsize = 0;
+        {
+            cstr *data = vec_data_as_cstr(&lines);
+            i64 bytes_written = 0;
+            i64 fsize = 0;
 
-        for (i32 i = 0; i < lines.len; ++i) {
-            line = data[i]; 
+            for (i32 i = 0; i < lines.len; ++i) {
+                cstr line = data[i]; 
 
-            fsize = cstrlen(line);
-            bytes_written = fwrite_noex(line, 1, fsize, f);
-            bytes_written += fwrite_noex("\n", 1, 1, f);
-            assert(bytes_written == fsize + 1 && "could not write fsize#bytes");
+                fsize = cstrlen(line);
+                bytes_written = fwrite_noex(line, 1, fsize, f);
+                bytes_written += fwrite_noex("\n", 1, 1, f);
+                assert(bytes_written == fsize + 1 && "could not write fsize#bytes");
+            }
         }
 
     fclose(f);

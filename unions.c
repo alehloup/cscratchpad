@@ -12,7 +12,7 @@ typedef union union32_t{
     f32 d;
 }union32_t;
 
-i32 main() {
+i32 main(void) {
 
     union64_t x = { .s="Alex" };
 

@@ -74,7 +74,7 @@ aoc1(i32 lineslen, cstr lines[]) {
         best3[0], best3[1], best3[2], best3[0] + best3[1] + best3[2]);
 }
 
-i32 main() {
+i32 main(void) {
     static u8 mem[128*MBs_] = {0};
     arena_t arena = newarena(128*MBs_, mem);
 

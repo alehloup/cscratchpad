@@ -8,7 +8,7 @@ typedef struct teste{
     i32 z;
 }teste;
 
-i32 main() {{
+i32 main(void) {
 
     arena_t perm = newarena(1*MBs_, (u8 *)calloc(1*MBs_, 1));
 
@@ -22,10 +22,11 @@ i32 main() {{
 
     teste *vetor = (teste *) alloc(&perm, sizeof(teste), 3);
     for(i32 i = 0, j = 0; i < 3; ++i) {
-        teste newel = {j++, j++, j++};
+        teste newel = {j, j+1, j+2};
+        j += 3;
         vetor[i] = newel;
         printf("%d Ints: %d %lld %d\n", i, vetor[i].x, vetor[i].y, vetor[i].z);
     }
 
     return 0;
-}}
+}

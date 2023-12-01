@@ -4,7 +4,7 @@
 
 static u8 * force_reloc = 0;
 
-void test_vlamatrix(arena_t scratch) {
+_proc test_vlamatrix(arena_t scratch) {
     printf("=========== MATRIXs ===========\n");
 
     i64 (*mat)[10][10] = (i64 (*)[10][10]) alloc(&scratch, sizeof(i64 [10][10]), 1);
@@ -25,7 +25,7 @@ void test_vlamatrix(arena_t scratch) {
     }
 }
 
-void test_vec_push_str(arena_t scratch) {
+_proc test_vec_push_str(arena_t scratch) {
     printf("=========== CSTRINGs ===========\n");
     
     vector64_t d = {0, 0, 0};
@@ -44,7 +44,7 @@ void test_vec_push_str(arena_t scratch) {
     printf("Pop: %s\n", vec_pop_str(&d));
 }
 
-void test_vec_push_i32(arena_t scratch) {
+_proc test_vec_push_i32(arena_t scratch) {
     printf("=========== I32s ===========\n");
 
     vector32_t d = {0, 0, 0};
@@ -65,7 +65,7 @@ void test_vec_push_i32(arena_t scratch) {
     printf("\n");
 }
 
-void test_vec_push_i64(arena_t scratch) {
+_proc test_vec_push_i64(arena_t scratch) {
     printf("=========== I64s ===========\n");
 
     vector64_t d = {0, 0, 0};
@@ -89,7 +89,7 @@ void test_vec_push_i64(arena_t scratch) {
     printf("\n");
 }
 
-void test_vec_push_f32(arena_t scratch) {
+_proc test_vec_push_f32(arena_t scratch) {
     printf("=========== FLOATs ===========\n");
 
     vector32_t d = {0, 0, 0};
@@ -110,7 +110,7 @@ void test_vec_push_f32(arena_t scratch) {
     printf("\n");
 }
 
-void test_vec_push_f64(arena_t scratch) {
+_proc test_vec_push_f64(arena_t scratch) {
     printf("=========== DOUBLEs ===========\n");
     
     vector64_t d = {0, 0, 0};
@@ -133,7 +133,7 @@ void test_vec_push_f64(arena_t scratch) {
     printf("\n");
 }
 
-i32 main() {
+i32 main(void) {
 
     arena_t scratch = newarena(8*MBs_, (u8 *) calloc(8*MBs_, 1));
     

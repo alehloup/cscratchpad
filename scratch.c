@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "ale.h"
 
-void print_mem(void * ptr, i32 len) {
+_proc print_mem(void * ptr, i32 len) {
     u8 * mem = (u8 *) ptr;
 
     printf("\n");

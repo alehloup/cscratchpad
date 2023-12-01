@@ -11,7 +11,5 @@
 -Wshadow -Wundef -Wconversion -Wdouble-promotion -Wformat-signedness 
 -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 
 
--fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize=undefined 
--fsanitize=alignment -fsanitize=object-size -fsanitize=builtin
--fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute 
--fsanitize=bounds-strict -fsanitize-address-use-after-scope -fsanitize=unreachable
+-fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize-address-use-after-scope
+-fsanitize=undefined,alignment,object-size,builtin,unreachable,bounds-strict,nonnull-attribute,returns-nonnull-attribute

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "ale.h"
 
-i32 main() {
+i32 main(void) {
     printf("%lld\n", cstr_to_num("-10"));
 
     printf("Alex%lld Sarah%lld Z%lld", 

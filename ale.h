@@ -7,9 +7,9 @@
 #define MBs_ 1048576 // malloc(52*MBs_)
 
 // Bool
-typedef int b32_t; // Boolean
-static const b32_t True = 1;
-static const b32_t False = 0;
+typedef int b32; // Boolean
+static const b32 True = 1;
+static const b32 False = 0;
 
 // Int
 typedef unsigned char u8;
@@ -23,8 +23,9 @@ typedef float f32;
 typedef double f64;
 
 // String
-typedef const char * cstr; // const string
+typedef const char * const cstr; // const string const pointer
 typedef char * mstr; // modifiable string
+typedef const char * pstr; // const string
 
 typedef struct s8_struct{ i32 len; mstr data; }s8_struct; // slice struct
 typedef s8_struct * s8str; // slice string
@@ -74,33 +75,34 @@ typedef s8_struct * s8str; // slice string
 
 _pure i64 cstrlen(cstr cstring) {
     i64 len;
-    for (len = 0; *cstring != '\0'; ++cstring, ++len) {
+    for (len = 0; cstring[len]; ++len) {
         /* Empty Body */
     }
     return len;
 }
 
 _pure i32 cstrcmp(cstr cstr1, cstr cstr2) {
-    for (; *cstr1 != '\0' && *cstr1 == *cstr2; ++cstr1, ++cstr2) {
+    i64 i = 0;
+    for (i = 0; cstr1[i] && cstr1[i] == cstr2[i]; ++i) {
         /* Empty Body */
     }
-    return *cstr1 - *cstr2;
+    return cstr1[i] - cstr2[i];
 }
 
 _pure i32 void_compare_strings(const void *a, const void *b) {
     return cstrcmp(*(cstr const *)a, *(cstr const *)b);
 }
 
-_pure b32_t is_empty_string(cstr str) {
-    for (cstr cursor = str; *cursor != '\0'; ++cursor) {
-        if (*cursor != ' ') {
+_pure b32 is_empty_string(cstr string) {
+    for (i64 i = 0; string[i]; ++i) {
+        if (string[i] != ' ') {
             return False;
         }
     }
     return True;
 }
 
-_math b32_t is_digit(char character) {
+_math b32 is_digit(char character) {
     return character >= '0' && character <= '9';
 }
 
@@ -129,19 +131,18 @@ _pure i64 cstr_to_num(cstr str) {
 
 // Random
 _pure i32 rnd(u64 seed[1]) {
+    i32 shift = 29;
     *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
-    i32 shift = (i32) (29 - (i32)(*seed >> 61));
+    shift -= (i32)(*seed >> 61);
     
     return ((i32) (*seed >> shift)) & 2147483647;
 }
 
 // Hash
 _pure i64 hash_str(cstr str) {
-    cstr sp = (cstr) str;
-
     u64 h = 0x7A5662DCDF;
-    while(*sp) { 
-        h ^= (*(sp++)) & 255; h *= 1111111111111111111;
+    for(i64 i = 0; str[i]; ++i) { 
+        h ^= str[i] & 255; h *= 1111111111111111111;
     }
 
     return (i64) ((h ^ (h >> 32)) >> 1);
@@ -232,9 +233,9 @@ void * alloc(arena_t arena[1], i64 size, i64 count) {
     i64 total = size * count;
     i64 pad = MODPWR2(- (i64)arena->beg, 8); //mod -x gives n for next align
 
-    assert(total < (arena->end - arena->beg - pad) && "ARENA OUT OF MEMORY");
-
     u8 *p = arena->beg + pad;
+
+    assert(total < (arena->end - arena->beg - pad) && "ARENA OUT OF MEMORY");
     arena->beg += pad + total;
     
     return (void *) zeromem(p, total);
@@ -269,7 +270,7 @@ _proc vec64_grow(vector64_t vector[1],  arena_t arena[1]) {
         i64 *VEC_EXTEND = (i64 *) alloc(arena, 8LL, vector->cap);
         assert((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
         vector->cap *= 2;
-    } else if ("VEC RELOC") {
+    } else if ((i64)"VEC RELOC") {
         i64 *VEC_RELOC = (i64 *) alloc(arena, 8LL, vector->cap *= 2);
         copymem64(VEC_RELOC, vector->data, vector->len);
         vector->data = VEC_RELOC;
@@ -287,7 +288,7 @@ _proc vec32_grow(vector32_t vector[1], arena_t arena[1]) {
         i32 *VEC_EXTEND = (i32 *) alloc(arena, 4LL, vector->cap);
         assert((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
         vector->cap *= 2;
-    } else if ("VEC RELOC") {
+    } else if ((i64)"VEC RELOC") {
         i32 *VEC_RELOC = (i32 *) alloc(arena, 4LL, vector->cap *= 2);
         copymem32(VEC_RELOC, vector->data, vector->len);
         vector->data = VEC_RELOC;
@@ -334,14 +335,17 @@ _fun i64 vec_pop_i64(vector64_t vector[1]) {
 _fun f64 vec_pop_f64(vector64_t vector[1]) {
     return i64_to_f64(vec_pop_i64(vector));
 }
-_fun cstr vec_pop_str(vector64_t vector[1]) {
-     return (cstr) vec_pop_i64(vector);
+_fun pstr vec_pop_str(vector64_t vector[1]) {
+    i64 cstr_as_i64 = vec_pop_i64(vector);
+    return (pstr) cstr_as_i64;
 }
 _fun void * vec_pop_ptr(vector64_t vector[1]) {
-     return (void *) vec_pop_i64(vector);
+    i64 pointer_as_i64 = vec_pop_i64(vector);
+    return (void *) pointer_as_i64;
 }
 _fun s8str vec_pop_s8str(vector64_t vector[1]) {
-     return (s8str) vec_pop_i64(vector);
+    i64 s8str_as_i64 = vec_pop_i64(vector);
+    return (s8str) s8str_as_i64;
 }
 _fun i32 vec_pop_i32(vector32_t vector[1]) {
     assert(vector->len > 0 && "POP ON 32bit EMPTY ARRAY");
@@ -360,9 +364,9 @@ _fun f64 * vec_data_as_f64(vector64_t vector[1]) {
     assert(sizeof(f64) == 8 && "ale.h vec_data_as_f64 assumes that a double == 64bits");
     return (f64 *) vector->data;
 }
-_fun cstr * vec_data_as_cstr(vector64_t vector[1]) {
+_fun pstr * vec_data_as_cstr(vector64_t vector[1]) {
     assert(sizeof(cstr) == 8 && "ale.h vec_data_as_cstr assumes that a pointer == 64bits");
-    return (cstr *) vector->data;
+    return (pstr *) vector->data;
 }
 _fun i32 * vec_data_as_i32(vector32_t vector[1]) {
     return (i32 *) vector->data;
@@ -387,11 +391,11 @@ typedef struct ht64_t{
 }ht64_t;
 
 _fun ht64_t new_ht64(arena_t arena[1], i32 expected_maxn) {
-    const i32 ht_expo = fit_pwr2_exp(expected_maxn + 64);
-    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
-
     ht64_t *ht = (ht64_t*)
         alloc(arena, sizeof(ht64_t), 1);
+
+    const i32 ht_expo = fit_pwr2_exp(expected_maxn + 64);
+    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
     
     ht->shift = 64 - ht_expo;
     ht->mask = (1 << ht_expo) - 1;
@@ -409,11 +413,11 @@ typedef struct ht32_t{
 }ht32_t;
 
 _fun ht32_t new_ht32(arena_t arena[1], i32 expected_maxn) {
-    const i32 ht_expo = fit_pwr2_exp(expected_maxn + 64);
-    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
-
     ht32_t *ht = (ht32_t*)
         alloc(arena, sizeof(ht32_t), 1);
+
+    const i32 ht_expo = fit_pwr2_exp(expected_maxn + 64);
+    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 1");
     
     ht->shift = 64 - ht_expo;
     ht->mask = (1 << ht_expo) - 1;
@@ -464,8 +468,8 @@ _fun i64 htnum_get_i64(ht64_t table, i64 ikey) {
 _fun f64 htnum_get_f64(ht64_t table, i64 ikey) {
     return i64_to_f64(table.data[htnum(&table, ikey, 0)].val);
 }
-_fun cstr htnum_get_str(ht64_t table, i64 ikey) {
-    return (cstr) table.data[htnum(&table, ikey, 0)].val;
+_fun pstr htnum_get_str(ht64_t table, i64 ikey) {
+    return (pstr) table.data[htnum(&table, ikey, 0)].val;
 }
 _fun void * htnum_get_ptr(ht64_t table, i64 ikey) {
     return (void *) table.data[htnum(&table, ikey, 0)].val;
@@ -518,7 +522,7 @@ _nonnull i32 htstr(
     
     for(
         index = ht_lookup(hash, index, mask, shift);
-        data[index].key != 0 && cstrcmp((cstr) data[index].key, keycstr);
+        data[index].key != 0 && cstrcmp((pstr) data[index].key, keycstr);
         index = ht_lookup(hash, index, mask, shift)
     ) {
         /* empty body */
@@ -542,8 +546,8 @@ _fun i64 htstr_get_i64(ht64_t table, cstr skey) {
 _fun f64 htstr_get_f64(ht64_t table, cstr skey) {
     return i64_to_f64(table.data[htstr(&table, skey, 0)].val);
 }
-_fun cstr htstr_get_str(ht64_t table, cstr skey) {
-    return (cstr) table.data[htstr(&table, skey, 0)].val;
+_fun pstr htstr_get_str(ht64_t table, cstr skey) {
+    return (pstr) table.data[htstr(&table, skey, 0)].val;
 }
 _fun void * htstr_get_ptr(ht64_t table, cstr skey) {
     return (void *) table.data[htstr(&table, skey, 0)].val;
@@ -646,23 +650,23 @@ _fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
 */
 
 // Alters a text by converting \n to \0 and pushing each line as a cstr in the returned vector
-_fun vector64_t slice_into_lines(arena_t arena[1], mstr text_to_alter) {
+_fun vector64_t slice_into_lines(arena_t arena[1], char text_to_alter[1]) {
     vector64_t lines = {0, 0, 0};
     
-    cstr last_line = "";
-    for (mstr cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
-        if (*cursor == '\r') {
-            *cursor = '\0';
+    i64 last_line = 0;
+    for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
+        if (text_to_alter[i] == '\r') {
+            text_to_alter[i] = '\0';
         }
-        else if (*cursor == '\n') {
-            *cursor = '\0';
+        else if (text_to_alter[i] == '\n') {
+            text_to_alter[i] = '\0';
             
-            vec_push_str(&lines,  arena, current);
+            vec_push_str(&lines,  arena, &text_to_alter[current]);
             last_line = current;
-            current = cursor+1;
+            current = i+1;
         }
     }
-    if (!is_empty_string(last_line)) {
+    if (!is_empty_string(&text_to_alter[last_line])) {
         vec_push_str(&lines,  arena, "");
     }
 
@@ -670,20 +674,20 @@ _fun vector64_t slice_into_lines(arena_t arena[1], mstr text_to_alter) {
 }
 
 // Alters a text by converting \n to \0 and pushing each nonempty line as a cstr in the returned vector
-_fun vector64_t slice_into_nonempty_lines(arena_t arena[1], mstr text_to_alter) {
+_fun vector64_t slice_into_nonempty_lines(arena_t arena[1], char text_to_alter[1]) {
     vector64_t lines = {0, 0, 0};
     
-    for (mstr cursor = text_to_alter, current = text_to_alter; *cursor != '\0'; ++cursor) {
-        if (*cursor == '\r') {
-            *cursor = '\0';
+    for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
+        if (text_to_alter[i] == '\r') {
+            text_to_alter[i] = '\0';
         }
-        else if (*cursor == '\n') {
-            *cursor = '\0';
+        else if (text_to_alter[i] == '\n') {
+            text_to_alter[i] = '\0';
             
-            if (!is_empty_string(current)) {
-                vec_push_str(&lines,  arena, current);
+            if (!is_empty_string(&text_to_alter[current])) {
+                vec_push_str(&lines,  arena, &text_to_alter[current]);
             }
-            current = cursor+1;
+            current = i+1;
         }
     }
 

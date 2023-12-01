@@ -8,7 +8,7 @@ typedef struct {
 } RandomizedSet;
 
 
-void print_cache(RandomizedSet* obj) {
+_proc print_cache(RandomizedSet* obj) {
     printf("|Cache . .");
     for(i32 i = 0; i < obj->cache.len; ++i) {
         printf(" %d:%d ", i, obj->cache.data[i]);
@@ -16,7 +16,7 @@ void print_cache(RandomizedSet* obj) {
     printf("| ");
 }
 
-RandomizedSet * randomizedSetCreate() {
+_fun RandomizedSet * randomizedSetCreate() {
     static u8 memory[4*MBs_] = {0};
     static arena_t arena = {0, 0};
 
@@ -30,8 +30,8 @@ RandomizedSet * randomizedSetCreate() {
     return S;
 }
 
-b32_t randomizedSetInsert(RandomizedSet* obj, i32 val) {
-    b32_t ret = False;
+_fun b32 randomizedSetInsert(RandomizedSet* obj, i32 val) {
+    b32 ret = False;
     if (val == 0) {
         ret = !obj->cache.data[0];
         obj->cache.data[0] = 1;
@@ -53,7 +53,7 @@ b32_t randomizedSetInsert(RandomizedSet* obj, i32 val) {
     return True;
 }
 
-b32_t randomizedSetRemove(RandomizedSet* obj, i32 val) {
+_fun b32 randomizedSetRemove(RandomizedSet* obj, i32 val) {
     if (val == 0) {
         if (obj->cache.data[0]) {
             obj->cache.data[0] = 0;
@@ -84,7 +84,7 @@ b32_t randomizedSetRemove(RandomizedSet* obj, i32 val) {
     return False;
 }
 
-i32 randomizedSetGetRandom(RandomizedSet* obj) {
+_fun i32 randomizedSetGetRandom(RandomizedSet* obj) {
     static u64 seed = 11111111111l;
     i32 range = obj->cache.len - 1;
     if (obj->cache.data[0]) {
@@ -98,7 +98,7 @@ i32 randomizedSetGetRandom(RandomizedSet* obj) {
     return obj->cache.data[choosen];
 }
 
-void randomizedSetFree(RandomizedSet* obj) {
+_proc randomizedSetFree(RandomizedSet* obj) {
     if (!obj) {
         printf("Obj is null!");
     }
@@ -106,37 +106,37 @@ void randomizedSetFree(RandomizedSet* obj) {
     obj->arena->end = 0;
 }
 
-void printb32_t(i32 b) {
+_proc printb32(i32 b) {
     if (b) {
         printf("true, ");
     }
     else {
         printf("false, ");
-    };
+    }
 }
 
-void test() {
+_proc test() {
     RandomizedSet* obj = randomizedSetCreate();
     printf("[[], ");
 
-    printb32_t(randomizedSetInsert(obj, 1));
+    printb32(randomizedSetInsert(obj, 1));
 
-    printb32_t(randomizedSetRemove(obj, 2));
+    printb32(randomizedSetRemove(obj, 2));
 
-    printb32_t(randomizedSetInsert(obj, 2));
+    printb32(randomizedSetInsert(obj, 2));
 
     printf("%d, ", randomizedSetGetRandom(obj));
 
-    printb32_t(randomizedSetRemove(obj, 1));
+    printb32(randomizedSetRemove(obj, 1));
 
-    printb32_t(randomizedSetInsert(obj, 2));
+    printb32(randomizedSetInsert(obj, 2));
     
     printf("]");
     randomizedSetFree(obj);
     
 }
 
-i32 main() {
+i32 main(void) {
     test();
     return 0;
 }

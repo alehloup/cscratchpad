@@ -3,58 +3,58 @@
 /*
     ==================== COMPILER SPECIFIC ====================
 */ 
-#ifdef stdout
-    // Print Assert if stdio.h was included
-    #define diagnostic_ printf("ASSERT FAILED %s:%s:%d", __FILE__, __func__, __LINE__)
-#endif
-#ifndef stdout
-    static int assert_trapped_ = 0;
-    #define diagnostic_ assert_trapped_ = 1
-#endif
-#ifdef _MSC_VER
-    // MSVC
-    #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
-    #define gcc_attr(...) //do NOT use attributes in MSVC
-#endif
-#ifndef _MSC_VER
-    // GCC Clang
-    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
-    #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
-#endif
+    #ifdef stdout
+        // Print Assert if stdio.h was included
+        #define diagnostic_ printf("ASSERT FAILED %s:%s:%d", __FILE__, __func__, __LINE__)
+    #endif
+    #ifndef stdout
+        static int assert_trapped_ = 0;
+        #define diagnostic_ assert_trapped_ = 1
+    #endif
+    #ifdef _MSC_VER
+        // MSVC
+        #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
+        #define gcc_attr(...) //do NOT use attributes in MSVC
+    #endif
+    #ifndef _MSC_VER
+        // GCC Clang
+        #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
+        #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
+    #endif
 
-// Simple attributes
-#define _math gcc_attr(const, warn_unused_result) static
-#define _pure gcc_attr(pure, nonnull, warn_unused_result) static
-#define _nonnull gcc_attr(nonnull) static
-#define _fun gcc_attr(nonnull, warn_unused_result) static
-#define _proc gcc_attr(nonnull) static void
-// Standard functions attributes
-#define _main \
-    gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) i32
-#define _malloc(paramidx_elementsize, paramidx_elementcount) \
-    gcc_attr(malloc, assume_aligned(8), alloc_size(paramidx_elementsize, paramidx_elementcount), \
-        nonnull, warn_unused_result) static
-#define _format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
-    gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), \
-        format(printf, paramidx_format, paramidx_varargs)) static
-// Buffer attributes
-#define _fun_rbuffer(paramidx_bufferlen, paramidx_buffer) \
-    gcc_attr(nonnull, warn_unused_result, \
-        access(read_only, paramidx_buffer, paramidx_bufferlen)) static
-#define _proc_rbuffer(paramidx_bufferlen, paramidx_buffer) \
-    gcc_attr(nonnull, \
-        access(read_only, paramidx_buffer, paramidx_bufferlen)) static void 
-#define _fun_wbuffer(paramidx_bufferlen, paramidx_buffer) \
-    gcc_attr(nonnull, warn_unused_result, \
-        access(write_only, paramidx_buffer, paramidx_bufferlen)) static
-#define _proc_wbuffer(paramidx_bufferlen, paramidx_buffer) \
-    gcc_attr(nonnull, \
-        access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
+    // Simple attributes
+    #define _math gcc_attr(const, warn_unused_result) static
+    #define _pure gcc_attr(pure, nonnull, warn_unused_result) static
+    #define _nonnull gcc_attr(nonnull) static
+    #define _fun gcc_attr(nonnull, warn_unused_result) static
+    #define _proc gcc_attr(nonnull) static void
+    // Standard functions attributes
+    #define _main \
+        gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) i32
+    #define _malloc(paramidx_elementsize, paramidx_elementcount) \
+        gcc_attr(malloc, assume_aligned(8), alloc_size(paramidx_elementsize, paramidx_elementcount), \
+            nonnull, warn_unused_result) static
+    #define _format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
+        gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), \
+            format(printf, paramidx_format, paramidx_varargs)) static
+    // Buffer attributes
+    #define _fun_rbuffer(paramidx_bufferlen, paramidx_buffer) \
+        gcc_attr(nonnull, warn_unused_result, \
+            access(read_only, paramidx_buffer, paramidx_bufferlen)) static
+    #define _proc_rbuffer(paramidx_bufferlen, paramidx_buffer) \
+        gcc_attr(nonnull, \
+            access(read_only, paramidx_buffer, paramidx_bufferlen)) static void 
+    #define _fun_wbuffer(paramidx_bufferlen, paramidx_buffer) \
+        gcc_attr(nonnull, warn_unused_result, \
+            access(write_only, paramidx_buffer, paramidx_bufferlen)) static
+    #define _proc_wbuffer(paramidx_bufferlen, paramidx_buffer) \
+        gcc_attr(nonnull, \
+            access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
+//  ^^^^^^^^^^^^^^^^^^^^ COMPILER SPECIFIC ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== TYPES ====================
 */
-
 #define MBs_ 1048576 // malloc(52*MBs_)
 
 // Bool
@@ -80,11 +80,11 @@ typedef const char * pstr; // const string
 
 typedef struct s8_struct{ i32 len; mstr data; }s8_struct; // slice struct
 typedef s8_struct * s8str; // slice string
+//  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
     STRINGS
 */
-
 _pure i64 cstrlen(cstr cstring) {
     i64 len;
     for (len = 0; cstring[len]; ++len) {
@@ -136,12 +136,11 @@ _pure i64 cstr_to_num(cstr str) {
     }
     return num;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
 /*
-    ==================== MATH ====================
+    ==================== RANDOM ====================
 */
-
-// Random
 _pure i32 rnd(u64 seed[1]) {
     i32 shift = 29;
     *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
@@ -149,8 +148,11 @@ _pure i32 rnd(u64 seed[1]) {
     
     return ((i32) (*seed >> shift)) & 2147483647;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ RANDOM ^^^^^^^^^^^^^^^^^^^^
 
-// Hash
+/*
+    ==================== HASH ====================
+*/
 _pure i64 hash_str(cstr str) {
     u64 h = 0x7A5662DCDF;
     for(i64 i = 0; str[i]; ++i) { 
@@ -167,41 +169,36 @@ _math i64 hash_i64(i64 integer64) {
     
     return (i64) ((x ^ (x >> 31)) >> 1);
 }
+//  ^^^^^^^^^^^^^^^^^^^^ HASH ^^^^^^^^^^^^^^^^^^^^
 
-// Mask-Step-Index (MSI) lookup
-_math i32 ht_lookup(
-    u64 hash, // 1st hash acts as base location
-    i32 index, // 2nd "hash" steps over the "list of elements" from base-location
-    i32 mask, // trims number to < ht_capacity
-    i32 shift // use |exp| bits for step 
-)
-{
-    i32 step = (i32)(hash >> shift) | 1;
-    return (i32) ((index + step) & mask);
-}
-
-//Conversions from/to float
+/*
+    ==================== TYPE PRUNNING ====================
+*/
 typedef union i64_f64_union{i64 as_int; f64 as_float;}i64_f64_union;
-_math f64 i64_to_f64(i64 int64) {
+_math f64 reinterpret_i64_as_f64(i64 int64) {
     i64_f64_union u = {int64};
     return u.as_float;
 }
-_math i64 f64_to_i64(f64 float64) {
+_math i64 reinterpret_f64_as_i64(f64 float64) {
     i64_f64_union u = {0};
     u.as_float = float64;
     return u.as_int;
 }
 typedef union i32_f32_union{i32 as_int; f32 as_float;}i32_f32_union;
-_math f32 i32_to_f32(i32 int32) {
+_math f32 reinterpret_i32_as_f32(i32 int32) {
     i32_f32_union u = {int32};
     return u.as_float;
 }
-_math i32 f32_to_i32(f32 float32) {
+_math i32 reinterpret_f32_as_i32(f32 float32) {
     i32_f32_union u = {0};
     u.as_float = float32;
     return u.as_int;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ TYPE PRUNNING ^^^^^^^^^^^^^^^^^^^^
 
+/*
+    ==================== MATH ====================
+*/
 // bitmask for optimized Mod for power 2 numbers
 _math i64 MODPWR2(i64 number, i64 modval) {
     return (number) & (modval - 1);
@@ -215,12 +212,11 @@ _math i32 fit_pwr2_exp(i32 size) {
     }
     return exp;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== ARENA ALLOCATION ====================
 */
-
-// ARENA
 typedef struct arena_t{ u8 *beg; u8 *end; }arena_t;
 
 _fun_rbuffer(/*bufferlen*/1, /*buffer*/2) 
@@ -265,12 +261,11 @@ copymem32(i32 * __restrict dst32, const i32 * __restrict src32, i64 count) {
         dst32[i] = src32[i];
     }
 }
+//  ^^^^^^^^^^^^^^^^^^^^ ARENA ALLOCATION ^^^^^^^^^^^^^^^^^^^^
 
 /*
-    ==================== DATA STRUCTURES ====================
+    ==================== VECTOR ====================
 */
-
-// VECTOR (dynamic array)
 typedef struct vector64_t{i32 cap; i32 len; i64 *data;}vector64_t;
 
 _proc vec64_grow(vector64_t vector[1],  arena_t arena[1]) { 
@@ -316,7 +311,7 @@ _proc vec_push_i64(vector64_t vector[1], arena_t arena[1], i64 int64) {
     vector->data[vector->len++] = int64;
 }
 _proc vec_push_f64(vector64_t vector[1], arena_t arena[1], f64 float64) {
-    vec_push_i64(vector, arena, f64_to_i64(float64));
+    vec_push_i64(vector, arena, reinterpret_f64_as_i64(float64));
 }
 _proc vec_push_str(vector64_t vector[1], arena_t arena[1], cstr cstring) {
     vec_push_i64(vector, arena, (i64) cstring);
@@ -335,7 +330,7 @@ _proc vec_push_i32(vector32_t vector[1], arena_t arena[1], i32 int32) {
     vector->data[vector->len++] = int32;
 }
 _proc vec_push_f32(vector32_t vector[1], arena_t arena[1], f32 float32) {
-    vec_push_i32(vector, arena, f32_to_i32(float32));
+    vec_push_i32(vector, arena, reinterpret_f32_as_i32(float32));
 }
 
 // Vector Pop
@@ -345,7 +340,7 @@ _fun i64 vec_pop_i64(vector64_t vector[1]) {
     return vector->data[--vector->len];
 }
 _fun f64 vec_pop_f64(vector64_t vector[1]) {
-    return i64_to_f64(vec_pop_i64(vector));
+    return reinterpret_i64_as_f64(vec_pop_i64(vector));
 }
 _fun pstr vec_pop_str(vector64_t vector[1]) {
     i64 cstr_as_i64 = vec_pop_i64(vector);
@@ -365,7 +360,7 @@ _fun i32 vec_pop_i32(vector32_t vector[1]) {
     return vector->data[--vector->len];
 }
 _fun f32 vec_pop_f32(vector32_t vector[1]) {
-    return i32_to_f32(vec_pop_i32(vector));
+    return reinterpret_i32_as_f32(vec_pop_i32(vector));
 }
 
 // Vector as C Array
@@ -395,7 +390,11 @@ _proc vec64_rem(vector64_t vector[1], i32 index) {
 _proc vec32_rem(vector32_t vector[1], i32 index) {
     vector->data[index] = vector->data[--vector->len];
 }
+//  ^^^^^^^^^^^^^^^^^^^^ VECTOR ^^^^^^^^^^^^^^^^^^^^
 
+/*
+    ==================== HASH TABLE ====================
+*/
 typedef struct entry64_t{i64 key; i64 val;}entry64_t;
 typedef struct ht64_t{
     i32 shift;i32 mask; i32 len;
@@ -440,6 +439,18 @@ _fun ht32_t new_ht32(arena_t arena[1], i32 expected_maxn) {
     return *ht;
 }
 
+// Mask-Step-Index (MSI) lookup
+_math i32 ht_lookup(
+    u64 hash, // 1st hash acts as base location
+    i32 index, // 2nd "hash" steps over the "list of elements" from base-location
+    i32 mask, // trims number to < ht_capacity
+    i32 shift // use |exp| bits for step 
+)
+{
+    i32 step = (i32)(hash >> shift) | 1;
+    return (i32) ((index + step) & mask);
+}
+
 // MSI Hash Table with Integer64 as Key
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 _nonnull i32 htnum(
@@ -478,7 +489,7 @@ _fun i64 htnum_get_i64(ht64_t table, i64 ikey) {
     return table.data[htnum(&table, ikey, 0)].val;
 }
 _fun f64 htnum_get_f64(ht64_t table, i64 ikey) {
-    return i64_to_f64(table.data[htnum(&table, ikey, 0)].val);
+    return reinterpret_i64_as_f64(table.data[htnum(&table, ikey, 0)].val);
 }
 _fun pstr htnum_get_str(ht64_t table, i64 ikey) {
     return (pstr) table.data[htnum(&table, ikey, 0)].val;
@@ -495,7 +506,7 @@ _proc htnum_set_i64(ht64_t table[1], i64 ikey, i64 ival) {
     table->data[htnum(table, ikey, 1)].val = ival;
 }
 _proc htnum_set_f64(ht64_t table[1], i64 ikey, f64 dval) {
-    table->data[htnum(table, ikey, 1)].val = f64_to_i64(dval);
+    table->data[htnum(table, ikey, 1)].val = reinterpret_f64_as_i64(dval);
 }
 _proc htnum_set_str(ht64_t table[1], i64 ikey, cstr sval) {
     table->data[htnum(table, ikey, 1)].val = (i64) sval;
@@ -556,7 +567,7 @@ _fun i64 htstr_get_i64(ht64_t table, cstr skey) {
     return (i64) table.data[htstr(&table, skey, 0)].val;
 }
 _fun f64 htstr_get_f64(ht64_t table, cstr skey) {
-    return i64_to_f64(table.data[htstr(&table, skey, 0)].val);
+    return reinterpret_i64_as_f64(table.data[htstr(&table, skey, 0)].val);
 }
 _fun pstr htstr_get_str(ht64_t table, cstr skey) {
     return (pstr) table.data[htstr(&table, skey, 0)].val;
@@ -573,7 +584,7 @@ _proc htstr_set_i64(ht64_t table[1], cstr skey, i64 ival) {
     table->data[htstr(table, skey, 1)].val = ival;
 }
 _proc htstr_set_f64(ht64_t table[1], cstr skey, f64 dval) {
-    table->data[htstr(table, skey, 1)].val = f64_to_i64(dval);
+    table->data[htstr(table, skey, 1)].val = reinterpret_f64_as_i64(dval);
 }
 _proc htstr_set_str(ht64_t table[1], cstr skey, cstr sval) {
     table->data[htstr(table, skey, 1)].val = (i64) sval;
@@ -636,7 +647,7 @@ _fun i32 htint_get_i32(ht32_t table, i32 ikey) {
     return table.data[htint(&table, ikey, 0)].val;
 }
 _fun f32 htint_get_f32(ht32_t table, i32 ikey) {
-    return i32_to_f32(table.data[htint(&table, ikey, 0)].val);
+    return reinterpret_i32_as_f32(table.data[htint(&table, ikey, 0)].val);
 }
 
 // Creates key if not found, then returns the index of |ikey| in the msi |table|
@@ -647,7 +658,7 @@ _proc htint_set_i32(ht32_t table[1], i32 ikey, i32 ival) {
     table->data[htint(table, ikey, 1)].val = ival;
 }
 _proc htint_set_f32(ht32_t table[1], i32 ikey, f32 float32) {
-    table->data[htint(table, ikey, 1)].val = f32_to_i32(float32);
+    table->data[htint(table, ikey, 1)].val = reinterpret_f32_as_i32(float32);
 }
 _fun entry32_t * htint_data_as_int32(ht32_t table[1]) {
     return (entry32_t *) table->data;
@@ -656,11 +667,11 @@ typedef struct entry_i32_f32{i32 key; f32 val;}entry_i32_f32;
 _fun entry_i32_f32 * htint_data_as_f32(ht32_t table[1]) {
     return (entry_i32_f32 *) table->data;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== TEXT ====================
 */
-
 // Alters a text by converting \n to \0 and pushing each line as a cstr in the returned vector
 _fun vector64_t slice_into_lines(arena_t arena[1], char text_to_alter[1]) {
     vector64_t lines = {0, 0, 0};
@@ -705,3 +716,4 @@ _fun vector64_t slice_into_nonempty_lines(arena_t arena[1], char text_to_alter[1
 
     return lines;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^

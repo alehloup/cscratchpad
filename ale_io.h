@@ -7,18 +7,17 @@
 #include "ale.h"
 
 /*
-    TIME / BENCHMARK
+    ==================== TIME BENCHMARK ====================
 */
 _fun f64 seconds_since(clock_t start)
 {
     return (f64)(clock() - start) / CLOCKS_PER_SEC;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
 
 /*
-    ==================== INPUT/OUTPUT IO ====================
+    ==================== SHELL ====================
 */
-
-// SHELL
 _format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
 i32 shellrun(i32 bufferlen, char buffer [512], cstr format, ...) {
     va_list args;
@@ -30,8 +29,11 @@ i32 shellrun(i32 bufferlen, char buffer [512], cstr format, ...) {
     vsprintf_s(buffer, (u64) bufferlen, format, args);
     return system(buffer);
 }
+//  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
 
-// FILES
+/*
+    ==================== FILES ====================
+*/
 _fun i64 fread_noex(char dst[1], i64 sz, i64 count, FILE * f) {
     #ifdef __cplusplus
         try { return (i64) fread(dst, (u64) sz, (u64) count, f); } catch(...) {return 0;}
@@ -130,6 +132,11 @@ _nonnull b32 lines_to_file(vector64_t lines, cstr filename) {
     }
     return True;
 }
+//  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
+
+/*
+    ==================== STDLIB ====================
+*/
 
 _proc vec_sort_cstr(vector64_t cstrings) {
     qsort(
@@ -137,3 +144,4 @@ _proc vec_sort_cstr(vector64_t cstrings) {
         sizeof(i64), void_compare_strings
     );
 } 
+//  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^

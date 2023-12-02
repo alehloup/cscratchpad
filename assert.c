@@ -11,7 +11,7 @@ typedef struct teste{
 i32 main(void) {
 
     static u8 buf[1] = {0};
-    arena_t perm = newarena(1, buf);
+    Arena perm = newarena(1, buf);
 
     // printf("Começando beg:%p end:%p total:%lldMB\n", 
     //     (void *) perm.beg, (void *) perm.end, (perm.end - perm.beg)/1048576);

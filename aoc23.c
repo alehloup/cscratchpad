@@ -1,14 +1,24 @@
 #include "ale_io.h"
 
 _proc_rbuffer(1, 2)
-aoc3(i32 lineslen, cstr lines[]) {
+aoc3(i32 lineslen, mstr lines[]) {
+    static u8 buff[MBs_ / 8] = {0};
+    Arena arena = newarena(MBs_ / 8, buff);
+
     i8 reds = 12, greens = 13, blues = 14;
     printf("Reds: %d, Greens: %d, Blues: %d\n", reds, greens, blues);
 
     for (int iline = 0; iline < lineslen; ++iline) {
-        cstr line = lines[iline];
-     
-        printf("%d: %s\n", iline+1, line);
+        Vec64 game = mutslice_by_splitter(&arena,  lines[iline], ':');
+        Vec64 grabs = mutslice_by_splitter(&arena,  (mstr) game.data[1], ';');
+
+        for (int igrab = 0; igrab < grabs.len; ++igrab) {
+            Vec64 grab = mutslice_by_splitter(&arena,  (mstr) grabs.data[igrab], ',');
+
+        }
+        
+
+        printf("| \n");
     }
 
 }
@@ -41,10 +51,10 @@ aoc1(i32 lineslen, cstr lines[]) {
 
 i32 main(void) {
     static u8 mem[128*MBs_] = {0};
-    arena_t arena = newarena(128*MBs_, mem);
+    Arena arena = newarena(128*MBs_, mem);
 
-    vector64_t lines = file_to_nonempty_lines(&arena, "aoc.txt");
-    cstr *data = vec_data_as_cstr(&lines);
+    Vec64 lines = file_to_nonempty_lines(&arena, "aoc.txt");
+    mstr *data = vec_data_as_mstr(&lines);
 
     aoc3(lines.len, data);
 

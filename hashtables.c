@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include "ale.h"
 
-_proc test_ht_str(arena_t scratch) {
-    ht64_t ht = new_ht64(&scratch, 4);
+_proc test_ht_str(Arena scratch) {
+    Ht64 ht = new_Ht64(&scratch, 4);
     
     printf("%s hash: %lld\n", "Alessandro Stamatto", hash_str("Alessandro Stamatto"));
 
@@ -16,7 +16,7 @@ _proc test_ht_str(arena_t scratch) {
     printf("Não pegou: %s\n", hts_get_str(ht, "Karol"));
 
     {
-        entry_str_str *data = hts_data_as_str(&ht);
+        Entry_str_str *data = hts_data_as_str(&ht);
         for(i32 i = 0; i < ht.cap; ++i) {
             if  (! data[i].key) {
                 continue;
@@ -29,8 +29,8 @@ _proc test_ht_str(arena_t scratch) {
     }
 }
 
-_proc test_ht_i64(arena_t arena) {
-    ht64_t ht = new_ht64(&arena, 4);
+_proc test_ht_i64(Arena arena) {
+    Ht64 ht = new_Ht64(&arena, 4);
 
     printf("%d, hash: %lld\n", 4, hash_i64(4));
 
@@ -42,7 +42,7 @@ _proc test_ht_i64(arena_t arena) {
     printf("não pegou: %s\n", hti_get_str(ht, 3));
 
     {
-        entry_i64_str *data = hti_data_as_str(&ht);
+        Entry_i64_str *data = hti_data_as_str(&ht);
         for(i32 i = 0; i < ht.cap; ++i) {
             if  ( ! data[i].key) {
                 continue;
@@ -55,8 +55,8 @@ _proc test_ht_i64(arena_t arena) {
     }
 }
 
-_proc test_big_ht_i64(arena_t scratch) {
-    ht64_t ht = new_ht64(&scratch, 128);
+_proc test_big_ht_i64(Arena scratch) {
+    Ht64 ht = new_Ht64(&scratch, 128);
 
     printf("\n Big HT %d %d \n", ht.len, ht.cap);
 
@@ -65,7 +65,7 @@ _proc test_big_ht_i64(arena_t scratch) {
     }
 
     {
-        entry64_t *data = hti_data_as_int64(&ht);
+        Entry64 *data = hti_data_as_int64(&ht);
         for(i32 i = 1; i <= ht.len; ++i) {
             i32 idx = hti_get_idx(ht, i);
             
@@ -86,7 +86,7 @@ _proc test_big_ht_i64(arena_t scratch) {
 
 i32 main(void) {
     static u8 bufferzao[2*MBs_] = {0};
-    arena_t scratch = newarena(sizeof(bufferzao), bufferzao);
+    Arena scratch = newarena(sizeof(bufferzao), bufferzao);
     test_ht_i64(scratch);
     printf("\n");
     printf("\n");

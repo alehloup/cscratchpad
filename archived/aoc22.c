@@ -76,9 +76,9 @@ aoc1(i32 lineslen, cstr lines[]) {
 
 i32 main(void) {
     static u8 mem[128*MBs_] = {0};
-    arena_t arena = newarena(128*MBs_, mem);
+    Arena arena = newarena(128*MBs_, mem);
 
-    vector64_t lines = file_to_lines(&arena, "aoc.txt");
+    Vec64 lines = file_to_lines(&arena, "aoc.txt");
     cstr *data = vec_data_as_cstr(&lines);
 
     aoc2(lines.len, data);

@@ -4,8 +4,8 @@
 
 static u8 * force_reloc = 0;
 
-_proc test_vec_push_str(arena_t scratch) {
-    vector64_t d = {0, 0, 0};
+_proc test_vec_push_str(Arena scratch) {
+    Vec64 d = {0, 0, 0};
 
     printf("=========== CSTRINGs ===========\n");
     
@@ -25,8 +25,8 @@ _proc test_vec_push_str(arena_t scratch) {
     printf("Pop: %s\n", vec_pop_str(&d));
 }
 
-_proc test_vec_push_i64(arena_t scratch) {
-    vector64_t d = {0, 0, 0};
+_proc test_vec_push_i64(Arena scratch) {
+    Vec64 d = {0, 0, 0};
 
     printf("=========== I64s ===========\n");
     
@@ -51,8 +51,8 @@ _proc test_vec_push_i64(arena_t scratch) {
     }
 }
 
-_proc test_vec_push_f64(arena_t scratch) {
-    vector64_t d = {0, 0, 0};
+_proc test_vec_push_f64(Arena scratch) {
+    Vec64 d = {0, 0, 0};
 
     printf("=========== DOUBLEs ===========\n");
 
@@ -79,7 +79,7 @@ _proc test_vec_push_f64(arena_t scratch) {
 
 i32 main(void) {
 
-    arena_t scratch = newarena(8*MBs_, (u8 *) calloc(8*MBs_, 1));
+    Arena scratch = newarena(8*MBs_, (u8 *) calloc(8*MBs_, 1));
     
     test_vec_push_str(scratch);
     test_vec_push_i64(scratch);

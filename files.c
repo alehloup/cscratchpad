@@ -3,13 +3,13 @@
 i32 main(void) {
     static u8 buffer[2*MBs_];
 
-    arena_t perm = newarena(sizeof(buffer), buffer);
+    Arena perm = newarena(sizeof(buffer), buffer);
     
     mstr contents = file_to_buffer(&perm, "exemplo.txt");
     printf("%s", contents);
 
     {
-        vector64_t lines = slice_into_nonempty_lines(&perm, contents);
+        Vec64 lines = mutslice_into_nonempty_lines(&perm, contents);
         vec_sort_cstr(lines);
 
         {

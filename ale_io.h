@@ -47,7 +47,7 @@ _fun i64 fwrite_noex(cstr Str, i64 Size, i64 Count, FILE * File) {
               return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
 }
 
-_fun mstr file_to_buffer(arena_t arena[1], cstr filename) {
+_fun mstr file_to_buffer(Arena arena[1], cstr filename) {
     mstr contents = 0;
     i64 fsize = 0;
 
@@ -78,14 +78,14 @@ _fun mstr file_to_buffer(arena_t arena[1], cstr filename) {
     return contents;
 }
 
-_fun vector64_t file_to_lines(arena_t arena[1], cstr filename) {
+_fun Vec64 file_to_lines(Arena arena[1], cstr filename) {
     mstr buffer = file_to_buffer(arena, filename);
-    return slice_into_lines(arena, buffer);
+    return mutslice_into_lines(arena, buffer);
 }
 
-_fun vector64_t file_to_nonempty_lines(arena_t arena[1], cstr filename) {
+_fun Vec64 file_to_nonempty_lines(Arena arena[1], cstr filename) {
     mstr buffer = file_to_buffer(arena, filename);
-    return slice_into_nonempty_lines(arena, buffer);
+    return mutslice_into_nonempty_lines(arena, buffer);
 }
 
 _nonnull b32 buffer_to_file(cstr buffer, cstr filename) {
@@ -106,7 +106,7 @@ _nonnull b32 buffer_to_file(cstr buffer, cstr filename) {
     return True;
 }
 
-_nonnull b32 lines_to_file(vector64_t lines, cstr filename) {
+_nonnull b32 lines_to_file(Vec64 lines, cstr filename) {
     {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
@@ -138,7 +138,7 @@ _nonnull b32 lines_to_file(vector64_t lines, cstr filename) {
     ==================== STDLIB ====================
 */
 
-_proc vec_sort_cstr(vector64_t cstrings) {
+_proc vec_sort_cstr(Vec64 cstrings) {
     qsort(
         vec_data_as_cstr(&cstrings), (u64) cstrings.len, 
         sizeof(i64), void_compare_strings

@@ -2,9 +2,9 @@
 #include "ale.h"
 
 typedef struct {
-    ht64_t table;
-    vector64_t cache;
-    arena_t * arena;
+    Ht64 table;
+    Vec64 cache;
+    Arena * arena;
 } RandomizedSet;
 
 
@@ -18,7 +18,7 @@ _proc print_cache(RandomizedSet* obj) {
 
 _fun RandomizedSet * randomizedSetCreate(void) {
     static u8 memory[8*MBs_] = {0};
-    static arena_t arena = {0, 0};
+    static Arena arena = {0, 0};
 
     arena = newarena(sizeof(memory), memory);
     
@@ -26,7 +26,7 @@ _fun RandomizedSet * randomizedSetCreate(void) {
         RandomizedSet *S = (RandomizedSet *) alloc(&arena, sizeof(RandomizedSet), 1);
         S->arena = &arena;
 
-        S->table = new_ht64(&arena, 200000);
+        S->table = new_Ht64(&arena, 200000);
         vec_push_i64(&S->cache, &arena, 0);
         return S;
     }
@@ -34,7 +34,7 @@ _fun RandomizedSet * randomizedSetCreate(void) {
 
 _fun b32 randomizedSetInsert(RandomizedSet* obj, i32 val) {
     i32 msiidx = 0;
-    entry64_t entry = {0, 0};
+    Entry64 entry = {0, 0};
     i64 key = val;
 
     b32 ret = False;

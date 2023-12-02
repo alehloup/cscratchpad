@@ -24,8 +24,11 @@
 
     // Simple attributes
     #define _math gcc_attr(const, warn_unused_result) static
+    #define _math_hot gcc_attr(const, warn_unused_result, hot) static
     #define _pure gcc_attr(pure, nonnull, warn_unused_result) static
+    #define _pure_hot gcc_attr(pure, nonnull, warn_unused_result, hot) static
     #define _nonnull gcc_attr(nonnull) static
+    #define _nonnull_hot gcc_attr(nonnull, hot) static
     #define _fun gcc_attr(nonnull, warn_unused_result) static
     #define _proc gcc_attr(nonnull) static void
     // Standard functions attributes
@@ -33,7 +36,7 @@
         gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) i32
     #define _malloc(paramidx_elementsize, paramidx_elementcount) \
         gcc_attr(malloc, assume_aligned(8), alloc_size(paramidx_elementsize, paramidx_elementcount), \
-            nonnull, warn_unused_result) static
+            nonnull, warn_unused_result, hot) static
     #define _format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
         gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), \
             format(printf, paramidx_format, paramidx_varargs)) static
@@ -47,8 +50,14 @@
     #define _fun_wbuffer(paramidx_bufferlen, paramidx_buffer) \
         gcc_attr(nonnull, warn_unused_result, \
             access(write_only, paramidx_buffer, paramidx_bufferlen)) static
+    #define _fun_wbuffer_hot(paramidx_bufferlen, paramidx_buffer) \
+        gcc_attr(nonnull, warn_unused_result, hot, \
+            access(write_only, paramidx_buffer, paramidx_bufferlen)) static
     #define _proc_wbuffer(paramidx_bufferlen, paramidx_buffer) \
         gcc_attr(nonnull, \
+            access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
+    #define _proc_wbuffer_hot(paramidx_bufferlen, paramidx_buffer) \
+        gcc_attr(nonnull, hot, \
             access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
 //  ^^^^^^^^^^^^^^^^^^^^ COMPILER SPECIFIC ^^^^^^^^^^^^^^^^^^^^
 
@@ -86,7 +95,7 @@ typedef s8_struct * s8str; // slice string
 /*
     STRINGS
 */
-_pure i64 cstrlen(cstr cstring) {
+_pure_hot i64 cstrlen(cstr cstring) {
     i64 len;
     for (len = 0; cstring[len]; ++len) {
         /* Empty Body */
@@ -94,7 +103,7 @@ _pure i64 cstrlen(cstr cstring) {
     return len;
 }
 
-_pure i32 cstrcmp(cstr cstr1, cstr cstr2) {
+_pure_hot i32 cstrcmp(cstr cstr1, cstr cstr2) {
     i64 i = 0;
     for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
         /* Empty Body */
@@ -102,7 +111,7 @@ _pure i32 cstrcmp(cstr cstr1, cstr cstr2) {
     return cstr1[i] - cstr2[i];
 }
 
-_pure b32 startswith(cstr string, cstr prefix) {
+_pure_hot b32 startswith(cstr string, cstr prefix) {
     i64 i = 0;
     if (!prefix[0]) {
         return True;
@@ -124,11 +133,11 @@ _pure b32 startswith(cstr string, cstr prefix) {
     }
 }
 
-_pure i32 void_compare_strings(const void *a, const void *b) {
+_pure_hot i32 void_compare_strings(const void *a, const void *b) {
     return cstrcmp(*(cstr *)a, *(cstr *)b);
 }
 
-_pure b32 is_empty_string(cstr string) {
+_pure_hot b32 is_empty_string(cstr string) {
     for (i64 i = 0; string[i]; ++i) {
         if (string[i] != ' ') {
             return False;
@@ -137,7 +146,7 @@ _pure b32 is_empty_string(cstr string) {
     return True;
 }
 
-_math b32 is_digit(char character) {
+_math_hot b32 is_digit(char character) {
     return character >= '0' && character <= '9';
 }
 
@@ -159,7 +168,7 @@ _fun i8 named_digit(cstr string) {
     return -1;
 }
 
-_pure i64 cstr_to_num(cstr str) {
+_pure_hot i64 cstr_to_num(cstr str) {
     i64 num = 0, power = 1;
     for (i64 i = cstrlen(str) - 1; i >= 0; --i) {
         char character = str[i];
@@ -182,7 +191,7 @@ _pure i64 cstr_to_num(cstr str) {
 /*
     ==================== RANDOM ====================
 */
-_pure i32 rnd(u64 seed[1]) {
+_pure_hot i32 rnd(u64 seed[1]) {
     i32 shift = 29;
     *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
     shift -= (i32)(*seed >> 61);
@@ -194,7 +203,7 @@ _pure i32 rnd(u64 seed[1]) {
 /*
     ==================== HASH ====================
 */
-_pure i64 hash_str(cstr str) {
+_pure_hot i64 hash_str(cstr str) {
     u64 h = 0x7A5662DCDF;
     for(i64 i = 0; str[i]; ++i) { 
         h ^= str[i] & 255; h *= 1111111111111111111;
@@ -202,7 +211,7 @@ _pure i64 hash_str(cstr str) {
 
     return (i64) ((h ^ (h >> 32)) >> 1);
 }
-_math i64 hash_i64(i64 integer64) {
+_math_hot i64 hash_i64(i64 integer64) {
     u64 x = (u64)integer64;
     x *= 0x94d049bb133111eb; 
     x ^= (x >> 30); 
@@ -216,11 +225,11 @@ _math i64 hash_i64(i64 integer64) {
     ==================== TYPE PRUNNING ====================
 */
 typedef union i64_f64_union{i64 as_i64; f64 as_f64;}i64_f64_union;
-_math f64 reinterpret_i64_as_f64(i64 int64) {
+_math_hot f64 reinterpret_i64_as_f64(i64 int64) {
     i64_f64_union u = {int64};
     return u.as_f64;
 }
-_math i64 reinterpret_f64_as_i64(f64 float64) {
+_math_hot i64 reinterpret_f64_as_i64(f64 float64) {
     i64_f64_union u = {0};
     u.as_f64 = float64;
     return u.as_i64;
@@ -261,7 +270,7 @@ arena_t newarena(i64 buffer_len, u8 buffer[]) {
     return arena;
 }
 
-_fun_wbuffer(/*bufferlen*/2, /*buffer*/1) 
+_fun_wbuffer_hot(/*bufferlen*/2, /*buffer*/1) 
 u8 * zeromem(u8 * __restrict dst, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst[i] = 0;
@@ -283,7 +292,7 @@ void * alloc(arena_t arena[1], i64 size, i64 count) {
     return (void *) zeromem(p, total);
 }
 
-_proc_wbuffer(/*bufferlen*/ 3, /*buffer*/ 1) 
+_proc_wbuffer_hot(/*bufferlen*/ 3, /*buffer*/ 1) 
 copymem64(i64 * __restrict dst64, const i64 * __restrict src64, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst64[i] = src64[i];
@@ -401,7 +410,7 @@ _fun ht64_t new_ht64(arena_t arena[1], i32 expected_maxn) {
 }
 
 // Mask-Step-Index (MSI) lookup
-_math i32 ht_lookup(
+_math_hot i32 ht_lookup(
     u64 hash, // 1st hash acts as base location
     i32 index, // 2nd "hash" steps over the "list of elements" from base-location
     u32 mask, // trims number to < ht_capacity
@@ -413,7 +422,7 @@ _math i32 ht_lookup(
 }
 
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
-_nonnull i32 htloop(
+_nonnull_hot i32 htloop(
     ht64_t ht[1] /* ht_ht */, 
     i64 keyi64, cstr keystr, 
     i32 create_if_not_found

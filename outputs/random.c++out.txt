@@ -18,4 +18,4 @@
 18: 50003529
 19: 49999212
 20: 50001096
-Executado em: 3.358000
+Executado em: 3.356000 segundos 

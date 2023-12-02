@@ -8,3 +8,5 @@ three6433 : 3
 nine3453 : 9
 woa : -1
 zero5 : 0
+word: Ale
+word: Mat

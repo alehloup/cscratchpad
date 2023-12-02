@@ -756,4 +756,26 @@ _fun vector64_t slice_into_nonempty_lines(arena_t arena[1], char text_to_alter[1
 
     return lines;
 }
+
+_fun vector64_t slice_by_splitter(arena_t arena[1], char text_to_alter[1], char splitter) {
+    vector64_t words = {0, 0, 0};
+    i64 i = 0, current = 0;
+
+    for (i = 0; text_to_alter[i]; ++i) {
+        if (text_to_alter[i] == splitter) {
+            text_to_alter[i] = '\0';
+            
+            if (!is_empty_string(&text_to_alter[current])) {
+                vec_push_str(&words, arena, &text_to_alter[current]);
+            }
+            current = i+1;
+        }
+    }
+
+    if (current != i && !is_empty_string(&text_to_alter[current])) {
+        vec_push_str(&words, arena, &text_to_alter[current]);
+    }
+
+    return words;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^

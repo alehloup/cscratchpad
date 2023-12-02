@@ -23,5 +23,17 @@ i32 main(void) {
         }
     }
 
+    {
+        u8 buffer[MBs_ / 8] = {0};
+        arena_t arena = newarena(MBs_ / 8, buffer);
+        vector64_t words = {0, 0, 0};
+        char teste[16] = {'A', 'l', 'e', ' ', 'M', 'a', 't', ' ', '\0'};
+
+        words = slice_by_splitter(&arena, teste, ' ');
+        for (int i = 0; i < words.len; ++i) {
+            printf("word: %s\n", (cstr) words.data[i]);
+        }
+    }
+
     return 0;
 }

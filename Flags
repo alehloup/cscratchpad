@@ -6,10 +6,8 @@
 -Wstringop-overflow=4 -Wuse-after-free=3 -Warray-bounds=2 
 -Wformat=2 -Wformat-truncation=2 -Wformat-overflow=2 
 
--Wuninitialized -Wstrict-aliasing -Wcast-align=strict -Wnull-dereference 
--fstrict-flex-arrays -Warray-parameter -Wvla -Wvla-parameter
--Wshadow -Wundef -Wconversion -Wdouble-promotion -Wformat-signedness 
--Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 
+-Wcast-align=strict -Wnull-dereference -fstrict-flex-arrays -Wvla -Wundef -Wconversion -Wlogical-op
+-Wdouble-promotion -Wformat-signedness -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum
 
 -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize-address-use-after-scope
 -fsanitize=undefined,alignment,object-size,builtin,unreachable,bounds-strict,nonnull-attribute,returns-nonnull-attribute

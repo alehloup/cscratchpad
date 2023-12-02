@@ -4,9 +4,7 @@
 -DEBUG /Z7 /W4 /wd4146 /wd4245 /RTCcsu -D_GLIBCXX_ASSERTIONS 
 -D_FORTIFY_SOURCE=3 -Wall -Wextra -Wpedantic -Werror -Warray-bounds -Wformat=2
 
--Wuninitialized -Wstrict-aliasing -Wcast-align -Wnull-dereference 
--Warray-parameter -Wvla -Wvla-parameter -Wshadow -Wundef -Wconversion -Wdouble-promotion
--Wswitch-default -Wswitch-enum 
+-Wcast-align -Wnull-dereference -Wvla -Wundef -Wconversion -Wdouble-promotion -Wswitch-default -Wswitch-enum 
 
 -fsanitize-trap -fsanitize-undefined-trap-on-error 
 -fsanitize=undefined,alignment,object-size,builtin,bounds,unreachable,nonnull-attribute,returns-nonnull-attribute

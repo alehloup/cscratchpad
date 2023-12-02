@@ -1,12 +1,12 @@
 #include "ale_io.h"
 
 i32 main(i32 argc, cstr *argv) {
+    char buffer[512];
+    cstr _1_ = argc > 1 ? argv[1] : "", _2_ = argc > 2 ? argv[2] : "";
+
     if (argc < 1) {
         printf("No args...");
     }
-
-    char buffer[512];
-    cstr __1 = argv[1], __2 = argv[2];
 
     printf(
         (
@@ -16,7 +16,7 @@ i32 main(i32 argc, cstr *argv) {
             " | "
             "tee \"./outputs/%sout.txt\""
         ), 
-    __1, __1, __1, __2, __1);
+    _1_, _1_, _1_, _2_, _1_);
     printf("\n");
 
     shellrun(sizeof(buffer), buffer, 
@@ -27,7 +27,7 @@ i32 main(i32 argc, cstr *argv) {
             " | "
             "tee \"./outputs/%sout.txt\""
         ), 
-    __1, __1, __1, __2, __1);
+    _1_, _1_, _1_, _2_, _1_);
 
     return 0;
 }

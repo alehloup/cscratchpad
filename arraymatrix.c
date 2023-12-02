@@ -5,9 +5,9 @@
 static u8 * force_reloc = 0;
 
 _proc test_vlamatrix(arena_t scratch) {
-    printf("=========== MATRIXs ===========\n");
-
     i64 (*mat)[10][10] = (i64 (*)[10][10]) alloc(&scratch, sizeof(i64 [10][10]), 1);
+
+    printf("=========== MATRIXs ===========\n");
 
     // test_size_cvla(10, 10, mat); // only works in C
 
@@ -26,9 +26,9 @@ _proc test_vlamatrix(arena_t scratch) {
 }
 
 _proc test_vec_push_str(arena_t scratch) {
-    printf("=========== CSTRINGs ===========\n");
-    
     vector64_t d = {0, 0, 0};
+
+    printf("=========== CSTRINGs ===========\n");
     
     for (i32 i = 0; i < 52; ++i) {
         vec_push_str(&d, &scratch, "sAl");
@@ -36,18 +36,20 @@ _proc test_vec_push_str(arena_t scratch) {
         vec_push_str(&d, &scratch, "sEv");
     }
 
-    cstr *data = vec_data_as_cstr(&d);
-    for (i32 i = 0; i < d.len; ++i) {
-        printf(" %d:%s ", i, data[i]);
+    {
+        cstr *data = vec_data_as_cstr(&d);
+        for (i32 i = 0; i < d.len; ++i) {
+            printf(" %d:%s ", i, data[i]);
+        }
     }
 
     printf("Pop: %s\n", vec_pop_str(&d));
 }
 
 _proc test_vec_push_i32(arena_t scratch) {
-    printf("=========== I32s ===========\n");
-
     vector32_t d = {0, 0, 0};
+
+    printf("=========== I32s ===========\n");
     
     vec_push_i32(&d, &scratch, 52+32000);
     printf("POP: %d\n", vec_pop_i32(&d));
@@ -58,17 +60,19 @@ _proc test_vec_push_i32(arena_t scratch) {
 
     printf("POP: %d\n", vec_pop_i32(&d));
 
-    i32 *data = vec_data_as_i32(&d);
-    for(i32 i = 0; i < d.len; ++i) {
-        printf("%d ", data[i]);
-    } 
-    printf("\n");
+    {
+        i32 *data = vec_data_as_i32(&d);
+        for(i32 i = 0; i < d.len; ++i) {
+            printf("%d ", data[i]);
+        } 
+        printf("\n");
+    }
 }
 
 _proc test_vec_push_i64(arena_t scratch) {
-    printf("=========== I64s ===========\n");
-
     vector64_t d = {0, 0, 0};
+
+    printf("=========== I64s ===========\n");
     
     vec_push_i64(&d, &scratch, 52+64000);
     printf("POP: %lld\n", vec_pop_i64(&d));
@@ -81,18 +85,20 @@ _proc test_vec_push_i64(arena_t scratch) {
 
     printf("POP: %lld\n", vec_pop_i64(&d));
 
-    i64 *data = vec_data_as_i64(&d);
+    {
+        i64 *data = vec_data_as_i64(&d);
 
-    for(i32 i = 0; i < d.len; ++i) {
-        printf("%lld ", data[i]);
-    } 
-    printf("\n");
+        for(i32 i = 0; i < d.len; ++i) {
+            printf("%lld ", data[i]);
+        } 
+        printf("\n");
+    }
 }
 
 _proc test_vec_push_f32(arena_t scratch) {
-    printf("=========== FLOATs ===========\n");
-
     vector32_t d = {0, 0, 0};
+
+    printf("=========== FLOATs ===========\n");
     
     vec_push_f32(&d, &scratch, 5.2f + 0.0032f);
     printf("POP: %f\n", (f64) vec_pop_f32(&d));
@@ -103,17 +109,20 @@ _proc test_vec_push_f32(arena_t scratch) {
 
     printf("POP: %f\n", (f64) vec_pop_f32(&d));
 
-    f32 *data = vec_data_as_f32(&d);
-    for(i32 i = 0; i < d.len; ++i) {
-        printf("%f ", (f64) data[i]);
-    } 
-    printf("\n");
+    {
+        f32 *data = vec_data_as_f32(&d);
+        for(i32 i = 0; i < d.len; ++i) {
+            printf("%f ", (f64) data[i]);
+        } 
+        printf("\n");
+    }
 }
 
 _proc test_vec_push_f64(arena_t scratch) {
-    printf("=========== DOUBLEs ===========\n");
-    
     vector64_t d = {0, 0, 0};
+
+    printf("=========== DOUBLEs ===========\n");
+
     
     vec_push_f64(&d, &scratch, 5.2+0.0064);
     printf("POP: %lf\n", vec_pop_f64(&d));
@@ -126,11 +135,13 @@ _proc test_vec_push_f64(arena_t scratch) {
 
     printf("POP: %lf\n", vec_pop_f64(&d));
 
-    f64 *data = vec_data_as_f64(&d);
-    for(i32 i = 0; i < d.len; ++i) {
-        printf("%lf ", data[i]);
-    } 
-    printf("\n");
+    {
+        f64 *data = vec_data_as_f64(&d);
+        for(i32 i = 0; i < d.len; ++i) {
+            printf("%lf ", data[i]);
+        } 
+        printf("\n");
+    }
 }
 
 i32 main(void) {

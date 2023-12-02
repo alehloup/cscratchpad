@@ -142,12 +142,13 @@ _math b32 is_digit(char character) {
 
 // Returns the digit value, if as character or in english lowercase name, or -1 if its not a digit
 _fun i8 named_digit(cstr string) {
+    cstr named[] = {"zero", "one", "two", "three", "four", 
+                    "five", "six", "seven", "eight", "nine"};
+                    
     if (string[0] && is_digit(string[0])) {
         return string[0] - '0';
     }
 
-    cstr named[] = {"zero", "one", "two", "three", "four", 
-                    "five", "six", "seven", "eight", "nine"};
     for (i8 i = 0; i < 10; ++i) {
         if (startswith(string, named[i])) {
             return i;

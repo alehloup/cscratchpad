@@ -17,10 +17,15 @@ _proc print_mem(void * ptr, i32 len) {
 }
 
 _main main(i32 argslen, cstr args[]) {
+    cstr x = argslen > 0 ? args[0] : "";
+
     assert(argslen > 0);
 
-    cstr x = args[0];
-    printf("%s", x);
+    printf("%s\n", x);
+
+    #ifdef _MSC_VER
+        printf("MSVC!");
+    #endif 
     
     return 0;
 }

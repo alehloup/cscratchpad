@@ -1,21 +1,6 @@
 #include <stdio.h>
 #include "ale.h"
 
-_fun i8 named_digit(cstr string) {
-    if (string[0] && is_digit(string[0])) {
-        return string[0] - '0';
-    }
-
-    cstr named[] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
-    for (i8 i = 0; i < 10; ++i) {
-        if (startswith(string, named[i])) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 i32 main(void) {
     printf("%lld\n", cstr_to_num("-10"));
 

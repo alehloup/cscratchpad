@@ -224,13 +224,13 @@ _math_hot i64 hash_i64(i64 integer64) {
 /*
     ==================== TYPE PRUNNING ====================
 */
-typedef union i64_f64_union{i64 as_i64; f64 as_f64;}i64_f64_union;
+typedef union Union_i64_f64{i64 as_i64; f64 as_f64;}Union_i64_f64;
 _math_hot f64 reinterpret_i64_as_f64(i64 int64) {
-    i64_f64_union u = {int64};
+    Union_i64_f64 u = {int64};
     return u.as_f64;
 }
 _math_hot i64 reinterpret_f64_as_i64(f64 float64) {
-    i64_f64_union u = {0};
+    Union_i64_f64 u = {0};
     u.as_f64 = float64;
     return u.as_i64;
 }

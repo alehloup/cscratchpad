@@ -5,19 +5,19 @@
 _proc test_ht_str(arena_t scratch) {
     ht64_t ht = new_ht64(&scratch, 4);
     
-    printf("%lld\n", hash_str("Alessandro Stamatto"));
+    printf("%s hash: %lld\n", "Alessandro Stamatto", hash_str("Alessandro Stamatto"));
 
-    htstr_set_str(&ht, "Alessandro", "Stamatto");
-    htstr_set_str(&ht, "Sarah", "Sakamotto");
-    htstr_set_str(&ht, "Alessandro", "Ferreira");
+    hts_set_str(&ht, "Alessandro", "Stamatto");
+    hts_set_str(&ht, "Sarah", "Sakamotto");
+    hts_set_str(&ht, "Alessandro", "Ferreira");
 
 
-    printf("Pegou: %s\n", htstr_get_str(ht, "Sarah"));
-    printf("Não pegou: %s\n", htstr_get_str(ht, "Karol"));
+    printf("Pegou: %s\n", hts_get_str(ht, "Sarah"));
+    printf("Não pegou: %s\n", hts_get_str(ht, "Karol"));
 
     {
-        entry_str_str *data = htstr_data_as_str(&ht);
-        for(i32 i = 0; i < ht.mask; ++i) {
+        entry_str_str *data = hts_data_as_str(&ht);
+        for(i32 i = 0; i < ht.cap; ++i) {
             if  (! data[i].key) {
                 continue;
             }
@@ -32,18 +32,18 @@ _proc test_ht_str(arena_t scratch) {
 _proc test_ht_i64(arena_t arena) {
     ht64_t ht = new_ht64(&arena, 4);
 
-    printf("%lld\n", hash_i64(4));
+    printf("%d, hash: %lld\n", 4, hash_i64(4));
 
-    htnum_set_str(&ht, 5, "Stamatto");
-    htnum_set_str(&ht, 4, "Sakamoto");
-    htnum_set_str(&ht, 5, "Ferreira");
+    hti_set_str(&ht, 5, "Stamatto");
+    hti_set_str(&ht, 4, "Sakamoto");
+    hti_set_str(&ht, 5, "Ferreira");
 
-    printf("pegou: %s\n", htnum_get_str(ht, 5));
-    printf("não pegou: %s\n", htnum_get_str(ht, 3));
+    printf("pegou: %s\n", hti_get_str(ht, 5));
+    printf("não pegou: %s\n", hti_get_str(ht, 3));
 
     {
-        entry_i64_str *data = htnum_data_as_str(&ht);
-        for(i32 i = 0; i < ht.mask; ++i) {
+        entry_i64_str *data = hti_data_as_str(&ht);
+        for(i32 i = 0; i < ht.cap; ++i) {
             if  ( ! data[i].key) {
                 continue;
             }
@@ -58,14 +58,16 @@ _proc test_ht_i64(arena_t arena) {
 _proc test_big_ht_i64(arena_t scratch) {
     ht64_t ht = new_ht64(&scratch, 128);
 
-    for(i32 i = 0; i < 128; ++i) {
-        htnum_set_i64(&ht, i, i);
+    printf("\n Big HT %d %d \n", ht.len, ht.cap);
+
+    for(i32 i = 1; i < 128; ++i) {
+        hti_set_i64(&ht, i, i);
     }
 
     {
-        entry64_t *data = htnum_data_as_int64(&ht);
-        for(i32 i = 0; i < ht.len; ++i) {
-            i32 idx = htnum_get_idx(ht, i);
+        entry64_t *data = hti_data_as_int64(&ht);
+        for(i32 i = 1; i <= ht.len; ++i) {
+            i32 idx = hti_get_idx(ht, i);
             
             printf("[%d]", idx);
             printf("%lld: %lld", data[idx].key, data[idx].val);
@@ -73,8 +75,8 @@ _proc test_big_ht_i64(arena_t scratch) {
 
             assert(data[idx].key == data[idx].val && "should be equal!");
         }
-        for(i32 i = ht.len; i < ht.mask; ++i) {
-            i32 idx = htnum_get_idx(ht, i);
+        for(i32 i = ht.len+1; i < ht.cap; ++i) {
+            i32 idx = hti_get_idx(ht, i);
 
             assert(data[idx].key == 0 && "should be empty!");
         }

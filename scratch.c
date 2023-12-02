@@ -2,18 +2,15 @@
 #include <stdlib.h>
 #include "ale.h"
 
-_proc print_mem(void * ptr, i32 len) {
-    u8 * mem = (u8 *) ptr;
-
-    printf("\n");
-    printf("[%lld] ", (i64) ptr);
-    for (i32 i = 0; i < len; ++i) {
-        if (i > 0 && i % 8 == 0) {
-            printf(" ;; ");
-        }
-        printf("|%d| ", mem[i]);
+_math i8 ht_get_exp_from_cap(i32 int32) {
+    u32 high = (u32) int32; 
+    i8 exp = 6;
+    high >> exp;
+    
+    while(high >>= 1) {
+        ++exp;
     }
-    printf("\n");
+    return exp;
 }
 
 _main main(i32 argslen, cstr args[]) {
@@ -23,9 +20,7 @@ _main main(i32 argslen, cstr args[]) {
 
     printf("%s\n", x);
 
-    #ifdef _MSC_VER
-        printf("MSVC!");
-    #endif 
+
     
     return 0;
 }

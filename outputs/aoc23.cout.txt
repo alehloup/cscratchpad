@@ -1,726 +1,770 @@
-total_reds: 12, total_greens: 13, total_blues: 14
- === GAME 1 ===
-|1xgreen|4xblue|
-|1xblue|2xgreen|1xred|
-|1xred|1xgreen|2xblue|
-|1xgreen|1xred|
-|1xgreen|
-|1xgreen|1xblue|1xred|
- ================= 
- === GAME 2 ===
-|2xblue|2xred|6xgreen|
-|1xred|6xgreen|7xblue|
-|10xgreen|8xblue|1xred|
-|2xgreen|18xblue <IMPOSSIBLE> |2xred|
-|14xblue|3xgreen|1xred|
-|8xgreen|1xred|9xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 3 ===
-|6xgreen|5xblue|9xred|
-|4xblue|1xgreen|13xred <IMPOSSIBLE> |
-|9xgreen|14xred <IMPOSSIBLE> |1xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 4 ===
-|14xgreen <IMPOSSIBLE> |3xblue|16xred <IMPOSSIBLE> |
-|20xred <IMPOSSIBLE> |
-|4xgreen|2xred|1xblue|
-|10xblue|11xgreen|18xred <IMPOSSIBLE> |
-|3xred|3xblue|6xgreen|
-|2xgreen|18xred <IMPOSSIBLE> |9xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 5 ===
-|5xgreen|4xblue|
-|1xred|3xblue|2xgreen|
-|4xgreen|2xred|15xblue <IMPOSSIBLE> |
-|11xblue|8xgreen|4xred|
-|4xred|3xgreen|
-|4xred|3xgreen|7xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 6 ===
-|6xblue|10xgreen|
-|2xred|6xgreen|2xblue|
-|4xred|4xblue|1xgreen|
-|2xblue|7xgreen|2xred|
- ================= 
- === GAME 7 ===
-|14xgreen <IMPOSSIBLE> |3xred|2xblue|
-|5xblue|3xgreen|2xred|
-|1xgreen|3xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 8 ===
-|7xred|
-|3xblue|9xred|1xgreen|
-|5xgreen|5xblue|7xred|
-|1xred|2xblue|
- ================= 
- === GAME 9 ===
-|3xgreen|4xblue|1xred|
-|3xblue|12xgreen|18xred <IMPOSSIBLE> |
-|7xgreen|9xred|8xblue|
-|2xblue|10xred|12xgreen|
-|4xblue|1xred|1xgreen|
-|4xblue|6xgreen|6xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 10 ===
-|2xblue|4xgreen|2xred|
-|7xgreen|4xred|
-|5xred|8xgreen|
- ================= 
- === GAME 11 ===
-|1xblue|10xgreen|15xred <IMPOSSIBLE> |
-|1xblue|2xgreen|2xred|
-|5xgreen|10xblue|8xred|
-|13xred <IMPOSSIBLE> |7xblue|
-|1xred|9xgreen|4xblue|
-|9xblue|9xred|8xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 12 ===
-|1xgreen|10xred|3xblue|
-|14xred <IMPOSSIBLE> |1xgreen|4xblue|
-|6xred|3xgreen|12xblue|
-|13xblue|1xgreen|18xred <IMPOSSIBLE> |
-|4xgreen|14xred <IMPOSSIBLE> |7xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 13 ===
-|1xred|3xgreen|
-|2xgreen|1xred|5xblue|
-|1xblue|
-|1xgreen|7xblue|1xred|
-|1xred|2xgreen|7xblue|
- ================= 
- === GAME 14 ===
-|7xblue|9xred|1xgreen|
-|8xred|2xblue|
-|11xred|18xblue <IMPOSSIBLE> |4xgreen|
-|2xblue|3xgreen|1xred|
-|1xgreen|8xred|9xblue|
-|2xblue|8xred|1xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 15 ===
-|8xblue|3xgreen|15xred <IMPOSSIBLE> |
-|13xred <IMPOSSIBLE> |10xblue|
-|2xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 16 ===
-|1xgreen|1xred|
-|1xblue|2xgreen|2xred|
-|1xblue|4xred|1xgreen|
-|3xgreen|
-|2xblue|3xgreen|4xred|
- ================= 
- === GAME 17 ===
-|1xgreen|3xred|14xblue|
-|1xred|2xblue|2xgreen|
-|3xred|
- ================= 
- === GAME 18 ===
-|1xred|2xgreen|8xblue|
-|2xblue|14xred <IMPOSSIBLE> |
-|4xblue|2xred|2xgreen|
-|6xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 19 ===
-|2xred|11xblue|18xgreen <IMPOSSIBLE> |
-|3xred|6xgreen|3xblue|
-|7xgreen|1xred|10xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 20 ===
-|10xred|1xblue|4xgreen|
-|4xgreen|3xblue|
-|10xgreen|13xred <IMPOSSIBLE> |4xblue|
-|2xred|7xgreen|
-|4xred|3xblue|5xgreen|
-|13xred <IMPOSSIBLE> |1xgreen|4xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 21 ===
-|20xred <IMPOSSIBLE> |4xgreen|5xblue|
-|10xred|11xgreen|4xblue|
-|1xred|8xblue|14xgreen <IMPOSSIBLE> |
-|11xgreen|8xblue|15xred <IMPOSSIBLE> |
-|8xblue|2xgreen|13xred <IMPOSSIBLE> |
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 22 ===
-|2xred|11xblue|4xgreen|
-|1xblue|3xred|6xgreen|
-|6xgreen|1xred|1xblue|
-|4xgreen|7xblue|3xred|
-|11xblue|6xgreen|4xred|
- ================= 
- === GAME 23 ===
-|6xgreen|3xred|1xblue|
-|17xgreen <IMPOSSIBLE> |11xred|
-|1xred|2xblue|13xgreen|
-|13xgreen|19xred <IMPOSSIBLE> |
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 24 ===
-|1xblue|
-|12xred|1xblue|
-|1xred|
-|12xred|1xgreen|1xblue|
-|11xred|1xblue|
-|12xred|1xgreen|
- ================= 
- === GAME 25 ===
-|12xblue|6xred|3xgreen|
-|8xgreen|14xblue|
-|11xgreen|5xblue|6xred|
-|4xred|12xblue|8xgreen|
- ================= 
- === GAME 26 ===
-|15xred <IMPOSSIBLE> |13xgreen|9xblue|
-|9xblue|8xgreen|7xred|
-|2xgreen|6xred|3xblue|
-|1xblue|7xred|3xgreen|
-|13xblue|4xgreen|18xred <IMPOSSIBLE> |
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 27 ===
-|9xblue|5xred|
-|15xred <IMPOSSIBLE> |12xblue|3xgreen|
-|12xred|12xblue|1xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 28 ===
-|18xred <IMPOSSIBLE> |4xgreen|
-|4xgreen|6xred|
-|1xblue|6xgreen|19xred <IMPOSSIBLE> |
-|9xgreen|17xred <IMPOSSIBLE> |
-|4xgreen|5xblue|18xred <IMPOSSIBLE> |
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 29 ===
-|7xgreen|6xred|6xblue|
-|6xblue|19xred <IMPOSSIBLE> |4xgreen|
-|4xgreen|4xblue|13xred <IMPOSSIBLE> |
-|5xblue|15xred <IMPOSSIBLE> |10xgreen|
-|2xgreen|6xblue|5xred|
-|8xred|10xgreen|6xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 30 ===
-|1xgreen|13xred <IMPOSSIBLE> |12xblue|
-|1xred|2xblue|
-|11xblue|1xred|1xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 31 ===
-|8xgreen|18xblue <IMPOSSIBLE> |17xred <IMPOSSIBLE> |
-|4xred|8xgreen|6xblue|
-|9xblue|7xgreen|
-|3xgreen|1xblue|12xred|
-|5xred|10xblue|11xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 32 ===
-|17xred <IMPOSSIBLE> |17xgreen <IMPOSSIBLE> |7xblue|
-|18xred <IMPOSSIBLE> |16xgreen <IMPOSSIBLE> |
-|1xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 33 ===
-|16xblue <IMPOSSIBLE> |3xred|
-|9xblue|1xred|2xgreen|
-|3xgreen|7xblue|
-|1xgreen|4xred|
-|3xgreen|1xred|8xblue|
-|5xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 34 ===
-|5xblue|8xred|1xgreen|
-|9xred|10xblue|7xgreen|
-|1xgreen|14xblue|
-|8xblue|4xred|10xgreen|
-|15xblue <IMPOSSIBLE> |8xgreen|7xred|
-|2xred|6xgreen|3xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 35 ===
-|13xred <IMPOSSIBLE> |9xblue|
-|7xblue|16xred <IMPOSSIBLE> |10xgreen|
-|4xred|6xblue|
-|3xblue|12xgreen|7xred|
-|8xblue|6xred|
-|10xblue|3xgreen|2xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 36 ===
-|1xblue|9xred|2xgreen|
-|11xred|3xblue|2xgreen|
-|2xgreen|6xred|
-|8xgreen|11xred|3xblue|
-|4xgreen|7xblue|11xred|
-|9xgreen|8xred|2xblue|
- ================= 
- === GAME 37 ===
-|8xgreen|3xblue|4xred|
-|14xblue|10xgreen|3xred|
-|19xgreen <IMPOSSIBLE> |2xblue|7xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 38 ===
-|2xgreen|3xred|3xblue|
-|3xgreen|9xred|
-|13xblue|8xred|
-|6xred|5xgreen|13xblue|
- ================= 
- === GAME 39 ===
-|8xred|5xblue|
-|4xgreen|5xblue|3xred|
-|18xred <IMPOSSIBLE> |2xgreen|6xblue|
-|2xgreen|5xblue|17xred <IMPOSSIBLE> |
-|1xgreen|2xred|
-|5xgreen|6xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 40 ===
-|12xred|4xblue|1xgreen|
-|11xgreen|20xblue <IMPOSSIBLE> |4xred|
-|10xblue|4xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 41 ===
-|2xgreen|2xblue|
-|2xred|2xgreen|
-|2xgreen|2xblue|10xred|
- ================= 
- === GAME 42 ===
-|6xgreen|3xblue|
-|2xred|2xgreen|1xblue|
-|3xblue|5xgreen|6xred|
-|6xred|
-|1xblue|6xgreen|12xred|
- ================= 
- === GAME 43 ===
-|1xblue|4xgreen|
-|1xblue|
-|2xblue|8xred|2xgreen|
-|2xblue|1xred|4xgreen|
-|1xblue|4xred|4xgreen|
-|4xgreen|7xred|
- ================= 
- === GAME 44 ===
-|8xgreen|9xred|
-|1xred|2xblue|13xgreen|
-|4xblue|8xgreen|17xred <IMPOSSIBLE> |
-|13xred <IMPOSSIBLE> |13xgreen|
-|1xred|9xgreen|
-|19xred <IMPOSSIBLE> |3xgreen|3xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 45 ===
-|10xblue|2xred|1xgreen|
-|6xgreen|5xred|8xblue|
-|3xblue|1xred|
-|4xgreen|10xblue|4xred|
- ================= 
- === GAME 46 ===
-|3xred|8xblue|
-|6xblue|7xgreen|6xred|
-|6xgreen|1xblue|7xred|
-|8xred|1xgreen|5xblue|
-|9xred|12xblue|10xgreen|
-|7xgreen|5xred|1xblue|
- ================= 
- === GAME 47 ===
-|5xred|
-|2xblue|2xgreen|5xred|
-|3xgreen|7xred|
-|14xred <IMPOSSIBLE> |3xgreen|2xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 48 ===
-|7xblue|12xgreen|2xred|
-|11xgreen|10xblue|1xred|
-|1xred|13xblue|2xgreen|
-|14xgreen <IMPOSSIBLE> |2xred|9xblue|
-|2xred|12xgreen|3xblue|
-|2xred|7xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 49 ===
-|4xgreen|5xblue|
-|9xblue|
-|10xblue|5xgreen|2xred|
-|10xblue|2xred|2xgreen|
-|1xred|1xgreen|4xblue|
-|2xblue|
- ================= 
- === GAME 50 ===
-|2xred|2xblue|7xgreen|
-|7xred|9xgreen|3xblue|
-|5xred|10xgreen|
- ================= 
- === GAME 51 ===
-|15xred <IMPOSSIBLE> |9xblue|4xgreen|
-|5xred|2xblue|15xgreen <IMPOSSIBLE> |
-|4xblue|3xgreen|20xred <IMPOSSIBLE> |
-|12xgreen|1xred|10xblue|
-|10xgreen|5xblue|13xred <IMPOSSIBLE> |
-|9xred|10xgreen|11xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 52 ===
-|3xblue|12xgreen|1xred|
-|6xgreen|
-|1xred|8xgreen|
-|1xblue|1xgreen|1xred|
- ================= 
- === GAME 53 ===
-|10xgreen|7xred|12xblue|
-|9xblue|6xgreen|2xred|
-|8xgreen|5xblue|5xred|
-|7xblue|16xgreen <IMPOSSIBLE> |11xred|
-|6xred|8xblue|13xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 54 ===
-|10xgreen|6xblue|3xred|
-|6xgreen|2xred|8xblue|
-|9xblue|11xgreen|2xred|
-|10xgreen|1xblue|3xred|
- ================= 
- === GAME 55 ===
-|4xblue|1xred|
-|3xred|7xblue|
-|12xred|4xgreen|8xblue|
-|3xgreen|5xblue|1xred|
-|13xblue|12xred|1xgreen|
- ================= 
- === GAME 56 ===
-|12xblue|15xgreen <IMPOSSIBLE> |
-|1xgreen|7xred|11xblue|
-|5xgreen|9xblue|1xred|
-|8xred|5xgreen|6xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 57 ===
-|4xgreen|11xblue|18xred <IMPOSSIBLE> |
-|14xblue|14xred <IMPOSSIBLE> |16xgreen <IMPOSSIBLE> |
-|7xred|15xgreen <IMPOSSIBLE> |3xblue|
-|18xred <IMPOSSIBLE> |20xgreen <IMPOSSIBLE> |8xblue|
-|12xblue|9xred|16xgreen <IMPOSSIBLE> |
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 58 ===
-|10xblue|9xgreen|8xred|
-|13xgreen|6xblue|8xred|
-|8xgreen|4xred|
-|4xblue|1xred|18xgreen <IMPOSSIBLE> |
-|7xred|10xgreen|10xblue|
-|15xblue <IMPOSSIBLE> |10xgreen|3xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 59 ===
-|17xgreen <IMPOSSIBLE> |2xblue|2xred|
-|2xblue|1xred|8xgreen|
-|14xgreen <IMPOSSIBLE> |1xred|1xblue|
-|15xgreen <IMPOSSIBLE> |3xblue|2xred|
-|2xblue|8xgreen|1xred|
-|1xblue|1xred|8xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 60 ===
-|1xgreen|1xblue|1xred|
-|4xblue|3xred|2xgreen|
-|13xgreen|
-|2xblue|2xred|8xgreen|
-|4xred|12xgreen|4xblue|
-|4xgreen|4xblue|4xred|
- ================= 
- === GAME 61 ===
-|3xblue|7xred|
-|5xblue|8xred|1xgreen|
-|1xblue|8xred|
-|10xblue|2xred|1xgreen|
-|1xgreen|5xblue|2xred|
- ================= 
- === GAME 62 ===
-|10xred|2xgreen|
-|8xblue|7xred|2xgreen|
-|4xgreen|2xblue|10xred|
- ================= 
- === GAME 63 ===
-|1xgreen|3xblue|5xred|
-|6xgreen|5xblue|2xred|
-|3xblue|7xred|
- ================= 
- === GAME 64 ===
-|6xred|20xblue <IMPOSSIBLE> |
-|4xred|3xblue|2xgreen|
-|3xgreen|19xblue <IMPOSSIBLE> |6xred|
-|2xgreen|6xblue|3xred|
-|13xblue|5xgreen|5xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 65 ===
-|6xred|9xblue|20xgreen <IMPOSSIBLE> |
-|6xred|16xgreen <IMPOSSIBLE> |4xblue|
-|12xred|6xgreen|5xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 66 ===
-|2xblue|5xred|4xgreen|
-|13xblue|2xgreen|
-|1xgreen|6xblue|
- ================= 
- === GAME 67 ===
-|4xgreen|5xblue|2xred|
-|1xred|14xblue|6xgreen|
-|1xgreen|14xred <IMPOSSIBLE> |5xblue|
-|18xred <IMPOSSIBLE> |16xblue <IMPOSSIBLE> |
-|15xblue <IMPOSSIBLE> |8xred|18xgreen <IMPOSSIBLE> |
-|1xgreen|18xred <IMPOSSIBLE> |6xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 68 ===
-|1xblue|9xred|7xgreen|
-|7xred|1xblue|6xgreen|
-|5xgreen|1xblue|8xred|
- ================= 
- === GAME 69 ===
-|12xgreen|3xblue|4xred|
-|9xgreen|8xred|7xblue|
-|4xblue|5xred|10xgreen|
-|4xred|5xgreen|7xblue|
-|9xgreen|4xred|2xblue|
-|3xgreen|13xblue|1xred|
- ================= 
- === GAME 70 ===
-|9xred|1xgreen|8xblue|
-|11xgreen|13xblue|12xred|
-|3xblue|5xgreen|8xred|
-|1xred|14xblue|
- ================= 
- === GAME 71 ===
-|10xblue|
-|2xgreen|8xblue|9xred|
-|5xred|1xblue|
- ================= 
- === GAME 72 ===
-|3xgreen|5xblue|5xred|
-|1xblue|1xred|2xgreen|
-|4xred|4xblue|1xgreen|
-|5xblue|4xred|1xgreen|
-|6xblue|3xgreen|5xred|
-|5xblue|1xred|4xgreen|
- ================= 
- === GAME 73 ===
-|3xred|1xgreen|1xblue|
-|7xgreen|2xred|1xblue|
-|2xgreen|1xblue|3xred|
-|1xred|4xgreen|1xblue|
-|3xred|5xgreen|
- ================= 
- === GAME 74 ===
-|5xblue|1xred|4xgreen|
-|3xred|2xgreen|
-|4xred|6xblue|
-|2xred|2xblue|
-|1xgreen|4xred|8xblue|
-|5xblue|4xred|
- ================= 
- === GAME 75 ===
-|3xred|5xblue|3xgreen|
-|9xgreen|6xblue|7xred|
-|2xgreen|3xred|12xblue|
-|14xgreen <IMPOSSIBLE> |4xblue|10xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 76 ===
-|1xblue|7xred|1xgreen|
-|6xred|1xblue|2xgreen|
-|4xred|2xgreen|
-|3xred|1xblue|
-|16xred <IMPOSSIBLE> |1xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 77 ===
-|3xred|10xblue|1xgreen|
-|4xred|7xblue|3xgreen|
-|7xblue|6xgreen|7xred|
-|5xgreen|15xblue <IMPOSSIBLE> |7xred|
-|12xgreen|5xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 78 ===
-|6xred|10xblue|15xgreen <IMPOSSIBLE> |
-|6xgreen|11xred|4xblue|
-|6xblue|8xred|
-|4xblue|7xred|2xgreen|
-|11xgreen|7xred|11xblue|
-|3xblue|14xgreen <IMPOSSIBLE> |6xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 79 ===
-|14xred <IMPOSSIBLE> |6xgreen|4xblue|
-|13xred <IMPOSSIBLE> |6xblue|
-|6xred|13xgreen|4xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 80 ===
-|8xred|2xblue|8xgreen|
-|6xred|10xgreen|4xblue|
-|3xred|9xgreen|
-|2xgreen|8xblue|7xred|
-|7xblue|3xred|11xgreen|
-|1xred|12xgreen|8xblue|
- ================= 
- === GAME 81 ===
-|9xred|4xblue|11xgreen|
-|1xblue|4xred|2xgreen|
-|5xred|
-|3xblue|2xred|2xgreen|
-|14xred <IMPOSSIBLE> |12xgreen|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 82 ===
-|5xgreen|
-|2xblue|
-|2xred|
-|1xblue|2xred|11xgreen|
-|8xgreen|2xred|1xblue|
- ================= 
- === GAME 83 ===
-|3xgreen|7xred|6xblue|
-|7xred|7xgreen|11xblue|
-|7xblue|13xgreen|7xred|
-|12xblue|10xred|2xgreen|
-|1xgreen|11xred|7xblue|
-|12xblue|9xred|9xgreen|
- ================= 
- === GAME 84 ===
-|5xblue|1xgreen|
-|16xgreen <IMPOSSIBLE> |4xblue|8xred|
-|7xred|5xblue|16xgreen <IMPOSSIBLE> |
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 85 ===
-|9xgreen|20xblue <IMPOSSIBLE> |7xred|
-|19xblue <IMPOSSIBLE> |14xred <IMPOSSIBLE> |2xgreen|
-|10xgreen|2xred|10xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 86 ===
-|1xgreen|3xred|5xblue|
-|9xred|2xblue|6xgreen|
-|8xgreen|14xred <IMPOSSIBLE> |3xblue|
-|18xgreen <IMPOSSIBLE> |2xblue|7xred|
-|2xblue|10xred|14xgreen <IMPOSSIBLE> |
-|17xgreen <IMPOSSIBLE> |4xblue|12xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 87 ===
-|4xgreen|8xred|13xblue|
-|7xred|13xblue|4xgreen|
-|1xgreen|8xblue|
- ================= 
- === GAME 88 ===
-|9xblue|11xred|
-|5xgreen|7xblue|12xred|
-|10xred|2xgreen|1xblue|
-|2xblue|5xred|5xgreen|
-|7xred|6xgreen|9xblue|
-|1xgreen|10xred|5xblue|
- ================= 
- === GAME 89 ===
-|7xred|2xgreen|1xblue|
-|1xblue|2xgreen|
-|6xred|1xgreen|
-|7xred|1xblue|
-|3xgreen|3xred|
- ================= 
- === GAME 90 ===
-|8xblue|2xred|3xgreen|
-|9xgreen|4xblue|3xred|
-|7xgreen|11xblue|2xred|
-|13xgreen|12xblue|8xred|
-|10xblue|2xgreen|
-|5xgreen|1xred|9xblue|
- ================= 
- === GAME 91 ===
-|2xred|2xgreen|4xblue|
-|5xblue|2xred|16xgreen <IMPOSSIBLE> |
-|11xgreen|
-|3xblue|2xred|8xgreen|
-|4xgreen|3xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 92 ===
-|8xred|12xblue|3xgreen|
-|11xred|10xblue|6xgreen|
-|14xred <IMPOSSIBLE> |8xgreen|14xblue|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 93 ===
-|3xgreen|2xred|3xblue|
-|3xgreen|3xred|1xblue|
-|2xblue|16xred <IMPOSSIBLE> |3xgreen|
-|2xgreen|
-|5xgreen|2xblue|2xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 94 ===
-|5xred|2xgreen|
-|9xred|3xblue|
-|2xgreen|2xblue|5xred|
-|3xblue|8xred|2xgreen|
-|8xred|1xblue|1xgreen|
- ================= 
- === GAME 95 ===
-|3xblue|4xgreen|7xred|
-|7xred|1xgreen|15xblue <IMPOSSIBLE> |
-|6xblue|2xgreen|7xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 96 ===
-|2xblue|1xred|6xgreen|
-|7xblue|8xgreen|
-|1xred|7xgreen|
-|2xgreen|14xblue|1xred|
-|3xblue|1xred|7xgreen|
-|4xblue|11xgreen|
- ================= 
- === GAME 97 ===
-|2xred|9xblue|8xgreen|
-|3xgreen|5xblue|
-|6xgreen|1xred|9xblue|
-|2xred|13xgreen|1xblue|
-|2xgreen|2xred|2xblue|
- ================= 
- === GAME 98 ===
-|2xblue|1xgreen|1xred|
-|4xblue|5xred|1xgreen|
-|4xblue|3xred|2xgreen|
- ================= 
- === GAME 99 ===
-|17xred <IMPOSSIBLE> |2xblue|4xgreen|
-|4xgreen|8xred|6xblue|
-|5xred|
- IMPOSSIBLE GAME! 
- ================= 
- === GAME 100 ===
-|6xred|4xgreen|
-|3xred|2xblue|9xgreen|
-|1xblue|5xgreen|14xred <IMPOSSIBLE> |
-|1xblue|2xred|2xgreen|
-|9xred|1xblue|14xgreen <IMPOSSIBLE> |
-|2xblue|11xgreen|8xred|
- IMPOSSIBLE GAME! 
- ================= 
-Possibles: 2486
+     GAME 1    
+1g 4b 
+1b 2g 1r 
+1r 1g 2b 
+1g 1r 
+1g 
+1g 1b 1r 
+needed: 1 red 2 green 4 blue (8)
+
+     GAME 2    
+2b 2r 6g 
+1r 6g 7b 
+10g 8b 1r 
+2g 18b 2r 
+14b 3g 1r 
+8g 1r 9b 
+needed: 2 red 10 green 18 blue (360)
+
+     GAME 3    
+6g 5b 9r 
+4b 1g 13r 
+9g 14r 1b 
+needed: 14 red 9 green 5 blue (630)
+
+     GAME 4    
+14g 3b 16r 
+20r 
+4g 2r 1b 
+10b 11g 18r 
+3r 3b 6g 
+2g 18r 9b 
+needed: 20 red 14 green 10 blue (2800)
+
+     GAME 5    
+5g 4b 
+1r 3b 2g 
+4g 2r 15b 
+11b 8g 4r 
+4r 3g 
+4r 3g 7b 
+needed: 4 red 8 green 15 blue (480)
+
+     GAME 6    
+6b 10g 
+2r 6g 2b 
+4r 4b 1g 
+2b 7g 2r 
+needed: 4 red 10 green 6 blue (240)
+
+     GAME 7    
+14g 3r 2b 
+5b 3g 2r 
+1g 3b 
+needed: 3 red 14 green 5 blue (210)
+
+     GAME 8    
+7r 
+3b 9r 1g 
+5g 5b 7r 
+1r 2b 
+needed: 9 red 5 green 5 blue (225)
+
+     GAME 9    
+3g 4b 1r 
+3b 12g 18r 
+7g 9r 8b 
+2b 10r 12g 
+4b 1r 1g 
+4b 6g 6r 
+needed: 18 red 12 green 8 blue (1728)
+
+     GAME 10    
+2b 4g 2r 
+7g 4r 
+5r 8g 
+needed: 5 red 8 green 2 blue (80)
+
+     GAME 11    
+1b 10g 15r 
+1b 2g 2r 
+5g 10b 8r 
+13r 7b 
+1r 9g 4b 
+9b 9r 8g 
+needed: 15 red 10 green 10 blue (1500)
+
+     GAME 12    
+1g 10r 3b 
+14r 1g 4b 
+6r 3g 12b 
+13b 1g 18r 
+4g 14r 7b 
+needed: 18 red 4 green 13 blue (936)
+
+     GAME 13    
+1r 3g 
+2g 1r 5b 
+1b 
+1g 7b 1r 
+1r 2g 7b 
+needed: 1 red 3 green 7 blue (21)
+
+     GAME 14    
+7b 9r 1g 
+8r 2b 
+11r 18b 4g 
+2b 3g 1r 
+1g 8r 9b 
+2b 8r 1g 
+needed: 11 red 4 green 18 blue (792)
+
+     GAME 15    
+8b 3g 15r 
+13r 10b 
+2r 
+needed: 15 red 3 green 10 blue (450)
+
+     GAME 16    
+1g 1r 
+1b 2g 2r 
+1b 4r 1g 
+3g 
+2b 3g 4r 
+needed: 4 red 3 green 2 blue (24)
+
+     GAME 17    
+1g 3r 14b 
+1r 2b 2g 
+3r 
+needed: 3 red 2 green 14 blue (84)
+
+     GAME 18    
+1r 2g 8b 
+2b 14r 
+4b 2r 2g 
+6r 
+needed: 14 red 2 green 8 blue (224)
+
+     GAME 19    
+2r 11b 18g 
+3r 6g 3b 
+7g 1r 10b 
+needed: 3 red 18 green 11 blue (594)
+
+     GAME 20    
+10r 1b 4g 
+4g 3b 
+10g 13r 4b 
+2r 7g 
+4r 3b 5g 
+13r 1g 4b 
+needed: 13 red 10 green 4 blue (520)
+
+     GAME 21    
+20r 4g 5b 
+10r 11g 4b 
+1r 8b 14g 
+11g 8b 15r 
+8b 2g 13r 
+needed: 20 red 14 green 8 blue (2240)
+
+     GAME 22    
+2r 11b 4g 
+1b 3r 6g 
+6g 1r 1b 
+4g 7b 3r 
+11b 6g 4r 
+needed: 4 red 6 green 11 blue (264)
+
+     GAME 23    
+6g 3r 1b 
+17g 11r 
+1r 2b 13g 
+13g 19r 
+needed: 19 red 17 green 2 blue (646)
+
+     GAME 24    
+1b 
+12r 1b 
+1r 
+12r 1g 1b 
+11r 1b 
+12r 1g 
+needed: 12 red 1 green 1 blue (12)
+
+     GAME 25    
+12b 6r 3g 
+8g 14b 
+11g 5b 6r 
+4r 12b 8g 
+needed: 6 red 11 green 14 blue (924)
+
+     GAME 26    
+15r 13g 9b 
+9b 8g 7r 
+2g 6r 3b 
+1b 7r 3g 
+13b 4g 18r 
+needed: 18 red 13 green 13 blue (3042)
+
+     GAME 27    
+9b 5r 
+15r 12b 3g 
+12r 12b 1g 
+needed: 15 red 3 green 12 blue (540)
+
+     GAME 28    
+18r 4g 
+4g 6r 
+1b 6g 19r 
+9g 17r 
+4g 5b 18r 
+needed: 19 red 9 green 5 blue (855)
+
+     GAME 29    
+7g 6r 6b 
+6b 19r 4g 
+4g 4b 13r 
+5b 15r 10g 
+2g 6b 5r 
+8r 10g 6b 
+needed: 19 red 10 green 6 blue (1140)
+
+     GAME 30    
+1g 13r 12b 
+1r 2b 
+11b 1r 1g 
+needed: 13 red 1 green 12 blue (156)
+
+     GAME 31    
+8g 18b 17r 
+4r 8g 6b 
+9b 7g 
+3g 1b 12r 
+5r 10b 11g 
+needed: 17 red 11 green 18 blue (3366)
+
+     GAME 32    
+17r 17g 7b 
+18r 16g 
+1b 
+needed: 18 red 17 green 7 blue (2142)
+
+     GAME 33    
+16b 3r 
+9b 1r 2g 
+3g 7b 
+1g 4r 
+3g 1r 8b 
+5b 
+needed: 4 red 3 green 16 blue (192)
+
+     GAME 34    
+5b 8r 1g 
+9r 10b 7g 
+1g 14b 
+8b 4r 10g 
+15b 8g 7r 
+2r 6g 3b 
+needed: 9 red 10 green 15 blue (1350)
+
+     GAME 35    
+13r 9b 
+7b 16r 10g 
+4r 6b 
+3b 12g 7r 
+8b 6r 
+10b 3g 2r 
+needed: 16 red 12 green 10 blue (1920)
+
+     GAME 36    
+1b 9r 2g 
+11r 3b 2g 
+2g 6r 
+8g 11r 3b 
+4g 7b 11r 
+9g 8r 2b 
+needed: 11 red 9 green 7 blue (693)
+
+     GAME 37    
+8g 3b 4r 
+14b 10g 3r 
+19g 2b 7r 
+needed: 7 red 19 green 14 blue (1862)
+
+     GAME 38    
+2g 3r 3b 
+3g 9r 
+13b 8r 
+6r 5g 13b 
+needed: 9 red 5 green 13 blue (585)
+
+     GAME 39    
+8r 5b 
+4g 5b 3r 
+18r 2g 6b 
+2g 5b 17r 
+1g 2r 
+5g 6b 
+needed: 18 red 5 green 6 blue (540)
+
+     GAME 40    
+12r 4b 1g 
+11g 20b 4r 
+10b 4r 
+needed: 12 red 11 green 20 blue (2640)
+
+     GAME 41    
+2g 2b 
+2r 2g 
+2g 2b 10r 
+needed: 10 red 2 green 2 blue (40)
+
+     GAME 42    
+6g 3b 
+2r 2g 1b 
+3b 5g 6r 
+6r 
+1b 6g 12r 
+needed: 12 red 6 green 3 blue (216)
+
+     GAME 43    
+1b 4g 
+1b 
+2b 8r 2g 
+2b 1r 4g 
+1b 4r 4g 
+4g 7r 
+needed: 8 red 4 green 2 blue (64)
+
+     GAME 44    
+8g 9r 
+1r 2b 13g 
+4b 8g 17r 
+13r 13g 
+1r 9g 
+19r 3g 3b 
+needed: 19 red 13 green 4 blue (988)
+
+     GAME 45    
+10b 2r 1g 
+6g 5r 8b 
+3b 1r 
+4g 10b 4r 
+needed: 5 red 6 green 10 blue (300)
+
+     GAME 46    
+3r 8b 
+6b 7g 6r 
+6g 1b 7r 
+8r 1g 5b 
+9r 12b 10g 
+7g 5r 1b 
+needed: 9 red 10 green 12 blue (1080)
+
+     GAME 47    
+5r 
+2b 2g 5r 
+3g 7r 
+14r 3g 2b 
+needed: 14 red 3 green 2 blue (84)
+
+     GAME 48    
+7b 12g 2r 
+11g 10b 1r 
+1r 13b 2g 
+14g 2r 9b 
+2r 12g 3b 
+2r 7b 
+needed: 2 red 14 green 13 blue (364)
+
+     GAME 49    
+4g 5b 
+9b 
+10b 5g 2r 
+10b 2r 2g 
+1r 1g 4b 
+2b 
+needed: 2 red 5 green 10 blue (100)
+
+     GAME 50    
+2r 2b 7g 
+7r 9g 3b 
+5r 10g 
+needed: 7 red 10 green 3 blue (210)
+
+     GAME 51    
+15r 9b 4g 
+5r 2b 15g 
+4b 3g 20r 
+12g 1r 10b 
+10g 5b 13r 
+9r 10g 11b 
+needed: 20 red 15 green 11 blue (3300)
+
+     GAME 52    
+3b 12g 1r 
+6g 
+1r 8g 
+1b 1g 1r 
+needed: 1 red 12 green 3 blue (36)
+
+     GAME 53    
+10g 7r 12b 
+9b 6g 2r 
+8g 5b 5r 
+7b 16g 11r 
+6r 8b 13g 
+needed: 11 red 16 green 12 blue (2112)
+
+     GAME 54    
+10g 6b 3r 
+6g 2r 8b 
+9b 11g 2r 
+10g 1b 3r 
+needed: 3 red 11 green 9 blue (297)
+
+     GAME 55    
+4b 1r 
+3r 7b 
+12r 4g 8b 
+3g 5b 1r 
+13b 12r 1g 
+needed: 12 red 4 green 13 blue (624)
+
+     GAME 56    
+12b 15g 
+1g 7r 11b 
+5g 9b 1r 
+8r 5g 6b 
+needed: 8 red 15 green 12 blue (1440)
+
+     GAME 57    
+4g 11b 18r 
+14b 14r 16g 
+7r 15g 3b 
+18r 20g 8b 
+12b 9r 16g 
+needed: 18 red 20 green 14 blue (5040)
+
+     GAME 58    
+10b 9g 8r 
+13g 6b 8r 
+8g 4r 
+4b 1r 18g 
+7r 10g 10b 
+15b 10g 3r 
+needed: 8 red 18 green 15 blue (2160)
+
+     GAME 59    
+17g 2b 2r 
+2b 1r 8g 
+14g 1r 1b 
+15g 3b 2r 
+2b 8g 1r 
+1b 1r 8g 
+needed: 2 red 17 green 3 blue (102)
+
+     GAME 60    
+1g 1b 1r 
+4b 3r 2g 
+13g 
+2b 2r 8g 
+4r 12g 4b 
+4g 4b 4r 
+needed: 4 red 13 green 4 blue (208)
+
+     GAME 61    
+3b 7r 
+5b 8r 1g 
+1b 8r 
+10b 2r 1g 
+1g 5b 2r 
+needed: 8 red 1 green 10 blue (80)
+
+     GAME 62    
+10r 2g 
+8b 7r 2g 
+4g 2b 10r 
+needed: 10 red 4 green 8 blue (320)
+
+     GAME 63    
+1g 3b 5r 
+6g 5b 2r 
+3b 7r 
+needed: 7 red 6 green 5 blue (210)
+
+     GAME 64    
+6r 20b 
+4r 3b 2g 
+3g 19b 6r 
+2g 6b 3r 
+13b 5g 5r 
+needed: 6 red 5 green 20 blue (600)
+
+     GAME 65    
+6r 9b 20g 
+6r 16g 4b 
+12r 6g 5b 
+needed: 12 red 20 green 9 blue (2160)
+
+     GAME 66    
+2b 5r 4g 
+13b 2g 
+1g 6b 
+needed: 5 red 4 green 13 blue (260)
+
+     GAME 67    
+4g 5b 2r 
+1r 14b 6g 
+1g 14r 5b 
+18r 16b 
+15b 8r 18g 
+1g 18r 6b 
+needed: 18 red 18 green 16 blue (5184)
+
+     GAME 68    
+1b 9r 7g 
+7r 1b 6g 
+5g 1b 8r 
+needed: 9 red 7 green 1 blue (63)
+
+     GAME 69    
+12g 3b 4r 
+9g 8r 7b 
+4b 5r 10g 
+4r 5g 7b 
+9g 4r 2b 
+3g 13b 1r 
+needed: 8 red 12 green 13 blue (1248)
+
+     GAME 70    
+9r 1g 8b 
+11g 13b 12r 
+3b 5g 8r 
+1r 14b 
+needed: 12 red 11 green 14 blue (1848)
+
+     GAME 71    
+10b 
+2g 8b 9r 
+5r 1b 
+needed: 9 red 2 green 10 blue (180)
+
+     GAME 72    
+3g 5b 5r 
+1b 1r 2g 
+4r 4b 1g 
+5b 4r 1g 
+6b 3g 5r 
+5b 1r 4g 
+needed: 5 red 4 green 6 blue (120)
+
+     GAME 73    
+3r 1g 1b 
+7g 2r 1b 
+2g 1b 3r 
+1r 4g 1b 
+3r 5g 
+needed: 3 red 7 green 1 blue (21)
+
+     GAME 74    
+5b 1r 4g 
+3r 2g 
+4r 6b 
+2r 2b 
+1g 4r 8b 
+5b 4r 
+needed: 4 red 4 green 8 blue (128)
+
+     GAME 75    
+3r 5b 3g 
+9g 6b 7r 
+2g 3r 12b 
+14g 4b 10r 
+needed: 10 red 14 green 12 blue (1680)
+
+     GAME 76    
+1b 7r 1g 
+6r 1b 2g 
+4r 2g 
+3r 1b 
+16r 1g 
+needed: 16 red 2 green 1 blue (32)
+
+     GAME 77    
+3r 10b 1g 
+4r 7b 3g 
+7b 6g 7r 
+5g 15b 7r 
+12g 5r 
+needed: 7 red 12 green 15 blue (1260)
+
+     GAME 78    
+6r 10b 15g 
+6g 11r 4b 
+6b 8r 
+4b 7r 2g 
+11g 7r 11b 
+3b 14g 6r 
+needed: 11 red 15 green 11 blue (1815)
+
+     GAME 79    
+14r 6g 4b 
+13r 6b 
+6r 13g 4b 
+needed: 14 red 13 green 6 blue (1092)
+
+     GAME 80    
+8r 2b 8g 
+6r 10g 4b 
+3r 9g 
+2g 8b 7r 
+7b 3r 11g 
+1r 12g 8b 
+needed: 8 red 12 green 8 blue (768)
+
+     GAME 81    
+9r 4b 11g 
+1b 4r 2g 
+5r 
+3b 2r 2g 
+14r 12g 
+needed: 14 red 12 green 4 blue (672)
+
+     GAME 82    
+5g 
+2b 
+2r 
+1b 2r 11g 
+8g 2r 1b 
+needed: 2 red 11 green 2 blue (44)
+
+     GAME 83    
+3g 7r 6b 
+7r 7g 11b 
+7b 13g 7r 
+12b 10r 2g 
+1g 11r 7b 
+12b 9r 9g 
+needed: 11 red 13 green 12 blue (1716)
+
+     GAME 84    
+5b 1g 
+16g 4b 8r 
+7r 5b 16g 
+needed: 8 red 16 green 5 blue (640)
+
+     GAME 85    
+9g 20b 7r 
+19b 14r 2g 
+10g 2r 10b 
+needed: 14 red 10 green 20 blue (2800)
+
+     GAME 86    
+1g 3r 5b 
+9r 2b 6g 
+8g 14r 3b 
+18g 2b 7r 
+2b 10r 14g 
+17g 4b 12r 
+needed: 14 red 18 green 5 blue (1260)
+
+     GAME 87    
+4g 8r 13b 
+7r 13b 4g 
+1g 8b 
+needed: 8 red 4 green 13 blue (416)
+
+     GAME 88    
+9b 11r 
+5g 7b 12r 
+10r 2g 1b 
+2b 5r 5g 
+7r 6g 9b 
+1g 10r 5b 
+needed: 12 red 6 green 9 blue (648)
+
+     GAME 89    
+7r 2g 1b 
+1b 2g 
+6r 1g 
+7r 1b 
+3g 3r 
+needed: 7 red 3 green 1 blue (21)
+
+     GAME 90    
+8b 2r 3g 
+9g 4b 3r 
+7g 11b 2r 
+13g 12b 8r 
+10b 2g 
+5g 1r 9b 
+needed: 8 red 13 green 12 blue (1248)
+
+     GAME 91    
+2r 2g 4b 
+5b 2r 16g 
+11g 
+3b 2r 8g 
+4g 3b 
+needed: 2 red 16 green 5 blue (160)
+
+     GAME 92    
+8r 12b 3g 
+11r 10b 6g 
+14r 8g 14b 
+needed: 14 red 8 green 14 blue (1568)
+
+     GAME 93    
+3g 2r 3b 
+3g 3r 1b 
+2b 16r 3g 
+2g 
+5g 2b 2r 
+needed: 16 red 5 green 3 blue (240)
+
+     GAME 94    
+5r 2g 
+9r 3b 
+2g 2b 5r 
+3b 8r 2g 
+8r 1b 1g 
+needed: 9 red 2 green 3 blue (54)
+
+     GAME 95    
+3b 4g 7r 
+7r 1g 15b 
+6b 2g 7r 
+needed: 7 red 4 green 15 blue (420)
+
+     GAME 96    
+2b 1r 6g 
+7b 8g 
+1r 7g 
+2g 14b 1r 
+3b 1r 7g 
+4b 11g 
+needed: 1 red 11 green 14 blue (154)
+
+     GAME 97    
+2r 9b 8g 
+3g 5b 
+6g 1r 9b 
+2r 13g 1b 
+2g 2r 2b 
+needed: 2 red 13 green 9 blue (234)
+
+     GAME 98    
+2b 1g 1r 
+4b 5r 1g 
+4b 3r 2g 
+needed: 5 red 2 green 4 blue (40)
+
+     GAME 99    
+17r 2b 4g 
+4g 8r 6b 
+5r 
+needed: 17 red 4 green 6 blue (408)
+
+     GAME 100    
+6r 4g 
+3r 2b 9g 
+1b 5g 14r 
+1b 2r 2g 
+9r 1b 14g 
+2b 11g 8r 
+needed: 14 red 14 green 2 blue (392)
+
+Powersum: 87984

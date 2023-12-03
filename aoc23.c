@@ -1,7 +1,7 @@
 #include "ale_io.h"
 
 _proc_rbuffer(1, 2)
-aoc3(i32 lineslen, mstr lines[]) {
+aoc2(i32 lineslen, mstr lines[]) {
     static u8 buff[1*MBs_] = {0};
     Arena arena = newarena(1*MBs_, buff);
     
@@ -73,7 +73,7 @@ i32 main(void) {
     Vec64 lines = file_to_nonempty_lines(&arena, "aoc.txt");
     mstr *data = vec_data_as_mstr(&lines);
 
-    aoc3(lines.len, data);
+    aoc2(lines.len, data);
 
     return 0;
 }

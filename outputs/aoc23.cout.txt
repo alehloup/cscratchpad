@@ -1,6 +1,726 @@
-Reds: 12, Greens: 13, Blues: 14
-| 3 blue, 4 red| 1 red, 2 green, 6 blue| 2 green| 
-| 1 blue, 2 green| 3 green, 4 blue, 1 red| 1 green, 1 blue| 
-| 8 green, 6 blue, 20 red| 5 blue, 4 red, 13 green| 5 green, 1 red| 
-| 1 green, 3 red, 6 blue| 3 green, 6 red| 3 green, 15 blue, 14 red| 
-| 6 red, 1 blue, 3 green| 2 blue, 1 red, 2 green| 
+total_reds: 12, total_greens: 13, total_blues: 14
+ === GAME 1 ===
+|1xgreen|4xblue|
+|1xblue|2xgreen|1xred|
+|1xred|1xgreen|2xblue|
+|1xgreen|1xred|
+|1xgreen|
+|1xgreen|1xblue|1xred|
+ ================= 
+ === GAME 2 ===
+|2xblue|2xred|6xgreen|
+|1xred|6xgreen|7xblue|
+|10xgreen|8xblue|1xred|
+|2xgreen|18xblue <IMPOSSIBLE> |2xred|
+|14xblue|3xgreen|1xred|
+|8xgreen|1xred|9xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 3 ===
+|6xgreen|5xblue|9xred|
+|4xblue|1xgreen|13xred <IMPOSSIBLE> |
+|9xgreen|14xred <IMPOSSIBLE> |1xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 4 ===
+|14xgreen <IMPOSSIBLE> |3xblue|16xred <IMPOSSIBLE> |
+|20xred <IMPOSSIBLE> |
+|4xgreen|2xred|1xblue|
+|10xblue|11xgreen|18xred <IMPOSSIBLE> |
+|3xred|3xblue|6xgreen|
+|2xgreen|18xred <IMPOSSIBLE> |9xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 5 ===
+|5xgreen|4xblue|
+|1xred|3xblue|2xgreen|
+|4xgreen|2xred|15xblue <IMPOSSIBLE> |
+|11xblue|8xgreen|4xred|
+|4xred|3xgreen|
+|4xred|3xgreen|7xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 6 ===
+|6xblue|10xgreen|
+|2xred|6xgreen|2xblue|
+|4xred|4xblue|1xgreen|
+|2xblue|7xgreen|2xred|
+ ================= 
+ === GAME 7 ===
+|14xgreen <IMPOSSIBLE> |3xred|2xblue|
+|5xblue|3xgreen|2xred|
+|1xgreen|3xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 8 ===
+|7xred|
+|3xblue|9xred|1xgreen|
+|5xgreen|5xblue|7xred|
+|1xred|2xblue|
+ ================= 
+ === GAME 9 ===
+|3xgreen|4xblue|1xred|
+|3xblue|12xgreen|18xred <IMPOSSIBLE> |
+|7xgreen|9xred|8xblue|
+|2xblue|10xred|12xgreen|
+|4xblue|1xred|1xgreen|
+|4xblue|6xgreen|6xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 10 ===
+|2xblue|4xgreen|2xred|
+|7xgreen|4xred|
+|5xred|8xgreen|
+ ================= 
+ === GAME 11 ===
+|1xblue|10xgreen|15xred <IMPOSSIBLE> |
+|1xblue|2xgreen|2xred|
+|5xgreen|10xblue|8xred|
+|13xred <IMPOSSIBLE> |7xblue|
+|1xred|9xgreen|4xblue|
+|9xblue|9xred|8xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 12 ===
+|1xgreen|10xred|3xblue|
+|14xred <IMPOSSIBLE> |1xgreen|4xblue|
+|6xred|3xgreen|12xblue|
+|13xblue|1xgreen|18xred <IMPOSSIBLE> |
+|4xgreen|14xred <IMPOSSIBLE> |7xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 13 ===
+|1xred|3xgreen|
+|2xgreen|1xred|5xblue|
+|1xblue|
+|1xgreen|7xblue|1xred|
+|1xred|2xgreen|7xblue|
+ ================= 
+ === GAME 14 ===
+|7xblue|9xred|1xgreen|
+|8xred|2xblue|
+|11xred|18xblue <IMPOSSIBLE> |4xgreen|
+|2xblue|3xgreen|1xred|
+|1xgreen|8xred|9xblue|
+|2xblue|8xred|1xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 15 ===
+|8xblue|3xgreen|15xred <IMPOSSIBLE> |
+|13xred <IMPOSSIBLE> |10xblue|
+|2xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 16 ===
+|1xgreen|1xred|
+|1xblue|2xgreen|2xred|
+|1xblue|4xred|1xgreen|
+|3xgreen|
+|2xblue|3xgreen|4xred|
+ ================= 
+ === GAME 17 ===
+|1xgreen|3xred|14xblue|
+|1xred|2xblue|2xgreen|
+|3xred|
+ ================= 
+ === GAME 18 ===
+|1xred|2xgreen|8xblue|
+|2xblue|14xred <IMPOSSIBLE> |
+|4xblue|2xred|2xgreen|
+|6xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 19 ===
+|2xred|11xblue|18xgreen <IMPOSSIBLE> |
+|3xred|6xgreen|3xblue|
+|7xgreen|1xred|10xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 20 ===
+|10xred|1xblue|4xgreen|
+|4xgreen|3xblue|
+|10xgreen|13xred <IMPOSSIBLE> |4xblue|
+|2xred|7xgreen|
+|4xred|3xblue|5xgreen|
+|13xred <IMPOSSIBLE> |1xgreen|4xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 21 ===
+|20xred <IMPOSSIBLE> |4xgreen|5xblue|
+|10xred|11xgreen|4xblue|
+|1xred|8xblue|14xgreen <IMPOSSIBLE> |
+|11xgreen|8xblue|15xred <IMPOSSIBLE> |
+|8xblue|2xgreen|13xred <IMPOSSIBLE> |
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 22 ===
+|2xred|11xblue|4xgreen|
+|1xblue|3xred|6xgreen|
+|6xgreen|1xred|1xblue|
+|4xgreen|7xblue|3xred|
+|11xblue|6xgreen|4xred|
+ ================= 
+ === GAME 23 ===
+|6xgreen|3xred|1xblue|
+|17xgreen <IMPOSSIBLE> |11xred|
+|1xred|2xblue|13xgreen|
+|13xgreen|19xred <IMPOSSIBLE> |
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 24 ===
+|1xblue|
+|12xred|1xblue|
+|1xred|
+|12xred|1xgreen|1xblue|
+|11xred|1xblue|
+|12xred|1xgreen|
+ ================= 
+ === GAME 25 ===
+|12xblue|6xred|3xgreen|
+|8xgreen|14xblue|
+|11xgreen|5xblue|6xred|
+|4xred|12xblue|8xgreen|
+ ================= 
+ === GAME 26 ===
+|15xred <IMPOSSIBLE> |13xgreen|9xblue|
+|9xblue|8xgreen|7xred|
+|2xgreen|6xred|3xblue|
+|1xblue|7xred|3xgreen|
+|13xblue|4xgreen|18xred <IMPOSSIBLE> |
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 27 ===
+|9xblue|5xred|
+|15xred <IMPOSSIBLE> |12xblue|3xgreen|
+|12xred|12xblue|1xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 28 ===
+|18xred <IMPOSSIBLE> |4xgreen|
+|4xgreen|6xred|
+|1xblue|6xgreen|19xred <IMPOSSIBLE> |
+|9xgreen|17xred <IMPOSSIBLE> |
+|4xgreen|5xblue|18xred <IMPOSSIBLE> |
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 29 ===
+|7xgreen|6xred|6xblue|
+|6xblue|19xred <IMPOSSIBLE> |4xgreen|
+|4xgreen|4xblue|13xred <IMPOSSIBLE> |
+|5xblue|15xred <IMPOSSIBLE> |10xgreen|
+|2xgreen|6xblue|5xred|
+|8xred|10xgreen|6xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 30 ===
+|1xgreen|13xred <IMPOSSIBLE> |12xblue|
+|1xred|2xblue|
+|11xblue|1xred|1xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 31 ===
+|8xgreen|18xblue <IMPOSSIBLE> |17xred <IMPOSSIBLE> |
+|4xred|8xgreen|6xblue|
+|9xblue|7xgreen|
+|3xgreen|1xblue|12xred|
+|5xred|10xblue|11xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 32 ===
+|17xred <IMPOSSIBLE> |17xgreen <IMPOSSIBLE> |7xblue|
+|18xred <IMPOSSIBLE> |16xgreen <IMPOSSIBLE> |
+|1xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 33 ===
+|16xblue <IMPOSSIBLE> |3xred|
+|9xblue|1xred|2xgreen|
+|3xgreen|7xblue|
+|1xgreen|4xred|
+|3xgreen|1xred|8xblue|
+|5xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 34 ===
+|5xblue|8xred|1xgreen|
+|9xred|10xblue|7xgreen|
+|1xgreen|14xblue|
+|8xblue|4xred|10xgreen|
+|15xblue <IMPOSSIBLE> |8xgreen|7xred|
+|2xred|6xgreen|3xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 35 ===
+|13xred <IMPOSSIBLE> |9xblue|
+|7xblue|16xred <IMPOSSIBLE> |10xgreen|
+|4xred|6xblue|
+|3xblue|12xgreen|7xred|
+|8xblue|6xred|
+|10xblue|3xgreen|2xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 36 ===
+|1xblue|9xred|2xgreen|
+|11xred|3xblue|2xgreen|
+|2xgreen|6xred|
+|8xgreen|11xred|3xblue|
+|4xgreen|7xblue|11xred|
+|9xgreen|8xred|2xblue|
+ ================= 
+ === GAME 37 ===
+|8xgreen|3xblue|4xred|
+|14xblue|10xgreen|3xred|
+|19xgreen <IMPOSSIBLE> |2xblue|7xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 38 ===
+|2xgreen|3xred|3xblue|
+|3xgreen|9xred|
+|13xblue|8xred|
+|6xred|5xgreen|13xblue|
+ ================= 
+ === GAME 39 ===
+|8xred|5xblue|
+|4xgreen|5xblue|3xred|
+|18xred <IMPOSSIBLE> |2xgreen|6xblue|
+|2xgreen|5xblue|17xred <IMPOSSIBLE> |
+|1xgreen|2xred|
+|5xgreen|6xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 40 ===
+|12xred|4xblue|1xgreen|
+|11xgreen|20xblue <IMPOSSIBLE> |4xred|
+|10xblue|4xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 41 ===
+|2xgreen|2xblue|
+|2xred|2xgreen|
+|2xgreen|2xblue|10xred|
+ ================= 
+ === GAME 42 ===
+|6xgreen|3xblue|
+|2xred|2xgreen|1xblue|
+|3xblue|5xgreen|6xred|
+|6xred|
+|1xblue|6xgreen|12xred|
+ ================= 
+ === GAME 43 ===
+|1xblue|4xgreen|
+|1xblue|
+|2xblue|8xred|2xgreen|
+|2xblue|1xred|4xgreen|
+|1xblue|4xred|4xgreen|
+|4xgreen|7xred|
+ ================= 
+ === GAME 44 ===
+|8xgreen|9xred|
+|1xred|2xblue|13xgreen|
+|4xblue|8xgreen|17xred <IMPOSSIBLE> |
+|13xred <IMPOSSIBLE> |13xgreen|
+|1xred|9xgreen|
+|19xred <IMPOSSIBLE> |3xgreen|3xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 45 ===
+|10xblue|2xred|1xgreen|
+|6xgreen|5xred|8xblue|
+|3xblue|1xred|
+|4xgreen|10xblue|4xred|
+ ================= 
+ === GAME 46 ===
+|3xred|8xblue|
+|6xblue|7xgreen|6xred|
+|6xgreen|1xblue|7xred|
+|8xred|1xgreen|5xblue|
+|9xred|12xblue|10xgreen|
+|7xgreen|5xred|1xblue|
+ ================= 
+ === GAME 47 ===
+|5xred|
+|2xblue|2xgreen|5xred|
+|3xgreen|7xred|
+|14xred <IMPOSSIBLE> |3xgreen|2xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 48 ===
+|7xblue|12xgreen|2xred|
+|11xgreen|10xblue|1xred|
+|1xred|13xblue|2xgreen|
+|14xgreen <IMPOSSIBLE> |2xred|9xblue|
+|2xred|12xgreen|3xblue|
+|2xred|7xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 49 ===
+|4xgreen|5xblue|
+|9xblue|
+|10xblue|5xgreen|2xred|
+|10xblue|2xred|2xgreen|
+|1xred|1xgreen|4xblue|
+|2xblue|
+ ================= 
+ === GAME 50 ===
+|2xred|2xblue|7xgreen|
+|7xred|9xgreen|3xblue|
+|5xred|10xgreen|
+ ================= 
+ === GAME 51 ===
+|15xred <IMPOSSIBLE> |9xblue|4xgreen|
+|5xred|2xblue|15xgreen <IMPOSSIBLE> |
+|4xblue|3xgreen|20xred <IMPOSSIBLE> |
+|12xgreen|1xred|10xblue|
+|10xgreen|5xblue|13xred <IMPOSSIBLE> |
+|9xred|10xgreen|11xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 52 ===
+|3xblue|12xgreen|1xred|
+|6xgreen|
+|1xred|8xgreen|
+|1xblue|1xgreen|1xred|
+ ================= 
+ === GAME 53 ===
+|10xgreen|7xred|12xblue|
+|9xblue|6xgreen|2xred|
+|8xgreen|5xblue|5xred|
+|7xblue|16xgreen <IMPOSSIBLE> |11xred|
+|6xred|8xblue|13xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 54 ===
+|10xgreen|6xblue|3xred|
+|6xgreen|2xred|8xblue|
+|9xblue|11xgreen|2xred|
+|10xgreen|1xblue|3xred|
+ ================= 
+ === GAME 55 ===
+|4xblue|1xred|
+|3xred|7xblue|
+|12xred|4xgreen|8xblue|
+|3xgreen|5xblue|1xred|
+|13xblue|12xred|1xgreen|
+ ================= 
+ === GAME 56 ===
+|12xblue|15xgreen <IMPOSSIBLE> |
+|1xgreen|7xred|11xblue|
+|5xgreen|9xblue|1xred|
+|8xred|5xgreen|6xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 57 ===
+|4xgreen|11xblue|18xred <IMPOSSIBLE> |
+|14xblue|14xred <IMPOSSIBLE> |16xgreen <IMPOSSIBLE> |
+|7xred|15xgreen <IMPOSSIBLE> |3xblue|
+|18xred <IMPOSSIBLE> |20xgreen <IMPOSSIBLE> |8xblue|
+|12xblue|9xred|16xgreen <IMPOSSIBLE> |
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 58 ===
+|10xblue|9xgreen|8xred|
+|13xgreen|6xblue|8xred|
+|8xgreen|4xred|
+|4xblue|1xred|18xgreen <IMPOSSIBLE> |
+|7xred|10xgreen|10xblue|
+|15xblue <IMPOSSIBLE> |10xgreen|3xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 59 ===
+|17xgreen <IMPOSSIBLE> |2xblue|2xred|
+|2xblue|1xred|8xgreen|
+|14xgreen <IMPOSSIBLE> |1xred|1xblue|
+|15xgreen <IMPOSSIBLE> |3xblue|2xred|
+|2xblue|8xgreen|1xred|
+|1xblue|1xred|8xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 60 ===
+|1xgreen|1xblue|1xred|
+|4xblue|3xred|2xgreen|
+|13xgreen|
+|2xblue|2xred|8xgreen|
+|4xred|12xgreen|4xblue|
+|4xgreen|4xblue|4xred|
+ ================= 
+ === GAME 61 ===
+|3xblue|7xred|
+|5xblue|8xred|1xgreen|
+|1xblue|8xred|
+|10xblue|2xred|1xgreen|
+|1xgreen|5xblue|2xred|
+ ================= 
+ === GAME 62 ===
+|10xred|2xgreen|
+|8xblue|7xred|2xgreen|
+|4xgreen|2xblue|10xred|
+ ================= 
+ === GAME 63 ===
+|1xgreen|3xblue|5xred|
+|6xgreen|5xblue|2xred|
+|3xblue|7xred|
+ ================= 
+ === GAME 64 ===
+|6xred|20xblue <IMPOSSIBLE> |
+|4xred|3xblue|2xgreen|
+|3xgreen|19xblue <IMPOSSIBLE> |6xred|
+|2xgreen|6xblue|3xred|
+|13xblue|5xgreen|5xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 65 ===
+|6xred|9xblue|20xgreen <IMPOSSIBLE> |
+|6xred|16xgreen <IMPOSSIBLE> |4xblue|
+|12xred|6xgreen|5xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 66 ===
+|2xblue|5xred|4xgreen|
+|13xblue|2xgreen|
+|1xgreen|6xblue|
+ ================= 
+ === GAME 67 ===
+|4xgreen|5xblue|2xred|
+|1xred|14xblue|6xgreen|
+|1xgreen|14xred <IMPOSSIBLE> |5xblue|
+|18xred <IMPOSSIBLE> |16xblue <IMPOSSIBLE> |
+|15xblue <IMPOSSIBLE> |8xred|18xgreen <IMPOSSIBLE> |
+|1xgreen|18xred <IMPOSSIBLE> |6xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 68 ===
+|1xblue|9xred|7xgreen|
+|7xred|1xblue|6xgreen|
+|5xgreen|1xblue|8xred|
+ ================= 
+ === GAME 69 ===
+|12xgreen|3xblue|4xred|
+|9xgreen|8xred|7xblue|
+|4xblue|5xred|10xgreen|
+|4xred|5xgreen|7xblue|
+|9xgreen|4xred|2xblue|
+|3xgreen|13xblue|1xred|
+ ================= 
+ === GAME 70 ===
+|9xred|1xgreen|8xblue|
+|11xgreen|13xblue|12xred|
+|3xblue|5xgreen|8xred|
+|1xred|14xblue|
+ ================= 
+ === GAME 71 ===
+|10xblue|
+|2xgreen|8xblue|9xred|
+|5xred|1xblue|
+ ================= 
+ === GAME 72 ===
+|3xgreen|5xblue|5xred|
+|1xblue|1xred|2xgreen|
+|4xred|4xblue|1xgreen|
+|5xblue|4xred|1xgreen|
+|6xblue|3xgreen|5xred|
+|5xblue|1xred|4xgreen|
+ ================= 
+ === GAME 73 ===
+|3xred|1xgreen|1xblue|
+|7xgreen|2xred|1xblue|
+|2xgreen|1xblue|3xred|
+|1xred|4xgreen|1xblue|
+|3xred|5xgreen|
+ ================= 
+ === GAME 74 ===
+|5xblue|1xred|4xgreen|
+|3xred|2xgreen|
+|4xred|6xblue|
+|2xred|2xblue|
+|1xgreen|4xred|8xblue|
+|5xblue|4xred|
+ ================= 
+ === GAME 75 ===
+|3xred|5xblue|3xgreen|
+|9xgreen|6xblue|7xred|
+|2xgreen|3xred|12xblue|
+|14xgreen <IMPOSSIBLE> |4xblue|10xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 76 ===
+|1xblue|7xred|1xgreen|
+|6xred|1xblue|2xgreen|
+|4xred|2xgreen|
+|3xred|1xblue|
+|16xred <IMPOSSIBLE> |1xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 77 ===
+|3xred|10xblue|1xgreen|
+|4xred|7xblue|3xgreen|
+|7xblue|6xgreen|7xred|
+|5xgreen|15xblue <IMPOSSIBLE> |7xred|
+|12xgreen|5xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 78 ===
+|6xred|10xblue|15xgreen <IMPOSSIBLE> |
+|6xgreen|11xred|4xblue|
+|6xblue|8xred|
+|4xblue|7xred|2xgreen|
+|11xgreen|7xred|11xblue|
+|3xblue|14xgreen <IMPOSSIBLE> |6xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 79 ===
+|14xred <IMPOSSIBLE> |6xgreen|4xblue|
+|13xred <IMPOSSIBLE> |6xblue|
+|6xred|13xgreen|4xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 80 ===
+|8xred|2xblue|8xgreen|
+|6xred|10xgreen|4xblue|
+|3xred|9xgreen|
+|2xgreen|8xblue|7xred|
+|7xblue|3xred|11xgreen|
+|1xred|12xgreen|8xblue|
+ ================= 
+ === GAME 81 ===
+|9xred|4xblue|11xgreen|
+|1xblue|4xred|2xgreen|
+|5xred|
+|3xblue|2xred|2xgreen|
+|14xred <IMPOSSIBLE> |12xgreen|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 82 ===
+|5xgreen|
+|2xblue|
+|2xred|
+|1xblue|2xred|11xgreen|
+|8xgreen|2xred|1xblue|
+ ================= 
+ === GAME 83 ===
+|3xgreen|7xred|6xblue|
+|7xred|7xgreen|11xblue|
+|7xblue|13xgreen|7xred|
+|12xblue|10xred|2xgreen|
+|1xgreen|11xred|7xblue|
+|12xblue|9xred|9xgreen|
+ ================= 
+ === GAME 84 ===
+|5xblue|1xgreen|
+|16xgreen <IMPOSSIBLE> |4xblue|8xred|
+|7xred|5xblue|16xgreen <IMPOSSIBLE> |
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 85 ===
+|9xgreen|20xblue <IMPOSSIBLE> |7xred|
+|19xblue <IMPOSSIBLE> |14xred <IMPOSSIBLE> |2xgreen|
+|10xgreen|2xred|10xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 86 ===
+|1xgreen|3xred|5xblue|
+|9xred|2xblue|6xgreen|
+|8xgreen|14xred <IMPOSSIBLE> |3xblue|
+|18xgreen <IMPOSSIBLE> |2xblue|7xred|
+|2xblue|10xred|14xgreen <IMPOSSIBLE> |
+|17xgreen <IMPOSSIBLE> |4xblue|12xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 87 ===
+|4xgreen|8xred|13xblue|
+|7xred|13xblue|4xgreen|
+|1xgreen|8xblue|
+ ================= 
+ === GAME 88 ===
+|9xblue|11xred|
+|5xgreen|7xblue|12xred|
+|10xred|2xgreen|1xblue|
+|2xblue|5xred|5xgreen|
+|7xred|6xgreen|9xblue|
+|1xgreen|10xred|5xblue|
+ ================= 
+ === GAME 89 ===
+|7xred|2xgreen|1xblue|
+|1xblue|2xgreen|
+|6xred|1xgreen|
+|7xred|1xblue|
+|3xgreen|3xred|
+ ================= 
+ === GAME 90 ===
+|8xblue|2xred|3xgreen|
+|9xgreen|4xblue|3xred|
+|7xgreen|11xblue|2xred|
+|13xgreen|12xblue|8xred|
+|10xblue|2xgreen|
+|5xgreen|1xred|9xblue|
+ ================= 
+ === GAME 91 ===
+|2xred|2xgreen|4xblue|
+|5xblue|2xred|16xgreen <IMPOSSIBLE> |
+|11xgreen|
+|3xblue|2xred|8xgreen|
+|4xgreen|3xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 92 ===
+|8xred|12xblue|3xgreen|
+|11xred|10xblue|6xgreen|
+|14xred <IMPOSSIBLE> |8xgreen|14xblue|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 93 ===
+|3xgreen|2xred|3xblue|
+|3xgreen|3xred|1xblue|
+|2xblue|16xred <IMPOSSIBLE> |3xgreen|
+|2xgreen|
+|5xgreen|2xblue|2xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 94 ===
+|5xred|2xgreen|
+|9xred|3xblue|
+|2xgreen|2xblue|5xred|
+|3xblue|8xred|2xgreen|
+|8xred|1xblue|1xgreen|
+ ================= 
+ === GAME 95 ===
+|3xblue|4xgreen|7xred|
+|7xred|1xgreen|15xblue <IMPOSSIBLE> |
+|6xblue|2xgreen|7xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 96 ===
+|2xblue|1xred|6xgreen|
+|7xblue|8xgreen|
+|1xred|7xgreen|
+|2xgreen|14xblue|1xred|
+|3xblue|1xred|7xgreen|
+|4xblue|11xgreen|
+ ================= 
+ === GAME 97 ===
+|2xred|9xblue|8xgreen|
+|3xgreen|5xblue|
+|6xgreen|1xred|9xblue|
+|2xred|13xgreen|1xblue|
+|2xgreen|2xred|2xblue|
+ ================= 
+ === GAME 98 ===
+|2xblue|1xgreen|1xred|
+|4xblue|5xred|1xgreen|
+|4xblue|3xred|2xgreen|
+ ================= 
+ === GAME 99 ===
+|17xred <IMPOSSIBLE> |2xblue|4xgreen|
+|4xgreen|8xred|6xblue|
+|5xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+ === GAME 100 ===
+|6xred|4xgreen|
+|3xred|2xblue|9xgreen|
+|1xblue|5xgreen|14xred <IMPOSSIBLE> |
+|1xblue|2xred|2xgreen|
+|9xred|1xblue|14xgreen <IMPOSSIBLE> |
+|2xblue|11xgreen|8xred|
+ IMPOSSIBLE GAME! 
+ ================= 
+Possibles: 2486

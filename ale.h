@@ -31,6 +31,8 @@
     #define _nonnull_hot gcc_attr(nonnull, hot) static
     #define _fun gcc_attr(nonnull, warn_unused_result) static
     #define _proc gcc_attr(nonnull) static void
+    #define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) static
+    #define _proc_hot gcc_attr(nonnull, hot) static void
     // Standard functions attributes
     #define _main \
         gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) i32
@@ -312,7 +314,14 @@ void * alloc(Arena arena[1], i64 size, i64 count) {
 }
 
 _proc_wbuffer_hot(/*bufferlen*/ 3, /*buffer*/ 1) 
-copymem64(i64 * __restrict dst64, const i64 * __restrict src64, i64 count) {
+copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        dst[i] = src[i];
+    }
+}
+
+_proc_wbuffer_hot(/*bufferlen*/ 3, /*buffer*/ 1) 
+copymem64(u64 * __restrict dst64, cu64 * __restrict src64, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst64[i] = src64[i];
     }
@@ -335,7 +344,7 @@ _proc Vec64_grow(Vec64 vector[1],  Arena arena[1]) {
         vector->cap *= 2;
     } else if ((i64)"VEC RELOC") {
         i64 *VEC_RELOC = (i64 *) alloc(arena, 8LL, vector->cap *= 2);
-        copymem64(VEC_RELOC, vector->data, vector->len);
+        copymem64((u64 *)VEC_RELOC, (u64 *)vector->data, vector->len);
         vector->data = VEC_RELOC;
     }
 }

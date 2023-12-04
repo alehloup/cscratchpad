@@ -50,7 +50,7 @@ _fun_hot void * push_vec(void * ptr_to_array) {
 
     return *arr + (dh->elsize * dh->len++);
 }
-#define VPUSH(arr) (typeof(arr)) push_vec(&arr)
+#define VAPPEND(arr) *(typeof(arr))push_vec(&arr)
 
 
 int main(void) {
@@ -64,7 +64,7 @@ int main(void) {
             i32 *reloc = alloc(&arena, 4, 1);
             (*reloc) += 1;
         }
-        *VPUSH(x) = i;
+        VAPPEND(x) = i;
     } 
 
     for (int i = 0; i < hd_(x)->len; ++i) {

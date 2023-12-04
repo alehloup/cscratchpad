@@ -8,27 +8,22 @@ i32 main(i32 argc, cstr *argv) {
         printf("No args...");
     }
 
-    printf(    
+    printf(
         (
-        "gcc @Flags %s -o \"./builds/%s.exe\"" 
-        " && " 
-        "\"./builds/%s.exe\""
-            " | "
-            "tee \"./outputs/%sout.txt\""
+            "gcc @Flags %s -o \"./%s.exe\"" 
+            " && \"./%s.exe\""
         ), 
-    _1_, _1_, _1_, _1_);
+        _1_, _1_, _1_
+    );
 
     printf("\n");
     
     shellrun(sizeof(buffer), buffer, 
         (
-        "gcc @Flags %s -o \"./builds/%s.exe\"" 
-        " && " 
-        "\"./builds/%s.exe\""
-            " | "
-            "tee \"./outputs/%sout.txt\""
+            "gcc @Flags %s -o \"./%s.exe\"" 
+            " && \"./%s.exe\""
         ),
-    _1_, _1_, _1_, _1_
+        _1_, _1_, _1_
     );
 
     return 0;

@@ -10,24 +10,20 @@ i32 main(i32 argc, cstr *argv) {
 
     printf(
         (
-        "gcc @Flags %s -o \"./builds/%s.exe\"" 
+        "gcc @Flags %s -o \"./%s.exe\"" 
         " && " 
-        "\"./builds/%s.exe\" < %s"
-            " | "
-            "tee \"./outputs/%sout.txt\""
+        "\"./%s.exe\" < %s"
         ), 
-    _1_, _1_, _1_, _2_, _1_);
+    _1_, _1_, _1_, _2_);
     printf("\n");
 
-    shellrun(sizeof(buffer), buffer, 
+    shellrun(sizeof(buffer), buffer,
         (
-        "gcc @Flags %s -o \"./builds/%s.exe\"" 
+        "gcc @Flags %s -o \"./%s.exe\"" 
         " && " 
-        "\"./builds/%s.exe\" < %s"
-            " | "
-            "tee \"./outputs/%sout.txt\""
-        ), 
-    _1_, _1_, _1_, _2_, _1_);
+        "\"./%s.exe\" < %s"
+        ),
+    _1_, _1_, _1_, _2_);
 
     return 0;
 }

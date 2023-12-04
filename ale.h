@@ -68,28 +68,35 @@
 
 // Bool
 typedef int b32; // Boolean
-static const b32 True = 1;
-static const b32 False = 0;
+typedef const b32 cb32;
+static cb32 True = 1;
+static cb32 False = 0;
 
 // Int
 typedef unsigned char u8;
+typedef const u8 cu8;
 typedef unsigned int u32;
+typedef const u32 cu32;
 typedef unsigned long long u64;
+typedef const u64 cu64;
 typedef signed char i8;
+typedef const i8 ci8;
 typedef int i32;
+typedef const i32 ci32;
 typedef long long i64;
+typedef const i64 ci64;
 
 // Float
 typedef float f32;
+typedef const f32 cf32;
 typedef double f64;
+typedef const f64 cf64;
 
 // String
-typedef const char * const cstr; // const string const pointer
+typedef const char cchar;
+typedef cchar * const cstr; // const string const pointer
+typedef cchar * pstr; // const string
 typedef char * mstr; // modifiable string
-typedef const char * pstr; // const string
-
-typedef struct s8_struct{ i32 len; mstr data; }s8_struct; // slice struct
-typedef s8_struct * s8str; // slice string
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -150,6 +157,14 @@ _math_hot b32 is_digit(char character) {
     return character >= '0' && character <= '9';
 }
 
+_pure_hot i64 digitlen(cstr cstring) {
+    i64 len;
+    for (len = 0; is_digit(cstring[len]); ++len) {
+        /* Empty Body */
+    }
+    return len;
+}
+
 // Returns the digit value, if as character or in english lowercase name, or -1 if its not a digit
 _fun i8 named_digit(cstr string) {
     cstr named[] = {"zero", "one", "two", "three", "four", 
@@ -168,23 +183,27 @@ _fun i8 named_digit(cstr string) {
     return -1;
 }
 
-_pure_hot i64 cstr_to_num(cstr str) {
-    i64 num = 0, power = 1;
-    for (i64 i = cstrlen(str) - 1; i >= 0; --i) {
+typedef struct i64num_i64len{i64 num; i64 len;}i64num_i64len;
+_pure_hot i64num_i64len cstr_to_num(cstr str) {
+    i64 power = 1;
+    i64num_i64len ret = {0, digitlen(str)};
+
+    for (i64 i = ret.len - 1; i >= 0; --i) {
         char character = str[i];
 
         if (character == '-') {
-            return -num;
+            ret.num = -ret.num;
+            return ret;
         }
         
         if (is_digit(character)) {
-            num += (character - '0') * power;
+            ret.num += (character - '0') * power;
             power *= 10;
         } else {
-            return num;
+            return ret;
         }
     }
-    return num;
+    return ret;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
@@ -338,9 +357,6 @@ _proc vec_push_str(Vec64 vector[1], Arena arena[1], cstr cstring) {
 _proc vec_push_ptr(Vec64 vector[1], Arena arena[1], void * ptr) {
     vec_push_i64(vector, arena, (i64) ptr);
 }
-_proc vec_push_s8str(Vec64 vector[1], Arena arena[1], s8str s8string) {
-    vec_push_i64(vector, arena, (i64) s8string);
-}
 
 // Vector Pop
 _fun i64 vec_pop_i64(Vec64 vector[1]) {
@@ -358,10 +374,6 @@ _fun pstr vec_pop_str(Vec64 vector[1]) {
 _fun void * vec_pop_ptr(Vec64 vector[1]) {
     i64 pointer_as_i64 = vec_pop_i64(vector);
     return (void *) pointer_as_i64;
-}
-_fun s8str vec_pop_s8str(Vec64 vector[1]) {
-    i64 s8str_as_i64 = vec_pop_i64(vector);
-    return (s8str) s8str_as_i64;
 }
 
 // Vector as C Array

@@ -1,5 +1,47 @@
 #include "ale_io.h"
 
+_fun b32 aoc3_is_symbol(cchar letter) {
+    return letter != '\0' && (letter < '.' || letter > '9' || letter == '/');
+}
+
+_proc_rbuffer(1, 2)
+aoc3(i32 lineslen, cstr lines[]) {
+    i64 sum = 0;
+
+    for (int iline = 0; iline < lineslen; ++iline) {
+        cstr line = lines[iline];
+        for (i64 iletter = 0; line[iletter]; ++iletter) {
+            if(is_digit(line[iletter])) {
+                i64num_i64len num_len = cstr_to_num(&line[iletter]);
+                b32 touches_symbol = False;
+                ci64 start = iletter > 0 ? iletter - 1 : iletter;
+                ci64 end = iletter+num_len.len + 1; //lines always end with '\0'
+
+                if (iline > 0) {
+                    cstr top = lines[iline - 1];
+                    for (i64 itop = start; !touches_symbol && itop < end && top[itop]; ++itop)
+                        touches_symbol |= aoc3_is_symbol(top[itop]);
+                }
+                //sides:
+                touches_symbol |= iletter > 0 && aoc3_is_symbol(line[iletter-1]);
+                touches_symbol |= aoc3_is_symbol(line[iletter+num_len.len]);
+                    
+                if (iline < lineslen - 1) {
+                    cstr bot = lines[iline + 1];
+                    for (i64 ibot = start; !touches_symbol && ibot < end && bot[ibot]; ++ibot)
+                        touches_symbol |= aoc3_is_symbol(bot[ibot]);
+                }
+
+                printf("%lld#%lld (%d), ", num_len.num, num_len.len, touches_symbol);
+                
+                iletter += num_len.len;
+                sum += touches_symbol ? num_len.num : 0;
+            }
+        }
+    }
+    printf("\n Sum: %lld \n", sum);
+}
+
 _proc_rbuffer(1, 2)
 aoc2(i32 lineslen, mstr lines[]) {
     static u8 buff[1*MBs_] = {0};
@@ -71,9 +113,9 @@ i32 main(void) {
     Arena arena = newarena(128*MBs_, mem);
 
     Vec64 lines = file_to_nonempty_lines(&arena, "aoc.txt");
-    mstr *data = vec_data_as_mstr(&lines);
+    cstr *data = vec_data_as_cstr(&lines);
 
-    aoc2(lines.len, data);
+    aoc3(lines.len, data);
 
     return 0;
 }

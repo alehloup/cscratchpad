@@ -2,7 +2,7 @@
 #include "ale.h"
 
 i32 main(void) {
-    printf("%lld\n", cstr_to_num("-10"));
+    printf("%lld\n", cstr_to_num("-10").num);
 
     printf("Alex%lld Sarah%lld Z%lld\n", 
     cstrlen("Alex"), cstrlen("Sarah"), cstrlen(""));
@@ -32,6 +32,14 @@ i32 main(void) {
         words = mutslice_by_splitter(&arena, teste, ' ');
         for (int i = 0; i < words.len; ++i) {
             printf("word: %s\n", (cstr) words.data[i]);
+        }
+    }
+
+    {
+        cstr cstrs[4] = {"123 456 789", "52#89;", "69 . 3", " 91"};
+        for (int i = 0; i < 4; ++i) {
+            i64num_i64len num_len = cstr_to_num(cstrs[i]);
+            printf("\"%s\" |%lld| #%lld\n", cstrs[i], num_len.num, num_len.len);
         }
     }
 

@@ -7,4 +7,4 @@
 -fsanitize-trap -fsanitize-undefined-trap-on-error 
 -fsanitize=undefined,alignment,object-size,builtin,bounds,unreachable,nonnull-attribute,returns-nonnull-attribute
 
--Wno-unsafe-buffer-usage -Wno-unused-function
+-Wno-unsafe-buffer-usage -Wno-unused-function -Wno-language-extension-token

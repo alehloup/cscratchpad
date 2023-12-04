@@ -11,17 +11,10 @@
         static int assert_trapped_ = 0;
         #define diagnostic_ assert_trapped_ = 1
     #endif
-    #ifdef _MSC_VER
-        // MSVC
-        #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
-        #define gcc_attr(...) //do NOT use attributes in MSVC
-    #endif
-    #ifndef _MSC_VER
-        // GCC Clang
-        #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
-        #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
-    #endif
-
+    
+    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
+    
+    #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
     // Simple attributes
     #define _math gcc_attr(const, warn_unused_result) static
     #define _math_hot gcc_attr(const, warn_unused_result, hot) static

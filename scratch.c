@@ -52,11 +52,12 @@ _fun_hot void * push_vec(void * ptr_to_array) {
 }
 #define VAPPEND(arr) *(typeof(arr))push_vec(&arr)
 
-
 int main(void) {
-    u8 buffer[1*MBs_] = {0};
+    static u8 buffer[1*MBs_] = {0};
     Arena arena = newarena(1*MBs_, buffer);
+
     i32 *x = VNEW(&arena, i32);
+    printf("created array %d \n ", x[0]);
 
     for (i32 i = 0; i < 152; ++i) {
         printf("%d ", i);

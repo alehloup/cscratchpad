@@ -40,7 +40,8 @@ _fun_hot u8 * grow_vec(u8 * arr) {
     return arr;
 }
 
-_fun_hot u8 * push_vec(u8 * * arr) {
+_fun_hot void * push_vec(void * ptr_to_array) {
+    u8 * *arr = (u8 * *)ptr_to_array;
     ds_header * dh = hd_(*arr);
     
     if (dh->len >= dh->cap) {
@@ -49,7 +50,7 @@ _fun_hot u8 * push_vec(u8 * * arr) {
 
     return *arr + (dh->elsize * dh->len++);
 }
-#define VPUSH(arr) (typeof(arr)) push_vec(&((u8 *)arr))
+#define VPUSH(arr) (typeof(arr)) push_vec(&arr)
 
 
 int main(void) {

@@ -22,14 +22,14 @@ _fun_hot u8 * grow_vec(u8 * arr) {
     cu8 *capend = &arr[dh->cap * dh->elsize];
 
     if ("VEC EXTEND" && arena->beg == capend) {
-        printf(" VEC EXTEND ");
         u8 *VEC_EXTEND = (u8 *)alloc(arena, dh->elsize, dh->cap);
+        
         assert((u64)VEC_EXTEND == (u64)capend && "extend misaligned");
     } else if ((u64)"VEC RELOC") {
-        printf(" VEC RELOC ");
         ds_header *VEC_RELOC = (ds_header *)
             alloc(arena, (dh->elsize*dh->cap * 2) + (i64)sizeof(ds_header), 1);
         u8 *newarr = (u8 *)(VEC_RELOC + 1);
+
         copymem(newarr, arr, dh->cap * dh->elsize);
         arr = newarr;
         copymem((u8 *)VEC_RELOC, (u8 *)dh, (i64)sizeof(ds_header));

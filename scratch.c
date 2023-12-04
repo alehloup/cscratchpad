@@ -11,7 +11,7 @@ _fun void * new_vec(Arena arena[1], i32 elsize) {
     return vec + 1;
 }
 
-_pure ds_header * hd_(void * ds) {
+_math_hot ds_header * hd_(void * ds) {
     return ((ds_header *) ds) - 1;
 }
 

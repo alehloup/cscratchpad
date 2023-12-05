@@ -77,8 +77,11 @@ typedef struct Arena{ u8 *beg; u8 *end; }Arena;
 
 // Data Structures Header (stb strategy)
 typedef struct ds_header{Arena *arena; i32 elsize; i32 cap; i32 len;}ds_header;
-_math_hot ds_header * hd_(const void * const ds) {
+_math_hot ds_header * hd_(ccvoidp ds) {
     return ((ds_header *) ds) - 1;
+}
+_pure_hot i32 hd_len_(ccvoidp ds) {
+    return hd_(ds)->len;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
@@ -101,7 +104,7 @@ _proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
 }
 
 _pure_hot i32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
-    ccu8 mem1 = (ccu8)mem1_, mem2 = (ccu8)mem2_;
+    ccu8 mem1 = (cu8 *)mem1_, mem2 = (cu8 *)mem2_;
     i64 i = 0; 
     ci64 last = count - 1;
     for (; i < last && mem1[i] == mem2[i]; ++i) {
@@ -112,7 +115,7 @@ _pure_hot i32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
 }
 
 _pure_hot i32 is_not_zero(ccvoidp mem1_, ci64 size) {
-    ccu8 mem1 = (ccu8)mem1_;
+    ccu8 mem1 = (cu8 *)mem1_;
     i64 i = 0; 
     for (; i < size && mem1[i]; ++i) {
         /* Empty Body */
@@ -122,7 +125,7 @@ _pure_hot i32 is_not_zero(ccvoidp mem1_, ci64 size) {
 }
 
 _pure_hot i32 is_zero(ccvoidp mem1_, ci64 size) {
-    ccu8 mem1 = (ccu8)mem1_;
+    ccu8 mem1 = (cu8 *)mem1_;
     i64 i = 0; 
     for (; i < size && !mem1[i]; ++i) {
         /* Empty Body */
@@ -248,7 +251,7 @@ _pure_hot u64 hash_str(ccstr str) {
     return (h ^ (h >> 32)) >> 1;
 }
 _pure_hot u64 hash_bytes(ccvoidp bytes_, ci64 count) {
-    ccu8 bytes = (ccu8)bytes_;
+    ccu8 bytes = (cu8 *)bytes_;
     u64 h = 0x7A5662DCDF;
     for(i64 i = 0; i < count; ++i) { 
         h ^= bytes[i] & 255; h *= 1111111111111111111;
@@ -402,17 +405,17 @@ _fun_hot i32 htloop(
     void * const keys_, ccvoidp key_, i32 key_is_str, i32 create_if_not_found
 ) {
     static u8 bytes_key[256] = {0};
-    ccstr string_key = key_is_str ? (ccstr) key_ : 0;
-    u8 * const u8keys = (u8 * const) keys_;
-    mstr * const strkeys = (mstr * const) keys_;
+    ccstr string_key = key_is_str ? (cstr) key_ : 0;
+    u8 * const u8keys = (u8 *) keys_;
+    mstr * const strkeys = (mstr *) keys_;
 
     ds_header *hd = hd_(u8keys);
     ci32 elsize = hd->elsize;
-    cu32 mask = (cu32) hd->cap;
+    cu32 mask = (u32) hd->cap;
     cu8 shift = 64 - (fit_pwr2_exp(hd->cap)); 
 
     u64 hash; i32 index;
-    copymem(bytes_key, (ccu8)key_, elsize);
+    copymem(bytes_key, (cu8 *)key_, elsize);
     hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);
     index = (i32) hash;
 

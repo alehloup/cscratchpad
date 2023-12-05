@@ -144,24 +144,6 @@ _pure_hot i64 digitlen(ccstr cstring) {
     return len;
 }
 
-// Returns the digit value, if as character or in english lowercase name, or -1 if its not a digit
-_fun i8 named_digit(ccstr string) {
-    ccstr named[] = {"zero", "one", "two", "three", "four", 
-                    "five", "six", "seven", "eight", "nine"};
-                    
-    if (string[0] && is_digit(string[0])) {
-        return string[0] - '0';
-    }
-
-    for (i8 i = 0; i < 10; ++i) {
-        if (startswith(string, named[i])) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 typedef struct i64num_i64len{i64 num; i64 len;}i64num_i64len;
 _pure_hot i64num_i64len cstr_to_num(ccstr str) {
     i64 power = 1;
@@ -238,7 +220,7 @@ _math_hot i64 reinterpret_f64_as_i64(f64 float64) {
     ==================== MATH ====================
 */
 // bitmask for optimized Mod for power 2 numbers
-_math i64 MODPWR2(i64 number, i64 modval) {
+_math_hot i64 MODPWR2(i64 number, i64 modval) {
     return (number) & (modval - 1);
 }
 

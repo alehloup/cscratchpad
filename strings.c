@@ -17,13 +17,6 @@ i32 main(void) {
         startswith(&("Sarah Sakamoto com outras palavras"[6]), "Sakamoto"));
 
     {
-        ccstr examples[] = {"5dois", "three6433", "nine3453", "woa", "zero5"};
-        for (i8 i = 0; i < (i8) (sizeof(examples)/sizeof(cstr)); ++i) {
-            printf("%s : %d\n", examples[i], named_digit(examples[i]));
-        }
-    }
-
-    {
         u8 buffer[MBs_ / 8] = {0};
         Arena arena = newarena(MBs_ / 8, buffer);
         mstr *words = VNEW(&arena, mstr);
@@ -41,6 +34,17 @@ i32 main(void) {
             i64num_i64len num_len = cstr_to_num(ccstrs[i]);
             printf("\"%s\" |%lld| #%lld\n", ccstrs[i], num_len.num, num_len.len);
         }
+    }
+
+    {
+        i32 x = 52, y = 69, alex = 2019912801;
+        union {struct {char a;char b;char c;char d;} s; i32 i;}  z = {{'a', 'l', 'e', 'x'}}; 
+        printf("%d %d : %d\n", x, y, cmpmem(&x, &y, isizeof(x)));
+        printf("%d %d : %d\n", x, x, cmpmem(&x, &x, isizeof(x)));
+        printf("%d %d : %d\n", y, y, cmpmem(&y, &y, isizeof(y)));
+        printf("%d %c%c%c%c : %d\n", x, z.s.a,z.s.b,z.s.c,z.s.d, cmpmem(&x, &z, isizeof(x)));
+        printf("%d %d : %d\n", alex, z.i, cmpmem(&alex, &z, isizeof(alex)));
+        printf("%d %d : %d\n", alex, y, cmpmem(&alex, &y, isizeof(y)));
     }
 
     return 0;

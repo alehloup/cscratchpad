@@ -3,7 +3,7 @@
 i32 main(void) {
     static u8 buffer[2*MBs_];
 
-    Arena perm = newarena(sizeof(buffer), buffer);
+    Arena perm = newarena(isizeof(buffer), buffer);
     
     mstr contents = file_to_buffer(&perm, "./txts/exemplo.txt");
     printf("%s", contents);

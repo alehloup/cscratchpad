@@ -63,7 +63,7 @@ typedef double f64;
 typedef const f64 cf64;
 
 // String
-typedef const char cchar;
+typedef const char cchar; // const char
 typedef cchar * const ccstr; // const string const pointer
 typedef cchar * cstr; // const string
 typedef char * mstr; // modifiable string
@@ -79,6 +79,36 @@ _math_hot ds_header * hd_(void * ds) {
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
+    MEMORY
+*/
+#define isizeof(x_element_) ((i64)sizeof(x_element_))
+#define countof(x_array_) (isizeof(x_array_) / isizeof(*x_array_))
+
+_fun_hot u8 * zeromem(u8 * __restrict dst, i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        dst[i] = 0;
+    }
+    return dst;
+}
+_proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        dst[i] = src[i];
+    }
+}
+
+_pure_hot i32 cmpmem(void * const mem1_, void * const mem2_, ci64 count) {
+    cu8 *mem1 = (cu8 *)mem1_, *mem2 = (cu8 *)mem2_;
+    i64 i = 0; 
+    ci64 last = count - 1;
+    for (; i < last && mem1[i] == mem2[i]; ++i) {
+        /* Empty Body */
+    }
+    
+    return mem1[i] - mem2[i];
+}
+//  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
+
+/*
     STRINGS
 */
 _pure_hot i64 cstrlen(ccstr cstring) {
@@ -88,6 +118,8 @@ _pure_hot i64 cstrlen(ccstr cstring) {
     }
     return len;
 }
+//Only works for COMPILE TIME STRINGS:
+#define compile_time_cstrlen(compile_time_string_) countof(compile_time_string_) - 1
 
 _pure_hot i32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     i64 i = 0;
@@ -226,18 +258,6 @@ _fun Arena newarena(i64 buffer_len, u8 buffer[]) {
     return arena;
 }
 
-_fun_hot u8 * zeromem(u8 * __restrict dst, i64 count) {
-    for (i64 i = 0; i < count; ++i) {
-        dst[i] = 0;
-    }
-    return dst;
-}
-_proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
-    for (i64 i = 0; i < count; ++i) {
-        dst[i] = src[i];
-    }
-}
-
 // bitmask for optimized Mod for power 2 numbers
 _math_hot i64 mod_pwr2(i64 number, i64 modval) {
     return (number) & (modval - 1);
@@ -262,7 +282,7 @@ void * alloc(Arena arena[1], i64 size, i64 count) {
     ==================== VECTOR ====================
 */
 _fun_hot void * new_vec(Arena arena[1], i32 elsize) {
-    ds_header * vec = (ds_header *)alloc(arena, (i64)sizeof(ds_header) + (64*elsize), 1);
+    ds_header * vec = (ds_header *)alloc(arena, isizeof(ds_header) + (64*elsize), 1);
     vec->elsize = elsize;
     vec->cap = 64;
     vec->len = 0;
@@ -282,12 +302,12 @@ _fun_hot u8 * grow_vec(u8 * arr) {
         assert((u64)VEC_EXTEND == (u64)capend && "extend misaligned");
     } else if ((u64)"VEC RELOC") {
         ds_header *VEC_RELOC = (ds_header *)
-            alloc(arena, (dh->elsize*dh->cap * 2) + (i64)sizeof(ds_header), 1);
+            alloc(arena, (dh->elsize*dh->cap * 2) + isizeof(ds_header), 1);
         u8 *newarr = (u8 *)(VEC_RELOC + 1);
 
         copymem(newarr, arr, dh->cap * dh->elsize);
         arr = newarr;
-        copymem((u8 *)VEC_RELOC, (u8 *)dh, (i64)sizeof(ds_header));
+        copymem((u8 *)VEC_RELOC, (u8 *)dh, isizeof(ds_header));
         dh = VEC_RELOC;
     }
     dh->cap <<= 1;
@@ -333,7 +353,7 @@ _math u8 fit_pwr2_exp(i32 size) {
 
 _fun Ht64 new_Ht64(Arena arena[1], i32 expected_maxn) {
     Ht64 *ht = (Ht64*)
-        alloc(arena, sizeof(Ht64), 1);
+        alloc(arena, isizeof(Ht64), 1);
 
     const u8 ht_expo = fit_pwr2_exp(expected_maxn + 64);
     assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 65");
@@ -342,7 +362,7 @@ _fun Ht64 new_Ht64(Arena arena[1], i32 expected_maxn) {
     ht->cap = (1 << ht_expo) - 1;
     ht->len = 0;
     ht->data = (Entry64 *)
-        alloc(arena, sizeof(Entry64), ht->cap + 2);
+        alloc(arena, isizeof(Entry64), ht->cap + 2);
 
     return *ht;
 }

@@ -19,7 +19,7 @@ i32 main(i32 argc, ccstr*argv) {
 
     printf("\n");
     
-    shellrun(sizeof(buffer), buffer, 
+    shellrun(isizeof(buffer), buffer, 
         (
             "gcc @Flags %s -o \"./%s.exe\"" 
             " && \"./%s.exe\""

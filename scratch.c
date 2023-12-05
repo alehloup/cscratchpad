@@ -7,7 +7,7 @@ _math_hot ds_header * hd_(void * ds) {
     return ((ds_header *) ds) - 1;
 }
 _fun_hot void * new_vec(Arena arena[1], i32 elsize) {
-    ds_header * vec = alloc(arena, (i64)sizeof(ds_header) + (64*elsize), 1);
+    ds_header * vec = alloc(arena, isizeof(ds_header) + (64*elsize), 1);
     vec->elsize = elsize;
     vec->cap = 64;
     vec->len = 0;
@@ -27,12 +27,12 @@ _fun_hot u8 * grow_vec(u8 * arr) {
         assert((u64)VEC_EXTEND == (u64)capend && "extend misaligned");
     } else if ((u64)"VEC RELOC") {
         ds_header *VEC_RELOC = (ds_header *)
-            alloc(arena, (dh->elsize*dh->cap * 2) + (i64)sizeof(ds_header), 1);
+            alloc(arena, (dh->elsize*dh->cap * 2) + isizeof(ds_header), 1);
         u8 *newarr = (u8 *)(VEC_RELOC + 1);
 
         copymem(newarr, arr, dh->cap * dh->elsize);
         arr = newarr;
-        copymem((u8 *)VEC_RELOC, (u8 *)dh, (i64)sizeof(ds_header));
+        copymem((u8 *)VEC_RELOC, (u8 *)dh, isizeof(ds_header));
         dh = VEC_RELOC;
     }
     dh->cap <<= 1;

@@ -33,7 +33,7 @@ _proc test_vec_push_i64(Arena scratch) {
     printf("POP: %lld\n", VPOP(i64s));
 
     for(i32 i = 0; i < 164; ++i) {
-        force_reloc = (u8 *) alloc(&scratch, sizeof(u8), 1);
+        force_reloc = (u8 *) alloc(&scratch, isizeof(u8), 1);
         *force_reloc = 52;
         VAPPEND(i64s) = i+64000;
     }
@@ -56,7 +56,7 @@ _proc test_vec_push_f64(Arena scratch) {
 
     for(i32 i = 0; i < 164; ++i) {
         VAPPEND(f64s) = (i / 2.0)+0.0064;
-        force_reloc = (u8 *) alloc(&scratch, sizeof(u8), 1);
+        force_reloc = (u8 *) alloc(&scratch, isizeof(u8), 1);
         *force_reloc = 3;
     }
 

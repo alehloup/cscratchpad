@@ -232,7 +232,7 @@ _pure_hot i32 rnd(u64 seed[1]) {
     *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
     shift -= (i32)(*seed >> 61);
     
-    return ((i32) (*seed >> shift)) & 2147483647;
+    return (i32)((*seed >> shift) & 2147483647);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ RANDOM ^^^^^^^^^^^^^^^^^^^^
 
@@ -246,14 +246,6 @@ _pure_hot u64 hash_str(ccstr str) {
     }
 
     return (h ^ (h >> 32)) >> 1;
-}
-_math_hot u64 hash_i64(ci64 integer64) {
-    u64 x = (u64)integer64;
-    x *= 0x94d049bb133111eb; 
-    x ^= (x >> 30); 
-    x *= 0xbf58476d1ce4e5b9; 
-    
-    return (x ^ (x >> 31)) >> 1;
 }
 _pure_hot u64 hash_bytes(ccvoidp bytes_, ci64 count) {
     ccu8 bytes = (ccu8)bytes_;

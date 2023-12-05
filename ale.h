@@ -217,27 +217,6 @@ _math_hot i64 reinterpret_f64_as_i64(f64 float64) {
 //  ^^^^^^^^^^^^^^^^^^^^ TYPE PRUNNING ^^^^^^^^^^^^^^^^^^^^
 
 /*
-    ==================== MATH ====================
-*/
-// bitmask for optimized Mod for power 2 numbers
-_math_hot i64 MODPWR2(i64 number, i64 modval) {
-    return (number) & (modval - 1);
-}
-
-// Returns first power 2 that size+1 fits (it starts at 2^9 == 512)
-_math u8 fit_pwr2_exp(i32 size) {
-    u8 exp=6; i32 val=64; ++size;
-
-    assert(size <= 16777216 && "Max size allowed: 16777215");
-
-    while (val < size) {
-        ++exp; val*=2;
-    }
-    return exp;
-}
-//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
-
-/*
     ==================== ARENA ALLOCATION ====================
 */
 _fun Arena newarena(i64 buffer_len, u8 buffer[]) {
@@ -259,11 +238,16 @@ _proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
     }
 }
 
+// bitmask for optimized Mod for power 2 numbers
+_math_hot i64 mod_pwr2(i64 number, i64 modval) {
+    return (number) & (modval - 1);
+}
+
 gcc_attr(malloc, assume_aligned(8), alloc_size(2, 3), nonnull, warn_unused_result, hot) static
 // Arena Allocator always zeroes the memory, always 8 aligned
 void * alloc(Arena arena[1], i64 size, i64 count) {
     i64 total = size * count;
-    i64 pad = MODPWR2(- (i64)arena->beg, 8); //mod -x gives n for next align
+    i64 pad = mod_pwr2(- (i64)arena->beg, 8); //mod -x gives n for next align
 
     u8 *p = arena->beg + pad;
 
@@ -334,6 +318,18 @@ typedef struct Ht64{
     Entry64 *data;
     u8 shift;
 }Ht64;
+
+// Returns first power 2 that size+1 fits
+_math u8 fit_pwr2_exp(i32 size) {
+    u8 exp=6; i32 val=64; ++size;
+
+    assert(size <= 16777216 && "Max size allowed: 16777215");
+
+    while (val < size) {
+        ++exp; val*=2;
+    }
+    return exp;
+}
 
 _fun Ht64 new_Ht64(Arena arena[1], i32 expected_maxn) {
     Ht64 *ht = (Ht64*)

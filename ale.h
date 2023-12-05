@@ -1,60 +1,43 @@
 #pragma once
 
 /*
-    ==================== COMPILER SPECIFIC ====================
+    ==================== ASSERT ====================
 */ 
-    #ifdef stdout
-        // Print Assert if stdio.h was included
-        #define diagnostic_ printf("ASSERT FAILED %s:%s:%d", __FILE__, __func__, __LINE__)
-    #endif
-    #ifndef stdout
-        static int assert_trapped_ = 0;
-        #define diagnostic_ assert_trapped_ = 1
-    #endif
+#ifdef stdout
+    // Print Assert if stdio.h was included
+    #define diagnostic_ printf("ASSERT FAILED %s:%s:%d", __FILE__, __func__, __LINE__)
+#endif
+#ifndef stdout
+    static int assert_trapped_ = 0;
+    #define diagnostic_ assert_trapped_ = 1
+#endif
+#define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
+//  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
     
-    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
-    
-    #define gcc_attr(...) __attribute((unused, __VA_ARGS__)) // Use attributes in GCC and Clang
-    // Simple attributes
-    #define _math gcc_attr(const, warn_unused_result) static
-    #define _math_hot gcc_attr(const, warn_unused_result, hot) static
-    #define _pure gcc_attr(pure, nonnull, warn_unused_result) static
-    #define _pure_hot gcc_attr(pure, nonnull, warn_unused_result, hot) static
-    #define _nonnull gcc_attr(nonnull) static
-    #define _nonnull_hot gcc_attr(nonnull, hot) static
-    #define _fun gcc_attr(nonnull, warn_unused_result) static
-    #define _proc gcc_attr(nonnull) static void
-    #define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) static
-    #define _proc_hot gcc_attr(nonnull, hot) static void
-    // Standard functions attributes
-    #define _main \
-        gcc_attr(nonnull, warn_unused_result, access(read_only, 2, 1)) i32
-    #define _malloc(paramidx_elementsize, paramidx_elementcount) \
-        gcc_attr(malloc, assume_aligned(8), alloc_size(paramidx_elementsize, paramidx_elementcount), \
-            nonnull, warn_unused_result, hot) static
-    #define _format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
-        gcc_attr(access(read_only, paramidx_buffer, paramidx_bufferlen), \
-            format(printf, paramidx_format, paramidx_varargs)) static
-    // Buffer attributes
-    #define _fun_rbuffer(paramidx_bufferlen, paramidx_buffer) \
-        gcc_attr(nonnull, warn_unused_result, \
-            access(read_only, paramidx_buffer, paramidx_bufferlen)) static
-    #define _proc_rbuffer(paramidx_bufferlen, paramidx_buffer) \
-        gcc_attr(nonnull, \
-            access(read_only, paramidx_buffer, paramidx_bufferlen)) static void 
-    #define _fun_wbuffer(paramidx_bufferlen, paramidx_buffer) \
-        gcc_attr(nonnull, warn_unused_result, \
-            access(write_only, paramidx_buffer, paramidx_bufferlen)) static
-    #define _fun_wbuffer_hot(paramidx_bufferlen, paramidx_buffer) \
-        gcc_attr(nonnull, warn_unused_result, hot, \
-            access(write_only, paramidx_buffer, paramidx_bufferlen)) static
-    #define _proc_wbuffer(paramidx_bufferlen, paramidx_buffer) \
-        gcc_attr(nonnull, \
-            access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
-    #define _proc_wbuffer_hot(paramidx_bufferlen, paramidx_buffer) \
-        gcc_attr(nonnull, hot, \
-            access(write_only, paramidx_buffer, paramidx_bufferlen)) static void 
-//  ^^^^^^^^^^^^^^^^^^^^ COMPILER SPECIFIC ^^^^^^^^^^^^^^^^^^^^
+/*
+    ==================== ATTRIBUTES ====================
+*/
+#define gcc_attr(...) __attribute((__VA_ARGS__))
+// Simple attributes
+#define _math gcc_attr(const, warn_unused_result) static
+#define _math_hot gcc_attr(const, warn_unused_result, hot) static
+#define _pure gcc_attr(pure, nonnull, warn_unused_result) static
+#define _pure_hot gcc_attr(pure, nonnull, warn_unused_result, hot) static
+#define _nonnull gcc_attr(nonnull) static
+#define _nonnull_hot gcc_attr(nonnull, hot) static
+#define _fun gcc_attr(nonnull, warn_unused_result) static
+#define _proc gcc_attr(nonnull) static void
+#define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) static
+#define _proc_hot gcc_attr(nonnull, hot) static void
+// Standard functions attributes
+#define _main \
+    gcc_attr(nonnull, warn_unused_result) i32
+#define _malloc(paramidx_elementsize, paramidx_elementcount) \
+    gcc_attr(malloc, assume_aligned(8), alloc_size(paramidx_elementsize, paramidx_elementcount), \
+        nonnull, warn_unused_result, hot) static
+#define _format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
+    gcc_attr(format(printf, paramidx_format, paramidx_varargs)) static
+//  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== TYPES ====================
@@ -276,16 +259,14 @@ _math u8 fit_pwr2_exp(i32 size) {
 */
 typedef struct Arena{ u8 *beg; u8 *end; }Arena;
 
-_fun_rbuffer(/*bufferlen*/1, /*buffer*/2) 
-Arena newarena(i64 buffer_len, u8 buffer[]) {
+_fun Arena newarena(i64 buffer_len, u8 buffer[]) {
     Arena arena = {0, 0};
     arena.beg = (u8 *)buffer;
     arena.end = arena.beg ? arena.beg + buffer_len : 0;
     return arena;
 }
 
-_fun_wbuffer_hot(/*bufferlen*/2, /*buffer*/1) 
-u8 * zeromem(u8 * __restrict dst, i64 count) {
+_fun_hot u8 * zeromem(u8 * __restrict dst, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst[i] = 0;
     }
@@ -306,15 +287,13 @@ void * alloc(Arena arena[1], i64 size, i64 count) {
     return (void *) zeromem(p, total);
 }
 
-_proc_wbuffer_hot(/*bufferlen*/ 3, /*buffer*/ 1) 
-copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
+_proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst[i] = src[i];
     }
 }
 
-_proc_wbuffer_hot(/*bufferlen*/ 3, /*buffer*/ 1) 
-copymem64(u64 * __restrict dst64, cu64 * __restrict src64, i64 count) {
+_proc_hot copymem64(u64 * __restrict dst64, cu64 * __restrict src64, i64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst64[i] = src64[i];
     }

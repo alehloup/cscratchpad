@@ -1,7 +1,6 @@
 #include "ale_io.h"
 
-_proc_rbuffer(1, 2)
-aoc3(i32 lineslen, cstr lines[]) {
+_proc aoc3(i32 lineslen, cstr lines[]) {
     i64 sum = 0;
 
     for (int iline = 1; iline < lineslen-1; ++iline) {
@@ -16,8 +15,7 @@ aoc3(i32 lineslen, cstr lines[]) {
     printf("\n Sum: %lld \n", sum);
 }
 
-_proc_rbuffer(1, 2)
-aoc2(i32 lineslen, mstr lines[]) {
+_proc aoc2(i32 lineslen, mstr lines[]) {
     static u8 buff[1*MBs_] = {0};
     Arena arena = newarena(1*MBs_, buff);
     
@@ -56,8 +54,7 @@ aoc2(i32 lineslen, mstr lines[]) {
 
 }
 
-_proc_rbuffer(1, 2)
-aoc1(i32 lineslen, cstr lines[]) {
+_proc aoc1(i32 lineslen, cstr lines[]) {
     i64 sum = 0;
     for (int iline = 0; iline < lineslen; ++iline) {
         cstr line = lines[iline];

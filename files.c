@@ -5,7 +5,7 @@ i32 main(void) {
 
     Arena perm = newarena(sizeof(buffer), buffer);
     
-    mstr contents = file_to_buffer(&perm, "exemplo.txt");
+    mstr contents = file_to_buffer(&perm, "./txts/exemplo.txt");
     printf("%s", contents);
 
     {
@@ -16,9 +16,9 @@ i32 main(void) {
         for (i32 i = 0; i < hd_(lines)->len; ++i) {
             printf("%d: %s\n", i, lines[i]);
         }
-        buffer_to_file(lines[0], "first.txt");
+        buffer_to_file(lines[0], "./txts/first.txt");
         
 
-        lines_to_file(lines, "sorted.txt");
+        lines_to_file(lines, "./txts/sorted.txt");
     }
 }

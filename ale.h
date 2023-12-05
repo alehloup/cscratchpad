@@ -285,7 +285,7 @@ _proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
     }
 }
 
-// Arena Allocator that always zeroes the memory, always 8 aligned
+// Arena Allocator always zeroes the memory, always 8 aligned
 _malloc(/*size*/2, /*count*/3)
 void * alloc(Arena arena[1], i64 size, i64 count) {
     i64 total = size * count;

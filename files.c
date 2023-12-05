@@ -9,16 +9,14 @@ i32 main(void) {
     printf("%s", contents);
 
     {
-        Vec64 lines = mutslice_into_nonempty_lines(&perm, contents);
+        mstr *lines = mutslice_into_nonempty_lines(&perm, contents);
         vec_sort_cstr(lines);
 
-        {
-            cstr *data = vec_data_as_cstr(&lines);
-            for (i32 i = 0; i < lines.len; ++i) {
-                printf("%d: %s\n", i, data[i]);
-            }
-            buffer_to_file(data[0], "first.txt");
+        
+        for (i32 i = 0; i < hd_(lines)->len; ++i) {
+            printf("%d: %s\n", i, lines[i]);
         }
+        buffer_to_file(lines[0], "first.txt");
         
 
         lines_to_file(lines, "sorted.txt");

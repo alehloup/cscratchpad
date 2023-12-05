@@ -19,7 +19,7 @@ _fun f64 seconds_since(clock_t start)
     ==================== SHELL ====================
 */
 _format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
-i32 shellrun(i32 bufferlen, char buffer [512], cstr format, ...) {
+i32 shellrun(i32 bufferlen, char buffer [512], ccstr format, ...) {
     va_list args;
     u8 *buf = zeromem((u8 *) buffer, 512);
     assert(buf == (u8 *)buffer && "zeromem returned different address!");
@@ -40,14 +40,14 @@ _fun i64 fread_noex(char dst[1], i64 sz, i64 count, FILE * f) {
     #endif 
               return (i64) fread(dst, (u64) sz, (u64) count, f);
 }
-_fun i64 fwrite_noex(cstr Str, i64 Size, i64 Count, FILE * File) {
+_fun i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
     #ifdef __cplusplus
         try { return (i64) fwrite(Str, (u64) Size, (u64) Count, File); } catch(...) {return 0;}
     #endif 
               return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
 }
 
-_fun mstr file_to_buffer(Arena arena[1], cstr filename) {
+_fun mstr file_to_buffer(Arena arena[1], ccstr filename) {
     mstr contents = 0;
     i64 fsize = 0;
 
@@ -78,17 +78,17 @@ _fun mstr file_to_buffer(Arena arena[1], cstr filename) {
     return contents;
 }
 
-_fun Vec64 file_to_lines(Arena arena[1], cstr filename) {
+_fun mstr * file_to_lines(Arena arena[1], ccstr filename) {
     mstr buffer = file_to_buffer(arena, filename);
     return mutslice_into_lines(arena, buffer);
 }
 
-_fun Vec64 file_to_nonempty_lines(Arena arena[1], cstr filename) {
+_fun mstr * file_to_nonempty_lines(Arena arena[1], ccstr filename) {
     mstr buffer = file_to_buffer(arena, filename);
     return mutslice_into_nonempty_lines(arena, buffer);
 }
 
-_nonnull b32 buffer_to_file(cstr buffer, cstr filename) {
+_nonnull b32 buffer_to_file(ccstr buffer, ccstr filename) {
     {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
@@ -106,7 +106,7 @@ _nonnull b32 buffer_to_file(cstr buffer, cstr filename) {
     return True;
 }
 
-_nonnull b32 lines_to_file(Vec64 lines, cstr filename) {
+_nonnull b32 lines_to_file(mstr lines[1], ccstr filename) {
     {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
@@ -114,12 +114,11 @@ _nonnull b32 lines_to_file(Vec64 lines, cstr filename) {
         assert(!err && "Could not open file for writting");
 
         {
-            cstr *data = vec_data_as_cstr(&lines);
             i64 bytes_written = 0;
             i64 fsize = 0;
 
-            for (i32 i = 0; i < lines.len; ++i) {
-                cstr line = data[i]; 
+            for (i32 i = 0; i < hd_(lines)->len; ++i) {
+                ccstr line = lines[i]; 
 
                 fsize = cstrlen(line);
                 bytes_written = fwrite_noex(line, 1, fsize, f);
@@ -138,9 +137,9 @@ _nonnull b32 lines_to_file(Vec64 lines, cstr filename) {
     ==================== STDLIB ====================
 */
 
-_proc vec_sort_cstr(Vec64 cstrings) {
+_proc vec_sort_cstr(mstr cstrings[1]) {
     qsort(
-        vec_data_as_cstr(&cstrings), (u64) cstrings.len, 
+        cstrings, (u64)  hd_(cstrings)->len, 
         sizeof(i64), void_compare_strings
     );
 } 

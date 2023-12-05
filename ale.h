@@ -72,15 +72,24 @@ typedef const f64 cf64;
 
 // String
 typedef const char cchar;
-typedef cchar * const cstr; // const string const pointer
-typedef cchar * pstr; // const string
+typedef cchar * const ccstr; // const string const pointer
+typedef cchar * cstr; // const string
 typedef char * mstr; // modifiable string
+
+// Arena
+typedef struct Arena{ u8 *beg; u8 *end; }Arena;
+
+// Data Structures Header (stb strategy)
+typedef struct ds_header{Arena *arena; i32 elsize; i32 cap; i32 len;}ds_header;
+_math_hot ds_header * hd_(void * ds) {
+    return ((ds_header *) ds) - 1;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
     STRINGS
 */
-_pure_hot i64 cstrlen(cstr cstring) {
+_pure_hot i64 cstrlen(ccstr cstring) {
     i64 len;
     for (len = 0; cstring[len]; ++len) {
         /* Empty Body */
@@ -88,7 +97,7 @@ _pure_hot i64 cstrlen(cstr cstring) {
     return len;
 }
 
-_pure_hot i32 cstrcmp(cstr cstr1, cstr cstr2) {
+_pure_hot i32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     i64 i = 0;
     for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
         /* Empty Body */
@@ -96,7 +105,7 @@ _pure_hot i32 cstrcmp(cstr cstr1, cstr cstr2) {
     return cstr1[i] - cstr2[i];
 }
 
-_pure_hot b32 startswith(cstr string, cstr prefix) {
+_pure_hot b32 startswith(ccstr string, ccstr prefix) {
     i64 i = 0;
     if (!prefix[0]) {
         return True;
@@ -119,10 +128,10 @@ _pure_hot b32 startswith(cstr string, cstr prefix) {
 }
 
 _pure_hot i32 void_compare_strings(const void *a, const void *b) {
-    return cstrcmp(*(cstr *)a, *(cstr *)b);
+    return cstrcmp(*(ccstr *)a, *(ccstr *)b);
 }
 
-_pure_hot b32 is_empty_string(cstr string) {
+_pure_hot b32 is_empty_string(ccstr string) {
     for (i64 i = 0; string[i]; ++i) {
         if (string[i] != ' ') {
             return False;
@@ -135,7 +144,7 @@ _math_hot b32 is_digit(char character) {
     return character >= '0' && character <= '9';
 }
 
-_pure_hot i64 digitlen(cstr cstring) {
+_pure_hot i64 digitlen(ccstr cstring) {
     i64 len;
     for (len = 0; is_digit(cstring[len]); ++len) {
         /* Empty Body */
@@ -144,8 +153,8 @@ _pure_hot i64 digitlen(cstr cstring) {
 }
 
 // Returns the digit value, if as character or in english lowercase name, or -1 if its not a digit
-_fun i8 named_digit(cstr string) {
-    cstr named[] = {"zero", "one", "two", "three", "four", 
+_fun i8 named_digit(ccstr string) {
+    ccstr named[] = {"zero", "one", "two", "three", "four", 
                     "five", "six", "seven", "eight", "nine"};
                     
     if (string[0] && is_digit(string[0])) {
@@ -162,7 +171,7 @@ _fun i8 named_digit(cstr string) {
 }
 
 typedef struct i64num_i64len{i64 num; i64 len;}i64num_i64len;
-_pure_hot i64num_i64len cstr_to_num(cstr str) {
+_pure_hot i64num_i64len cstr_to_num(ccstr str) {
     i64 power = 1;
     i64num_i64len ret = {0, digitlen(str)};
 
@@ -200,7 +209,7 @@ _pure_hot i32 rnd(u64 seed[1]) {
 /*
     ==================== HASH ====================
 */
-_pure_hot i64 hash_str(cstr str) {
+_pure_hot i64 hash_str(ccstr str) {
     u64 h = 0x7A5662DCDF;
     for(i64 i = 0; str[i]; ++i) { 
         h ^= str[i] & 255; h *= 1111111111111111111;
@@ -257,8 +266,6 @@ _math u8 fit_pwr2_exp(i32 size) {
 /*
     ==================== ARENA ALLOCATION ====================
 */
-typedef struct Arena{ u8 *beg; u8 *end; }Arena;
-
 _fun Arena newarena(i64 buffer_len, u8 buffer[]) {
     Arena arena = {0, 0};
     arena.beg = (u8 *)buffer;
@@ -271,6 +278,11 @@ _fun_hot u8 * zeromem(u8 * __restrict dst, i64 count) {
         dst[i] = 0;
     }
     return dst;
+}
+_proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        dst[i] = src[i];
+    }
 }
 
 // Arena Allocator that always zeroes the memory, always 8 aligned
@@ -286,98 +298,57 @@ void * alloc(Arena arena[1], i64 size, i64 count) {
     
     return (void *) zeromem(p, total);
 }
-
-_proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
-    for (i64 i = 0; i < count; ++i) {
-        dst[i] = src[i];
-    }
-}
-
-_proc_hot copymem64(u64 * __restrict dst64, cu64 * __restrict src64, i64 count) {
-    for (i64 i = 0; i < count; ++i) {
-        dst64[i] = src64[i];
-    }
-}
 //  ^^^^^^^^^^^^^^^^^^^^ ARENA ALLOCATION ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== VECTOR ====================
 */
-typedef struct Vec64{i32 cap; i32 len; i64 *data;}Vec64;
+_fun_hot void * new_vec(Arena arena[1], i32 elsize) {
+    ds_header * vec = (ds_header *)alloc(arena, (i64)sizeof(ds_header) + (64*elsize), 1);
+    vec->elsize = elsize;
+    vec->cap = 64;
+    vec->len = 0;
+    vec->arena = arena;
+    return vec + 1;
+}
+#define VNEW(arena, type) (type *) new_vec(arena, (i32)sizeof(type))
 
-_proc Vec64_grow(Vec64 vector[1],  Arena arena[1]) { 
-    static const i32 VEC_FIRST_SIZE = 64;
+_fun_hot u8 * grow_vec(u8 * arr) { 
+    ds_header * dh = hd_(arr);
+    Arena *arena = dh->arena;
+    cu8 *capend = &arr[dh->cap * dh->elsize];
 
-    if        ("VEC START" && !vector->data) {
-        vector->data = (i64 *) alloc(arena, 8LL, vector->cap = VEC_FIRST_SIZE); 
-    } else if ("VEC EXTEND" && arena->beg == ((u8 *) &(vector->data[vector->cap]))) { 
-        i64 *VEC_EXTEND = (i64 *) alloc(arena, 8LL, vector->cap);
-        assert((VEC_EXTEND == &(vector->data[vector->cap])) && "extend misaligned");
-        vector->cap *= 2;
-    } else if ((i64)"VEC RELOC") {
-        i64 *VEC_RELOC = (i64 *) alloc(arena, 8LL, vector->cap *= 2);
-        copymem64((u64 *)VEC_RELOC, (u64 *)vector->data, vector->len);
-        vector->data = VEC_RELOC;
+    if ("VEC EXTEND" && arena->beg == capend) {
+        u8 *VEC_EXTEND = (u8 *)alloc(arena, dh->elsize, dh->cap);
+        
+        assert((u64)VEC_EXTEND == (u64)capend && "extend misaligned");
+    } else if ((u64)"VEC RELOC") {
+        ds_header *VEC_RELOC = (ds_header *)
+            alloc(arena, (dh->elsize*dh->cap * 2) + (i64)sizeof(ds_header), 1);
+        u8 *newarr = (u8 *)(VEC_RELOC + 1);
+
+        copymem(newarr, arr, dh->cap * dh->elsize);
+        arr = newarr;
+        copymem((u8 *)VEC_RELOC, (u8 *)dh, (i64)sizeof(ds_header));
+        dh = VEC_RELOC;
     }
+    dh->cap <<= 1;
+
+    return arr;
 }
 
-// Vector Push
-_proc vec_push_i64(Vec64 vector[1], Arena arena[1], i64 int64) {
-    if (vector->len >= vector->cap) {
-        Vec64_grow(vector, arena);
+_fun_hot void * push_vec(void * ptr_to_array) {
+    u8 * *arr = (u8 * *)ptr_to_array;
+    ds_header * dh = hd_(*arr);
+    
+    if (dh->len >= dh->cap) {
+       *arr = grow_vec(*arr);
     }
 
-    vector->data[vector->len++] = int64;
+    return *arr + (dh->elsize * dh->len++);
 }
-_proc vec_push_f64(Vec64 vector[1], Arena arena[1], f64 float64) {
-    vec_push_i64(vector, arena, reinterpret_f64_as_i64(float64));
-}
-_proc vec_push_str(Vec64 vector[1], Arena arena[1], cstr cstring) {
-    vec_push_i64(vector, arena, (i64) cstring);
-}
-_proc vec_push_ptr(Vec64 vector[1], Arena arena[1], void * ptr) {
-    vec_push_i64(vector, arena, (i64) ptr);
-}
-
-// Vector Pop
-_fun i64 vec_pop_i64(Vec64 vector[1]) {
-    assert(vector->len > 0 && "POP ON 64bit EMPTY ARRAY");
-
-    return vector->data[--vector->len];
-}
-_fun f64 vec_pop_f64(Vec64 vector[1]) {
-    return reinterpret_i64_as_f64(vec_pop_i64(vector));
-}
-_fun pstr vec_pop_str(Vec64 vector[1]) {
-    i64 cstr_as_i64 = vec_pop_i64(vector);
-    return (pstr) cstr_as_i64;
-}
-_fun void * vec_pop_ptr(Vec64 vector[1]) {
-    i64 pointer_as_i64 = vec_pop_i64(vector);
-    return (void *) pointer_as_i64;
-}
-
-// Vector as C Array
-_fun i64 * vec_data_as_i64(Vec64 vector[1]) {
-    return (i64 *) vector->data;
-}
-_fun f64 * vec_data_as_f64(Vec64 vector[1]) {
-    assert(sizeof(f64) == 8 && "ale.h vec_data_as_f64 assumes that a double == 64bits");
-    return (f64 *) vector->data;
-}
-_fun pstr * vec_data_as_cstr(Vec64 vector[1]) {
-    assert(sizeof(cstr) == 8 && "ale.h vec_data_as_cstr assumes that a pointer == 64bits");
-    return (pstr *) vector->data;
-}
-_fun mstr * vec_data_as_mstr(Vec64 vector[1]) {
-    assert(sizeof(cstr) == 8 && "ale.h vec_data_as_cstr assumes that a pointer == 64bits");
-    return (mstr *) vector->data;
-}
-
-// Vector remove by last swap
-_proc vec_rem(Vec64 vector[1], i32 index) {
-    vector->data[index] = vector->data[--vector->len];
-}
+#define VAPPEND(arr) *(typeof(arr))push_vec(&arr)
+#define VPOP(arr) arr[--hd_(arr)->len]
 //  ^^^^^^^^^^^^^^^^^^^^ VECTOR ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -421,7 +392,7 @@ _math_hot i32 ht_lookup(
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 _nonnull_hot i32 htloop(
     Ht64 ht[1] /* ht_ht */, 
-    i64 keyi64, cstr keystr, 
+    i64 keyi64, ccstr keystr, 
     i32 create_if_not_found
 ) {
     Entry64 *data = ht->data;
@@ -440,7 +411,7 @@ _nonnull_hot i32 htloop(
         index = ht_lookup(hash, index, mask, shift);
         data[index].key != 0 
             && data[index].key != keyi64
-            && (intkey || cstrcmp((pstr) data[index].key, keystr));
+            && (intkey || cstrcmp((cstr) data[index].key, keystr));
         index = ht_lookup(hash, index, mask, shift)
     ) {
         /* empty body */
@@ -465,8 +436,8 @@ _fun i64 hti_get_i64(Ht64 table, i64 ikey) {
 _fun f64 hti_get_f64(Ht64 table, i64 ikey) {
     return reinterpret_i64_as_f64(table.data[htloop(&table, ikey, "", 0)].val);
 }
-_fun pstr hti_get_str(Ht64 table, i64 ikey) {
-    return (pstr) table.data[htloop(&table, ikey, "", 0)].val;
+_fun cstr hti_get_str(Ht64 table, i64 ikey) {
+    return (cstr) table.data[htloop(&table, ikey, "", 0)].val;
 }
 _fun void * hti_get_ptr(Ht64 table, i64 ikey) {
     return (void *) table.data[htloop(&table, ikey, "", 0)].val;
@@ -482,7 +453,7 @@ _proc hti_set_i64(Ht64 table[1], i64 ikey, i64 ival) {
 _proc hti_set_f64(Ht64 table[1], i64 ikey, f64 dval) {
     table->data[htloop(table, ikey, "", 1)].val = reinterpret_f64_as_i64(dval);
 }
-_proc hti_set_str(Ht64 table[1], i64 ikey, cstr sval) {
+_proc hti_set_str(Ht64 table[1], i64 ikey, ccstr sval) {
     table->data[htloop(table, ikey, "", 1)].val = (i64) sval;
 }
 _proc hti_set_ptr(Ht64 table[1], i64 ikey, void * pval) {
@@ -495,7 +466,7 @@ typedef struct Entry_i64_f64{i64 key; f64 val;}Entry_i64_f64;
 _fun Entry_i64_f64 * hti_data_as_f64(Ht64 table[1]) {
     return (Entry_i64_f64 *) table->data;
 }
-typedef struct Entry_i64_str{i64 key; cstr val;}Entry_i64_str;
+typedef struct Entry_i64_str{i64 key; ccstr val;}Entry_i64_str;
 _fun Entry_i64_str * hti_data_as_str(Ht64 table[1]) {
     return (Entry_i64_str *) table->data;
 }
@@ -505,52 +476,52 @@ _fun Entry_i64_ptr * hti_data_as_ptr(Ht64 table[1]) {
 }
 
 // Returns the index of |ikey| in the msi |table|
-_fun i32 hts_get_idx(Ht64 table, cstr skey) {
+_fun i32 hts_get_idx(Ht64 table, ccstr skey) {
     return htloop(&table, 0, skey, 0);
 }
-_fun i64 hts_get_i64(Ht64 table, cstr skey) {
+_fun i64 hts_get_i64(Ht64 table, ccstr skey) {
     return (i64) table.data[htloop(&table, 0, skey, 0)].val;
 }
-_fun f64 hts_get_f64(Ht64 table, cstr skey) {
+_fun f64 hts_get_f64(Ht64 table, ccstr skey) {
     return reinterpret_i64_as_f64(table.data[htloop(&table, 0, skey, 0)].val);
 }
-_fun pstr hts_get_str(Ht64 table, cstr skey) {
-    return (pstr) table.data[htloop(&table, 0, skey, 0)].val;
+_fun cstr hts_get_str(Ht64 table, ccstr skey) {
+    return (cstr) table.data[htloop(&table, 0, skey, 0)].val;
 }
-_fun void * hts_get_ptr(Ht64 table, cstr skey) {
+_fun void * hts_get_ptr(Ht64 table, ccstr skey) {
     return (void *) table.data[htloop(&table, 0, skey, 0)].val;
 }
 
 // Creates key if not found, then returns the index of |skey| in the msi |table|
-_proc hts_set_idx(Ht64 table[1], cstr skey) {
+_proc hts_set_idx(Ht64 table[1], ccstr skey) {
     htloop(table, 0, skey, 1);
 }
-_proc hts_set_i64(Ht64 table[1], cstr skey, i64 ival) {
+_proc hts_set_i64(Ht64 table[1], ccstr skey, i64 ival) {
     table->data[htloop(table, 0, skey, 1)].val = ival;
 }
-_proc hts_set_f64(Ht64 table[1], cstr skey, f64 dval) {
+_proc hts_set_f64(Ht64 table[1], ccstr skey, f64 dval) {
     table->data[htloop(table, 0, skey, 1)].val = reinterpret_f64_as_i64(dval);
 }
-_proc hts_set_str(Ht64 table[1], cstr skey, cstr sval) {
+_proc hts_set_str(Ht64 table[1], ccstr skey, ccstr sval) {
     table->data[htloop(table, 0, skey, 1)].val = (i64) sval;
 }
-_proc hts_set_ptr(Ht64 table[1], cstr skey, void * pval) {
+_proc hts_set_ptr(Ht64 table[1], ccstr skey, void * pval) {
     table->data[htloop(table, 0, skey, 1)].val = (i64) pval;
 }
 
-typedef struct Entry_str_i64{cstr key; i64 val;}Entry_str_i64;
+typedef struct Entry_str_i64{ccstr key; i64 val;}Entry_str_i64;
 _fun Entry_str_i64 * hts_data_as_int64(Ht64 table[1]) {
     return (Entry_str_i64 *) table->data;
 }
-typedef struct Entry_str_f64{cstr key; f64 val;}Entry_str_f64;
+typedef struct Entry_str_f64{ccstr key; f64 val;}Entry_str_f64;
 _fun Entry_str_f64 * hts_data_as_f64(Ht64 table[1]) {
     return (Entry_str_f64 *) table->data;
 }
-typedef struct Entry_str_str{cstr key; cstr val;}Entry_str_str;
+typedef struct Entry_str_str{ccstr key; ccstr val;}Entry_str_str;
 _fun Entry_str_str * hts_data_as_str(Ht64 table[1]) {
     return (Entry_str_str *) table->data;
 }
-typedef struct Entry_str_ptr{cstr key; void * val;}Entry_str_ptr;
+typedef struct Entry_str_ptr{ccstr key; void * val;}Entry_str_ptr;
 _fun Entry_str_ptr * hts_data_as_ptr(Ht64 table[1]) {
     return (Entry_str_ptr *) table->data;
 }
@@ -559,11 +530,10 @@ _fun Entry_str_ptr * hts_data_as_ptr(Ht64 table[1]) {
 /*
     ==================== TEXT ====================
 */
-// Alters a text by converting \n to \0 and pushing each line as a cstr in the returned vector
-_fun Vec64 mutslice_into_lines(Arena arena[1], char text_to_alter[1]) {
-    Vec64 lines = {0, 0, 0};
+// Alters a text by converting \n to \0 and pushing each line as a ccstr in the returned vector
+_fun mstr * mutslice_into_lines(Arena arena[1], mstr text_to_alter) {
+    mstr *lines = VNEW(arena, mstr);
     
-    i64 last_line = 0;
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
             text_to_alter[i] = '\0';
@@ -571,21 +541,17 @@ _fun Vec64 mutslice_into_lines(Arena arena[1], char text_to_alter[1]) {
         else if (text_to_alter[i] == '\n') {
             text_to_alter[i] = '\0';
             
-            vec_push_str(&lines,  arena, &text_to_alter[current]);
-            last_line = current;
+            VAPPEND(lines) = &text_to_alter[current];
             current = i+1;
         }
-    }
-    if (!is_empty_string(&text_to_alter[last_line])) {
-        vec_push_str(&lines,  arena, "");
     }
 
     return lines;
 }
 
-// Alters a text by converting \n to \0 and pushing each nonempty line as a cstr in the returned vector
-_fun Vec64 mutslice_into_nonempty_lines(Arena arena[1], char text_to_alter[1]) {
-    Vec64 lines = {0, 0, 0};
+// Alters a text by converting \n to \0 and pushing each nonempty line as a ccstr in the returned vector
+_fun mstr * mutslice_into_nonempty_lines(Arena arena[1], mstr text_to_alter) {
+    mstr *lines = VNEW(arena, mstr);
     
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
@@ -595,7 +561,7 @@ _fun Vec64 mutslice_into_nonempty_lines(Arena arena[1], char text_to_alter[1]) {
             text_to_alter[i] = '\0';
             
             if (!is_empty_string(&text_to_alter[current])) {
-                vec_push_str(&lines,  arena, &text_to_alter[current]);
+                VAPPEND(lines) =  &text_to_alter[current];
             }
             current = i+1;
         }
@@ -604,8 +570,8 @@ _fun Vec64 mutslice_into_nonempty_lines(Arena arena[1], char text_to_alter[1]) {
     return lines;
 }
 
-_fun Vec64 mutslice_by_splitter(Arena arena[1], char text_to_alter[1], char splitter) {
-    Vec64 words = {0, 0, 0};
+_fun mstr * mutslice_by_splitter(Arena arena[1], char text_to_alter[1], char splitter) {
+    mstr *words = VNEW(arena, mstr);
     i64 i = 0, current = 0;
 
     for (i = 0; text_to_alter[i]; ++i) {
@@ -613,14 +579,14 @@ _fun Vec64 mutslice_by_splitter(Arena arena[1], char text_to_alter[1], char spli
             text_to_alter[i] = '\0';
             
             if (!is_empty_string(&text_to_alter[current])) {
-                vec_push_str(&words, arena, &text_to_alter[current]);
+                VAPPEND(words) = &text_to_alter[current];
             }
             current = i+1;
         }
     }
 
     if (current != i && !is_empty_string(&text_to_alter[current])) {
-        vec_push_str(&words, arena, &text_to_alter[current]);
+        VAPPEND(words) = &text_to_alter[current];
     }
 
     return words;

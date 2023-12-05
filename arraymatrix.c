@@ -5,76 +5,67 @@
 static u8 * force_reloc = 0;
 
 _proc test_vec_push_str(Arena scratch) {
-    Vec64 d = {0, 0, 0};
+    cstr *cstrings = VNEW(&scratch, cstr);
 
     printf("=========== CSTRINGs ===========\n");
     
     for (i32 i = 0; i < 52; ++i) {
-        vec_push_str(&d, &scratch, "sAl");
-        vec_push_str(&d, &scratch, "sSa");
-        vec_push_str(&d, &scratch, "sEv");
+        VAPPEND(cstrings) = "sAl";
+        VAPPEND(cstrings) = "sSa";
+        VAPPEND(cstrings) = "sEv";
     }
 
     {
-        cstr *data = vec_data_as_cstr(&d);
-        for (i32 i = 0; i < d.len; ++i) {
-            printf(" %d:%s ", i, data[i]);
+        for (i32 i = 0; i < hd_(cstrings)->len; ++i) {
+            printf(" %d:%s ", i, cstrings[i]);
         }
     }
 
-    printf("Pop: %s\n", vec_pop_str(&d));
+    printf("Pop: %s\n", VPOP(cstrings));
 }
 
 _proc test_vec_push_i64(Arena scratch) {
-    Vec64 d = {0, 0, 0};
+    i64 *i64s = VNEW(&scratch, i64);
 
     printf("=========== I64s ===========\n");
     
-    vec_push_i64(&d, &scratch, 52+64000);
-    printf("POP: %lld\n", vec_pop_i64(&d));
+    VAPPEND(i64s) = 52+64000;
+    printf("POP: %lld\n", VPOP(i64s));
 
     for(i32 i = 0; i < 164; ++i) {
         force_reloc = (u8 *) alloc(&scratch, sizeof(u8), 1);
         *force_reloc = 52;
-        vec_push_i64(&d, &scratch, i+64000);
+        VAPPEND(i64s) = i+64000;
     }
 
-    printf("POP: %lld\n", vec_pop_i64(&d));
+    printf("POP: %lld\n", VPOP(i64s));
 
-    {
-        i64 *data = vec_data_as_i64(&d);
-
-        for(i32 i = 0; i < d.len; ++i) {
-            printf("%lld ", data[i]);
-        } 
-        printf("\n");
-    }
+    for(i32 i = 0; i < hd_(i64s)->len; ++i) {
+        printf("%lld ", i64s[i]);
+    } 
+    printf("\n");
 }
 
 _proc test_vec_push_f64(Arena scratch) {
-    Vec64 d = {0, 0, 0};
+    f64 *f64s = VNEW(&scratch, f64);
 
     printf("=========== DOUBLEs ===========\n");
-
     
-    vec_push_f64(&d, &scratch, 5.2+0.0064);
-    printf("POP: %lf\n", vec_pop_f64(&d));
+    VAPPEND(f64s) = 5.2+0.0064;
+    printf("POP: %lf\n", VPOP(f64s));
 
     for(i32 i = 0; i < 164; ++i) {
-        vec_push_f64(&d, &scratch, (i / 2.0)+0.0064);
+        VAPPEND(f64s) = (i / 2.0)+0.0064;
         force_reloc = (u8 *) alloc(&scratch, sizeof(u8), 1);
         *force_reloc = 3;
     }
 
-    printf("POP: %lf\n", vec_pop_f64(&d));
-
-    {
-        f64 *data = vec_data_as_f64(&d);
-        for(i32 i = 0; i < d.len; ++i) {
-            printf("%lf ", data[i]);
-        } 
-        printf("\n");
-    }
+    printf("POP: %lf\n", VPOP(f64s));
+    
+    for(i32 i = 0; i < hd_(f64s)->len; ++i) {
+        printf("%lf ", f64s[i]);
+    } 
+    printf("\n");
 }
 
 i32 main(void) {

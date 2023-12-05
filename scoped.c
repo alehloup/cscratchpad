@@ -17,7 +17,7 @@ i32 main(void) {
         printf("Meio!\n");
     }
 
-    scoped(cstr arquivo = "Fechando\n", printf("%s", arquivo)) {
+    scoped(ccstrarquivo = "Fechando\n", printf("%s", arquivo)) {
         printf("Meio do arquivo\n");
     }
 

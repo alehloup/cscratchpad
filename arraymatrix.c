@@ -5,7 +5,7 @@
 static u8 * force_reloc = 0;
 
 _proc test_vec_push_str(Arena scratch) {
-    cstr *cstrings = VNEW(&scratch, cstr);
+    cstr *cstrings = NEW_VEC(&scratch, cstr);
 
     printf("=========== CSTRINGs ===========\n");
     
@@ -25,7 +25,7 @@ _proc test_vec_push_str(Arena scratch) {
 }
 
 _proc test_vec_push_i64(Arena scratch) {
-    i64 *i64s = VNEW(&scratch, i64);
+    i64 *i64s = NEW_VEC(&scratch, i64);
 
     printf("=========== I64s ===========\n");
     
@@ -47,7 +47,7 @@ _proc test_vec_push_i64(Arena scratch) {
 }
 
 _proc test_vec_push_f64(Arena scratch) {
-    f64 *f64s = VNEW(&scratch, f64);
+    f64 *f64s = NEW_VEC(&scratch, f64);
 
     printf("=========== DOUBLEs ===========\n");
     
@@ -70,7 +70,7 @@ _proc test_vec_push_f64(Arena scratch) {
 
 i32 main(void) {
 
-    Arena scratch = newarena(8*MBs_, (u8 *) calloc(8*MBs_, 1));
+    Arena scratch = new_arena(8*MBs_, (u8 *) calloc(8*MBs_, 1));
     
     test_vec_push_str(scratch);
     test_vec_push_i64(scratch);

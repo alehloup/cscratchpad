@@ -2,7 +2,7 @@
 
 i32 main(void) {
     static u8 mem[128*MBs_] = {0};
-    Arena arena = newarena(128*MBs_, mem);
+    Arena arena = new_arena(128*MBs_, mem);
 
     mstr *lines = file_to_lines(&arena, "./txts/aoc.txt");
 

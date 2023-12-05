@@ -18,8 +18,8 @@ i32 main(void) {
 
     {
         u8 buffer[MBs_ / 8] = {0};
-        Arena arena = newarena(MBs_ / 8, buffer);
-        mstr *words = VNEW(&arena, mstr);
+        Arena arena = new_arena(MBs_ / 8, buffer);
+        mstr *words = NEW_VEC(&arena, mstr);
         char teste[16] = {'A', 'l', 'e', ' ', 'M', 'a', 't', ' ', '\0'};
 
         words = split(&arena, teste, ' ');

@@ -251,7 +251,7 @@ _math_hot i64 reinterpret_f64_as_i64(f64 float64) {
 /*
     ==================== ARENA ALLOCATION ====================
 */
-_fun Arena newarena(i64 buffer_len, u8 buffer[]) {
+_fun Arena new_arena(i64 buffer_len, u8 buffer[]) {
     Arena arena = {0, 0};
     arena.beg = (u8 *)buffer;
     arena.end = arena.beg ? arena.beg + buffer_len : 0;
@@ -289,7 +289,7 @@ _fun_hot void * new_vec(Arena arena[1], i32 elsize) {
     vec->arena = arena;
     return vec + 1;
 }
-#define VNEW(arena, type) (type *) new_vec(arena, (i32)sizeof(type))
+#define NEW_VEC(arena, type) (type *) new_vec(arena, (i32)sizeof(type))
 
 _fun_hot u8 * grow_vec(u8 * arr) { 
     ds_header * dh = hd_(arr);
@@ -332,40 +332,29 @@ _fun_hot void * push_vec(void * ptr_to_array) {
 /*
     ==================== HASH TABLE ====================
 */
-typedef struct Entry64{i64 key; i64 val;}Entry64;
-typedef struct Ht64{
-    i32 cap; i32 len;
-    Entry64 *data;
-    u8 shift;
-}Ht64;
-
 // Returns first power 2 that size+1 fits
-_math u8 fit_pwr2_exp(i32 size) {
-    u8 exp=6; i32 val=64; ++size;
+_math_hot u8 fit_pwr2_exp(i32 size) {
+    u8 exp=8; 
+    i32 val= 1<<exp;
 
     assert(size <= 16777216 && "Max size allowed: 16777215");
 
     while (val < size) {
-        ++exp; val*=2;
+        ++exp; val<<= 1;
     }
     return exp;
 }
 
-_fun Ht64 new_Ht64(Arena arena[1], i32 expected_maxn) {
-    Ht64 *ht = (Ht64*)
-        alloc(arena, isizeof(Ht64), 1);
-
-    const u8 ht_expo = fit_pwr2_exp(expected_maxn + 64);
-    assert(ht_expo <= 24 && "IS TOO BIG FOR MSI, MAX IS 2^24 - 65");
-    
-    ht->shift = 64u - ht_expo;
-    ht->cap = (1 << ht_expo) - 1;
-    ht->len = 0;
-    ht->data = (Entry64 *)
-        alloc(arena, isizeof(Entry64), ht->cap + 2);
-
-    return *ht;
+_fun_hot void * new_pw2_vec(Arena arena[1], i32 elsize, i32 capacity) {
+    ci32 cap = (1<<fit_pwr2_exp(capacity)) - 1;
+    ds_header * vec = (ds_header *)alloc(arena, isizeof(ds_header) + (cap*elsize), 1);
+    vec->elsize = elsize;
+    vec->cap = cap;
+    vec->len = 0;
+    vec->arena = arena;
+    return vec + 1;
 }
+#define NEWPW2VEC(arena, type, capacity) (type *) new_pw2_vec(arena, (i32)sizeof(type), capacity)
 
 // Mask-Step-Index (MSI) lookup
 _math_hot i32 ht_lookup(
@@ -379,142 +368,44 @@ _math_hot i32 ht_lookup(
     return (i32) (((u32)index + step) & mask);
 }
 
-// Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
-_nonnull_hot i32 htloop(
-    Ht64 ht[1] /* ht_ht */, 
-    i64 keyi64, ccstr keystr, 
-    i32 create_if_not_found
-) {
-    Entry64 *data = ht->data;
+// // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
+// _nonnull_hot i32 htloop(
+//     Ht64 ht[1] /* ht_ht */, 
+//     i64 keyi64, ccstr keystr, 
+//     i32 create_if_not_found
+// ) {
+//     Entry64 *data = ht->data;
 
-    u64 hash = (u64) hash_i64(keyi64);
-    i32 index = (i32)hash;
-    u32 mask = (u32) ht->cap;
-    u8 shift = ht->shift; 
-    b32 intkey = keyi64 != 0;
+//     u64 hash = (u64) hash_i64(keyi64);
+//     i32 index = (i32)hash;
+//     u32 mask = (u32) ht->cap;
+//     u8 shift = ht->shift; 
+//     b32 intkey = keyi64 != 0;
 
-    if (!keyi64) {
-        keyi64 = (i64) keystr;
-    }
+//     if (!keyi64) {
+//         keyi64 = (i64) keystr;
+//     }
 
-    for(
-        index = ht_lookup(hash, index, mask, shift);
-        data[index].key != 0 
-            && data[index].key != keyi64
-            && (intkey || cstrcmp((cstr) data[index].key, keystr));
-        index = ht_lookup(hash, index, mask, shift)
-    ) {
-        /* empty body */
-    }
+//     for(
+//         index = ht_lookup(hash, index, mask, shift);
+//         data[index].key != 0 
+//             && data[index].key != keyi64
+//             && (intkey || cstrcmp((cstr) data[index].key, keystr));
+//         index = ht_lookup(hash, index, mask, shift)
+//     ) {
+//         /* empty body */
+//     }
 
-    if (data[index].key == 0 && create_if_not_found) {
-        assert(ht->len < (i32)(mask - 1) && "MSI HT IS FULL");
-        data[index].key = keyi64;
-        ++ht->len;
-    }
+//     if (data[index].key == 0 && create_if_not_found) {
+//         assert(ht->len < (i32)(mask - 1) && "MSI HT IS FULL");
+//         data[index].key = keyi64;
+//         ++ht->len;
+//     }
 
-    return index; // index of entry found OR entry empty
-}
+//     return index; // index of entry found OR entry empty
+// }
 
-// Returns the index of |ikey| in the msi |table|
-_fun i32 hti_get_idx(Ht64 table, i64 ikey) {
-    return htloop(&table, ikey, "", 0);
-}
-_fun i64 hti_get_i64(Ht64 table, i64 ikey) {
-    return table.data[htloop(&table, ikey, "", 0)].val;
-}
-_fun f64 hti_get_f64(Ht64 table, i64 ikey) {
-    return reinterpret_i64_as_f64(table.data[htloop(&table, ikey, "", 0)].val);
-}
-_fun cstr hti_get_str(Ht64 table, i64 ikey) {
-    return (cstr) table.data[htloop(&table, ikey, "", 0)].val;
-}
-_fun void * hti_get_ptr(Ht64 table, i64 ikey) {
-    return (void *) table.data[htloop(&table, ikey, "", 0)].val;
-}
 
-// Creates key if not found, then returns the index of |ikey| in the msi |table|
-_proc hti_set_idx(Ht64 table[1], i64 ikey) {
-    htloop(table, ikey, "", 1);
-}
-_proc hti_set_i64(Ht64 table[1], i64 ikey, i64 ival) {
-    table->data[htloop(table, ikey, "", 1)].val = ival;
-}
-_proc hti_set_f64(Ht64 table[1], i64 ikey, f64 dval) {
-    table->data[htloop(table, ikey, "", 1)].val = reinterpret_f64_as_i64(dval);
-}
-_proc hti_set_str(Ht64 table[1], i64 ikey, ccstr sval) {
-    table->data[htloop(table, ikey, "", 1)].val = (i64) sval;
-}
-_proc hti_set_ptr(Ht64 table[1], i64 ikey, void * pval) {
-    table->data[htloop(table, ikey, "", 1)].val = (i64) pval;
-}
-_fun Entry64 * hti_data_as_int64(Ht64 table[1]) {
-    return (Entry64 *) table->data;
-}
-typedef struct Entry_i64_f64{i64 key; f64 val;}Entry_i64_f64;
-_fun Entry_i64_f64 * hti_data_as_f64(Ht64 table[1]) {
-    return (Entry_i64_f64 *) table->data;
-}
-typedef struct Entry_i64_str{i64 key; ccstr val;}Entry_i64_str;
-_fun Entry_i64_str * hti_data_as_str(Ht64 table[1]) {
-    return (Entry_i64_str *) table->data;
-}
-typedef struct Entry_i64_ptr{i64 key; void * val;}Entry_i64_ptr;
-_fun Entry_i64_ptr * hti_data_as_ptr(Ht64 table[1]) {
-    return (Entry_i64_ptr *) table->data;
-}
-
-// Returns the index of |ikey| in the msi |table|
-_fun i32 hts_get_idx(Ht64 table, ccstr skey) {
-    return htloop(&table, 0, skey, 0);
-}
-_fun i64 hts_get_i64(Ht64 table, ccstr skey) {
-    return (i64) table.data[htloop(&table, 0, skey, 0)].val;
-}
-_fun f64 hts_get_f64(Ht64 table, ccstr skey) {
-    return reinterpret_i64_as_f64(table.data[htloop(&table, 0, skey, 0)].val);
-}
-_fun cstr hts_get_str(Ht64 table, ccstr skey) {
-    return (cstr) table.data[htloop(&table, 0, skey, 0)].val;
-}
-_fun void * hts_get_ptr(Ht64 table, ccstr skey) {
-    return (void *) table.data[htloop(&table, 0, skey, 0)].val;
-}
-
-// Creates key if not found, then returns the index of |skey| in the msi |table|
-_proc hts_set_idx(Ht64 table[1], ccstr skey) {
-    htloop(table, 0, skey, 1);
-}
-_proc hts_set_i64(Ht64 table[1], ccstr skey, i64 ival) {
-    table->data[htloop(table, 0, skey, 1)].val = ival;
-}
-_proc hts_set_f64(Ht64 table[1], ccstr skey, f64 dval) {
-    table->data[htloop(table, 0, skey, 1)].val = reinterpret_f64_as_i64(dval);
-}
-_proc hts_set_str(Ht64 table[1], ccstr skey, ccstr sval) {
-    table->data[htloop(table, 0, skey, 1)].val = (i64) sval;
-}
-_proc hts_set_ptr(Ht64 table[1], ccstr skey, void * pval) {
-    table->data[htloop(table, 0, skey, 1)].val = (i64) pval;
-}
-
-typedef struct Entry_str_i64{ccstr key; i64 val;}Entry_str_i64;
-_fun Entry_str_i64 * hts_data_as_int64(Ht64 table[1]) {
-    return (Entry_str_i64 *) table->data;
-}
-typedef struct Entry_str_f64{ccstr key; f64 val;}Entry_str_f64;
-_fun Entry_str_f64 * hts_data_as_f64(Ht64 table[1]) {
-    return (Entry_str_f64 *) table->data;
-}
-typedef struct Entry_str_str{ccstr key; ccstr val;}Entry_str_str;
-_fun Entry_str_str * hts_data_as_str(Ht64 table[1]) {
-    return (Entry_str_str *) table->data;
-}
-typedef struct Entry_str_ptr{ccstr key; void * val;}Entry_str_ptr;
-_fun Entry_str_ptr * hts_data_as_ptr(Ht64 table[1]) {
-    return (Entry_str_ptr *) table->data;
-}
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -522,7 +413,7 @@ _fun Entry_str_ptr * hts_data_as_ptr(Ht64 table[1]) {
 */
 // Alters a text by converting \n to \0 and pushing each line as a ccstr in the returned vector
 _fun_hot mstr * into_lines(Arena arena[1], mstr text_to_alter) {
-    mstr *lines = VNEW(arena, mstr);
+    mstr *lines = NEW_VEC(arena, mstr);
     
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
@@ -540,7 +431,7 @@ _fun_hot mstr * into_lines(Arena arena[1], mstr text_to_alter) {
 }
 
 _fun_hot mstr * split(Arena arena[1], mstr text_to_alter, char splitter) {
-    mstr *words = VNEW(arena, mstr);
+    mstr *words = NEW_VEC(arena, mstr);
     i64 i = 0, current = 0;
 
     for (i = 0; text_to_alter[i]; ++i) {

@@ -10,7 +10,7 @@ typedef struct teste{
 
 i32 main(void) {
 
-    Arena perm = newarena(1*MBs_, (u8 *)calloc(1*MBs_, 1));
+    Arena perm = new_arena(1*MBs_, (u8 *)calloc(1*MBs_, 1));
 
     teste *vetor = (teste *) alloc(&perm, isizeof(teste), 3);
     teste *woa = (teste *) alloc(&perm, isizeof(teste), 1);

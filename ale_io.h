@@ -83,31 +83,22 @@ _fun mstr * file_to_lines(Arena arena[1], ccstr filename) {
     return into_lines(arena, buffer);
 }
 
-_nonnull b32 buffer_to_file(ccstr buffer, ccstr filename) {
-    {
+_proc_hot buffer_to_file(ccstr buffer, ccstr filename) {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
-
         assert(!err && "Could not open file for writting");
-
         {
             i64 fsize = cstrlen(buffer);
             i64 bytes_written = fwrite_noex(buffer, 1, fsize, f);
             assert(bytes_written == fsize && "could not write fsize#bytes");
         }
-
     fclose(f);
-    }
-    return True;
 }
 
-_nonnull b32 lines_to_file(mstr lines[1], ccstr filename) {
-    {
+_proc_hot lines_to_file(mstr lines[1], ccstr filename) {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
-
         assert(!err && "Could not open file for writting");
-
         {
             i64 bytes_written = 0;
             i64 fsize = 0;
@@ -121,10 +112,7 @@ _nonnull b32 lines_to_file(mstr lines[1], ccstr filename) {
                 assert(bytes_written == fsize + 1 && "could not write fsize#bytes");
             }
         }
-
     fclose(f);
-    }
-    return True;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 

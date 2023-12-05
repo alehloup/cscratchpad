@@ -23,8 +23,6 @@
 #define _math_hot gcc_attr(const, warn_unused_result, hot) static
 #define _pure gcc_attr(pure, nonnull, warn_unused_result) static
 #define _pure_hot gcc_attr(pure, nonnull, warn_unused_result, hot) static
-#define _nonnull gcc_attr(nonnull) static
-#define _nonnull_hot gcc_attr(nonnull, hot) static
 #define _fun gcc_attr(nonnull, warn_unused_result) static
 #define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) static
 #define _proc gcc_attr(nonnull) static void
@@ -408,7 +406,7 @@ _math_hot i32 ht_lookup(
 }
 
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
-_nonnull_hot i32 htloop(
+_fun_hot i32 htloop(
     void * const keys_, ccvoidp key_, i32 key_is_str, i32 create_if_not_found
 ) {
     static u8 bytes_key[256] = {0};

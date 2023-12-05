@@ -9,7 +9,7 @@ i32 main(void) {
     printf("%s", contents);
 
     {
-        mstr *lines = mutslice_into_nonempty_lines(&perm, contents);
+        mstr *lines = into_lines(&perm, contents);
         vec_sort_cstr(lines);
 
         

@@ -10,7 +10,8 @@ i32 main(i32 argc, ccstr*argv) {
 
     printf(
         (
-            "g++ @Flags %s -o \"./%s.exe\"" 
+            "msvc"
+            " && clang-cl @Flagscl %s -o \"./%s.exe\"" 
             " && \"./%s.exe\""
             " && rm \"./%s.exe\""
         ), 
@@ -21,7 +22,8 @@ i32 main(i32 argc, ccstr*argv) {
     
     shellrun(sizeof(buffer), buffer, 
         (
-            "g++ @Flags %s -o \"./%s.exe\"" 
+            "msvc"
+            " && clang-cl @Flagscl %s -o \"./%s.exe\"" 
             " && \"./%s.exe\""
             " && rm \"./%s.exe\""
         ),

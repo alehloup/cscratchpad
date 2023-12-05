@@ -18,7 +18,7 @@ _fun f64 seconds_since(clock_t start)
 /*
     ==================== SHELL ====================
 */
-_format(/*bufferlen*/1, /*buffer*/2, /*format*/3, /*varargs*/4) 
+gcc_attr(format(printf, 3, 4), nonnull) static
 i32 shellrun(i32 bufferlen, char buffer [512], ccstr format, ...) {
     va_list args;
     u8 *buf = zeromem((u8 *) buffer, 512);
@@ -34,7 +34,7 @@ i32 shellrun(i32 bufferlen, char buffer [512], ccstr format, ...) {
 /*
     ==================== FILES ====================
 */
-_fun i64 fread_noex(char dst[1], i64 sz, i64 count, FILE * f) {
+_fun i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
     #ifdef __cplusplus
         try { return (i64) fread(dst, (u64) sz, (u64) count, f); } catch(...) {return 0;}
     #endif 
@@ -80,12 +80,7 @@ _fun mstr file_to_buffer(Arena arena[1], ccstr filename) {
 
 _fun mstr * file_to_lines(Arena arena[1], ccstr filename) {
     mstr buffer = file_to_buffer(arena, filename);
-    return mutslice_into_lines(arena, buffer);
-}
-
-_fun mstr * file_to_nonempty_lines(Arena arena[1], ccstr filename) {
-    mstr buffer = file_to_buffer(arena, filename);
-    return mutslice_into_nonempty_lines(arena, buffer);
+    return into_lines(arena, buffer);
 }
 
 _nonnull b32 buffer_to_file(ccstr buffer, ccstr filename) {

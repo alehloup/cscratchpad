@@ -2,7 +2,7 @@
 
 i32 main(i32 argc, ccstr*argv) {
     char buffer[512];
-    ccstr_1_ = argc > 1 ? argv[1] : "";
+    ccstr _1_ = argc > 1 ? argv[1] : "";
 
     if (argc < 1) {
         printf("No args...");
@@ -12,8 +12,9 @@ i32 main(i32 argc, ccstr*argv) {
         (
             "gcc @Flags %s -o \"./%s.exe\"" 
             " && \"./%s.exe\""
+            " && rm \"./%s.exe\""
         ), 
-        _1_, _1_, _1_
+        _1_, _1_, _1_, _1_
     );
 
     printf("\n");
@@ -22,8 +23,9 @@ i32 main(i32 argc, ccstr*argv) {
         (
             "gcc @Flags %s -o \"./%s.exe\"" 
             " && \"./%s.exe\""
+            " && rm \"./%s.exe\""
         ),
-        _1_, _1_, _1_
+        _1_, _1_, _1_, _1_
     );
 
     return 0;

@@ -26,17 +26,9 @@
 #define _nonnull gcc_attr(nonnull) static
 #define _nonnull_hot gcc_attr(nonnull, hot) static
 #define _fun gcc_attr(nonnull, warn_unused_result) static
-#define _proc gcc_attr(nonnull) static void
 #define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) static
+#define _proc gcc_attr(nonnull) static void
 #define _proc_hot gcc_attr(nonnull, hot) static void
-// Standard functions attributes
-#define _main \
-    gcc_attr(nonnull, warn_unused_result) i32
-#define _malloc(paramidx_elementsize, paramidx_elementcount) \
-    gcc_attr(malloc, assume_aligned(8), alloc_size(paramidx_elementsize, paramidx_elementcount), \
-        nonnull, warn_unused_result, hot) static
-#define _format(paramidx_bufferlen, paramidx_buffer, paramidx_format, paramidx_varargs) \
-    gcc_attr(format(printf, paramidx_format, paramidx_varargs)) static
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -285,8 +277,8 @@ _proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
     }
 }
 
+gcc_attr(malloc, assume_aligned(8), alloc_size(2, 3), nonnull, warn_unused_result, hot) static
 // Arena Allocator always zeroes the memory, always 8 aligned
-_malloc(/*size*/2, /*count*/3)
 void * alloc(Arena arena[1], i64 size, i64 count) {
     i64 total = size * count;
     i64 pad = MODPWR2(- (i64)arena->beg, 8); //mod -x gives n for next align
@@ -531,7 +523,7 @@ _fun Entry_str_ptr * hts_data_as_ptr(Ht64 table[1]) {
     ==================== TEXT ====================
 */
 // Alters a text by converting \n to \0 and pushing each line as a ccstr in the returned vector
-_fun mstr * mutslice_into_lines(Arena arena[1], mstr text_to_alter) {
+_fun_hot mstr * into_lines(Arena arena[1], mstr text_to_alter) {
     mstr *lines = VNEW(arena, mstr);
     
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
@@ -549,28 +541,7 @@ _fun mstr * mutslice_into_lines(Arena arena[1], mstr text_to_alter) {
     return lines;
 }
 
-// Alters a text by converting \n to \0 and pushing each nonempty line as a ccstr in the returned vector
-_fun mstr * mutslice_into_nonempty_lines(Arena arena[1], mstr text_to_alter) {
-    mstr *lines = VNEW(arena, mstr);
-    
-    for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
-        if (text_to_alter[i] == '\r') {
-            text_to_alter[i] = '\0';
-        }
-        else if (text_to_alter[i] == '\n') {
-            text_to_alter[i] = '\0';
-            
-            if (!is_empty_string(&text_to_alter[current])) {
-                VAPPEND(lines) =  &text_to_alter[current];
-            }
-            current = i+1;
-        }
-    }
-
-    return lines;
-}
-
-_fun mstr * mutslice_by_splitter(Arena arena[1], char text_to_alter[1], char splitter) {
+_fun_hot mstr * split(Arena arena[1], mstr text_to_alter, char splitter) {
     mstr *words = VNEW(arena, mstr);
     i64 i = 0, current = 0;
 

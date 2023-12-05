@@ -29,7 +29,7 @@ i32 main(void) {
         mstr *words = VNEW(&arena, mstr);
         char teste[16] = {'A', 'l', 'e', ' ', 'M', 'a', 't', ' ', '\0'};
 
-        words = mutslice_by_splitter(&arena, teste, ' ');
+        words = split(&arena, teste, ' ');
         for (int i = 0; i < hd_(words)->len; ++i) {
             printf("word: %s\n", words[i]);
         }

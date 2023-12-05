@@ -45,6 +45,7 @@ static cb32 False = 0;
 // Int
 typedef unsigned char u8;
 typedef const u8 cu8;
+typedef const u8* const ccu8;
 typedef unsigned int u32;
 typedef const u32 cu32;
 typedef unsigned long long u64;
@@ -68,12 +69,17 @@ typedef cchar * const ccstr; // const string const pointer
 typedef cchar * cstr; // const string
 typedef char * mstr; // modifiable string
 
+// Void
+typedef void * voidp;
+typedef const void * cvoidp;
+typedef const void * const ccvoidp;
+
 // Arena
 typedef struct Arena{ u8 *beg; u8 *end; }Arena;
 
 // Data Structures Header (stb strategy)
 typedef struct ds_header{Arena *arena; i32 elsize; i32 cap; i32 len;}ds_header;
-_math_hot ds_header * hd_(void * ds) {
+_math_hot ds_header * hd_(const void * const ds) {
     return ((ds_header *) ds) - 1;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
@@ -84,20 +90,20 @@ _math_hot ds_header * hd_(void * ds) {
 #define isizeof(x_element_) ((i64)sizeof(x_element_))
 #define countof(x_array_) (isizeof(x_array_) / isizeof(*x_array_))
 
-_fun_hot u8 * zeromem(u8 * __restrict dst, i64 count) {
+_fun_hot u8 * zeromem(u8 * const __restrict dst, ci64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst[i] = 0;
     }
     return dst;
 }
-_proc_hot copymem(u8 * __restrict dst, cu8 * __restrict src, i64 count) {
+_proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
     for (i64 i = 0; i < count; ++i) {
         dst[i] = src[i];
     }
 }
 
-_pure_hot i32 cmpmem(void * const mem1_, void * const mem2_, ci64 count) {
-    cu8 *mem1 = (cu8 *)mem1_, *mem2 = (cu8 *)mem2_;
+_pure_hot i32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
+    ccu8 mem1 = (ccu8)mem1_, mem2 = (ccu8)mem2_;
     i64 i = 0; 
     ci64 last = count - 1;
     for (; i < last && mem1[i] == mem2[i]; ++i) {
@@ -105,6 +111,26 @@ _pure_hot i32 cmpmem(void * const mem1_, void * const mem2_, ci64 count) {
     }
     
     return mem1[i] - mem2[i];
+}
+
+_pure_hot i32 is_not_zero(ccvoidp mem1_, ci64 size) {
+    ccu8 mem1 = (ccu8)mem1_;
+    i64 i = 0; 
+    for (; i < size && mem1[i]; ++i) {
+        /* Empty Body */
+    }
+    
+    return i == size;
+}
+
+_pure_hot i32 is_zero(ccvoidp mem1_, ci64 size) {
+    ccu8 mem1 = (ccu8)mem1_;
+    i64 i = 0; 
+    for (; i < size && !mem1[i]; ++i) {
+        /* Empty Body */
+    }
+    
+    return i == size;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
 
@@ -164,7 +190,7 @@ _pure_hot b32 is_empty_string(ccstr string) {
     return True;
 }
 
-_math_hot b32 is_digit(char character) {
+_math_hot b32 is_digit(cchar character) {
     return character >= '0' && character <= '9';
 }
 
@@ -215,21 +241,30 @@ _pure_hot i32 rnd(u64 seed[1]) {
 /*
     ==================== HASH ====================
 */
-_pure_hot i64 hash_str(ccstr str) {
+_pure_hot u64 hash_str(ccstr str) {
     u64 h = 0x7A5662DCDF;
     for(i64 i = 0; str[i]; ++i) { 
         h ^= str[i] & 255; h *= 1111111111111111111;
     }
 
-    return (i64) ((h ^ (h >> 32)) >> 1);
+    return (h ^ (h >> 32)) >> 1;
 }
-_math_hot i64 hash_i64(i64 integer64) {
+_math_hot u64 hash_i64(ci64 integer64) {
     u64 x = (u64)integer64;
     x *= 0x94d049bb133111eb; 
     x ^= (x >> 30); 
     x *= 0xbf58476d1ce4e5b9; 
     
-    return (i64) ((x ^ (x >> 31)) >> 1);
+    return (x ^ (x >> 31)) >> 1;
+}
+_pure_hot u64 hash_bytes(ccvoidp bytes_, ci64 count) {
+    ccu8 bytes = (ccu8)bytes_;
+    u64 h = 0x7A5662DCDF;
+    for(i64 i = 0; i < count; ++i) { 
+        h ^= bytes[i] & 255; h *= 1111111111111111111;
+    }
+
+    return (h ^ (h >> 32)) >> 1;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH ^^^^^^^^^^^^^^^^^^^^
 
@@ -237,11 +272,11 @@ _math_hot i64 hash_i64(i64 integer64) {
     ==================== TYPE PRUNNING ====================
 */
 typedef union Union_i64_f64{i64 as_i64; f64 as_f64;}Union_i64_f64;
-_math_hot f64 reinterpret_i64_as_f64(i64 int64) {
+_math_hot f64 reinterpret_i64_as_f64(ci64 int64) {
     Union_i64_f64 u = {int64};
     return u.as_f64;
 }
-_math_hot i64 reinterpret_f64_as_i64(f64 float64) {
+_math_hot i64 reinterpret_f64_as_i64(cf64 float64) {
     Union_i64_f64 u = {0};
     u.as_f64 = float64;
     return u.as_i64;
@@ -251,7 +286,7 @@ _math_hot i64 reinterpret_f64_as_i64(f64 float64) {
 /*
     ==================== ARENA ALLOCATION ====================
 */
-_fun Arena new_arena(i64 buffer_len, u8 buffer[]) {
+_fun Arena new_arena(ci64 buffer_len, u8 buffer[]) {
     Arena arena = {0, 0};
     arena.beg = (u8 *)buffer;
     arena.end = arena.beg ? arena.beg + buffer_len : 0;
@@ -259,13 +294,13 @@ _fun Arena new_arena(i64 buffer_len, u8 buffer[]) {
 }
 
 // bitmask for optimized Mod for power 2 numbers
-_math_hot i64 mod_pwr2(i64 number, i64 modval) {
+_math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
     return (number) & (modval - 1);
 }
 
 gcc_attr(malloc, assume_aligned(8), alloc_size(2, 3), nonnull, warn_unused_result, hot) static
 // Arena Allocator always zeroes the memory, always 8 aligned
-void * alloc(Arena arena[1], i64 size, i64 count) {
+voidp alloc(Arena arena[1], ci64 size, ci64 count) {
     i64 total = size * count;
     i64 pad = mod_pwr2(- (i64)arena->beg, 8); //mod -x gives n for next align
 
@@ -274,14 +309,14 @@ void * alloc(Arena arena[1], i64 size, i64 count) {
     assert(total < (arena->end - arena->beg - pad) && "ARENA OUT OF MEMORY");
     arena->beg += pad + total;
     
-    return (void *) zeromem(p, total);
+    return (voidp) zeromem(p, total);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ ARENA ALLOCATION ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== VECTOR ====================
 */
-_fun_hot void * new_vec(Arena arena[1], i32 elsize) {
+_fun_hot voidp new_vec(Arena arena[1], ci32 elsize) {
     ds_header * vec = (ds_header *)alloc(arena, isizeof(ds_header) + (64*elsize), 1);
     vec->elsize = elsize;
     vec->cap = 64;
@@ -315,7 +350,7 @@ _fun_hot u8 * grow_vec(u8 * arr) {
     return arr;
 }
 
-_fun_hot void * push_vec(void * ptr_to_array) {
+_fun_hot voidp push_vec(voidp ptr_to_array) {
     u8 * *arr = (u8 * *)ptr_to_array;
     ds_header * dh = hd_(*arr);
     
@@ -333,7 +368,7 @@ _fun_hot void * push_vec(void * ptr_to_array) {
     ==================== HASH TABLE ====================
 */
 // Returns first power 2 that size+1 fits
-_math_hot u8 fit_pwr2_exp(i32 size) {
+_math_hot u8 fit_pwr2_exp(ci32 size) {
     u8 exp=8; 
     i32 val= 1<<exp;
 
@@ -345,7 +380,7 @@ _math_hot u8 fit_pwr2_exp(i32 size) {
     return exp;
 }
 
-_fun_hot void * new_pw2_vec(Arena arena[1], i32 elsize, i32 capacity) {
+_fun_hot void * new_pw2_vec(Arena arena[1], ci32 elsize, ci32 capacity) {
     ci32 cap = (1<<fit_pwr2_exp(capacity)) - 1;
     ds_header * vec = (ds_header *)alloc(arena, isizeof(ds_header) + (cap*elsize), 1);
     vec->elsize = elsize;
@@ -355,57 +390,62 @@ _fun_hot void * new_pw2_vec(Arena arena[1], i32 elsize, i32 capacity) {
     return vec + 1;
 }
 #define NEWPW2VEC(arena, type, capacity) (type *) new_pw2_vec(arena, (i32)sizeof(type), capacity)
+#define NEWSET(arena, type, capacity) NEWPW2VEC(arena, type, capacity)
+#define NEWHTABLE(name, arena, type, capacity) \
+    type * name##_keys = NEWPW2VEC(arena, type, capacity); \
+    type * name##_vals = NEWPW2VEC(arena, type, capacity)
 
 // Mask-Step-Index (MSI) lookup
 _math_hot i32 ht_lookup(
-    u64 hash, // 1st hash acts as base location
-    i32 index, // 2nd "hash" steps over the "list of elements" from base-location
-    u32 mask, // trims number to < ht_capacity
-    u8  shift // use |exp| bits for step 
+    cu64 hash, // 1st hash acts as base location
+    ci32 index, // 2nd "hash" steps over the "list of elements" from base-location
+    cu32 mask, // trims number to < ht_capacity
+    cu8  shift // use |exp| bits for step 
 )
 {
     u32 step = (u32)(hash >> shift) | 1;
     return (i32) (((u32)index + step) & mask);
 }
 
-// // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
-// _nonnull_hot i32 htloop(
-//     Ht64 ht[1] /* ht_ht */, 
-//     i64 keyi64, ccstr keystr, 
-//     i32 create_if_not_found
-// ) {
-//     Entry64 *data = ht->data;
+// Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
+_nonnull_hot i32 htloop(
+    void * const keys_, ccvoidp key_, i32 key_is_str, i32 create_if_not_found
+) {
+    static u8 bytes_key[256] = {0};
+    ccstr string_key = key_is_str ? (ccstr) key_ : 0;
+    u8 * const u8keys = (u8 * const) keys_;
+    mstr * const strkeys = (mstr * const) keys_;
 
-//     u64 hash = (u64) hash_i64(keyi64);
-//     i32 index = (i32)hash;
-//     u32 mask = (u32) ht->cap;
-//     u8 shift = ht->shift; 
-//     b32 intkey = keyi64 != 0;
+    ds_header *hd = hd_(u8keys);
+    ci32 elsize = hd->elsize;
+    cu32 mask = (cu32) hd->cap;
+    cu8 shift = 64 - (fit_pwr2_exp(hd->cap)); 
 
-//     if (!keyi64) {
-//         keyi64 = (i64) keystr;
-//     }
+    u64 hash; i32 index;
+    copymem(bytes_key, (ccu8)key_, elsize);
+    hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);
+    index = (i32) hash;
 
-//     for(
-//         index = ht_lookup(hash, index, mask, shift);
-//         data[index].key != 0 
-//             && data[index].key != keyi64
-//             && (intkey || cstrcmp((cstr) data[index].key, keystr));
-//         index = ht_lookup(hash, index, mask, shift)
-//     ) {
-//         /* empty body */
-//     }
+    for(
+        index = ht_lookup(hash, index, mask, shift);
+        
+        is_not_zero(&u8keys[index*elsize], elsize)
+        && cmpmem(&u8keys[index*elsize], bytes_key, elsize)
+        && (!string_key || cstrcmp(strkeys[index], string_key));
+        
+        index = ht_lookup(hash, index, mask, shift)
+    ) {
+        /* empty body */
+    }
 
-//     if (data[index].key == 0 && create_if_not_found) {
-//         assert(ht->len < (i32)(mask - 1) && "MSI HT IS FULL");
-//         data[index].key = keyi64;
-//         ++ht->len;
-//     }
+    if (is_zero(&u8keys[index*elsize], elsize) && create_if_not_found) {
+        assert(hd->len < hd->cap - 1 && "MSI HT IS FULL");
+        copymem(&u8keys[index*elsize], bytes_key, elsize);
+        ++hd->len;
+    }
 
-//     return index; // index of entry found OR entry empty
-// }
-
-
+    return index; // index of entry found OR entry empty
+}
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -430,7 +470,7 @@ _fun_hot mstr * into_lines(Arena arena[1], mstr text_to_alter) {
     return lines;
 }
 
-_fun_hot mstr * split(Arena arena[1], mstr text_to_alter, char splitter) {
+_fun_hot mstr * split(Arena arena[1], mstr text_to_alter, cchar splitter) {
     mstr *words = NEW_VEC(arena, mstr);
     i64 i = 0, current = 0;
 

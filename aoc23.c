@@ -7,10 +7,7 @@ _proc aoc3(ci32 lineslen, mstr lines[1]) {
 
         for (int c = 0; lines[i][c]; ++c) {
             cchar letter = lines[i][c];
-            if (letter == '*') {
-                ci32 lower = c - 1, upper = c + 1;
-                assert(lower < upper);
-            
+            if (letter == '*') {            
                 printf("\n-----------------\n");
                 for (int r = 0; r < countof(region); r++) {
                     printf("%s \n", region[r]);

@@ -410,12 +410,15 @@ _fun_hot i32 htloop(
     u8 * const u8keys = (u8 *) keys_;
     mstr * const strkeys = (mstr *) keys_;
 
-    ds_header *hd = hd_(u8keys);
+    ds_header *hd = hd_(keys_);
     ci32 elsize = hd->elsize;
     cu32 mask = (u32) hd->cap;
     cu8 shift = 64 - (fit_pwr2_exp(hd->cap)); 
 
     u64 hash; i32 index;
+
+    assert(elsize < 256 && "maximum key size is 255");
+
     copymem(bytes_key, (cu8 *)key_, elsize);
     hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);
     index = (i32) hash;

@@ -10,11 +10,27 @@ _proc test_set(Arena arena) {
         printf("%d ", i);
         assert(ht_set(set, &i) == i);
     }
+    assert(hd_len_(set) == cap - 1);
+
+    for (short i = 1; i < cap; ++i) {
+        assert(ht_get(set, &i) == i);
+    }
+
+    printf("\n\n");
+    for (i32 i = 1; i < cap; ++i) {
+        printf("%d ", i);
+        assert(ht_set(set, &i) == i);
+    }
+    assert(hd_len_(set) == cap - 1);
     
     for (short i = 1; i < cap; ++i) {
         assert(ht_get(set, &i) == i);
     }
     
+    for (int i = cap; i < cap * 2; ++i) {
+        assert(ht_get(set, &i) == 0);
+    }
+
     printf("\nOkay!");
 }
 

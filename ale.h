@@ -37,8 +37,8 @@
 // Bool
 typedef int b32; // Boolean
 typedef const b32 cb32;
-static cb32 True = 1;
-static cb32 False = 0;
+#define True 1;
+#define False 0;
 
 // Int
 typedef unsigned char u8;
@@ -77,7 +77,11 @@ typedef const void * const ccvoidp;
 typedef struct Arena{ u8 *beg; u8 *end; }Arena;
 
 // Data Structures Header (stb strategy)
-typedef struct ds_header{Arena *arena; i32 elsize; i32 cap; i32 len;}ds_header;
+typedef struct ds_header{
+    Arena *arena; 
+    i32 cap; i32 len;
+    u8 elsize; u8 ptrcheck; u8 is_str; u8 invalid;
+}ds_header;
 _math_hot ds_header * hd_(voidpc ds) {
     return ((ds_header *) ds) - 1;
 }
@@ -156,6 +160,22 @@ _pure_hot i32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     }
     return cstr1[i] - cstr2[i];
 }
+
+_math_hot u8 is_str_typename(ccstr type_) {
+    static ccstr str_types[] = {
+        "cstr", "ccstr", "mstr", "cchar *", "cchar*",
+        "char *", "char*", "const char*", "const char *",
+        "const char *const", "const char * const"
+    };
+
+    for (int i = 0; i < countof(str_types); ++i) {
+        if (!cstrcmp(str_types[i], type_)) {
+            return True;
+        }
+    }
+    return False;
+}
+#define IS_STR_TYPENAME(type_s_) is_str_typename(#type_s_)
 
 _pure_hot b32 startswith(ccstr string, ccstr prefix) {
     i64 i = 0;
@@ -310,15 +330,21 @@ voidp alloc(Arena arena[1], ci64 size, ci64 count) {
 /*
     ==================== VECTOR ====================
 */
-_fun_hot voidp new_vec(Arena arena[1], ci32 elsize) {
-    ds_header * vec = (ds_header *)alloc(arena, isizeof(ds_header) + (64*elsize), 1);
+_fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str) {
+    ci32 cap_to_use = initial_cap ? initial_cap : 64;
+    ci64 alloc_size = isizeof(ds_header) + (cap_to_use * elsize);
+    ds_header * vec = (ds_header *)alloc(arena, alloc_size, 1);
+    
     vec->elsize = elsize;
-    vec->cap = 64;
+    vec->cap = cap_to_use;
     vec->len = 0;
     vec->arena = arena;
+    vec->is_str = is_str;
+    vec->ptrcheck = (u8)((u64)(vec+1));
     return vec + 1;
 }
-#define NEW_VEC(arena, type) (type *) new_vec(arena, (i32)sizeof(type))
+#define NEW_VEC(arena, type) (type *) \
+    new_vec(arena, (u8)sizeof(type), 0, IS_STR_TYPENAME(type))
 
 _fun_hot u8 * grow_vec(u8 * arr) { 
     ds_header * dh = hd_(arr);
@@ -361,7 +387,7 @@ _fun_hot voidp push_vec(voidp ptr_to_array) {
 /*
     ==================== HASH TABLE ====================
 */
-// Returns first power 2 that size+1 fits
+// Returns first power 2 that size fits
 _math_hot u8 fit_pwr2_exp(ci32 size) {
     u8 exp=8; 
     i32 val= 1<<exp;
@@ -373,21 +399,13 @@ _math_hot u8 fit_pwr2_exp(ci32 size) {
     }
     return exp;
 }
+#define NEW_VEC_PW2(arena, type, capacity) \
+    (type *) new_vec(arena, (u8)sizeof(type), (1<<fit_pwr2_exp(capacity)), IS_STR_TYPENAME(type))
 
-_fun_hot voidp new_pw2_vec(Arena arena[1], ci32 elsize, ci32 capacity) {
-    ci32 cap = (1<<fit_pwr2_exp(capacity)) - 1;
-    ds_header * vec = (ds_header *)alloc(arena, isizeof(ds_header) + (cap*elsize), 1);
-    vec->elsize = elsize;
-    vec->cap = cap;
-    vec->len = 0;
-    vec->arena = arena;
-    return vec + 1;
-}
-#define NEWPW2VEC(arena, type, capacity) (type *) new_pw2_vec(arena, (i32)sizeof(type), capacity)
-#define NEWSET(arena, type, capacity) NEWPW2VEC(arena, type, capacity)
+#define NEWSET(arena, type, capacity) NEW_VEC_PW2(arena, type, capacity)
 #define NEWHTABLE(name, arena, type, capacity) \
-    type * name##_keys = NEWPW2VEC(arena, type, capacity); \
-    type * name##_vals = NEWPW2VEC(arena, type, capacity)
+    type * name##_keys = NEW_VEC_PW2(arena, type, capacity); \
+    type * name##_vals = NEW_VEC_PW2(arena, type, capacity)
 
 // Mask-Step-Index (MSI) lookup
 _math_hot i32 ht_lookup(
@@ -403,21 +421,21 @@ _math_hot i32 ht_lookup(
 
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 _fun_hot i32 htloop(
-    voidpc keys_, ccvoidp key_, i32 key_is_str, i32 create_if_not_found
+    voidpc keys_, ccvoidp key_, i32 create_if_not_found
 ) {
     static u8 bytes_key[256] = {0};
-    ccstr string_key = key_is_str ? (cstr) key_ : 0;
+    
+    ds_header *hd = hd_(keys_);
+
+    ccstr string_key = hd->is_str ? (cstr) key_ : 0;
     u8 * const u8keys = (u8 *) keys_;
     mstr * const strkeys = (mstr *) keys_;
 
-    ds_header *hd = hd_(keys_);
-    ci32 elsize = hd->elsize;
-    cu32 mask = (u32) hd->cap;
+    cu8 elsize = hd->elsize;
+    cu32 mask = (u32) (hd->cap - 1);
     cu8 shift = 64 - (fit_pwr2_exp(hd->cap)); 
 
     u64 hash; i32 index;
-
-    assert(elsize < 256 && "maximum key size is 255");
 
     copymem(bytes_key, (cu8 *)key_, elsize);
     hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);
@@ -436,7 +454,7 @@ _fun_hot i32 htloop(
     }
 
     if (is_zero(&u8keys[index*elsize], elsize) && create_if_not_found) {
-        assert(hd->len < hd->cap - 1 && "MSI HT IS FULL");
+        assert(hd->len < hd->cap - 2 && "MSI HT IS FULL");
         copymem(&u8keys[index*elsize], bytes_key, elsize);
         ++hd->len;
     }

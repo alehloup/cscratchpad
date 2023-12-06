@@ -69,6 +69,7 @@ typedef char * mstr; // modifiable string
 
 // Void
 typedef void * voidp;
+typedef void * const voidpc;
 typedef const void * cvoidp;
 typedef const void * const ccvoidp;
 
@@ -77,10 +78,10 @@ typedef struct Arena{ u8 *beg; u8 *end; }Arena;
 
 // Data Structures Header (stb strategy)
 typedef struct ds_header{Arena *arena; i32 elsize; i32 cap; i32 len;}ds_header;
-_math_hot ds_header * hd_(ccvoidp ds) {
+_math_hot ds_header * hd_(voidpc ds) {
     return ((ds_header *) ds) - 1;
 }
-_pure_hot i32 hd_len_(ccvoidp ds) {
+_pure_hot i32 hd_len_(voidpc ds) {
     return hd_(ds)->len;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
@@ -178,7 +179,7 @@ _pure_hot b32 startswith(ccstr string, ccstr prefix) {
     }
 }
 
-_pure_hot i32 void_compare_strings(const void *a, const void *b) {
+_pure_hot i32 void_compare_strings(cvoidp a, cvoidp b) {
     return cstrcmp(*(ccstr *)a, *(ccstr *)b);
 }
 
@@ -373,7 +374,7 @@ _math_hot u8 fit_pwr2_exp(ci32 size) {
     return exp;
 }
 
-_fun_hot void * new_pw2_vec(Arena arena[1], ci32 elsize, ci32 capacity) {
+_fun_hot voidp new_pw2_vec(Arena arena[1], ci32 elsize, ci32 capacity) {
     ci32 cap = (1<<fit_pwr2_exp(capacity)) - 1;
     ds_header * vec = (ds_header *)alloc(arena, isizeof(ds_header) + (cap*elsize), 1);
     vec->elsize = elsize;
@@ -402,7 +403,7 @@ _math_hot i32 ht_lookup(
 
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 _fun_hot i32 htloop(
-    void * const keys_, ccvoidp key_, i32 key_is_str, i32 create_if_not_found
+    voidpc keys_, ccvoidp key_, i32 key_is_str, i32 create_if_not_found
 ) {
     static u8 bytes_key[256] = {0};
     ccstr string_key = key_is_str ? (cstr) key_ : 0;

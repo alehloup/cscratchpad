@@ -17,7 +17,7 @@ i32 main(void) {
     teste temp = {4, 5, 6};
 
     printf("Começando beg:%p end:%p total:%lldMB\n", 
-        (void *) perm.beg, (void *) perm.end, (perm.end - perm.beg)/1048576);
+        (voidp) perm.beg, (voidp) perm.end, (perm.end - perm.beg)/1048576);
 
     *woa =temp;
     printf("Ints: %d %lld %d\n", woa->x, woa->y, woa->z);

@@ -88,6 +88,9 @@ _math_hot ds_header * hd_(voidpc ds) {
 _pure_hot i32 hd_len_(voidpc ds) {
     return hd_(ds)->len;
 }
+_pure_hot b32 hd_checkptr(voidpc ds) {
+    return (u8)((u64)ds) == hd_(ds)->ptrcheck;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -351,6 +354,8 @@ _fun_hot u8 * grow_vec(u8 * arr) {
     Arena *arena = dh->arena;
     cu8 *capend = &arr[dh->cap * dh->elsize];
 
+    assert(hd_checkptr(arr) && "Vec was relloced, arr stale!");
+
     if ("VEC EXTEND" && arena->beg == capend) {
         u8 *VEC_EXTEND = (u8 *)alloc(arena, dh->elsize, dh->cap);
         
@@ -364,6 +369,7 @@ _fun_hot u8 * grow_vec(u8 * arr) {
         arr = newarr;
         copymem((u8 *)VEC_RELOC, (u8 *)dh, isizeof(ds_header));
         dh = VEC_RELOC;
+        dh->ptrcheck = (u8)((u64)arr);
     }
     dh->cap <<= 1;
 
@@ -436,6 +442,8 @@ _fun_hot i32 htloop(
     cu8 shift = 64 - (fit_pwr2_exp(hd->cap)); 
 
     u64 hash; i32 index;
+
+    assert(hd_checkptr(keys_) && "This is not a ale.h vector!");
 
     copymem(bytes_key, (cu8 *)key_, elsize);
     hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);

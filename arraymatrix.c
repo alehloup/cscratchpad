@@ -32,11 +32,15 @@ _proc test_vec_push_i64(Arena scratch) {
     VAPPEND(i64s) = 52+64000;
     printf("POP: %lld\n", VPOP(i64s));
 
+    printf("checkptr before: %d %llu\n", hd_(i64s)->ptrcheck, (u64)(i64s));
+    assert(hd_checkptr(i64s));
     for(i32 i = 0; i < 164; ++i) {
         force_reloc = (u8 *) alloc(&scratch, isizeof(u8), 1);
         *force_reloc = 52;
         VAPPEND(i64s) = i+64000;
     }
+    assert(hd_checkptr(i64s));
+    printf("checkptr after: %d %llu\n", hd_(i64s)->ptrcheck, (u64)(i64s));
 
     printf("POP: %lld\n", VPOP(i64s));
 

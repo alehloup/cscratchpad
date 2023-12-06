@@ -5,7 +5,7 @@
 */ 
 #ifdef stdout
     // Print Assert if stdio.h was included
-    #define diagnostic_ printf("ASSERT FAILED %s:%s:%d", __FILE__, __func__, __LINE__)
+    #define diagnostic_ printf("\n\n  |ASSERT FAILED %s:%s:%d|  \n\n", __FILE__, __func__, __LINE__)
 #endif
 #ifndef stdout
     static int assert_trapped_ = 0;
@@ -82,7 +82,7 @@ typedef struct ds_header{
     i32 cap; i32 len;
     u8 elsize; u8 ptrcheck; u8 is_str; u8 invalid;
 }ds_header;
-_math_hot ds_header * hd_(voidpc ds) {
+_pure_hot ds_header * hd_(voidpc ds) {
     return ((ds_header *) ds) - 1;
 }
 _pure_hot i32 hd_len_(voidpc ds) {
@@ -125,11 +125,13 @@ _pure_hot i32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
 _pure_hot i32 is_not_zero(ccvoidp mem1_, ci64 size) {
     ccu8 mem1 = (cu8 *)mem1_;
     i64 i = 0; 
-    for (; i < size && mem1[i]; ++i) {
-        /* Empty Body */
+    for (; i < size; ++i) {
+        if (mem1[i]) {
+            return True;
+        }
     }
     
-    return i == size;
+    return False;
 }
 
 _pure_hot i32 is_zero(ccvoidp mem1_, ci64 size) {
@@ -164,7 +166,7 @@ _pure_hot i32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     return cstr1[i] - cstr2[i];
 }
 
-_math_hot u8 is_str_typename(ccstr type_) {
+_pure_hot u8 is_str_typename(ccstr type_) {
     static ccstr str_types[] = {
         "cstr", "ccstr", "mstr", "cchar *", "cchar*",
         "char *", "char*", "const char*", "const char *",
@@ -408,8 +410,8 @@ _math_hot u8 fit_pwr2_exp(ci32 size) {
 #define NEW_VEC_PW2(arena, type, capacity) \
     (type *) new_vec(arena, (u8)sizeof(type), (1<<fit_pwr2_exp(capacity)), IS_STR_TYPENAME(type))
 
-#define NEWSET(arena, type, capacity) NEW_VEC_PW2(arena, type, capacity)
-#define NEWHTABLE(name, arena, type, capacity) \
+#define NEW_SET(arena, type, capacity) NEW_VEC_PW2(arena, type, capacity)
+#define NEW_HTABLE(name, arena, type, capacity) \
     type * name##_keys = NEW_VEC_PW2(arena, type, capacity); \
     type * name##_vals = NEW_VEC_PW2(arena, type, capacity)
 
@@ -427,7 +429,7 @@ _math_hot i32 ht_lookup(
 
 // Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 _fun_hot i32 htloop(
-    voidpc keys_, ccvoidp key_, i32 create_if_not_found
+    voidpc keys_, ccvoidp key_, b32 create_if_not_found
 ) {
     static u8 bytes_key[256] = {0};
     
@@ -439,13 +441,16 @@ _fun_hot i32 htloop(
 
     cu8 elsize = hd->elsize;
     cu32 mask = (u32) (hd->cap - 1);
-    cu8 shift = 64 - (fit_pwr2_exp(hd->cap)); 
+    cu8 shift = 64 - (fit_pwr2_exp(hd->cap));
 
-    u64 hash; i32 index;
+    u64 hash = 0; i32 index = 0;
 
     assert(hd_checkptr(keys_) && "This is not a ale.h vector!");
 
     copymem(bytes_key, (cu8 *)key_, elsize);
+
+    assert(is_not_zero(bytes_key, elsize) && "Hash Table does NOT support ZERO Key");
+
     hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);
     index = (i32) hash;
 
@@ -469,6 +474,9 @@ _fun_hot i32 htloop(
 
     return index; // index of entry found OR entry empty
 }
+#define ht_idx(keys_vec_, search_key_) htloop(keys_vec_, search_key_, 0)
+#define ht_get(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, search_key_, 0)]
+#define ht_set(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, search_key_, 1)]
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*

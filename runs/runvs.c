@@ -10,22 +10,26 @@ i32 main(i32 argc, ccstr*argv) {
 
     printf(
         (
-            "g++ @Flags %s -o \"./%s.exe\"" 
+            "msvc"
+            " && cl /W4 /Ox /Fo:%s.obj /Fe:%s.exe %s" 
             " && \"./%s.exe\""
             " && rm \"./%s.exe\""
+            " && rm \"./%s.obj\""
         ), 
-        _1_, _1_, _1_, _1_
+        _1_, _1_, _1_, _1_, _1_, _1_
     );
 
     printf("\n");
     
     shellrun(isizeof(buffer), buffer, 
         (
-            "g++ @Flags %s -o \"./%s.exe\"" 
+            "msvc"
+            " && cl /W4 /Ox /Fo:%s.obj /Fe:%s.exe %s" 
             " && \"./%s.exe\""
             " && rm \"./%s.exe\""
-        ),
-        _1_, _1_, _1_, _1_
+            " && rm \"./%s.obj\""
+        ), 
+        _1_, _1_, _1_, _1_, _1_, _1_
     );
 
     return 0;

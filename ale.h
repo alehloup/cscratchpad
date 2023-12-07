@@ -11,13 +11,23 @@
     static int assert_trapped_ = 0;
     #define diagnostic_ assert_trapped_ = 1
 #endif
-#define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
 //  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
-    
+
+/*
+    ==================== COMPILER DEFINES ====================
+*/
+#if defined(__GNUC__) || defined(__clang__)
+    #define gcc_attr(...) __attribute((__VA_ARGS__))
+    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
+#elif defined(_MSC_VER)
+    #define gcc_attr(...) 
+    #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
+#endif
+//  ^^^^^^^^^^^^^^^^^^^^ COMPILER DEFINES ^^^^^^^^^^^^^^^^^^^^
+
 /*
     ==================== ATTRIBUTES ====================
 */
-#define gcc_attr(...) __attribute((__VA_ARGS__))
 // Simple attributes
 #define _math gcc_attr(const, warn_unused_result) static
 #define _math_hot gcc_attr(const, warn_unused_result, hot) static
@@ -39,8 +49,8 @@
 // Bool
 typedef int b32; // Boolean
 typedef const b32 cb32;
-#define True 1;
-#define False 0;
+#define True 1
+#define False 0
 
 // Int
 typedef unsigned char u8;
@@ -162,6 +172,7 @@ _pure_hot i64 cstrlen(ccstr cstring) {
 
 _pure_hot i32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     i64 i = 0;
+
     for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
         /* Empty Body */
     }
@@ -207,7 +218,7 @@ _pure_hot b32 startswith(ccstr string, ccstr prefix) {
 }
 
 _pure_hot i32 void_compare_strings(cvoidp a, cvoidp b) {
-    return cstrcmp(*(ccstr *)a, *(ccstr *)b);
+    return cstrcmp(*(ccstr*)a, *(ccstr*)b);
 }
 
 _pure_hot b32 is_empty_string(ccstr string) {
@@ -332,8 +343,8 @@ voidp alloc(Arena arena[1], ci64 size, ci64 count) {
     
     return (voidp) zeromem(p, total);
 }
-#define ALLOCX(arena, type) (type *) alloc(arena, isizeof(type), 1);
-#define ALLOCXS(arena_, type_, count_) (type_ *) alloc(arena_, isizeof(type_), count_);
+#define ALLOC(arena, type) (type *) alloc(arena, isizeof(type), 1)
+#define ALLOCN(arena_, type_, count_) (type_ *) alloc(arena_, isizeof(type_), count_)
 //  ^^^^^^^^^^^^^^^^^^^^ ARENA ALLOCATION ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -360,31 +371,31 @@ _fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str)
 _fun_hot u8 * grow_vec(u8 * arr) { 
     ds_header * dh = hd_(arr);
     Arena *arena = dh->arena;
-    cu8 *capend = &arr[dh->cap * dh->elsize];
+    i64 cap_x_elsize = dh->cap * dh->elsize;
+    ccu8 capend = &arr[cap_x_elsize];
 
     assert(hd_checkptr(arr) && "Vec was relloced, arr stale!");
 
-    /*  */ if ("VEC EXTEND" && arena->beg == capend) {
+    if (arena->beg == capend) {
+        /* VEC EXTEND */
         u8 *VEC_EXTEND = (u8 *)alloc(arena, dh->elsize, dh->cap);
-        
         assert((u64)VEC_EXTEND == (u64)capend && "extend misaligned");
-    } else if ("VEC RELOC" && arena->beg != capend) {
+        dh->cap <<= 1;
+        return arr;
+    } else {
+        /* VEC RELOC */
         ds_header *VEC_RELOC = (ds_header *)
-            alloc(arena, (dh->elsize*dh->cap * 2) + isizeof(ds_header), 1);
+            alloc(arena, isizeof(ds_header) + (cap_x_elsize * 2), 1);
         u8 *newarr = (u8 *)(VEC_RELOC + 1);
-
-        copymem(newarr, arr, dh->cap * dh->elsize);
-        arr = newarr;
-        copymem((u8 *)VEC_RELOC, (u8 *)dh, isizeof(ds_header));
+        copymem((u8 *)VEC_RELOC, (u8 *)dh, isizeof(ds_header) + cap_x_elsize);
         dh = VEC_RELOC;
-        dh->ptrcheck = (u8)((u64)arr);
+        dh->ptrcheck = (u8)((u64)newarr);
+        dh->cap <<= 1;
+        return newarr;
     }
-    dh->cap <<= 1;
-
-    return arr;
 }
 
-_fun_hot voidp push_vec(voidp ptr_to_array) {
+_proc_hot inc_vec(voidp ptr_to_array) {
     u8 * *arr = (u8 * *)ptr_to_array;
     ds_header * dh = hd_(*arr);
     
@@ -392,10 +403,10 @@ _fun_hot voidp push_vec(voidp ptr_to_array) {
        *arr = grow_vec(*arr);
     }
 
-    return *arr + (dh->elsize * dh->len++);
+    ++dh->len;
 }
-#define VAPPEND(arr) *(typeof(arr))push_vec(&arr)
-#define VPOP(arr) arr[--hd_(arr)->len]
+#define vec_append(arr, value) (inc_vec(&arr), arr[hd_len_(arr)-1] = value)
+#define vec_pop(arr) arr[--hd_(arr)->len]
 //  ^^^^^^^^^^^^^^^^^^^^ VECTOR ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -502,7 +513,7 @@ _fun_hot mstr * into_lines(Arena arena[1], mstr text_to_alter) {
         else if (text_to_alter[i] == '\n') {
             text_to_alter[i] = '\0';
             
-            VAPPEND(lines) = &text_to_alter[current];
+            vec_append(lines, &text_to_alter[current]);
             current = i+1;
         }
     }
@@ -519,14 +530,14 @@ _fun_hot mstr * split(Arena arena[1], mstr text_to_alter, cchar splitter) {
             text_to_alter[i] = '\0';
             
             if (!is_empty_string(&text_to_alter[current])) {
-                VAPPEND(words) = &text_to_alter[current];
+                vec_append(words, &text_to_alter[current]);
             }
             current = i+1;
         }
     }
 
     if (current != i && !is_empty_string(&text_to_alter[current])) {
-        VAPPEND(words) = &text_to_alter[current];
+        vec_append(words, &text_to_alter[current]);
     }
 
     return words;

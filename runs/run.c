@@ -1,4 +1,4 @@
-#include "ale_io.h"
+#include "../ale_io.h"
 
 i32 main(i32 argc, ccstr*argv) {
     char buffer[512];

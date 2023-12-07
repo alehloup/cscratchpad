@@ -122,7 +122,7 @@ _proc_hot lines_to_file(mstr lines[1], ccstr filename) {
 
 _proc vec_sort_cstr(mstr cstrings[1]) {
     qsort(
-        cstrings, (u64)  hd_(cstrings)->len, 
+        cstrings, (u64)  hd_(cstrings)->len,
         sizeof(i64), void_compare_strings
     );
 } 

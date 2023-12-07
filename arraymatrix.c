@@ -10,9 +10,9 @@ _proc test_vec_push_str(Arena scratch) {
     printf("=========== CSTRINGs ===========\n");
     
     for (i32 i = 0; i < 52; ++i) {
-        VAPPEND(cstrings) = "sAl";
-        VAPPEND(cstrings) = "sSa";
-        VAPPEND(cstrings) = "sEv";
+        vec_append(cstrings, "sAl");
+        vec_append(cstrings, "sSa");
+        vec_append(cstrings, "sEv");
     }
 
     {
@@ -21,7 +21,7 @@ _proc test_vec_push_str(Arena scratch) {
         }
     }
 
-    printf("Pop: %s\n", VPOP(cstrings));
+    printf("Pop: %s\n", vec_pop(cstrings));
 }
 
 _proc test_vec_push_i64(Arena scratch) {
@@ -29,20 +29,20 @@ _proc test_vec_push_i64(Arena scratch) {
 
     printf("=========== I64s ===========\n");
     
-    VAPPEND(i64s) = 52+64000;
-    printf("POP: %lld\n", VPOP(i64s));
+    vec_append(i64s, 52+64000);
+    printf("POP: %lld\n", vec_pop(i64s));
 
     printf("checkptr before: %d %llu\n", hd_(i64s)->ptrcheck, (u64)(i64s));
     assert(hd_checkptr(i64s));
     for(i32 i = 0; i < 164; ++i) {
         force_reloc = (u8 *) alloc(&scratch, isizeof(u8), 1);
         *force_reloc = 52;
-        VAPPEND(i64s) = i+64000;
+        vec_append(i64s, i+64000);
     }
     assert(hd_checkptr(i64s));
     printf("checkptr after: %d %llu\n", hd_(i64s)->ptrcheck, (u64)(i64s));
 
-    printf("POP: %lld\n", VPOP(i64s));
+    printf("POP: %lld\n", vec_pop(i64s));
 
     for(i32 i = 0; i < hd_(i64s)->len; ++i) {
         printf("%lld ", i64s[i]);
@@ -55,16 +55,16 @@ _proc test_vec_push_f64(Arena scratch) {
 
     printf("=========== DOUBLEs ===========\n");
     
-    VAPPEND(f64s) = 5.2+0.0064;
-    printf("POP: %lf\n", VPOP(f64s));
+    vec_append(f64s, 5.2+0.0064);
+    printf("POP: %lf\n", vec_pop(f64s));
 
     for(i32 i = 0; i < 164; ++i) {
-        VAPPEND(f64s) = (i / 2.0)+0.0064;
+        vec_append(f64s, (i / 2.0)+0.0064);
         force_reloc = (u8 *) alloc(&scratch, isizeof(u8), 1);
         *force_reloc = 3;
     }
 
-    printf("POP: %lf\n", VPOP(f64s));
+    printf("POP: %lf\n", vec_pop(f64s));
     
     for(i32 i = 0; i < hd_(f64s)->len; ++i) {
         printf("%lf ", f64s[i]);

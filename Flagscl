@@ -1,6 +1,6 @@
 -flto -fuse-ld=lld
 -Ofast -march=native 
--D_FORTIFY_SOURCE=3 -fcf-protection=full -ftrivial-auto-var-init=zero 
+-D_FORTIFY_SOURCE=3 -fcf-protection=full -fstack-protector-strong -ftrivial-auto-var-init=zero 
 
 -Weverything -Werror -fsanitize-trap -fsanitize=undefined
 

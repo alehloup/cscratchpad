@@ -1,9 +1,7 @@
--Ofast -flto -fuse-ld=lld -march=native -ftrivial-auto-var-init=zero
--fcf-protection=full -D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 
+-flto -fuse-ld=lld
+-Ofast -march=native 
+-D_FORTIFY_SOURCE=3 -fcf-protection=full -fstack-protector-strong -ftrivial-auto-var-init=zero 
 
--Wall -Wextra -Wpedantic -Weverything -Werror
+-Weverything -Werror -fsanitize-trap -fsanitize=undefined
 
--fsanitize-trap -fsanitize-undefined-trap-on-error 
--fsanitize=undefined,alignment,object-size,builtin,bounds,unreachable,nonnull-attribute,returns-nonnull-attribute
-
--Wno-unsafe-buffer-usage -Wno-used-but-marked-unused
+-Wno-unsafe-buffer-usage -Wno-unused-function

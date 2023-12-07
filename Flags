@@ -1,6 +1,6 @@
 -static-pie -flto -g3
--Ofast -march=native -mtune=native
--D_FORTIFY_SOURCE=3 -fcf-protection=full -ftrivial-auto-var-init=zero -fstack-protector-strong
+-Ofast -march=native
+-D_FORTIFY_SOURCE=3 -fcf-protection=full -fstack-protector-strong -ftrivial-auto-var-init=zero
 
 -Wall -Wextra -Wpedantic -Werror -fsanitize-trap -fsanitize=undefined -fanalyzer
 

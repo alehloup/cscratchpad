@@ -1,7 +1,8 @@
--Ofast -flto -march=native -mtune=native -ftrivial-auto-var-init=zero -static-pie -g3
--fstack-protector-strong -fstack-clash-protection -fcf-protection=full -D_FORTIFY_SOURCE=3
+-static-pie -flto -g3
+-Ofast -march=native -mtune=native
+-D_FORTIFY_SOURCE=3 -fcf-protection=full -ftrivial-auto-var-init=zero -fstack-protector-strong
 
--Wall -Wextra -Wpedantic -Werror -fanalyzer -fsanitize-trap -fsanitize=undefined
+-Wall -Wextra -Wpedantic -Werror -fsanitize-trap -fsanitize=undefined -fanalyzer
 
 -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion
 -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum

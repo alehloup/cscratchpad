@@ -1,3 +1,7 @@
--Ofast -flto -fuse-ld=lld -march=native -ftrivial-auto-var-init=zero -fcf-protection=full -D_FORTIFY_SOURCE=3
+-flto -fuse-ld=lld
+-Ofast -march=native 
+-D_FORTIFY_SOURCE=3 -fcf-protection=full -ftrivial-auto-var-init=zero 
 
--Weverything -Wno-unsafe-buffer-usage -Wno-unused-function -Werror -fsanitize-trap -fsanitize=undefined
+-Weverything -Werror -fsanitize-trap -fsanitize=undefined
+
+-Wno-unsafe-buffer-usage -Wno-unused-function

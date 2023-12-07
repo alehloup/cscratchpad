@@ -442,32 +442,28 @@ _math_hot i32 ht_lookup(
 _fun_hot i32 htloop(
     voidpc keys_, cu64 key_, b32 create_if_not_found
 ) {
-    static u8 bytes_key[256] = {0};
-    
     ds_header *hd = hd_(keys_);
-
-    ccstr string_key = hd->is_str ? (cstr) key_ : 0;
-    u8 * const u8keys = (u8 *) keys_;
-    mstr * const strkeys = (mstr *) keys_;
-
     cu8 elsize = hd->elsize;
     cu32 mask = (u32) (hd->cap - 1);
     cu8 shift = 64 - (fit_pwr2_exp(hd->cap));
 
-    u64 hash = 0; i32 index = 0;
+    cu8 * const numeric_key = (cu8*)(&key_);
+    u8 * const u8keys = (u8 *) keys_;
+    
+    ccstr string_key = hd->is_str ? (cstr) key_ : 0;
+    mstr * const strkeys = (mstr *) keys_;
+
+    cu64 hash = string_key ? hash_str(string_key) : hash_bytes(numeric_key, elsize);
+    i32 index = (i32)hash;
 
     assert(hd_checkptr(keys_) && "This is not a ale.h vector!");
-    copymem(bytes_key, (cu8 *)(&key_), elsize);
-    assert(is_not_zero(&bytes_key, elsize) && "Hash Table does NOT support ZERO Key");
-
-    hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);
-    index = (i32) hash;
+    assert(is_not_zero(numeric_key, elsize) && "Hash Table does NOT support ZERO Key");
 
     for(
         index = ht_lookup(hash, index, mask, shift);
         
         is_not_zero(&u8keys[index*elsize], elsize)
-        && cmpmem(&u8keys[index*elsize], bytes_key, elsize)
+        && cmpmem(&u8keys[index*elsize], (cu64*)(&key_), elsize)
         && (!string_key || cstrcmp(strkeys[index], string_key));
         
         index = ht_lookup(hash, index, mask, shift)
@@ -477,7 +473,7 @@ _fun_hot i32 htloop(
 
     if (is_zero(&u8keys[index*elsize], elsize) && create_if_not_found) {
         assert(hd->len < hd->cap - 2 && "MSI HT IS FULL");
-        copymem(&u8keys[index*elsize], bytes_key, elsize);
+        copymem(&u8keys[index*elsize], numeric_key, elsize);
         ++hd->len;
     }
 

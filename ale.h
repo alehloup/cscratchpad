@@ -27,6 +27,8 @@
 #define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) static
 #define _proc gcc_attr(nonnull) static void
 #define _proc_hot gcc_attr(nonnull, hot) static void
+// for explicit discarding returns from warn_unused_result
+#define discard_ (void) 
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -348,6 +350,8 @@ _fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str)
     vec->ptrcheck = (u8)((u64)(vec+1));
     return vec + 1;
 }
+
+//NEW VECTOR (prefixes the array with ds_header, see new_vec and hd_)
 #define NEW_VEC(arena, type) (type *) \
     new_vec(arena, (u8)sizeof(type), 0, IS_STR_TYPENAME(type))
 
@@ -407,10 +411,16 @@ _math_hot u8 fit_pwr2_exp(ci32 size) {
     }
     return exp;
 }
+
+// MSI Only works with Power2 Capacity
 #define NEW_VEC_PW2(arena, type, capacity) \
     (type *) new_vec(arena, (u8)sizeof(type), (1<<fit_pwr2_exp(capacity)), IS_STR_TYPENAME(type))
 
-#define NEW_SET(arena, type, capacity) NEW_VEC_PW2(arena, type, capacity)
+// MSI Set
+#define NEW_SET(arena, type, capacity) \
+    NEW_VEC_PW2(arena, type, capacity)
+
+// MSI Hash Table
 #define NEW_HTABLE(name, arena, type, capacity) \
     type * name##_keys = NEW_VEC_PW2(arena, type, capacity); \
     type * name##_vals = NEW_VEC_PW2(arena, type, capacity)
@@ -427,9 +437,8 @@ _math_hot i32 ht_lookup(
     return (i32) (((u32)index + step) & mask);
 }
 
-// Finds the index of |keyi64| in the msi |table|, creates key if |create_if_not_found| is true
 _fun_hot i32 htloop(
-    voidpc keys_, ccvoidp key_, b32 create_if_not_found
+    voidpc keys_, cu64 key_, b32 create_if_not_found
 ) {
     static u8 bytes_key[256] = {0};
     
@@ -447,7 +456,7 @@ _fun_hot i32 htloop(
 
     assert(hd_checkptr(keys_) && "This is not a ale.h vector!");
 
-    copymem(bytes_key, (cu8 *)key_, elsize);
+    copymem(bytes_key, (cu8 *)(&key_), elsize);
 
     assert(is_not_zero(bytes_key, elsize) && "Hash Table does NOT support ZERO Key");
 
@@ -474,9 +483,9 @@ _fun_hot i32 htloop(
 
     return index; // index of entry found OR entry empty
 }
-#define ht_idx(keys_vec_, search_key_) htloop(keys_vec_, search_key_, 0)
-#define ht_get(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, search_key_, 0)]
-#define ht_set(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, search_key_, 1)]
+#define hset_idx(keys_vec_, search_key_) htloop(keys_vec_, (u64)search_key_, 0)
+#define hset_get(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, (u64)search_key_, 0)]
+#define hset_set(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, (u64)search_key_, 1)]
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*

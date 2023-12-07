@@ -11,36 +11,35 @@
     static int assert_trapped_ = 0;
     #define diagnostic_ assert_trapped_ = 1
 #endif
-//  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
 
-/*
-    ==================== COMPILER DEFINES ====================
-*/
-#if defined(__GNUC__) || defined(__clang__)
-    #define gcc_attr(...) __attribute((unused, __VA_ARGS__))
-    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
-#elif defined(_MSC_VER)
-    #define gcc_attr(...) 
+#if defined(_MSC_VER)
     #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
 #else
-    #define gcc_attr(...) 
     #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
 #endif
-//  ^^^^^^^^^^^^^^^^^^^^ COMPILER DEFINES ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== ATTRIBUTES ====================
 */
-// Simple attributes
-#define _math gcc_attr(const, warn_unused_result) inline static
-#define _math_hot gcc_attr(const, warn_unused_result, hot) inline static
-#define _pure gcc_attr(pure, nonnull, warn_unused_result) inline static
-#define _pure_hot gcc_attr(pure, nonnull, warn_unused_result, hot) inline static
-#define _fun gcc_attr(nonnull, warn_unused_result) inline static
-#define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) inline static
-#define _proc gcc_attr(nonnull) inline static void
-#define _proc_hot gcc_attr(nonnull, hot) inline static void
-// for explicit discarding returns from warn_unused_result
+#if defined(__GNUC__) || defined(__clang__)
+    #define gcc_attr(...) __attribute((nonnull, __VA_ARGS__)) inline static
+#else
+    #define gcc_attr(...) inline static
+#endif
+// 2 types of function attributes: either returns value (fun) or not (proc)
+#define _fun_attr(...) gcc_attr(warn_unused_result, __VA_ARGS__)
+#define _proc_attr(...) gcc_attr(__VA_ARGS__) void
+// function attributes
+#define _math _fun_attr(const) 
+#define _math_hot _fun_attr(const, hot)
+#define _pure _fun_attr(pure)
+#define _pure_hot _fun_attr(pure, hot)
+#define _fun _fun_attr()
+#define _fun_hot _fun_attr(hot)
+#define _proc _proc_attr()
+#define _proc_hot _proc_attr(hot)
+// for explicit discarding returns
 #define discard_ (void) 
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
@@ -333,7 +332,7 @@ _math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
     return (number) & (modval - 1);
 }
 
-gcc_attr(malloc, assume_aligned(8), alloc_size(2, 3), nonnull, warn_unused_result, hot) static
+gcc_attr(malloc, assume_aligned(8), alloc_size(2, 3), nonnull, warn_unused_result, hot)
 // Arena Allocator always zeroes the memory, always 8 aligned
 voidp alloc(Arena arena[1], ci64 size, ci64 count) {
     i64 total = size * count;

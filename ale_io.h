@@ -18,7 +18,7 @@ _fun f64 seconds_since(clock_t start)
 /*
     ==================== SHELL ====================
 */
-gcc_attr(format(printf, 3, 4), nonnull) static
+gcc_attr(format(printf, 3, 4), nonnull)
 i32 shellrun(i32 bufferlen, char buffer [512], ccstr format, ...) {
     va_list args;
     u8 *buf = zeromem((u8 *) buffer, 512);

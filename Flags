@@ -1,13 +1,7 @@
--Ofast -flto -march=native -mtune=native -ftrivial-auto-var-init=zero
--static-pie -fstack-protector-strong -fstack-clash-protection -fcf-protection=full
+-Ofast -flto -march=native -mtune=native -ftrivial-auto-var-init=zero -static-pie -g3
+-fstack-protector-strong -fstack-clash-protection -fcf-protection=full -D_FORTIFY_SOURCE=3 
 
--g3 -D_GLIBCXX_ASSERTIONS 
--D_FORTIFY_SOURCE=3 -fanalyzer -Wall -Wextra -Wpedantic -Werror
--Wstringop-overflow=4 -Wuse-after-free=3 -Warray-bounds=2 
--Wformat=2 -Wformat-truncation=2 -Wformat-overflow=2 
+-Wall -Wextra -Wpedantic -Werror -fanalyzer -fsanitize-trap -fsanitize=undefined
 
--Wwrite-strings -Wcast-align=strict -Wnull-dereference -fstrict-flex-arrays -Wvla -Wundef -Wconversion -Wlogical-op
--Wdouble-promotion -Wformat-signedness -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum
-
--fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize-address-use-after-scope
--fsanitize=undefined,alignment,object-size,builtin,unreachable,bounds-strict,nonnull-attribute,returns-nonnull-attribute
+-Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion
+-Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum

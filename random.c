@@ -11,11 +11,10 @@ i32 main(void) {
         counts[rnd(&seed) % N] +=1;
     }
     {
-        f64 elapsed = seconds_since(start);
         for(i32 i = 0; i < N; ++i) {
             printf("%d: %d\n", i+1, counts[i]);
         }
-        printf("Executado em: %f segundos \n", elapsed);
+        print_clock(start);
     }
 
     return 0;

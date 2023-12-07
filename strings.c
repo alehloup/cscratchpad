@@ -31,7 +31,7 @@ i32 main(void) {
     {
         ccstr ccstrs[4] = {"123 456 789", "52#89;", "69 . 3", " 91"};
         for (int i = 0; i < 4; ++i) {
-            i64num_i64len num_len = cstr_to_num(ccstrs[i]);
+            i64num_i32len num_len = cstr_to_num(ccstrs[i]);
             printf("\"%s\" |%lld| #%lld\n", ccstrs[i], num_len.num, num_len.len);
         }
     }

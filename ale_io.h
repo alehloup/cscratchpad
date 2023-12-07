@@ -13,6 +13,10 @@ _fun f64 seconds_since(clock_t start)
 {
     return (f64)(clock() - start) / CLOCKS_PER_SEC;
 }
+
+_proc print_clock(clock_t start) {
+    printf("Executed in %f seconds \n", seconds_since(start));
+}
 //  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
 
 /*

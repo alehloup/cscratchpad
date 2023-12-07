@@ -111,6 +111,7 @@ _pure_hot b32 hd_checkptr(voidpc ds) {
     MEMORY
 */
 #define isizeof(x_element_) ((i64)sizeof(x_element_))
+// COMPILE TIME Count Static Sized Array elements:
 #define countof(x_array_) (isizeof(x_array_) / isizeof(*x_array_))
 
 _fun_hot u8 * zeromem(u8 * const __restrict dst, ci64 count) {
@@ -236,20 +237,22 @@ _math_hot b32 is_digit(cchar character) {
     return character >= '0' && character <= '9';
 }
 
-_pure_hot i64 digitlen(ccstr cstring) {
-    i64 len;
+_pure_hot i32 digitlen(ccstr cstring) {
+    i32 len;
     for (len = 0; is_digit(cstring[len]); ++len) {
         /* Empty Body */
     }
+    
+
     return len;
 }
 
-typedef struct i64num_i64len{i64 num; i64 len;}i64num_i64len;
-_pure_hot i64num_i64len cstr_to_num(ccstr str) {
+typedef struct i64num_i32len{i64 num; i32 len;}i64num_i32len;
+_pure_hot i64num_i32len cstr_to_num(ccstr str) {
     i64 power = 1;
-    i64num_i64len ret = {0, digitlen(str)};
+    i64num_i32len ret = {0, digitlen(str)};
 
-    for (i64 i = ret.len - 1; i >= 0; --i) {
+    for (i32 i = ret.len - 1; i >= 0; --i) {
         char character = str[i];
 
         if (character == '-') {

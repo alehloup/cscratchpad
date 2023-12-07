@@ -21,7 +21,7 @@ _proc test_set_skey(Arena arena) {
     cstr *set = NEW_SET(&arena, cstr, cap);
 
     for (i32 i = 1; i < cap; ++i) {
-        mstr skey = alloc(&arena, 8, 16);
+        mstr skey = ALLOCXS(&arena, char, 16);
         sprintf_s(skey, 16, "\"%d\"", i);
         printf("%s ", skey);
         assert(!cstrcmp(hset_set(set, skey), skey));
@@ -29,13 +29,13 @@ _proc test_set_skey(Arena arena) {
     assert(hd_len_(set) == cap - 1);
 
     for (i32 i = 1; i < cap; ++i) {
-        mstr skey = alloc(&arena, 8, 16);
+        mstr skey = ALLOCXS(&arena, char, 16);
         sprintf_s(skey, 16, "\"%d\"", i);
         assert(!cstrcmp(hset_get(set, skey), skey));
     }
 
     for (i32 i = 1; i < cap; ++i) {
-        mstr skey = alloc(&arena, 8, 16);
+        mstr skey = ALLOCXS(&arena, char, 16);
         sprintf_s(skey, 16, "\"%d\"", i);
         printf("%s ", skey);
         assert(!cstrcmp(hset_set(set, skey), skey));
@@ -43,13 +43,13 @@ _proc test_set_skey(Arena arena) {
     assert(hd_len_(set) == cap - 1);
 
     for (i32 i = 1; i < cap; ++i) {
-        mstr skey = alloc(&arena, 8, 16);
+        mstr skey = ALLOCXS(&arena, char, 16);
         sprintf_s(skey, 16, "\"%d\"", i);
         assert(!cstrcmp(hset_get(set, skey), skey));
     }
 
     for (i32 i = cap; i < cap * 2; ++i) {
-        mstr skey = alloc(&arena, 8, 16);
+        mstr skey = ALLOCXS(&arena, char, 16);
         sprintf_s(skey, 16, "\"%d\"", i);
         assert(hset_get(set, skey) == 0);
     }

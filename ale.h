@@ -332,6 +332,8 @@ voidp alloc(Arena arena[1], ci64 size, ci64 count) {
     
     return (voidp) zeromem(p, total);
 }
+#define ALLOCX(arena, type) (type *) alloc(arena, isizeof(type), 1);
+#define ALLOCXS(arena_, type_, count_) (type_ *) alloc(arena_, isizeof(type_), count_);
 //  ^^^^^^^^^^^^^^^^^^^^ ARENA ALLOCATION ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -362,11 +364,11 @@ _fun_hot u8 * grow_vec(u8 * arr) {
 
     assert(hd_checkptr(arr) && "Vec was relloced, arr stale!");
 
-    if ("VEC EXTEND" && arena->beg == capend) {
+    /*  */ if ("VEC EXTEND" && arena->beg == capend) {
         u8 *VEC_EXTEND = (u8 *)alloc(arena, dh->elsize, dh->cap);
         
         assert((u64)VEC_EXTEND == (u64)capend && "extend misaligned");
-    } else if ((u64)"VEC RELOC") {
+    } else if ("VEC RELOC" && arena->beg != capend) {
         ds_header *VEC_RELOC = (ds_header *)
             alloc(arena, (dh->elsize*dh->cap * 2) + isizeof(ds_header), 1);
         u8 *newarr = (u8 *)(VEC_RELOC + 1);
@@ -455,10 +457,8 @@ _fun_hot i32 htloop(
     u64 hash = 0; i32 index = 0;
 
     assert(hd_checkptr(keys_) && "This is not a ale.h vector!");
-
     copymem(bytes_key, (cu8 *)(&key_), elsize);
-
-    assert(is_not_zero(bytes_key, elsize) && "Hash Table does NOT support ZERO Key");
+    assert(is_not_zero(&bytes_key, elsize) && "Hash Table does NOT support ZERO Key");
 
     hash = string_key ? hash_str(string_key) : hash_bytes(bytes_key, elsize);
     index = (i32) hash;

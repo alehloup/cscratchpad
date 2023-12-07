@@ -17,11 +17,14 @@
     ==================== COMPILER DEFINES ====================
 */
 #if defined(__GNUC__) || defined(__clang__)
-    #define gcc_attr(...) __attribute((__VA_ARGS__))
+    #define gcc_attr(...) __attribute((unused, __VA_ARGS__))
     #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
 #elif defined(_MSC_VER)
     #define gcc_attr(...) 
     #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
+#else
+    #define gcc_attr(...) 
+    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ COMPILER DEFINES ^^^^^^^^^^^^^^^^^^^^
 
@@ -29,14 +32,14 @@
     ==================== ATTRIBUTES ====================
 */
 // Simple attributes
-#define _math gcc_attr(const, warn_unused_result) static
-#define _math_hot gcc_attr(const, warn_unused_result, hot) static
-#define _pure gcc_attr(pure, nonnull, warn_unused_result) static
-#define _pure_hot gcc_attr(pure, nonnull, warn_unused_result, hot) static
-#define _fun gcc_attr(nonnull, warn_unused_result) static
-#define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) static
-#define _proc gcc_attr(nonnull) static void
-#define _proc_hot gcc_attr(nonnull, hot) static void
+#define _math gcc_attr(const, warn_unused_result) inline static
+#define _math_hot gcc_attr(const, warn_unused_result, hot) inline static
+#define _pure gcc_attr(pure, nonnull, warn_unused_result) inline static
+#define _pure_hot gcc_attr(pure, nonnull, warn_unused_result, hot) inline static
+#define _fun gcc_attr(nonnull, warn_unused_result) inline static
+#define _fun_hot gcc_attr(nonnull, hot, warn_unused_result) inline static
+#define _proc gcc_attr(nonnull) inline static void
+#define _proc_hot gcc_attr(nonnull, hot) inline static void
 // for explicit discarding returns from warn_unused_result
 #define discard_ (void) 
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^

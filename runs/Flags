@@ -11,5 +11,3 @@
 
 -fsanitize-trap -fsanitize-undefined-trap-on-error -fsanitize-address-use-after-scope
 -fsanitize=undefined,alignment,object-size,builtin,unreachable,bounds-strict,nonnull-attribute,returns-nonnull-attribute
-
--Wno-unused-function

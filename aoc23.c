@@ -1,5 +1,10 @@
 #include "ale_io.h"
 
+//AoC 4
+_proc aoc(ci32 lineslen, mstr lines[1]) {
+
+} 
+
 _proc aoc3(ci32 lineslen, mstr lines[1]) {
     i64 sum = 0;
     for (int i = 1; i < lineslen-1; ++i) {
@@ -44,7 +49,7 @@ i32 main(void) {
 
     mstr *lines = file_to_lines(&arena, "./txts/aoc.txt");
     clock_t start = clock();
-    aoc3(hd_len_(lines), lines);
+    aoc(hd_len_(lines), lines);
     print_clock(start);
 
     return 0;

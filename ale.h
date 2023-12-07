@@ -423,9 +423,9 @@ _math_hot u8 fit_pwr2_exp(ci32 size) {
     NEW_VEC_PW2(arena, type, capacity)
 
 // MSI Hash Table
-#define NEW_HTABLE(name, arena, type, capacity) \
-    type * name##_keys = NEW_VEC_PW2(arena, type, capacity); \
-    type * name##_vals = NEW_VEC_PW2(arena, type, capacity)
+#define NEW_HTABLE(arena, name, keytype_, valtype_, capacity) \
+    keytype_ * name##_keys = NEW_VEC_PW2(arena, keytype_, capacity); \
+    valtype_ * name##_vals = NEW_VEC_PW2(arena, valtype_, capacity)
 
 // Mask-Step-Index (MSI) lookup
 _math_hot i32 ht_lookup(
@@ -486,6 +486,10 @@ _fun_hot i32 htloop(
 #define hset_idx(keys_vec_, search_key_) htloop(keys_vec_, (u64)search_key_, 0)
 #define hset_get(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, (u64)search_key_, 0)]
 #define hset_set(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, (u64)search_key_, 1)]
+
+#define htable_idx(name, search_key_) htloop(name##_keys, (u64)search_key_, 0)
+#define htable_get(name, search_key_) name##_vals[htloop(name##_keys, (u64)search_key_, 0)]
+#define htable_set(name, search_key_, value_) (name##_vals[htloop(name##_keys, (u64)search_key_, 1)] = value_)
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*

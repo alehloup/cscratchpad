@@ -2,6 +2,47 @@
 #include <stdio.h>
 #include "ale.h"
 
+_proc test_hashtable_skey(Arena arena) {
+    i32 cap = 256 - 1;
+    NEW_HTABLE(&arena, table, cstr, int, cap);
+
+    for (i32 i = 1; i < cap; ++i) {
+        mstr skey = ALLOCXS(&arena, char, 16);
+        sprintf_s(skey, 16, "\"%d\"", i);
+        printf("%s ", skey);
+        
+        assert(htable_set(table, skey, i) == i);
+    }
+    assert(hd_len_(table_keys) == cap - 1);
+
+    for (i32 i = 1; i < cap; ++i) {
+        mstr skey = ALLOCXS(&arena, char, 16);
+        sprintf_s(skey, 16, "\"%d\"", i);
+        printf("%s: %d ", skey, htable_get(table, skey));
+        
+        assert(htable_get(table, skey) == i);
+    }
+
+    for (i32 i = 1; i < cap; ++i) {
+        mstr skey = ALLOCXS(&arena, char, 16);
+        sprintf_s(skey, 16, "\"%d\"", i);
+        printf("%s ", skey);
+        
+        assert(htable_set(table, skey, i) == i);
+    }
+    assert(hd_len_(table_keys) == cap - 1);
+
+    for (i32 i = 1; i < cap; ++i) {
+        mstr skey = ALLOCXS(&arena, char, 16);
+        sprintf_s(skey, 16, "\"%d\"", i);
+        printf("%s: %d ", skey, htable_get(table, skey));
+        
+        assert(htable_get(table, skey) == i);
+    }
+
+    printf("\nOkay!\n");
+}
+
 _proc test_set_strs(Arena arena) {
     cstr *set = NEW_SET(&arena, cstr, 0);
 
@@ -97,6 +138,7 @@ i32 main(void) {
     test_set_ikey(scratch);
     test_set_skey(scratch);
     test_set_strs(scratch);
+    test_hashtable_skey(scratch);
 
     return 0;
 }

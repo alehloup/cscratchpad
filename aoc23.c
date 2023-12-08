@@ -3,21 +3,21 @@
 static u8 mem[128*MBs_] = {0};
 static Arena A = {0, 0};
 
-_proc apply_conversion(i32 lenseeds, i64 seeds[20], ccstr line) {
-    i64num_i32len dst = cstr_to_num(line);
-    i64num_i32len src = cstr_to_num(&line[dst.len+1]);
-    i64num_i32len len = cstr_to_num(&line[dst.len+1+src.len+1]);
+_proc apply_conversion(ccstr line, i32 lenseeds, i64 seeds[20], u8 changed[20]) {
+    i64 dst, src, len;
+    sscanf_s(line, "%lld %lld %lld", &dst, &src, &len);
 
-    ci64 addit = dst.num - src.num,
-         start = src.num, end = src.num + len.num;
+    ci64 addit = dst - src,
+         start = src, end = src + len;
 
-    printf("(%lld|+%lld {%lld->%lld}) ", dst.num, addit, start, end);
+    printf("(%lld|+%lld {%lld->%lld}) ", dst, addit, start, end);
 
     for (int iseed = 0; iseed < lenseeds; ++iseed) {
         i64 seed = seeds[iseed];
-        if (seed >= start && seed < end) {
+        if (seed >= start && seed < end && !changed[iseed]) {
             seeds[iseed] += addit;
-            printf("|%lld->%lld| ", seed, seeds[iseed]);
+            changed[iseed] = True;
+            printf("#%d|%lld->%lld| ", iseed, seed, seeds[iseed]);
         }
     }
     printf("\n");
@@ -28,9 +28,11 @@ _proc aoc(ci32 lineslen, mstr lines[1]) {
     mstr seeds = split(&A, lines[0], ':')[1];
     mstr *seeds_str = split(&A, seeds, ' ');
     i64 *seeds_num = NEW_VEC(&A, i64);
+    u8 *changed = NEW_VEC(&A, u8);
 
     for (int i = 0; i < hd_len_(seeds_str); ++i) {
         vec_append(seeds_num, cstr_to_num(seeds_str[i]).num);
+        vec_append(changed, False);
     }
     assert(hd_len_(seeds_str) == hd_len_(seeds_num));
 
@@ -41,18 +43,21 @@ _proc aoc(ci32 lineslen, mstr lines[1]) {
         ccstr line = lines[iline];
         if (!is_empty_string(line)) {
             if (is_digit(line[0])) {
-                apply_conversion(hd_len_(seeds_num), seeds_num, line);
+                apply_conversion(line, hd_len_(seeds_num), seeds_num, changed);
             } else {
+                assert(zeromem(changed, hd_len_(changed)) != 0);
                 printf("%s\n", line);
             }
         }
     }
 
-    i64 mini = seeds_num[0];
+    i32 mini_seed = 0;
     for (int i = 1; i < hd_len_(seeds_num); ++i) {
-        mini = seeds_num[i] < mini ? seeds_num[i] : mini;
+        if (seeds_num[i] < seeds_num[mini_seed]) {
+            mini_seed = i;
+        }
     }
-    printf("Minimum: %lld\n", mini);
+    printf("Minimum %dSeed: %lld (started as %s)\n", mini_seed, seeds_num[mini_seed], seeds_str[mini_seed]);
 } 
 
 

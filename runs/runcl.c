@@ -10,8 +10,11 @@ i32 main(i32 argc, ccstr*argv) {
 
     printf(
         (
-            "msvc"
-            " && clang-cl @Flagscl %s -o \"./%s.exe\"" 
+            " msvc"
+            " && clang-cl" 
+            " -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero"
+            " -Weverything -Werror -fsanitize-trap -fsanitize=undefined -Wno-unsafe-buffer-usage -Wno-unused-function"
+            " %s -o \"./%s.exe\"" 
             " && \"./%s.exe\""
             " && rm \"./%s.exe\""
         ), 
@@ -22,8 +25,11 @@ i32 main(i32 argc, ccstr*argv) {
     
     shellrun(isizeof(buffer), buffer, 
         (
-            "msvc"
-            " && clang-cl @Flagscl %s -o \"./%s.exe\"" 
+            " msvc"
+            " && clang-cl" 
+            " -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero"
+            " -Weverything -Werror -fsanitize-trap -fsanitize=undefined -Wno-unsafe-buffer-usage -Wno-unused-function"
+            " %s -o \"./%s.exe\"" 
             " && \"./%s.exe\""
             " && rm \"./%s.exe\""
         ),

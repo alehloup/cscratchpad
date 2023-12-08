@@ -131,3 +131,14 @@ _proc vec_sort_cstr(mstr cstrings[1]) {
     );
 } 
 //  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^
+
+/*
+    ==================== PRINT ====================
+*/
+
+#define print_vec(vec_to_print_, format_str_) \
+    for(int ivec_ = 0; ivec_ < hd_len_(vec_to_print_); ++ivec_) \
+        printf(format_str_, vec_to_print_[ivec_]); \
+    printf("\n")
+
+//  ^^^^^^^^^^^^^^^^^^^^ PRINT ^^^^^^^^^^^^^^^^^^^^

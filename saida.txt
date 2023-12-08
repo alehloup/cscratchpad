@@ -1,0 +1,30 @@
+ SEEDS: 79 14 55 13 
+seed-to-soil map:
+(50|+-48 {98->100}) 
+(52|+2 {50->98}) |79->81| |55->57| 
+soil-to-fertilizer map:
+(0|+-15 {15->52}) 
+(37|+-15 {52->54}) 
+(39|+39 {0->15}) |14->53| |13->52| 
+fertilizer-to-water map:
+(49|+-4 {53->61}) |53->49| |57->53| 
+(0|+-11 {11->53}) |49->38| |52->41| 
+(42|+42 {0->7}) 
+(57|+50 {7->11}) 
+water-to-light map:
+(88|+70 {18->25}) 
+(18|+-7 {25->95}) |81->74| |38->31| |53->46| |41->34| 
+light-to-temperature map:
+(45|+-32 {77->100}) 
+(81|+36 {45->64}) |46->82| 
+(68|+4 {64->77}) |74->78| 
+temperature-to-humidity map:
+(0|+-69 {69->70}) 
+(1|+1 {0->69}) |31->32| |34->35| 
+humidity-to-location map:
+(60|+4 {56->93}) |78->82| |82->86| 
+(56|+-37 {93->97}) 
+Minimum: 32
+Executed in 0.000000 seconds 
+ gcc -Ofast -march=native -static-pie -flto -D_FORTIFY_SOURCE=3 -g3 -fcf-protection=full -fstack-protector-strong -ftrivial-auto-var-init=zero -Wall -Wextra -Wpedantic -Werror -fsanitize-trap -fsanitize=undefined -fanalyzer -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum aoc23.c -o "./aoc23.c.exe" && "./aoc23.c.exe" && rm "./aoc23.c.exe" 
+

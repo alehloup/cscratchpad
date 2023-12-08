@@ -1,51 +1,61 @@
 #include "ale_io.h"
 
-//AoC 4
-_proc aoc(ci32 lineslen, mstr lines[1]) {
+static u8 mem[128*MBs_] = {0};
+static Arena arena = {0, 0};
 
-} 
-
-_proc aoc3(ci32 lineslen, mstr lines[1]) {
-    i64 sum = 0;
-    for (int i = 1; i < lineslen-1; ++i) {
-        ccstr line = lines[i], top = lines[i-1], bot = lines[i+1];
-        ccstr regions[] = {top, line, bot};
-
-        for (int iline_letter = 0; lines[i][iline_letter]; ++iline_letter) {
-            cchar line_letter = lines[i][iline_letter];
-            if (line_letter == '*') {
-                ci32 asterisk_start = iline_letter - 1, asterisk_end = iline_letter + 1;
-                i32 nregion = 0;
-                i64 multregion = 1;
-                for (int iregion = 0; iregion < countof(regions); iregion++) {
-                    ccstr region = regions[iregion];
-                    for (int iregion_letter = 0; region[iregion_letter] && nregion < 3; ++iregion_letter) {
-                        if (is_digit(region[iregion_letter])) {
-                            i64num_i32len parsed = cstr_to_num(&region[iregion_letter]);
-                            ci32 iregion_start = iregion_letter; 
-                            ci32 iregion_end = iregion_start + parsed.len - 1;
-
-                            if ((iregion_start >= asterisk_start && iregion_start <= asterisk_end)
-                                || (iregion_end >= asterisk_start && iregion_end <= asterisk_end)) 
-                            {
-                                ++nregion; multregion *= parsed.num;
-                            }
-                            iregion_letter += parsed.len;
-                        }
-                    }
-                }
-                if (nregion == 2) {
-                    sum += multregion;
-                }
-            }
-        }
+_fun i64 per_line(mstr line) {
+    mstr card = split(&arena, line, ':')[1];
+    mstr *winnums_cardnums = split(&arena, card, '|');
+    mstr winnums = winnums_cardnums[0], cardnums = winnums_cardnums[1];
+    mstr *wins = split(&arena, winnums, ' '), 
+         *nums = split(&arena, cardnums, ' ');
+    mstr *wins_set = NEW_SET(&arena, mstr, 0);
+    
+    for (int i = 0; i < hd_len_(wins); ++i) {
+        printf("{%s} ", wins[i]);
+        discard_ hset_set(wins_set, wins[i]);
     }
-    printf("\n Final Sum: %lld \n", sum);
+
+    printf (" | ");
+
+    int nwins = 0;
+    for (int i = 0; i < hd_len_(nums); ++i) {
+        if (hset_get(wins_set, nums[i])) {
+            printf("|%s| ", nums[i]);
+            ++nwins;
+        }
+    } 
+    printf("#%d \n", nwins);
+
+    return nwins;
 }
 
+//AoC 4
+_proc aoc(ci32 lineslen, mstr lines[1]) {
+    static i64 nscratches[256] = {0};
+    i64 sum = 0;
+    for (int i = 0; i < countof(nscratches); ++i) 
+        nscratches[i] = 1;
+    
+    for (int i = 0; i < lineslen; ++i) {
+        i64 wins = per_line(lines[i]);
+
+        for (int j = 0; j < wins; ++j) {
+            nscratches[i+j+1] += nscratches[i];
+        } 
+    }
+
+    for (int i = 0; i < lineslen; ++i) {
+        sum += nscratches[i];
+        printf("%d:%lld ", i+1, nscratches[i]);
+    }
+
+    printf("\n\n Sum: %lld \n", sum);
+} 
+
+
 i32 main(void) {
-    static u8 mem[128*MBs_] = {0};
-    Arena arena = new_arena(128*MBs_, mem);
+    arena = new_arena(128*MBs_, mem);
 
     mstr *lines = file_to_lines(&arena, "./txts/aoc.txt");
     clock_t start = clock();

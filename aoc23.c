@@ -8,11 +8,10 @@ static Arena A = {0, 0};
 typedef struct range{i64 start; i64 end;}range;
 
 _proc apply_conversion(ccstr line, i32 lenseeds, range seeds[20], u8 changed[20]) {
-    i64 dst, src, len;
+    i64 dst, src, len, addit, src_start, src_end;
     sscanf_s(line, "%lld %lld %lld", &dst, &src, &len);
 
-    ci64 addit = dst - src,
-         src_start = src, src_end = src + len;
+    addit = dst - src; src_start = src; src_end = src + len;
 
     print("===(%lld - %lld|+%lld {%lld->%lld})===\n", dst, src, addit, src_start, src_end);
 
@@ -123,10 +122,12 @@ _proc aoc(ci32 lineslen, mstr lines[1]) {
 i32 main(void) {
     A = new_arena(128*MBs_, mem);
 
-    mstr *lines = file_to_lines(&A, "./txts/aoc.txt");
-    clock_t start = clock();
-    aoc(hd_len_(lines), lines);
-    print_clock(start);
+    {
+        mstr *lines = file_to_lines(&A, "./txts/aoc.txt");
+        clock_t start = clock();
+        aoc(hd_len_(lines), lines);
+        print_clock(start);
+    }
 
     return 0;
 }

@@ -1,121 +1,59 @@
+#include <math.h>
 #include "ale_io.h"
 
-#define print(...) 
+//#define print(...) 
 
 static u8 mem[128*MBs_] = {0};
 static Arena A = {0, 0};
 
-typedef struct range{i64 start; i64 end;}range;
-
-_proc apply_conversion(ccstr line, i32 lenseeds, range seeds[20], u8 changed[20]) {
-    i64 dst, src, len, addit, src_start, src_end;
-    sscanf_s(line, "%lld %lld %lld", &dst, &src, &len);
-
-    addit = dst - src; src_start = src; src_end = src + len;
-
-    print("===(%lld - %lld|+%lld {%lld->%lld})===\n", dst, src, addit, src_start, src_end);
-
-    for (int iseed = 0; iseed < lenseeds; ++iseed) {
-        i64 seed_start = seeds[iseed].start, seed_end = seeds[iseed].end;
-
-        if (!changed[iseed] && seed_start < src_end && seed_end > src_start) {
-            range newseed = {0, 0};
-            newseed.start = (seed_start >= src_start ? seed_start : src_start);
-            newseed.end = (seed_end <= src_end ? seed_end : src_end);
-
-            print("%d#%lld->%lld sliced to", iseed, seed_start, seed_end);
-
-            if (seed_start < newseed.start && seed_start < newseed.end) {
-                range beforeseed = {0, 0};
-                beforeseed.start = seed_start;
-                beforeseed.end = newseed.start;
-
-                print(" #%d|%lld->%lld| <", hd_len_(seeds), beforeseed.start, beforeseed.end);
-                if (beforeseed.start < beforeseed.end) {
-                    vec_append(seeds, beforeseed);
-                    vec_append(changed, False);
-                } else {
-                    print(" !! BEFORE START IS NOT LESSER THAN BEFORE END !! ");
-                }
-            }
-
-            print(" #%d\\|%lld->%lld|/", iseed, newseed.start, newseed.end);
-            if (newseed.start >= newseed.end) {
-                print(" !! SLICED START IS NOT LESSER THAN BEFORE END !! ");
-            }
-            
-
-            if (seed_end > newseed.end && seed_end > newseed.start) {
-                range afterseed = {0, 0};
-                afterseed.start = newseed.end;
-                afterseed.end = seed_end;
-
-                print(" < #%d|%lld->%lld|", hd_len_(seeds), afterseed.start, afterseed.end);
-                if (afterseed.start < afterseed.end) {
-                    vec_append(seeds, afterseed);
-                    vec_append(changed, False);
-                } else {
-                    print(" !! AFTER START IS NOT LESSER THAN BEFORE END !! ");
-                }
-            }
-            
-            newseed.start += addit;
-            newseed.end += addit;
-            print(" and converted to #%d{%lld->%lld} \n", iseed, newseed.start, newseed.end);
-            seeds[iseed] = newseed;
-            changed[iseed] = True;
-        }
-    }
+_math_hot i64 distance(i64 hold, i64 race_ms) {
+    return hold * (race_ms - hold);
 }
 
-//AoC 5
-_proc aoc(ci32 lineslen, mstr lines[1]) {
-    mstr seeds = split(&A, lines[0], ':')[1];
-    mstr *seeds_str = split(&A, seeds, ' ');
-    range *seeds_ranged = NEW_VEC_WITH_CAP(&A, range, 256);
-    u8 *changed = NEW_VEC_WITH_CAP(&A, u8, 256);
-    i32 mini_seed = 0;
+//AoC 6
+_proc aoc(ci64 lineslen, mstr lines[1]) {
+    i64 product = 1;
 
-    for (int i = 0; i < hd_len_(seeds_str); i += 2) {
-        range seed = {0, 0};
-        seed.start = cstr_to_num(seeds_str[i]).num;
-        seed.end   = seed.start + cstr_to_num(seeds_str[i+1]).num;
-        vec_append(seeds_ranged, seed);
-        vec_append(changed, False);
+    mstr line_times = split(&A, lines[0], ':')[1];
+    mstr *times_str = split(&A, line_times, ' ');
+    mstr line_distances = split(&A, lines[1], ':')[1];
+    mstr *distances_str = split(&A, line_distances, ' ');
+    
+    i64 *times = NEW_VEC(&A, i64), *distances = NEW_VEC(&A, i64);
+    for (int i = 0; i < hd_len_(times_str); ++i) {
+        sscanf_s(times_str[i], "%lld", vec_inc_ref(times));
     }
-    assert(hd_len_(seeds_str) / 2 == hd_len_(seeds_ranged));
-
-    print(" SEEDS: ");
-    for(int i = 0; i < hd_len_(seeds_ranged); ++i) {
-        print("\\%lld->%lld/ ", seeds_ranged[i].start, seeds_ranged[i].end);
+    for (int i = 0; i < hd_len_(distances_str); ++i) {
+        sscanf_s(distances_str[i], "%lld", vec_inc_ref(distances));
     }
 
-    for (int iline = 2; iline < lineslen; ++iline) {
-        ccstr line = lines[iline];
-        if (!is_empty_string(line)) {
-            if (is_digit(line[0])) {
-                apply_conversion(line, hd_len_(seeds_ranged), seeds_ranged, changed);
-            } else {
-                assert(zeromem(changed, hd_len_(changed)) != 0);
-                print("\n\n");
-                print(" SEEDS: ");
-                for(int i = 0; i < hd_len_(seeds_ranged); ++i) {
-                    print("\\%lld->%lld/ ", seeds_ranged[i].start, seeds_ranged[i].end);
-                }
-                print("\n%s\n", line);
-            }
+    print_vec(times, "%lld, ");
+    print_vec(distances, "%lld, ");
+    printf("\n");
+
+    for (int race = 0; race < hd_len_(times); ++race) {
+        ci64 race_time = times[race], 
+             race_record = distances[race];
+        ci64 hold = (race_time/2) + race_time % 2; 
+        ci64 time_traveled = race_time - hold;
+        ci64 distance_traveled = hold * time_traveled;
+        
+        i64 possibilities = 1, sub = 1 + race_time % 2;
+             
+        printf("%d#Race, time: %lld, record: %lld\n", race+1, race_time, race_record);
+        for (i64 dist = distance_traveled; dist >= race_record; dist -= (sub += 2)) {
+            ++possibilities;
         }
-    }
+        possibilities *= 2;
+        possibilities -= !(race_time % 2);
+        printf("Possibilities: %lld\n", possibilities);
+        printf("\n\n");
 
-    print("\n\nSeeds: ");
-    for (int i = 1; i < hd_len_(seeds_ranged); ++i) {
-        print("\\%lld->%lld/ ", seeds_ranged[i].start, seeds_ranged[i].end);
-        if (seeds_ranged[i].start < seeds_ranged[mini_seed].start) {
-            mini_seed = i;
-        }
+        product *= possibilities;
     }
-    print("\n");
-    printf("\nMinimum #%dSeed: %lld \n", mini_seed, seeds_ranged[mini_seed].start);
+    printf("Product: %lld\n", product);
+
+    discard_ lineslen;
 } 
 
 

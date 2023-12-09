@@ -422,18 +422,20 @@ _fun_hot u8 * grow_vec(u8 * arr) {
     }
 }
 
-_proc_hot inc_vec(voidp ptr_to_array) {
-    u8 * *arr = (u8 * *)ptr_to_array;
+// Increases len by 1 and returns last index 
+_fun_hot i32 vec_inc(voidp array_by_reference) {
+    u8 * *arr = (u8 * *)array_by_reference;
     ds_header * dh = hd_(*arr);
     
     if (dh->len >= dh->cap) {
        *arr = grow_vec(*arr);
     }
 
-    ++dh->len;
+    return dh->len++;
 }
-#define vec_append(arr, value) (inc_vec(&arr), arr[hd_len_(arr)-1] = value)
-#define vec_pop(arr) arr[--hd_(arr)->len]
+#define vec_inc_ref(arr) (&arr[vec_inc(&arr)])
+#define vec_append(arr, value) (arr[vec_inc(&arr)] = value)
+#define vec_pop(arr) arr[--hd_(&arr)->len]
 //  ^^^^^^^^^^^^^^^^^^^^ VECTOR ^^^^^^^^^^^^^^^^^^^^
 
 /*

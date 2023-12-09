@@ -5,7 +5,7 @@
 static u8 * force_reloc = 0;
 
 _proc test_vec_push_str(Arena scratch) {
-    cstr *cstrings = NEW_VEC(&scratch, cstr);
+    cstr *cstrings = NEW_VEC_WITH_CAP(&scratch, cstr, 5);
 
     printf("=========== CSTRINGs ===========\n");
     
@@ -25,22 +25,22 @@ _proc test_vec_push_str(Arena scratch) {
 }
 
 _proc test_vec_push_i64(Arena scratch) {
-    i64 *i64s = NEW_VEC(&scratch, i64);
+    i64 *i64s = NEW_VEC_WITH_CAP(&scratch, i64, 3);
 
     printf("=========== I64s ===========\n");
     
     vec_append(i64s, 52+64000);
     printf("POP: %lld\n", vec_pop(i64s));
 
-    printf("checkptr before: %d %llu\n", hd_(i64s)->ptrcheck, (u64)(i64s));
+    printf("checkptr before: %d %d %llu\n", hd_(i64s)->ptrcheck, (u8)(u64)(i64s), (u64)(i64s));
     assert(hd_checkptr(i64s));
     for(i32 i = 0; i < 164; ++i) {
-        force_reloc = (u8 *) alloc(&scratch, isizeof(u8), 1);
+        force_reloc = (u8 *) alloc(&scratch, isizeof(u8), 2);
         *force_reloc = 52;
         vec_append(i64s, i+64000);
     }
     assert(hd_checkptr(i64s));
-    printf("checkptr after: %d %llu\n", hd_(i64s)->ptrcheck, (u64)(i64s));
+    printf("checkptr after: %d %d %llu\n", hd_(i64s)->ptrcheck, (u8)(u64)(i64s), (u64)(i64s));
 
     printf("POP: %lld\n", vec_pop(i64s));
 

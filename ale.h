@@ -272,6 +272,28 @@ _pure_hot i64num_i32len cstr_to_num(ccstr str) {
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
 /*
+    ==================== MATH ====================
+*/
+// bitmask for optimized Mod for power 2 numbers
+_math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
+    return (number) & (modval - 1);
+}
+
+// Returns first power 2 that size fits
+_math_hot u8 fit_pwr2_exp(ci32 size) {
+    u8 exp=8; 
+    i32 val= 1<<exp;
+
+    assert(size <= 16777216 && "Max size allowed: 16777215");
+
+    while (val < size) {
+        ++exp; val<<= 1;
+    }
+    return exp;
+}
+//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
+
+/*
     ==================== RANDOM ====================
 */
 _pure_hot i32 rnd(u64 seed[1]) {
@@ -330,11 +352,6 @@ _fun Arena new_arena(ci64 buffer_len, u8 buffer[]) {
     return arena;
 }
 
-// bitmask for optimized Mod for power 2 numbers
-_math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
-    return (number) & (modval - 1);
-}
-
 gcc_attr(malloc, assume_aligned(8), alloc_size(2, 3), nonnull, warn_unused_result, hot)
 // Arena Allocator always zeroes the memory, always 8 aligned
 voidp alloc(Arena arena[1], ci64 size, ci64 count) {
@@ -355,8 +372,9 @@ voidp alloc(Arena arena[1], ci64 size, ci64 count) {
 /*
     ==================== VECTOR ====================
 */
+// Creates an Ale Vector, guarantees power-2 Capacity
 _fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str) {
-    ci32 cap_to_use = initial_cap ? initial_cap : 64;
+    ci32 cap_to_use = 1 << fit_pwr2_exp(initial_cap ? initial_cap : 256);
     ci64 alloc_size = isizeof(ds_header) + (cap_to_use * elsize);
     ds_header * vec = (ds_header *)alloc(arena, alloc_size, 1);
     
@@ -372,6 +390,8 @@ _fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str)
 //NEW VECTOR (prefixes the array with ds_header, see new_vec and hd_)
 #define NEW_VEC(arena, type) (type *) \
     new_vec(arena, (u8)sizeof(type), 0, IS_STR_TYPENAME(type))
+#define NEW_VEC_WITH_CAP(arena, type, capacity_) (type *) \
+    new_vec(arena, (u8)sizeof(type), capacity_, IS_STR_TYPENAME(type))
 
 _fun_hot u8 * grow_vec(u8 * arr) { 
     ds_header * dh = hd_(arr);
@@ -393,9 +413,11 @@ _fun_hot u8 * grow_vec(u8 * arr) {
             alloc(arena, isizeof(ds_header) + (cap_x_elsize * 2), 1);
         u8 *newarr = (u8 *)(VEC_RELOC + 1);
         copymem((u8 *)VEC_RELOC, (u8 *)dh, isizeof(ds_header) + cap_x_elsize);
-        dh = VEC_RELOC;
-        dh->ptrcheck = (u8)((u64)newarr);
-        dh->cap <<= 1;
+        
+        VEC_RELOC->cap <<= 1;
+        VEC_RELOC->ptrcheck = (u8)((u64)newarr);
+        dh->ptrcheck = VEC_RELOC->ptrcheck;
+
         return newarr;
     }
 }
@@ -417,31 +439,14 @@ _proc_hot inc_vec(voidp ptr_to_array) {
 /*
     ==================== HASH TABLE ====================
 */
-// Returns first power 2 that size fits
-_math_hot u8 fit_pwr2_exp(ci32 size) {
-    u8 exp=8; 
-    i32 val= 1<<exp;
-
-    assert(size <= 16777216 && "Max size allowed: 16777215");
-
-    while (val < size) {
-        ++exp; val<<= 1;
-    }
-    return exp;
-}
-
-// MSI Only works with Power2 Capacity
-#define NEW_VEC_PW2(arena, type, capacity) \
-    (type *) new_vec(arena, (u8)sizeof(type), (1<<fit_pwr2_exp(capacity)), IS_STR_TYPENAME(type))
-
 // MSI Set
 #define NEW_SET(arena, type, capacity) \
-    NEW_VEC_PW2(arena, type, capacity)
+    NEW_VEC_WITH_CAP(arena, type, capacity)
 
 // MSI Hash Table
 #define NEW_HTABLE(arena, name, keytype_, valtype_, capacity) \
-    keytype_ * name##_keys = NEW_VEC_PW2(arena, keytype_, capacity); \
-    valtype_ * name##_vals = NEW_VEC_PW2(arena, valtype_, capacity)
+    keytype_ * name##_keys = NEW_VEC_WITH_CAP(arena, keytype_, capacity); \
+    valtype_ * name##_vals = NEW_VEC_WITH_CAP(arena, valtype_, capacity)
 
 // Mask-Step-Index (MSI) lookup
 _math_hot i32 ht_lookup(

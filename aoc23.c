@@ -1,7 +1,7 @@
 #include <math.h>
 #include "ale_io.h"
 
-#define print(...) //printf(__VA_ARGS__)
+#define print(...)  //printf(__VA_ARGS__)
 #define printn(...) //print(__VA_ARGS__); printf("\n")
 
 static u8 mem[128*MBs_] = {0};
@@ -31,8 +31,11 @@ _fun b32 continues(i32 lenpositions, i32 positions[]) {
 _proc aoc(ci64 lineslen, mstr lines[1]) {
     static node graph[1048576];
     ccstr directions = lines[0];
-    i64 steps = 0;
+    ci32 lendirections = (i32) cstrlen(lines[0]);
+    i32 lenpositions = 0;
+    i64 steps = 0, attempt = 0;
     NEW_VEC(&A, positions, i32);
+    i32 iprevious = 0, pos_to_attempt = 0;
     
     assert(zeromem((u8*)graph, 1048576));
 
@@ -54,20 +57,56 @@ _proc aoc(ci64 lineslen, mstr lines[1]) {
         printn("%d = (%d, %d)", mpos, graph[mpos].l, graph[mpos].r);
     }
 
-    printn("\n0: %d", mypos);
-    while (continues(hd_len_(positions), positions)) {
-        for (int i = 0; directions[i] && mypos%100 != 90; ++i) {
-            mypos = directions[i] == 'L' ? graph[mypos].l : graph[mypos].r;
-            ++steps;
-            printn("%lld: %d", steps, mypos);
+    lenpositions = hd_len_(positions);
 
-            if (steps % 100000000 == 0) {
-                printf (" . ");
+    print("Starting positions: ");
+    print_vec(positions, "%d ");
+
+    while (continues(lenpositions, positions)) {
+        i64 cycle_steps = 0;
+        i32 idir = iprevious;
+
+        ++attempt;
+
+        do {
+            ci32 pos = positions[pos_to_attempt];
+            positions[pos_to_attempt] = directions[idir] == 'L' ? graph[pos].l : graph[pos].r;
+            ++cycle_steps;
+
+            idir = (idir + 1)%lendirections;
+        } while (positions[pos_to_attempt]%100 != 90);
+
+        steps += cycle_steps;
+
+        for (int ipos = 0; ipos < hd_len_(positions); ++ ipos) {
+            int keepup_steps = 0;
+
+            if (ipos == pos_to_attempt) {
+                print("[%d:%d] ", ipos, positions[ipos]);
+                continue;
             }
+            
+            for (int i = iprevious; directions[i] && keepup_steps < cycle_steps; ++i) {
+                ci32 pos = positions[ipos];
+                positions[ipos] = directions[i] == 'L' ? graph[pos].l : graph[pos].r;
+                ++keepup_steps;
+            }
+            
+            print("[%d:%d] ", ipos, positions[ipos]);
         }
+        printn(" ");
+
+        if (attempt % 100000 == 0) {
+            printf("\n#%lld\n", steps);
+            print_vec(positions, "%d ");            
+        }
+        
+
+        iprevious = idir;
+        pos_to_attempt = (pos_to_attempt+1)%lenpositions;
     }
-    printf("Steps: %lld", steps);
-    
+    printf("%lld \n", steps);
+    print_vec(positions, "%d ");    
 } 
 
 

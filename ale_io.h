@@ -15,7 +15,7 @@ _fun f64 seconds_since(clock_t start)
 }
 
 _proc print_clock(clock_t start) {
-    printf("Executed in %f seconds \n", seconds_since(start));
+    printf("\n\nExecuted in %f seconds \n", seconds_since(start));
 }
 //  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
 
@@ -128,6 +128,13 @@ _proc vec_sort_cstr(mstr cstrings[1]) {
     qsort(
         cstrings, (u64)  hd_(cstrings)->len,
         sizeof(i64), void_compare_strings
+    );
+} 
+
+_proc vec_custom_sort_cstr(mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp b)) {
+    qsort(
+        cstrings, (u64)  hd_(cstrings)->len,
+        sizeof(i64), compare_fun
     );
 } 
 //  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^

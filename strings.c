@@ -19,7 +19,7 @@ i32 main(void) {
     {
         u8 buffer[MBs_ / 8] = {0};
         Arena arena = new_arena(MBs_ / 8, buffer);
-        mstr *words = NEW_VEC(&arena, mstr);
+        NEW_VEC(&arena, words, mstr);
         char teste[16] = {'A', 'l', 'e', ' ', 'M', 'a', 't', ' ', '\0'};
 
         words = split(&arena, teste, ' ');
@@ -32,7 +32,7 @@ i32 main(void) {
         ccstr ccstrs[4] = {"123 456 789", "52#89;", "69 . 3", " 91"};
         for (int i = 0; i < 4; ++i) {
             i64num_i32len num_len = cstr_to_num(ccstrs[i]);
-            printf("\"%s\" |%lld| #%lld\n", ccstrs[i], num_len.num, num_len.len);
+            printf("\"%s\" |%lld| #%d\n", ccstrs[i], num_len.num, num_len.len);
         }
     }
 

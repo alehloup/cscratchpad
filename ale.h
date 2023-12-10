@@ -388,10 +388,10 @@ _fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str)
 }
 
 //NEW VECTOR (prefixes the array with ds_header, see new_vec and hd_)
-#define NEW_VEC(arena, type) (type *) \
-    new_vec(arena, (u8)sizeof(type), 0, IS_STR_TYPENAME(type))
-#define NEW_VEC_WITH_CAP(arena, type, capacity_) (type *) \
-    new_vec(arena, (u8)sizeof(type), capacity_, IS_STR_TYPENAME(type))
+#define NEW_VEC(arena, varname_, type) \
+    type *varname_ = new_vec(arena, (u8)sizeof(type), 0, IS_STR_TYPENAME(type))
+#define NEW_VEC_WITH_CAP(arena, varname_, type, capacity_) \
+    type *varname_ = new_vec(arena, (u8)sizeof(type), capacity_, IS_STR_TYPENAME(type))
 
 _fun_hot u8 * grow_vec(u8 * arr) { 
     ds_header * dh = hd_(arr);
@@ -435,20 +435,20 @@ _fun_hot i32 vec_inc(voidp array_by_reference) {
 }
 #define vec_inc_ref(arr) (&arr[vec_inc(&arr)])
 #define vec_append(arr, value) (arr[vec_inc(&arr)] = value)
-#define vec_pop(arr) arr[--hd_(&arr)->len]
+#define vec_pop(arr) arr[--hd_(arr)->len]
 //  ^^^^^^^^^^^^^^^^^^^^ VECTOR ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== HASH TABLE ====================
 */
 // MSI Set
-#define NEW_SET(arena, type, capacity) \
-    NEW_VEC_WITH_CAP(arena, type, capacity)
+#define NEW_SET(arena, varname_, type, capacity) \
+    NEW_VEC_WITH_CAP(arena, varname_, type, capacity)
 
 // MSI Hash Table
-#define NEW_HTABLE(arena, name, keytype_, valtype_, capacity) \
-    keytype_ * name##_keys = NEW_VEC_WITH_CAP(arena, keytype_, capacity); \
-    valtype_ * name##_vals = NEW_VEC_WITH_CAP(arena, valtype_, capacity)
+#define NEW_HTABLE(arena, prefix_name_, keytype_, valtype_, capacity) \
+    NEW_VEC_WITH_CAP(arena, prefix_name_##_keys, keytype_, capacity); \
+    NEW_VEC_WITH_CAP(arena, prefix_name_##_vals, valtype_, capacity)
 
 // Mask-Step-Index (MSI) lookup
 _math_hot i32 ht_lookup(
@@ -516,7 +516,7 @@ _fun_hot i32 htloop(
 */
 // Alters a text by converting \n to \0 and pushing each line as a ccstr in the returned vector
 _fun_hot mstr * into_lines(Arena arena[1], mstr text_to_alter) {
-    mstr *lines = NEW_VEC(arena, mstr);
+    NEW_VEC(arena, lines, mstr);
     
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
@@ -534,7 +534,7 @@ _fun_hot mstr * into_lines(Arena arena[1], mstr text_to_alter) {
 }
 
 _fun_hot mstr * split(Arena arena[1], mstr text_to_alter, cchar splitter) {
-    mstr *words = NEW_VEC(arena, mstr);
+    NEW_VEC(arena, words, mstr);
     i64 i = 0, current = 0;
 
     for (i = 0; text_to_alter[i]; ++i) {

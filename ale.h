@@ -301,6 +301,9 @@ _math_hot i64 least_common_multiple(i64 m, i64 n) {
      return m / greatest_common_divisor(m, n) * n;
 }
 
+#define NEXT_POWER2(n_) \
+    (((n_-1) | (n_ >> 1) | (n_ >> 2) | (n_ >> 4) | (n_ >> 8) | (n_ >> 16))+1)
+
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 /*

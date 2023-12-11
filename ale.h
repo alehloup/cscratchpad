@@ -441,7 +441,7 @@ _fun_hot i32 vec_inc(voidp array_by_reference) {
        *arr = grow_vec(*arr);
     }
 
-    return dh->len++;
+    return (dh->len++);
 }
 #define vec_inc_ref(arr) (&arr[vec_inc(&arr)])
 #define vec_append(arr, value) (arr[vec_inc(&arr)] = value)

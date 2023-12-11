@@ -291,6 +291,16 @@ _math_hot u8 fit_pwr2_exp(ci32 size) {
     }
     return exp;
 }
+
+_math_hot i64 greatest_common_divisor(i64 m, i64 n) {
+    i64 tmp;
+    while(m) { tmp = m; m = n % m; n = tmp; }       
+    return n;
+}
+_math_hot i64 least_common_multiple(i64 m, i64 n) {
+     return m / greatest_common_divisor(m, n) * n;
+}
+
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 /*

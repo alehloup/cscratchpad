@@ -303,7 +303,7 @@ _math_hot i64 least_common_multiple(i64 m, i64 n) {
 
 // Next Power of 2 for numbers upto 2*31 (2'147'483'648)
 #define NEXT_POWER2(n_) \
-    (((n_-1) | (n_ >> 1) | (n_ >> 2) | (n_ >> 4) | (n_ >> 8) | (n_ >> 16))+1)
+    ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
 
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
@@ -388,7 +388,7 @@ voidp alloc(Arena arena[1], ci64 size, ci64 count) {
 */
 // Creates an Ale Vector, guarantees power-2 Capacity
 _fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str) {
-    ci32 cap_to_use = 1 << fit_pwr2_exp(initial_cap ? initial_cap : 256);
+    ci32 cap_to_use = NEXT_POWER2(initial_cap ? initial_cap : 256);
     ci64 alloc_size = isizeof(ds_header) + (cap_to_use * elsize);
     ds_header * vec = (ds_header *)alloc(arena, alloc_size, 1);
     

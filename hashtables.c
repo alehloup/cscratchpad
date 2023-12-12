@@ -44,7 +44,7 @@ _proc test_hashtable_skey(Arena arena) {
 }
 
 _proc test_set_strs(Arena arena) {
-    cstr *set = NEW_SET(&arena, cstr, 0);
+    NEW_SET(&arena, set, cstr, 0);
 
     discard_ hset_set(set, "Alex");
     discard_ hset_set(set, "Sarah");
@@ -59,7 +59,7 @@ _proc test_set_strs(Arena arena) {
 
 _proc test_set_skey(Arena arena) {
     i32 cap = 256 - 1;
-    cstr *set = NEW_SET(&arena, cstr, cap);
+    NEW_SET(&arena, set, cstr, cap);
 
     for (i32 i = 1; i < cap; ++i) {
         mstr skey = ALLOCN(&arena, char, 16);
@@ -100,7 +100,7 @@ _proc test_set_skey(Arena arena) {
 
 _proc test_set_ikey(Arena arena) {
     i32 cap = 256 - 1;
-    short * set = NEW_SET(&arena, short, cap);
+    NEW_SET(&arena, set, short, cap);
 
     for (i32 i = 1; i < cap; ++i) {
         printf("%d ", i);

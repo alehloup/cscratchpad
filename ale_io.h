@@ -84,7 +84,7 @@ _fun i32 file_to_lines(ccstr filename, i32 lines_cap, mstr lines[64], i64 charbu
     return into_lines(charbuffer, lines_cap, lines);
 }
 
-_proc_hot buffer_to_file(ccstr buffer, ccstr filename) {
+_proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");

@@ -1,24 +1,30 @@
 #include "ale_io.h"
 
 i32 main(void) {
-    static u8 buffer[2*MBs_];
-
-    Arena perm = new_arena(isizeof(buffer), buffer);
+    static char buffer[256] = {0};
+    static mstr lines[64] = {0};
+    i64 buffer_cap = 256;
+    i32 lines_cap = 64;
     
-    mstr contents = file_to_buffer(&perm, "./txts/exemplo.txt");
-    printf("%s", contents);
+    i64 buffer_len = 
+        file_to_cstring("./txts/exemplo.txt", 
+        buffer_cap, buffer);
+    discard_ buffer_len;
+    
+    printf("%s", buffer);
 
     {
-        mstr *lines = into_lines(&perm, contents);
-        vec_sort_cstr(lines);
+        i32 lines_len = into_lines(buffer, 
+            lines_cap, lines);
+        sort_cstrings(lines_len, lines);
 
         
-        for (i32 i = 0; i < hd_(lines)->len; ++i) {
+        for (i32 i = 0; i < lines_len; ++i) {
             printf("%d: %s\n", i, lines[i]);
         }
-        buffer_to_file(lines[0], "./txts/first.txt");
+        cstring_to_file(lines[0], "./txts/first.txt");
         
 
-        lines_to_file(lines, "./txts/sorted.txt");
+        lines_to_file(lines_len, lines, "./txts/sorted.txt");
     }
 }

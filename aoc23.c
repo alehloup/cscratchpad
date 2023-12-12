@@ -7,30 +7,38 @@
 static u8 mem[128*MBs_] = {0};
 static Arena A = {0, 0};
 
+_fun_hot i32 turn_into_subseq(i32 sequence_len, i32 sequence[]) {
+    i32 len_minus_one = sequence_len - 1;
+
+    for (int i = 0; i < len_minus_one; ++i) {
+        sequence[i] = sequence[i+1] - sequence[i];
+    }
+    sequence[len_minus_one] = 0;
+    return sequence[0];
+}
+
 _fun i32 per_line(mstr line) {
     mstr *numbers_str = split(&A, line, ' ');
     i32 sequence_size = hd_len_(numbers_str), seqsum = 0;
     NEW_VEC(&A, sequence, i32);
-    NEW_VEC(&A, sums, i32);
+    NEW_VEC(&A, history, i32);
 
     for (int i = 0; i < hd_len_(numbers_str); ++i) {
         sscanf_s(numbers_str[i], "%d ", vec_inc_ref(sequence));
     }
-
-    print_vec(sequence, " %d ");
-    printf("------------------------\n");
     
-    while(sequence_size > 0 && sequence[sequence_size-1]) {
-        seqsum += sequence[--sequence_size];
-        vec_append(sums, sequence[sequence_size]);
-        for (int i = 0; i < sequence_size; ++i) {
-            sequence[i] = sequence[i+1] - sequence[i];
-        }
+    vec_append(history, sequence[0]);
+
+    while(sequence_size > 1) {
+        i32 cur = turn_into_subseq(sequence_size--, sequence);
         --hd_(sequence)->len;
-        print_vec(sequence, " %d ");
-        printf("------------------------\n");
+        vec_append(history, cur);
     }
-    printf("Sums: "); print_vec(sums, " %d ");
+    
+    seqsum = 0;
+    for (int i = hd_len_(history) - 1; i >= 0; --i) {
+        seqsum = history[i] - seqsum;
+    }
    
     return seqsum;
 }
@@ -44,8 +52,9 @@ _proc aoc(ci32 lineslen, mstr lines[1]) {
         if (is_empty_string(line)) {
             continue;
         }
+        //printf("%s ", line);
         seqnum = per_line(line);
-        printf(" [%d] \n\n\n", seqnum);
+        //printf(" [%d]\n", seqnum);
         sum += seqnum;
     }
     printf("Sum: %lld \n", sum);

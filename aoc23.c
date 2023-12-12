@@ -17,9 +17,9 @@ _fun_hot i32 turn_into_subseq(i32 sequence_len, i32 sequence[]) {
 _fun i32 per_line(mstr line) {
     static mstr numbers_str[64] = {0};
     static i32 sequence[64] = {0}, history[64] = {0};
-    i32 numbers_str_len = 64, sequence_len = 0, history_len = 0, seqsum = 0;
+    i32 numbers_str_cap = 64, sequence_len = 0, history_len = 0, seqsum = 0;
 
-    numbers_str_len = split(line, ' ', numbers_str_len, numbers_str);
+    i32 numbers_str_len = split(line, ' ', numbers_str_cap, numbers_str);
 
     for (int i = 0; i < numbers_str_len; ++i) {
         sscanf_s(numbers_str[i], "%d ", &sequence[sequence_len++]);
@@ -61,12 +61,12 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
 i32 main(void) {
     static char charbuffer[NEXT_POWER2(64000)] = {0};
     static mstr lines[256] = {0};
-    i64 charbuffer_len = 64000;
-    i32 lines_len = 256;
+    i64 charbuffer_cap = 64000;
+    i32 lines_cap = 256;
 
+    i32 lines_len = file_to_lines("./txts/aoc.txt", \
+        lines_cap, lines, charbuffer_cap, charbuffer);
 
-    lines_len = file_to_lines("./txts/aoc.txt", \
-        lines_len, lines, charbuffer_len, charbuffer);
     clock_t start = clock();
     aoc(lines_len, lines);
     print_clock(start);

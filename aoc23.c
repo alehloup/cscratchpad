@@ -9,35 +9,46 @@ static Arena A = {0, 0};
 
 _fun i32 per_line(mstr line) {
     mstr *numbers_str = split(&A, line, ' ');
-    ci32 sequence_size = hd_len_(numbers_str);
+    i32 sequence_size = hd_len_(numbers_str), seqsum = 0;
     NEW_VEC(&A, sequence, i32);
-
-    printf("Sequence size: %d \n", sequence_size);
+    NEW_VEC(&A, sums, i32);
 
     for (int i = 0; i < hd_len_(numbers_str); ++i) {
         sscanf_s(numbers_str[i], "%d ", vec_inc_ref(sequence));
     }
+
+    print_vec(sequence, " %d ");
+    printf("------------------------\n");
     
-    printf("Sequence_len: %d \n", hd_len_(sequence));
-
-    vec_append(sequence, 0);
-    for (int i = 0; i < hd_len_(sequence); ++i) {
-        printf("%d ", sequence[i]);
+    while(sequence_size > 0 && sequence[sequence_size-1]) {
+        seqsum += sequence[--sequence_size];
+        vec_append(sums, sequence[sequence_size]);
+        for (int i = 0; i < sequence_size; ++i) {
+            sequence[i] = sequence[i+1] - sequence[i];
+        }
+        --hd_(sequence)->len;
+        print_vec(sequence, " %d ");
+        printf("------------------------\n");
     }
-    printf("\n");
-
-    return 52;
+    printf("Sums: "); print_vec(sums, " %d ");
+   
+    return seqsum;
 }
 
 //AoC 9
 _proc aoc(ci32 lineslen, mstr lines[1]) {
+    i64 sum = 0;
     for (int iline = 0; iline < lineslen; ++iline) {
         mstr line = lines[iline];
+        i32 seqnum = 0;
         if (is_empty_string(line)) {
             continue;
         }
-        printf("%s: %d ", line, per_line(lines[iline]));
+        seqnum = per_line(line);
+        printf(" [%d] \n\n\n", seqnum);
+        sum += seqnum;
     }
+    printf("Sum: %lld \n", sum);
 } 
 
 

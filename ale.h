@@ -529,8 +529,8 @@ _fun_hot i32 htloop(
     ==================== TEXT ====================
 */
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun_hot i32 into_lines(mstr text_to_alter, i32 lines_len, mstr lines[64]) {
-    i32 nlines = 0;
+_fun_hot i32 into_lines(mstr text_to_alter, i32 lines_cap, mstr lines[64]) {
+    i32 lines_len = 0;
     
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
@@ -539,35 +539,35 @@ _fun_hot i32 into_lines(mstr text_to_alter, i32 lines_len, mstr lines[64]) {
         else if (text_to_alter[i] == '\n') {
             text_to_alter[i] = '\0';
             
-            assert(nlines < lines_len && "lines not big enough to store all lines");
-            lines[nlines++] = &text_to_alter[current];
+            assert(lines_len < lines_cap && "lines not big enough to store all lines");
+            lines[lines_len++] = &text_to_alter[current];
             current = i+1;
         }
     }
 
-    return nlines;
+    return lines_len;
 }
 
-_fun_hot i32 split(mstr text_to_alter, cchar splitter, i32 words_len, mstr words[64]) {
-    i32 i = 0, current = 0, nwords = 0;
+_fun_hot i32 split(mstr text_to_alter, cchar splitter, i32 words_cap, mstr words[64]) {
+    i32 i = 0, current = 0, words_len = 0;
 
     for (i = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == splitter) {
             text_to_alter[i] = '\0';
             
             if (!is_empty_string(&text_to_alter[current])) {
-                assert(nwords < words_len && "words not big enough to store all words");
-                words[nwords++] = &text_to_alter[current];
+                assert(words_len < words_cap && "words not big enough to store all words");
+                words[words_len++] = &text_to_alter[current];
             }
             current = i+1;
         }
     }
 
     if (current != i && !is_empty_string(&text_to_alter[current])) {
-        assert(nwords < words_len && "words not big enough to store all words");
-        words[nwords++] = &text_to_alter[current];
+        assert(words_len < words_cap && "words not big enough to store all words");
+        words[words_len++] = &text_to_alter[current];
     }
 
-    return nwords;
+    return words_len;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^

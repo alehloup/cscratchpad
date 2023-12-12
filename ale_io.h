@@ -51,7 +51,7 @@ _fun i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
               return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
 }
 
-_fun i64 file_to_cstring(ccstr filename, i64 charbuffer_len, char charbuffer[64]) {
+_fun i64 file_to_cstring(ccstr filename, i64 charbuffer_cap, char charbuffer[64]) {
     i64 fsize = 0;
 
         FILE *f = 0; i32 err = 
@@ -63,7 +63,7 @@ _fun i64 file_to_cstring(ccstr filename, i64 charbuffer_len, char charbuffer[64]
         fsize = ftell(f);
         fseek(f, 0, SEEK_SET);
 
-        assert(charbuffer_len >= fsize+2 && "charbuffer is not enough for file size");
+        assert(charbuffer_cap >= fsize+2 && "charbuffer is not enough for file size");
 
         {
             i64 bytesread = fread_noex(charbuffer, 1LL, fsize, f);
@@ -78,10 +78,10 @@ _fun i64 file_to_cstring(ccstr filename, i64 charbuffer_len, char charbuffer[64]
     return fsize;
 }
 
-_fun i32 file_to_lines(ccstr filename, i32 lines_len, mstr lines[64], i64 charbuffer_len, char charbuffer[64]) {
-    i64 fsize = file_to_cstring(filename, charbuffer_len, charbuffer);
-    discard_ fsize;
-    return into_lines(charbuffer, lines_len, lines);
+_fun i32 file_to_lines(ccstr filename, i32 lines_cap, mstr lines[64], i64 charbuffer_cap, char charbuffer[64]) {
+    i64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
+    discard_ charbuffer_len;
+    return into_lines(charbuffer, lines_cap, lines);
 }
 
 _proc_hot buffer_to_file(ccstr buffer, ccstr filename) {

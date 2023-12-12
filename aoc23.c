@@ -19,24 +19,22 @@ _fun_hot i32 turn_into_subseq(i32 sequence_len, i32 sequence[]) {
 
 _fun i32 per_line(mstr line) {
     mstr *numbers_str = split(&A, line, ' ');
-    i32 sequence_size = hd_len_(numbers_str), seqsum = 0;
-    NEW_VEC(&A, sequence, i32);
-    NEW_VEC(&A, history, i32);
+    static i32 sequence[64] = {0}, history[64] = {0};
+    i32 sequence_len = 0, history_len = 0, seqsum = 0;
 
     for (int i = 0; i < hd_len_(numbers_str); ++i) {
-        sscanf_s(numbers_str[i], "%d ", vec_inc_ref(sequence));
+        sscanf_s(numbers_str[i], "%d ", &sequence[sequence_len++]);
     }
     
-    vec_append(history, sequence[0]);
+    history[history_len++] = sequence[0];
 
-    while(sequence_size > 1) {
-        i32 cur = turn_into_subseq(sequence_size--, sequence);
-        --hd_(sequence)->len;
-        vec_append(history, cur);
+    while(sequence_len > 1) {
+        i32 cur = turn_into_subseq(sequence_len--, sequence);
+        history[history_len++] = cur;
     }
     
     seqsum = 0;
-    for (int i = hd_len_(history) - 1; i >= 0; --i) {
+    for (int i = history_len - 1; i >= 0; --i) {
         seqsum = history[i] - seqsum;
     }
    

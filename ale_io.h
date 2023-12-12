@@ -51,11 +51,9 @@ _fun i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
               return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
 }
 
-_fun mstr file_to_buffer(Arena arena[1], ccstr filename) {
-    mstr contents = 0;
+_fun i64 file_to_cstring(ccstr filename, i64 charbuffer_len, char charbuffer[64]) {
     i64 fsize = 0;
 
-    {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "rb");
     
@@ -65,26 +63,25 @@ _fun mstr file_to_buffer(Arena arena[1], ccstr filename) {
         fsize = ftell(f);
         fseek(f, 0, SEEK_SET);
 
-        contents = (mstr) alloc(arena, 1LL, fsize+2);
-        assert(contents && "Could not allocate buffer");
+        assert(charbuffer_len >= fsize+2 && "charbuffer is not enough for file size");
 
         {
-            i64 bytesread = fread_noex(contents, 1LL, fsize, f);
+            i64 bytesread = fread_noex(charbuffer, 1LL, fsize, f);
             assert(bytesread == fsize && "could not read fsize#bytes"); 
             
-            contents[fsize] = contents[fsize-1] != '\n' ? '\n' : '\0';
-            contents[fsize+1] = '\0';
+            charbuffer[fsize] = charbuffer[fsize-1] != '\n' ? '\n' : '\0';
+            charbuffer[fsize+1] = '\0';
         }
 
     fclose(f);
-    }
-    
-    return contents;
+
+    return fsize;
 }
 
-_fun mstr * file_to_lines(Arena arena[1], ccstr filename) {
-    mstr buffer = file_to_buffer(arena, filename);
-    return into_lines(arena, buffer);
+_fun i32 file_to_lines(ccstr filename, i32 lines_len, mstr lines[64], i64 charbuffer_len, char charbuffer[64]) {
+    i64 fsize = file_to_cstring(filename, charbuffer_len, charbuffer);
+    discard_ fsize;
+    return into_lines(charbuffer, lines_len, lines);
 }
 
 _proc_hot buffer_to_file(ccstr buffer, ccstr filename) {
@@ -99,7 +96,7 @@ _proc_hot buffer_to_file(ccstr buffer, ccstr filename) {
     fclose(f);
 }
 
-_proc_hot lines_to_file(mstr lines[1], ccstr filename) {
+_proc_hot lines_to_file(i32 lines_len, mstr lines[64], ccstr filename) {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");
@@ -107,7 +104,7 @@ _proc_hot lines_to_file(mstr lines[1], ccstr filename) {
             i64 bytes_written = 0;
             i64 fsize = 0;
 
-            for (i32 i = 0; i < hd_(lines)->len; ++i) {
+            for (i32 i = 0; i < lines_len; ++i) {
                 ccstr line = lines[i]; 
 
                 fsize = cstrlen(line);
@@ -124,17 +121,17 @@ _proc_hot lines_to_file(mstr lines[1], ccstr filename) {
     ==================== STDLIB ====================
 */
 
-_proc vec_sort_cstr(mstr cstrings[1]) {
+_proc sort_cstrings(i64 cstrings_len, mstr cstrings[1]) {
     qsort(
-        cstrings, (u64)  hd_(cstrings)->len,
-        sizeof(i64), void_compare_strings
+        cstrings, (u64) cstrings_len,
+        sizeof(mstr), void_compare_strings
     );
 } 
 
-_proc vec_custom_sort_cstr(mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp b)) {
+_proc sort_cstrings_custom(i64 cstrings_len, mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp b)) {
     qsort(
-        cstrings, (u64)  hd_(cstrings)->len,
-        sizeof(i64), compare_fun
+        cstrings, (u64)  cstrings_len,
+        sizeof(mstr), compare_fun
     );
 } 
 //  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^
@@ -143,8 +140,8 @@ _proc vec_custom_sort_cstr(mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp
     ==================== PRINT ====================
 */
 
-#define print_vec(vec_to_print_, format_str_) \
-    for(int ivec_ = 0; ivec_ < hd_len_(vec_to_print_); ++ivec_) \
+#define print_vec(vec_to_print_, vec_to_print_len_, format_str_) \
+    for(int ivec_ = 0; ivec_ < vec_to_print_len_; ++ivec_) \
         printf(format_str_, vec_to_print_[ivec_]); \
     printf("\n")
 

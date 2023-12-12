@@ -4,9 +4,6 @@
 #define print(...)  //printf(__VA_ARGS__)
 #define printn(...) //print(__VA_ARGS__); printf("\n")
 
-static u8 mem[128*MBs_] = {0};
-static Arena A = {0, 0};
-
 _fun_hot i32 turn_into_subseq(i32 sequence_len, i32 sequence[]) {
     i32 len_minus_one = sequence_len - 1;
 
@@ -18,11 +15,13 @@ _fun_hot i32 turn_into_subseq(i32 sequence_len, i32 sequence[]) {
 }
 
 _fun i32 per_line(mstr line) {
-    mstr *numbers_str = split(&A, line, ' ');
+    static mstr numbers_str[64] = {0};
     static i32 sequence[64] = {0}, history[64] = {0};
-    i32 sequence_len = 0, history_len = 0, seqsum = 0;
+    i32 numbers_str_len = 64, sequence_len = 0, history_len = 0, seqsum = 0;
 
-    for (int i = 0; i < hd_len_(numbers_str); ++i) {
+    numbers_str_len = split(line, ' ', numbers_str_len, numbers_str);
+
+    for (int i = 0; i < numbers_str_len; ++i) {
         sscanf_s(numbers_str[i], "%d ", &sequence[sequence_len++]);
     }
     
@@ -42,9 +41,9 @@ _fun i32 per_line(mstr line) {
 }
 
 //AoC 9
-_proc aoc(ci32 lineslen, mstr lines[1]) {
+_proc aoc(ci32 lines_len, mstr lines[64]) {
     i64 sum = 0;
-    for (int iline = 0; iline < lineslen; ++iline) {
+    for (int iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
         i32 seqnum = 0;
         if (is_empty_string(line)) {
@@ -60,14 +59,17 @@ _proc aoc(ci32 lineslen, mstr lines[1]) {
 
 
 i32 main(void) {
-    A = new_arena(128*MBs_, mem);
+    static char charbuffer[NEXT_POWER2(64000)] = {0};
+    static mstr lines[256] = {0};
+    i64 charbuffer_len = 64000;
+    i32 lines_len = 256;
 
-    {
-        mstr *lines = file_to_lines(&A, "./txts/aoc.txt");
-        clock_t start = clock();
-        aoc(hd_len_(lines), lines);
-        print_clock(start);
-    }
+
+    lines_len = file_to_lines("./txts/aoc.txt", \
+        lines_len, lines, charbuffer_len, charbuffer);
+    clock_t start = clock();
+    aoc(lines_len, lines);
+    print_clock(start);
 
     return 0;
 }

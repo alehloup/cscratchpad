@@ -288,34 +288,47 @@ _fun_inlined i64 least_common_multiple(i64 m, i64 n) {
 /*
     ==================== RANDOM ====================
 */
+#define RND_POSITIVE_INT32_MASK_ 2147483647
+#define RND_MULTIPLICATIVE_NUMBER_IN_HEX_ 0x9b60933458e17d7dULL
+#define RND_SUMMATIVE_NUMBER_IN_HEX_ 0xd737232eeccdf7edULL
 _pure_hot i32 rnd(u64 seed[1]) {
     i32 shift = 29;
-    *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
+    *seed = *seed * RND_MULTIPLICATIVE_NUMBER_IN_HEX_ + RND_SUMMATIVE_NUMBER_IN_HEX_;
     shift -= (i32)(*seed >> 61);
     
-    return (i32)((*seed >> shift) & 2147483647);
+    return (i32)((*seed >> shift) & RND_POSITIVE_INT32_MASK_);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ RANDOM ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== HASH ====================
 */
-_pure_hot hash64 hash_str(ccstr str) {
-    hash64 h = 0x7A5662DCDF;
-    for(i64 i = 0; str[i]; ++i) { 
-        h ^= str[i] & 255; h *= 1111111111111111111;
-    }
+#define HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(cur_hash_)  (cur_hash_ ^ (cur_hash_ >> 31))
 
-    return (h ^ (h >> 32)) >> 1;
+#define HASH_STR_H_START_NUMBER_IN_HEX_ 0x7A5662DCDF
+#define HASH_STR_H_MULTIPLICATIVE_NUMBER_ 1111111111111111111 // 11 ones
+_pure_hot hash64 hash_str(ccstr str) {
+    hash64 h = HASH_STR_H_START_NUMBER_IN_HEX_;
+    
+    for(i64 i = 0; str[i]; ++i) { 
+        h ^= str[i] & 255; h *= HASH_STR_H_MULTIPLICATIVE_NUMBER_;
+    }
+    h = HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(h);
+
+    return h >> 1;
 }
 
+#define HASH_INT_MULTIPLICATIVE_NUMBER_1_IN_HEX_ 0x94d049bb133111eb
+#define HASH_INT_MULTIPLICATIVE_NUMBER_2_IN_HEX_ 0xbf58476d1ce4e5b9
 _math_hot hash64 hash_int(i64 integer64) {
     hash64 x = (u64)integer64;
-    x *= 0x94d049bb133111eb; 
-    x ^= (x >> 30); 
-    x *= 0xbf58476d1ce4e5b9; 
     
-    return (x ^ (x >> 31)) >> 1;
+    x *= HASH_INT_MULTIPLICATIVE_NUMBER_1_IN_HEX_; 
+    x = HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(x);
+    x *= HASH_INT_MULTIPLICATIVE_NUMBER_2_IN_HEX_; 
+    x = HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(x);
+    
+    return x >> 1;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH ^^^^^^^^^^^^^^^^^^^^
 

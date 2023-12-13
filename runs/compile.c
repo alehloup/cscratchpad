@@ -13,6 +13,7 @@ i32 main(i32 argc, ccstr*argv) {
         " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
         " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
         " %s -o \"./%s.exe\"" 
+        "\n"
         ,
         _1_, _1_
     );

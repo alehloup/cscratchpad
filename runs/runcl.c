@@ -13,6 +13,7 @@ i32 main(i32 argc, ccstr*argv) {
         " %s -o \"./%s.exe\"" 
         " && \"./%s.exe\""
         " && rm \"./%s.exe\""
+        "\n"
         ,
         _1_, _1_, _1_, _1_
     );

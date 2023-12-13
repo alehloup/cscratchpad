@@ -3,8 +3,8 @@
 #include <time.h>
 #include "ale.h"
 
-#define print(...)  //printf(__VA_ARGS__)
-#define printn(...) //print(__VA_ARGS__); printf("\n")
+//#define print(...)  //printf(__VA_ARGS__)
+//#define printn(...) //print(__VA_ARGS__); printf("\n")
 
 _fun i32 fuse_lincol(i32 iline, i32 icol) {
     return 1000*iline + icol;

@@ -69,10 +69,14 @@ typedef int i32;
 typedef const i32 ci32;
 typedef long long i64;
 typedef const i64 ci64;
+
+// Visual Int
 typedef u64 hash64;
 typedef i32 idx32;
 typedef i32 len32;
 typedef i64 len64;
+typedef i32 cap32;
+typedef i64 cap64;
 
 // Float
 typedef float f32;
@@ -92,9 +96,6 @@ typedef void * voidp;
 typedef void * const voidpc;
 typedef const void * cvoidp;
 typedef const void * const ccvoidp;
-
-// Arena
-typedef struct Arena{ u8 *beg; u8 *end; }Arena;
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -154,11 +155,11 @@ _pure_hot b32 is_zero(ccvoidp mem1_, ci64 size) {
     STRINGS
 */
 _pure_hot len64 cstrlen(ccstr cstring) {
-    i64 len;
-    for (len = 0; cstring[len]; ++len) {
+    len64 cstring_len;
+    for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
         /* Empty Body */
     }
-    return len;
+    return cstring_len;
 }
 //Only works for COMPILE TIME STRINGS:
 #define compile_time_cstrlen(compile_time_string_) countof(compile_time_string_) - 1
@@ -228,21 +229,21 @@ _math_hot b32 is_digit(cchar character) {
 }
 
 _pure_hot len32 digitlen(ccstr cstring) {
-    i32 len;
-    for (len = 0; is_digit(cstring[len]); ++len) {
+    len32 cstring_len;
+    for (cstring_len = 0; is_digit(cstring[cstring_len]); ++cstring_len) {
         /* Empty Body */
     }
     
 
-    return len;
+    return cstring_len;
 }
 
-typedef struct i64num_i32len{i64 num; i32 len;}i64num_i32len;
+typedef struct i64num_i32len{i64 num; len32 num_len;}i64num_i32len;
 _pure_hot i64num_i32len cstr_to_num(ccstr str) {
     i64 power = 1;
     i64num_i32len ret = {0, digitlen(str)};
 
-    for (i32 i = ret.len - 1; i >= 0; --i) {
+    for (i32 i = ret.num_len - 1; i >= 0; --i) {
         char character = str[i];
 
         if (character == '-') {
@@ -328,48 +329,6 @@ _pure_hot hash64 hash_bytes(ccvoidp bytes_, ci64 count) {
 //  ^^^^^^^^^^^^^^^^^^^^ HASH ^^^^^^^^^^^^^^^^^^^^
 
 /*
-    ==================== TYPE PRUNNING ====================
-*/
-typedef union Union_i64_f64{i64 as_i64; f64 as_f64;}Union_i64_f64;
-_math_hot f64 reinterpret_i64_as_f64(ci64 int64) {
-    Union_i64_f64 u = {int64};
-    return u.as_f64;
-}
-_math_hot i64 reinterpret_f64_as_i64(cf64 float64) {
-    Union_i64_f64 u = {0};
-    u.as_f64 = float64;
-    return u.as_i64;
-}
-//  ^^^^^^^^^^^^^^^^^^^^ TYPE PRUNNING ^^^^^^^^^^^^^^^^^^^^
-
-/*
-    ==================== ARENA ALLOCATION ====================
-*/
-_fun Arena new_arena(ci64 buffer_len, u8 buffer[]) {
-    Arena arena = {0, 0};
-    arena.beg = (u8 *)buffer;
-    arena.end = arena.beg ? arena.beg + buffer_len : 0;
-    return arena;
-}
-
-gcc_attr(malloc, assume_aligned(8), alloc_size(2, 3), nonnull, warn_unused_result, hot)
-// Arena Allocator always zeroes the memory, always 8 aligned
-voidp alloc(Arena arena[1], ci64 size, ci64 count) {
-    i64 total = size * count;
-    i64 pad = mod_pwr2(- (i64)arena->beg, 8); //mod -x gives n for next align
-
-    u8 *p = arena->beg + pad;
-
-    assert(total < (arena->end - arena->beg - pad) && "ARENA OUT OF MEMORY");
-    arena->beg += pad + total;
-    
-    return (voidp) zeromem(p, total);
-}
-#define ALLOC(arena, type) (type *) alloc(arena, isizeof(type), 1)
-#define ALLOCN(arena_, type_, count_) (type_ *) alloc(arena_, isizeof(type_), count_)
-//  ^^^^^^^^^^^^^^^^^^^^ ARENA ALLOCATION ^^^^^^^^^^^^^^^^^^^^
-
-/*
     ==================== HASH TABLE ====================
 */
 
@@ -393,8 +352,8 @@ _math_hot i32 ht_lookup(
 */
 
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun_hot len32 into_lines(mstr text_to_alter, i32 lines_cap, mstr lines[64]) {
-    i32 lines_len = 0;
+_fun_hot len32 into_lines(mstr text_to_alter, cap32 lines_cap, mstr lines[64]) {
+    len32 lines_len = 0;
     
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
@@ -412,8 +371,9 @@ _fun_hot len32 into_lines(mstr text_to_alter, i32 lines_cap, mstr lines[64]) {
     return lines_len;
 }
 
-_fun_hot len32 split(mstr text_to_alter, cchar splitter, i32 words_cap, mstr words[64]) {
-    i32 i = 0, current = 0, words_len = 0;
+_fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr words[64]) {
+    idx32 i = 0, current = 0;
+    len32 words_len = 0;
 
     for (i = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == splitter) {
@@ -460,14 +420,14 @@ _proc print_clock(clock_t start) {
 #if defined RAND_MAX && defined stdout && defined va_start
 
 gcc_attr(format(printf, 3, 4), nonnull)
-i32 shellrun(i32 bufferlen, char buffer [512], ccstr format, ...) {
+i32 shellrun(cap32 buffer_cap, bufferchar buffer [512], ccstr format, ...) {
     va_list args;
     u8 *buf = zeromem((u8 *) buffer, 512);
     assert(buf == (u8 *)buffer && "zeromem returned different address!");
 
     va_start(args, format);
 
-    vsprintf_s(buffer, (u64) bufferlen, format, args);
+    vsprintf_s(buffer, (u64) buffer_cap, format, args);
     return system(buffer);
 }
 
@@ -492,7 +452,7 @@ _fun i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
               return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
 }
 
-_fun i64 file_to_cstring(ccstr filename, i64 charbuffer_cap, char charbuffer[64]) {
+_fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar charbuffer[64]) {
     i64 fsize = 0;
 
         FILE *f = 0; i32 err = 
@@ -519,8 +479,8 @@ _fun i64 file_to_cstring(ccstr filename, i64 charbuffer_cap, char charbuffer[64]
     return fsize;
 }
 
-_fun i32 file_to_lines(ccstr filename, i32 lines_cap, mstr lines[64], i64 charbuffer_cap, char charbuffer[64]) {
-    i64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
+_fun len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[64], cap64 charbuffer_cap, bufferchar charbuffer[64]) {
+    len64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
     discard_ charbuffer_len;
     return into_lines(charbuffer, lines_cap, lines);
 }
@@ -530,35 +490,35 @@ _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");
         {
-            i64 fsize = cstrlen(buffer);
-            i64 bytes_written = fwrite_noex(buffer, 1, fsize, f);
-            assert(bytes_written == fsize && "could not write fsize#bytes");
+            len64 buffer_len = cstrlen(buffer);
+            i64 bytes_written = fwrite_noex(buffer, 1, buffer_len, f);
+            assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
         }
     fclose(f);
 }
 
-_proc_hot lines_to_file(i32 lines_len, mstr lines[64], ccstr filename) {
+_proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");
         {
             i64 bytes_written = 0;
-            i64 fsize = 0;
+            len64 line_len = 0;
 
             for (i32 i = 0; i < lines_len; ++i) {
                 ccstr line = lines[i]; 
 
-                fsize = cstrlen(line);
-                bytes_written = fwrite_noex(line, 1, fsize, f);
+                line_len = cstrlen(line);
+                bytes_written = fwrite_noex(line, 1, line_len, f);
                 bytes_written += fwrite_noex("\n", 1, 1, f);
-                assert(bytes_written == fsize + 1 && "could not write fsize#bytes");
+                assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
             }
         }
     fclose(f);
 }
 
-#define print_array(vec_to_print_, vec_to_print_len_, format_str_) \
-    for(int ivec_ = 0; ivec_ < vec_to_print_len_; ++ivec_) \
+#define print_array(vec_to_print_, vec_to_print_len, format_str_) \
+    for(int ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
         printf(format_str_, vec_to_print_[ivec_]); \
     printf("\n")
 
@@ -570,14 +530,14 @@ _proc_hot lines_to_file(i32 lines_len, mstr lines[64], ccstr filename) {
 */ 
 #ifdef RAND_MAX
 
-_proc sort_cstrings(i64 cstrings_len, mstr cstrings[1]) {
+_proc sort_cstrings(len64 cstrings_len, mstr cstrings[1]) {
     qsort(
         cstrings, (u64) cstrings_len,
         sizeof(mstr), void_compare_strings
     );
 } 
 
-_proc sort_cstrings_custom(i64 cstrings_len, mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp b)) {
+_proc sort_cstrings_custom(len64 cstrings_len, mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp b)) {
     qsort(
         cstrings, (u64)  cstrings_len,
         sizeof(mstr), compare_fun

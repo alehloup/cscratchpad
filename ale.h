@@ -324,7 +324,7 @@ _math_hot hash64 hash_int(i64 integer64) {
 */
 
 #define MSI_HT_CAP_    4096 //   2 ^ 12
-#define MSI_HT_MASK_   MSI_HT_CAP_ - 1
+#define MSI_HT_MASK_   (MSI_HT_CAP_ - 1)
 #define MSI_HT_SHIFT_  52   //  64 - 12
 
 // Mask-Step-Index (MSI) lookup
@@ -421,21 +421,26 @@ _proc_inlined print_clock(clock_t start) {
 /*
     ==================== SHELL ====================
 */
-#if defined RAND_MAX && defined stdout && defined va_start // stdlib.h && stdio.h && stdarg.h
+#if defined RAND_MAX && defined stdout // stdlib.h && stdio.h
+#include <stdarg.h>
 
-gcc_attr(format(printf, 3, 4), nonnull)
-i32 shellrun(cap32 buffer_cap, bufferchar buffer [512], ccstr format, ...) {
+gcc_attr(format(printf, 1, 2), nonnull)
+i32 shellrun(ccstr format, ...) {
     va_list args;
-    u8 *buf = zeromem((u8 *) buffer, 512);
-    assert(buf == (u8 *)buffer && "zeromem returned different address!");
+
+    cap32 buffer_cap = 512; 
+    bufferchar buffer [512] = {0};
 
     va_start(args, format);
 
     vsprintf_s(buffer, (u64) buffer_cap, format, args);
+    printf("\n");
+    vprintf(format, args);
+    printf("\n");
     return system(buffer);
 }
 
-#endif // stdlib.h && stdio.h && stdarg.h
+#endif // stdlib.h && stdio.h
 //  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
 
 /*

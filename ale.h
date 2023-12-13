@@ -315,6 +315,13 @@ _math_hot i64 least_common_multiple(i64 m, i64 n) {
 #define NEXT_POWER2(n_) \
     ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
 
+#define P2EH_(n_, number_, exp_) n_ == number_ ? exp_ : 
+#define POWER2_EXP(n_) \
+    (P2EH_(n_, 256, 8)(P2EH_(n_, 512, 9)(P2EH_(n_, 1024, 10)(P2EH_(n_, 2048, 11)(P2EH_(n_, 4096, 12)(\
+    P2EH_(n_, 8192, 13)(P2EH_(n_, 16384, 14)(P2EH_(n_, 32768, 15)(P2EH_(n_, 65536, 16)(P2EH_(n_, 131072, 17)(\
+    P2EH_(n_, 262144, 18)(P2EH_(n_, 524288, 19)(P2EH_(n_, 1048576, 20)(P2EH_(n_, 2097152, 21)(P2EH_(n_, 4194304, 22)(\
+    P2EH_(n_, 8388608, 23)(P2EH_(n_, 16777216, 24) 0)\
+))))))))))))))))
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -533,6 +540,11 @@ _fun_hot i32 htloop(
 #define htable_idx(name, search_key_) htloop(name##_keys, (u64)search_key_, 0)
 #define htable_get(name, search_key_) name##_vals[htloop(name##_keys, (u64)search_key_, 0)]
 #define htable_set(name, search_key_, value_) (name##_vals[htloop(name##_keys, (u64)search_key_, 1)] = value_)
+
+// must have a variable arrayname_cap 
+#define HTMASK(arr_ay) ((arr_ay##_cap) - 1)
+// must be atleast 256 to work!
+#define HTSHIFT(arr_ay) (64 - fit_pwr2_exp(arr_ay##_cap))
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*

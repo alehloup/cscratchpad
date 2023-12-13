@@ -30,15 +30,20 @@
 // 2 types of function attributes: either returns value (fun) or not (proc)
 #define _fun_attr(...) gcc_attr(warn_unused_result, __VA_ARGS__)
 #define _proc_attr(...) gcc_attr(__VA_ARGS__) void
-// function attributes
+// math = no pointers, same inputs always produce same output
 #define _math _fun_attr(const) 
 #define _math_hot _fun_attr(const, hot)
+// pure = do not uses global variables, uses only its input
 #define _pure _fun_attr(pure)
 #define _pure_hot _fun_attr(pure, hot)
+// "normal" function / procedure
 #define _fun _fun_attr()
 #define _fun_hot _fun_attr(hot)
 #define _proc _proc_attr()
 #define _proc_hot _proc_attr(hot)
+// always inline
+#define _fun_inlined _fun_attr(always_inline)
+#define _proc_inlined _proc_attr(always_inline)
 // for explicit discarding returns
 #define discard_ (void) 
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
@@ -74,6 +79,7 @@ typedef const b32 cb32;
 typedef u64 hash64;
 typedef i32 cmp32;
 typedef i32 idx32;
+typedef i64 idx64;
 typedef i32 len32;
 typedef i64 len64;
 typedef i32 cap32;
@@ -196,7 +202,7 @@ _pure_hot b32 startswith(ccstr string, ccstr prefix) {
     }
 }
 
-_pure_hot cmp32 void_compare_strings(cvoidp a, cvoidp b) {
+_fun_inlined cmp32 void_compare_strings(cvoidp a, cvoidp b) {
     return cstrcmp(*(ccstr*)a, *(ccstr*)b);
 }
 
@@ -270,7 +276,7 @@ _math_hot i64 greatest_common_divisor(i64 m, i64 n) {
     while(m) { tmp = m; m = n % m; n = tmp; }       
     return n;
 }
-_math_hot i64 least_common_multiple(i64 m, i64 n) {
+_fun_inlined i64 least_common_multiple(i64 m, i64 n) {
      return m / greatest_common_divisor(m, n) * n;
 }
 
@@ -295,21 +301,21 @@ _pure_hot i32 rnd(u64 seed[1]) {
     ==================== HASH ====================
 */
 _pure_hot hash64 hash_str(ccstr str) {
-    u64 h = 0x7A5662DCDF;
+    hash64 h = 0x7A5662DCDF;
     for(i64 i = 0; str[i]; ++i) { 
         h ^= str[i] & 255; h *= 1111111111111111111;
     }
 
     return (h ^ (h >> 32)) >> 1;
 }
-_pure_hot hash64 hash_bytes(ccvoidp bytes_, ci64 count) {
-    ccu8 bytes = (cu8 *)bytes_;
-    u64 h = 0x7A5662DCDF;
-    for(i64 i = 0; i < count; ++i) { 
-        h ^= bytes[i] & 255; h *= 1111111111111111111;
-    }
 
-    return (h ^ (h >> 32)) >> 1;
+_math_hot hash64 hash_int(i64 integer64) {
+    hash64 x = (u64)integer64;
+    x *= 0x94d049bb133111eb; 
+    x ^= (x >> 30); 
+    x *= 0xbf58476d1ce4e5b9; 
+    
+    return (x ^ (x >> 31)) >> 1;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH ^^^^^^^^^^^^^^^^^^^^
 
@@ -318,8 +324,8 @@ _pure_hot hash64 hash_bytes(ccvoidp bytes_, ci64 count) {
 */
 
 #define MSI_HT_CAP_    4096 //   2 ^ 12
+#define MSI_HT_MASK_   MSI_HT_CAP_ - 1
 #define MSI_HT_SHIFT_  52   //  64 - 12
-#define MSI_HT_MASK_   4095 //  Cap - 1
 
 // Mask-Step-Index (MSI) lookup
 _math_hot idx32 ht_lookup(
@@ -337,23 +343,33 @@ _math_hot idx32 ht_lookup(
 */
 
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun_hot len32 into_lines(mstr text_to_alter, cap32 lines_cap, mstr lines[64]) {
+_fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[64], b32 include_empty_lines) {
     len32 lines_len = 0;
     
-    for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
+    idx64 current = 0;
+    for (idx64 i = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
             text_to_alter[i] = '\0';
         }
         else if (text_to_alter[i] == '\n') {
             text_to_alter[i] = '\0';
             
-            assert(lines_len < lines_cap && "lines not big enough to store all lines");
-            lines[lines_len++] = &text_to_alter[current];
+            if (include_empty_lines || !is_empty_string(&text_to_alter[current])) {
+                assert(lines_len < lines_cap && "lines not big enough to store all lines");
+                lines[lines_len++] = &text_to_alter[current];
+            }
             current = i+1;
         }
     }
+    if (include_empty_lines || !is_empty_string(&text_to_alter[current])) {
+        assert(lines_len < lines_cap && "lines not big enough to store all lines");
+        lines[lines_len++] = &text_to_alter[current];
+    }
 
     return lines_len;
+}
+_fun_inlined len32 into_lines(mstr text_to_alter, cap32 lines_cap, mstr lines[64]) {
+    return into_lines_(text_to_alter, lines_cap, lines, False);
 }
 
 _fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr words[64]) {
@@ -386,7 +402,7 @@ _fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr w
 */
 #ifdef CLOCKS_PER_SEC // time.h
 
-_fun f64 seconds_since(clock_t start)
+_fun_inlined f64 seconds_since(clock_t start)
 {
     return (f64)(clock() - start) / CLOCKS_PER_SEC;
 }
@@ -395,7 +411,7 @@ _fun f64 seconds_since(clock_t start)
 
 #if defined CLOCKS_PER_SEC && defined stdout // time.h && stdio.h
 
-_proc print_clock(clock_t start) {
+_proc_inlined print_clock(clock_t start) {
     printf("\n\nExecuted in %f seconds \n", seconds_since(start));
 }
 
@@ -427,13 +443,13 @@ i32 shellrun(cap32 buffer_cap, bufferchar buffer [512], ccstr format, ...) {
 */
 #ifdef stdout // stdio.h
 
-_fun i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
+_fun_inlined i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
     #ifdef __cplusplus
         try { return (i64) fread(dst, (u64) sz, (u64) count, f); } catch(...) {return 0;}
     #endif 
               return (i64) fread(dst, (u64) sz, (u64) count, f);
 }
-_fun i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
+_fun_inlined i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
     #ifdef __cplusplus
         try { return (i64) fwrite(Str, (u64) Size, (u64) Count, File); } catch(...) {return 0;}
     #endif 
@@ -467,7 +483,7 @@ _fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar char
     return fsize;
 }
 
-_fun len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[64], cap64 charbuffer_cap, bufferchar charbuffer[64]) {
+_fun_inlined len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[64], cap64 charbuffer_cap, bufferchar charbuffer[64]) {
     len64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
     discard_ charbuffer_len;
     return into_lines(charbuffer, lines_cap, lines);
@@ -518,14 +534,14 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
 */ 
 #ifdef RAND_MAX // stdlib.h
 
-_proc sort_cstrings(len64 cstrings_len, mstr cstrings[1]) {
+_proc_inlined sort_cstrings(len64 cstrings_len, mstr cstrings[1]) {
     qsort(
         cstrings, (u64) cstrings_len,
         sizeof(mstr), void_compare_strings
     );
 } 
 
-_proc sort_cstrings_custom(len64 cstrings_len, mstr cstrings[1], cmp32 (*compare_fun)(cvoidp a, cvoidp b)) {
+_proc_inlined sort_cstrings_custom(len64 cstrings_len, mstr cstrings[1], cmp32 (*compare_fun)(cvoidp a, cvoidp b)) {
     qsort(
         cstrings, (u64)  cstrings_len,
         sizeof(mstr), compare_fun

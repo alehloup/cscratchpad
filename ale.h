@@ -109,52 +109,20 @@ typedef const void * const ccvoidp;
     MEMORY
 */
 #define isizeof(x_element_) ((i64)sizeof(x_element_))
+
 // COMPILE TIME Count Static Sized Array elements:
 #define countof(x_array_) (isizeof(x_array_) / isizeof(*x_array_))
 
 _fun_hot u8 * zeromem(u8 * const __restrict dst, ci64 count) {
-    for (i64 i = 0; i < count; ++i) {
+    for (idx64 i = 0; i < count; ++i) {
         dst[i] = 0;
     }
     return dst;
 }
 _proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
-    for (i64 i = 0; i < count; ++i) {
+    for (idx64 i = 0; i < count; ++i) {
         dst[i] = src[i];
     }
-}
-
-_pure_hot cmp32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
-    ccu8 mem1 = (cu8 *)mem1_, mem2 = (cu8 *)mem2_;
-    i64 i = 0; 
-    ci64 last = count - 1;
-    for (; i < last && mem1[i] == mem2[i]; ++i) {
-        /* Empty Body */
-    }
-    
-    return mem1[i] - mem2[i];
-}
-
-_pure_hot b32 is_not_zero(ccvoidp mem1_, ci64 size) {
-    ccu8 mem1 = (cu8 *)mem1_;
-    i64 i = 0; 
-    for (; i < size; ++i) {
-        if (mem1[i]) {
-            return True;
-        }
-    }
-    
-    return False;
-}
-
-_pure_hot b32 is_zero(ccvoidp mem1_, ci64 size) {
-    ccu8 mem1 = (cu8 *)mem1_;
-    i64 i = 0; 
-    for (; i < size && !mem1[i]; ++i) {
-        /* Empty Body */
-    }
-    
-    return i == size;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
 
@@ -230,6 +198,7 @@ _pure_hot len32 digitlen(ccstr cstring) {
 }
 
 typedef struct i64num_i32len{i64 num; len32 num_len;}i64num_i32len;
+
 _pure_hot i64num_i32len cstr_to_num(ccstr str) {
     i64 power = 1;
     i64num_i32len ret = {0, digitlen(str)};
@@ -291,6 +260,7 @@ _fun_inlined i64 least_common_multiple(i64 m, i64 n) {
 #define RND_POSITIVE_INT32_MASK_ 2147483647
 #define RND_MULTIPLICATIVE_NUMBER_IN_HEX_ 0x9b60933458e17d7dULL
 #define RND_SUMMATIVE_NUMBER_IN_HEX_ 0xd737232eeccdf7edULL
+
 _pure_hot i32 rnd(u64 seed[1]) {
     i32 shift = 29;
     *seed = *seed * RND_MULTIPLICATIVE_NUMBER_IN_HEX_ + RND_SUMMATIVE_NUMBER_IN_HEX_;
@@ -307,6 +277,7 @@ _pure_hot i32 rnd(u64 seed[1]) {
 
 #define HASH_STR_H_START_NUMBER_IN_HEX_ 0x7A5662DCDF
 #define HASH_STR_H_MULTIPLICATIVE_NUMBER_ 1111111111111111111 // 11 ones
+
 _pure_hot hash64 hash_str(ccstr str) {
     hash64 h = HASH_STR_H_START_NUMBER_IN_HEX_;
     
@@ -320,6 +291,7 @@ _pure_hot hash64 hash_str(ccstr str) {
 
 #define HASH_INT_MULTIPLICATIVE_NUMBER_1_IN_HEX_ 0x94d049bb133111eb
 #define HASH_INT_MULTIPLICATIVE_NUMBER_2_IN_HEX_ 0xbf58476d1ce4e5b9
+
 _math_hot hash64 hash_int(i64 integer64) {
     hash64 x = (u64)integer64;
     
@@ -384,6 +356,9 @@ _fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[64], 
 _fun_inlined len32 into_lines(mstr text_to_alter, cap32 lines_cap, mstr lines[64]) {
     return into_lines_(text_to_alter, lines_cap, lines, False);
 }
+_fun_inlined len32 into_lines_including_empty(mstr text_to_alter, cap32 lines_cap, mstr lines[64]) {
+    return into_lines_(text_to_alter, lines_cap, lines, True);
+}
 
 _fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr words[64]) {
     idx32 i = 0, current = 0;
@@ -413,28 +388,34 @@ _fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr w
 /*
     ==================== TIME BENCHMARK ====================
 */
-#ifdef CLOCKS_PER_SEC // time.h
+#ifdef CLOCKS_PER_SEC 
+// time.h
 
 _fun_inlined f64 seconds_since(clock_t start)
 {
     return (f64)(clock() - start) / CLOCKS_PER_SEC;
 }
 
-#endif  // time.h
+// time.h
+#endif  
 
-#if defined CLOCKS_PER_SEC && defined stdout // time.h && stdio.h
+#if defined CLOCKS_PER_SEC && defined stdout 
+// time.h && stdio.h
 
 _proc_inlined print_clock(clock_t start) {
     printf("\n\nExecuted in %f seconds \n", seconds_since(start));
 }
 
-#endif // time.h && stdio.h
+// time.h && stdio.h
+#endif 
 //  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== SHELL ====================
 */
-#if defined RAND_MAX && defined stdout // stdlib.h && stdio.h
+#if defined RAND_MAX && defined stdout
+// stdlib.h && stdio.h
+
 #include <stdarg.h>
 
 gcc_attr(format(printf, 1, 2), nonnull)
@@ -453,13 +434,15 @@ i32 shellrun(ccstr format, ...) {
     return system(buffer);
 }
 
-#endif // stdlib.h && stdio.h
+// stdlib.h && stdio.h
+#endif 
 //  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== FILES ====================
 */
-#ifdef stdout // stdio.h
+#ifdef stdout
+// stdio.h
 
 _fun_inlined i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
     #ifdef __cplusplus
@@ -544,13 +527,15 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
         printf(format_str_, vec_to_print_[ivec_]); \
     printf("\n")
 
-#endif // stdio.h
+// stdio.h
+#endif 
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== STDLIB ====================
 */ 
-#ifdef RAND_MAX // stdlib.h
+#ifdef RAND_MAX
+// stdlib.h
 
 _proc_inlined sort_cstrings(len64 cstrings_len, mstr cstrings[1]) {
     qsort(
@@ -566,5 +551,6 @@ _proc_inlined sort_cstrings_custom(len64 cstrings_len, mstr cstrings[1], cmp32 (
     );
 }
 
-#endif // stdlib.h
+// stdlib.h
+#endif 
 //  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^

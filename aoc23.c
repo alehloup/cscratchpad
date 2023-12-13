@@ -4,22 +4,36 @@
 #define print(...)  //printf(__VA_ARGS__)
 #define printn(...) //print(__VA_ARGS__); printf("\n")
 
-_fun i32 per_line(mstr line) {
-    printf("%s \n", line);
-    return (i32) cstrlen(line);
+_fun i32 fuse_lincol(i32 iline, i32 icol) {
+    return 1000*iline + icol;
 }
 
 //AoC 10
-_proc aoc(ci32 lines_len, mstr lines[64]) {
-    i64 sum = 0;
+_proc aoc(ci32 lines_len, ccstr lines[64]) {
+    static ccstr TOPS = "|LJ";
+    static ccstr RIGHTS = "-FL";
+    static ccstr BOTTOMS = "|LF";
+    static ccstr LEFTS = "-J7";
+    i32 s_iline = 0, s_icol = 0;
+
+    printf("TOPS: %s\nRIGHTS: %s\nBOTTOMS:%s\nLEFTS:%s\n", TOPS, RIGHTS, BOTTOMS, LEFTS);
+
     for (int iline = 0; iline < lines_len; ++iline) {
-        mstr line = lines[iline];
+        ccstr line = lines[iline];
+        i32 s_pos = -1;
         if (is_empty_string(line)) {
             continue;
         }
-        sum += per_line(line);
+
+        s_pos = letter_pos_in_cstring('S', line);
+        if (s_pos > -1) {
+            s_iline = iline; s_icol = s_pos;
+            break;
+        }        
     }
-    printf("Sum: %lld \n", sum);
+
+    printf("S_pos: %d %d\n", s_iline, s_icol);
+    
 } 
 
 
@@ -33,7 +47,7 @@ i32 main(void) {
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();
-    aoc(lines_len, lines);
+    aoc(lines_len, (ccstr * )lines);
     print_clock(start);
 
     return 0;

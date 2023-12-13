@@ -269,6 +269,16 @@ _pure_hot i64num_i32len cstr_to_num(ccstr str) {
     }
     return ret;
 }
+
+_pure_hot i32 letter_pos_in_cstring(cchar letter, ccstr cstring) {
+    i32 letter_pos = 0;
+    for (; cstring[letter_pos]; ++letter_pos) {
+        if(cstring[letter_pos] == letter) {
+            return letter_pos;
+        }
+    }
+    return -1;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
 /*

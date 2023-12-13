@@ -1,6 +1,4 @@
-#include <time.h>
-#include <stdio.h>
-#include "ale.h"
+#include "ale_io.h"
 
 i32 main(void) {
     u64 seed = 41635984;

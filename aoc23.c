@@ -1,5 +1,7 @@
 #include <math.h>
-#include "ale_io.h"
+#include <stdio.h>
+#include <time.h>
+#include "ale.h"
 
 #define print(...)  //printf(__VA_ARGS__)
 #define printn(...) //print(__VA_ARGS__); printf("\n")

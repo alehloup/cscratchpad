@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "ale.h"
+#include "ale_io.h"
 
 i32 main(void) {
     static char buffer[256] = {0};

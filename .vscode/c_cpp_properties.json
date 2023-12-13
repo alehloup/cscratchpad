@@ -2,9 +2,7 @@
     "configurations": [
         {
             "name": "Win32",
-            "includePath": [
-                "_{workspaceFolder}/**"
-            ],
+            "includePath": [],
             "defines": [
                 "_DEBUG",
                 "UNICODE",

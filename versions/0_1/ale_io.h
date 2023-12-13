@@ -140,7 +140,7 @@ _proc sort_cstrings_custom(i64 cstrings_len, mstr cstrings[1], int (*compare_fun
     ==================== PRINT ====================
 */
 
-#define print_vec(vec_to_print_, vec_to_print_len_, format_str_) \
+#define print_array(vec_to_print_, vec_to_print_len_, format_str_) \
     for(int ivec_ = 0; ivec_ < vec_to_print_len_; ++ivec_) \
         printf(format_str_, vec_to_print_[ivec_]); \
     printf("\n")

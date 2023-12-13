@@ -58,7 +58,6 @@ typedef const b32 cb32;
 typedef unsigned char u8;
 typedef const u8 cu8;
 typedef const u8* const ccu8;
-typedef u8 bufferbytes; // just for visual:  bufferbytes buffer[64];
 typedef unsigned int u32;
 typedef const u32 cu32;
 typedef unsigned long long u64;
@@ -69,10 +68,6 @@ typedef int i32;
 typedef const i32 ci32;
 typedef long long i64;
 typedef const i64 ci64;
-typedef u64 hash64;
-typedef i32 idx32;
-typedef i32 len32;
-typedef i64 len64;
 
 // Float
 typedef float f32;
@@ -85,7 +80,6 @@ typedef const char cchar; // const char
 typedef cchar * const ccstr; // const string const pointer
 typedef cchar * cstr; // const string
 typedef char * mstr; // modifiable string
-typedef char bufferchar; // just for visual:  bufferchar buffer[64];
 
 // Void
 typedef void * voidp;
@@ -95,6 +89,22 @@ typedef const void * const ccvoidp;
 
 // Arena
 typedef struct Arena{ u8 *beg; u8 *end; }Arena;
+
+// Data Structures Header (stb strategy)
+typedef struct ds_header{
+    Arena *arena; 
+    i32 cap; i32 len;
+    u8 elsize; u8 ptrcheck; u8 is_str; u8 invalid;
+}ds_header;
+_pure_hot ds_header * hd_(voidpc ds) {
+    return ((ds_header *) ds) - 1;
+}
+_pure_hot i32 hd_len_(voidpc ds) {
+    return hd_(ds)->len;
+}
+_pure_hot b32 hd_checkptr(voidpc ds) {
+    return (u8)((u64)ds) == hd_(ds)->ptrcheck;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -127,7 +137,7 @@ _pure_hot i32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
     return mem1[i] - mem2[i];
 }
 
-_pure_hot b32 is_not_zero(ccvoidp mem1_, ci64 size) {
+_pure_hot i32 is_not_zero(ccvoidp mem1_, ci64 size) {
     ccu8 mem1 = (cu8 *)mem1_;
     i64 i = 0; 
     for (; i < size; ++i) {
@@ -139,7 +149,7 @@ _pure_hot b32 is_not_zero(ccvoidp mem1_, ci64 size) {
     return False;
 }
 
-_pure_hot b32 is_zero(ccvoidp mem1_, ci64 size) {
+_pure_hot i32 is_zero(ccvoidp mem1_, ci64 size) {
     ccu8 mem1 = (cu8 *)mem1_;
     i64 i = 0; 
     for (; i < size && !mem1[i]; ++i) {
@@ -153,7 +163,7 @@ _pure_hot b32 is_zero(ccvoidp mem1_, ci64 size) {
 /*
     STRINGS
 */
-_pure_hot len64 cstrlen(ccstr cstring) {
+_pure_hot i64 cstrlen(ccstr cstring) {
     i64 len;
     for (len = 0; cstring[len]; ++len) {
         /* Empty Body */
@@ -227,7 +237,7 @@ _math_hot b32 is_digit(cchar character) {
     return character >= '0' && character <= '9';
 }
 
-_pure_hot len32 digitlen(ccstr cstring) {
+_pure_hot i32 digitlen(ccstr cstring) {
     i32 len;
     for (len = 0; is_digit(cstring[len]); ++len) {
         /* Empty Body */
@@ -260,7 +270,7 @@ _pure_hot i64num_i32len cstr_to_num(ccstr str) {
     return ret;
 }
 
-_pure_hot idx32 letter_pos_in_cstring(cchar letter, ccstr cstring) {
+_pure_hot i32 letter_pos_in_cstring(cchar letter, ccstr cstring) {
     i32 letter_pos = 0;
     for (; cstring[letter_pos]; ++letter_pos) {
         if(cstring[letter_pos] == letter) {
@@ -279,6 +289,19 @@ _math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
     return (number) & (modval - 1);
 }
 
+// Returns first power 2 that size fits
+_math_hot u8 fit_pwr2_exp(ci32 size) {
+    u8 exp=8; 
+    i32 val= 1<<exp;
+
+    assert(size <= 16777216 && "Max size allowed: 16777215");
+
+    while (val < size) {
+        ++exp; val<<= 1;
+    }
+    return exp;
+}
+
 _math_hot i64 greatest_common_divisor(i64 m, i64 n) {
     i64 tmp;
     while(m) { tmp = m; m = n % m; n = tmp; }       
@@ -291,6 +314,14 @@ _math_hot i64 least_common_multiple(i64 m, i64 n) {
 // Next Power of 2 for numbers upto 2*31 (2'147'483'648)
 #define NEXT_POWER2(n_) \
     ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
+
+#define P2EH_(n_, number_, exp_) n_ == number_ ? exp_ : 
+#define POWER2_EXP(n_) \
+    (P2EH_(n_, 256, 8)(P2EH_(n_, 512, 9)(P2EH_(n_, 1024, 10)(P2EH_(n_, 2048, 11)(P2EH_(n_, 4096, 12)(\
+    P2EH_(n_, 8192, 13)(P2EH_(n_, 16384, 14)(P2EH_(n_, 32768, 15)(P2EH_(n_, 65536, 16)(P2EH_(n_, 131072, 17)(\
+    P2EH_(n_, 262144, 18)(P2EH_(n_, 524288, 19)(P2EH_(n_, 1048576, 20)(P2EH_(n_, 2097152, 21)(P2EH_(n_, 4194304, 22)(\
+    P2EH_(n_, 8388608, 23)(P2EH_(n_, 16777216, 24) 0)\
+))))))))))))))))
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -308,7 +339,7 @@ _pure_hot i32 rnd(u64 seed[1]) {
 /*
     ==================== HASH ====================
 */
-_pure_hot hash64 hash_str(ccstr str) {
+_pure_hot u64 hash_str(ccstr str) {
     u64 h = 0x7A5662DCDF;
     for(i64 i = 0; str[i]; ++i) { 
         h ^= str[i] & 255; h *= 1111111111111111111;
@@ -316,7 +347,7 @@ _pure_hot hash64 hash_str(ccstr str) {
 
     return (h ^ (h >> 32)) >> 1;
 }
-_pure_hot hash64 hash_bytes(ccvoidp bytes_, ci64 count) {
+_pure_hot u64 hash_bytes(ccvoidp bytes_, ci64 count) {
     ccu8 bytes = (cu8 *)bytes_;
     u64 h = 0x7A5662DCDF;
     for(i64 i = 0; i < count; ++i) { 
@@ -370,30 +401,157 @@ voidp alloc(Arena arena[1], ci64 size, ci64 count) {
 //  ^^^^^^^^^^^^^^^^^^^^ ARENA ALLOCATION ^^^^^^^^^^^^^^^^^^^^
 
 /*
+    ==================== VECTOR ====================
+*/
+// Creates an Ale Vector, guarantees power-2 Capacity
+_fun_hot voidp new_vec(Arena arena[1], cu8 elsize, ci32 initial_cap, cu8 is_str) {
+    ci32 cap_to_use = NEXT_POWER2(initial_cap ? initial_cap : 256);
+    ci64 alloc_size = isizeof(ds_header) + (cap_to_use * elsize);
+    ds_header * vec = (ds_header *)alloc(arena, alloc_size, 1);
+    
+    vec->elsize = elsize;
+    vec->cap = cap_to_use;
+    vec->len = 0;
+    vec->arena = arena;
+    vec->is_str = is_str;
+    vec->ptrcheck = (u8)((u64)(vec+1));
+    return vec + 1;
+}
+
+//NEW VECTOR (prefixes the array with ds_header, see new_vec and hd_)
+#define NEW_VEC(arena, varname_, type) \
+    type *varname_ = new_vec(arena, (u8)sizeof(type), 0, IS_STR_TYPENAME(type))
+#define NEW_VEC_WITH_CAP(arena, varname_, type, capacity_) \
+    type *varname_ = new_vec(arena, (u8)sizeof(type), capacity_, IS_STR_TYPENAME(type))
+
+_fun_hot u8 * grow_vec(u8 * arr) { 
+    ds_header * dh = hd_(arr);
+    Arena *arena = dh->arena;
+    i64 cap_x_elsize = dh->cap * dh->elsize;
+    ccu8 capend = &arr[cap_x_elsize];
+
+    assert(hd_checkptr(arr) && "Vec was relloced, arr stale!");
+
+    if (arena->beg == capend) {
+        /* VEC EXTEND */
+        u8 *VEC_EXTEND = (u8 *)alloc(arena, dh->elsize, dh->cap);
+        assert((u64)VEC_EXTEND == (u64)capend && "extend misaligned");
+        dh->cap <<= 1;
+        return arr;
+    } else {
+        /* VEC RELOC */
+        ds_header *VEC_RELOC = (ds_header *)
+            alloc(arena, isizeof(ds_header) + (cap_x_elsize * 2), 1);
+        u8 *newarr = (u8 *)(VEC_RELOC + 1);
+        copymem((u8 *)VEC_RELOC, (u8 *)dh, isizeof(ds_header) + cap_x_elsize);
+        
+        VEC_RELOC->cap <<= 1;
+        VEC_RELOC->ptrcheck = (u8)((u64)newarr);
+        dh->ptrcheck = VEC_RELOC->ptrcheck;
+
+        return newarr;
+    }
+}
+
+// Increases len by 1 and returns last index 
+_fun_hot i32 vec_inc(voidp array_by_reference) {
+    u8 * *arr = (u8 * *)array_by_reference;
+    ds_header * dh = hd_(*arr);
+    
+    if (dh->len >= dh->cap) {
+       *arr = grow_vec(*arr);
+    }
+
+    return (dh->len++);
+}
+#define vec_inc_ref(arr) (&arr[vec_inc(&arr)])
+#define vec_append(arr, value) (arr[vec_inc(&arr)] = value)
+#define vec_pop(arr) arr[--hd_(arr)->len]
+//  ^^^^^^^^^^^^^^^^^^^^ VECTOR ^^^^^^^^^^^^^^^^^^^^
+
+/*
     ==================== HASH TABLE ====================
 */
+// MSI Set
+#define NEW_SET(arena, varname_, type, capacity) \
+    NEW_VEC_WITH_CAP(arena, varname_, type, capacity)
 
-#define MSI_HT_CAP_    4096 //   2 ^ 12
-#define MSI_HT_SHIFT_  52   //  64 - 12
-#define MSI_HT_MASK_   4095 //  Cap - 1
+// MSI Hash Table
+#define NEW_HTABLE(arena, prefix_name_, keytype_, valtype_, capacity) \
+    NEW_VEC_WITH_CAP(arena, prefix_name_##_keys, keytype_, capacity); \
+    NEW_VEC_WITH_CAP(arena, prefix_name_##_vals, valtype_, capacity)
 
 // Mask-Step-Index (MSI) lookup
 _math_hot i32 ht_lookup(
     cu64 hash, // 1st hash acts as base location
-    ci32 index // 2nd "hash" steps over the "list of elements" from base-location
+    ci32 index, // 2nd "hash" steps over the "list of elements" from base-location
+    cu32 mask, // trims number to < ht_capacity
+    cu8  shift // use |exp| bits for step 
 )
 {
-    u32 step = (u32)(hash >> MSI_HT_SHIFT_) | 1;
-    return (i32) (((u32)index + step) & MSI_HT_MASK_);
+    u32 step = (u32)(hash >> shift) | 1;
+    return (i32) (((u32)index + step) & mask);
 }
+
+_fun_hot i32 htloop(
+    voidpc keys_, cu64 key_, b32 create_if_not_found
+) {
+    ds_header *hd = hd_(keys_);
+    cu8 elsize = hd->elsize;
+    cu32 mask = (u32) (hd->cap - 1);
+    cu8 shift = 64 - (fit_pwr2_exp(hd->cap));
+
+    cu8 * const numeric_key = (cu8*)(&key_);
+    u8 * const u8keys = (u8 *) keys_;
+    
+    ccstr string_key = hd->is_str ? (cstr) key_ : 0;
+    mstr * const strkeys = (mstr *) keys_;
+
+    cu64 hash = string_key ? hash_str(string_key) : hash_bytes(numeric_key, elsize);
+    i32 index = (i32)hash;
+
+    assert(hd_checkptr(keys_) && "This is not a ale.h vector!");
+    assert(is_not_zero(numeric_key, elsize) && "Hash Table does NOT support ZERO Key");
+
+    for(
+        index = ht_lookup(hash, index, mask, shift);
+        
+        is_not_zero(&u8keys[index*elsize], elsize)
+        && cmpmem(&u8keys[index*elsize], (cu64*)(&key_), elsize)
+        && (!string_key || cstrcmp(strkeys[index], string_key));
+        
+        index = ht_lookup(hash, index, mask, shift)
+    ) {
+        /* empty body */
+    }
+
+    if (is_zero(&u8keys[index*elsize], elsize) && create_if_not_found) {
+        assert(hd->len < hd->cap - 2 && "MSI HT IS FULL");
+        copymem(&u8keys[index*elsize], numeric_key, elsize);
+        ++hd->len;
+    }
+
+    return index; // index of entry found OR entry empty
+}
+#define hset_idx(keys_vec_, search_key_) htloop(keys_vec_, (u64)search_key_, 0)
+#define hset_get(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, (u64)search_key_, 0)]
+#define hset_set(keys_vec_, search_key_) keys_vec_[htloop(keys_vec_, (u64)search_key_, 1)]
+
+#define htable_idx(name, search_key_) htloop(name##_keys, (u64)search_key_, 0)
+#define htable_get(name, search_key_) name##_vals[htloop(name##_keys, (u64)search_key_, 0)]
+#define htable_set(name, search_key_, value_) (name##_vals[htloop(name##_keys, (u64)search_key_, 1)] = value_)
+
+// must have a variable arrayname_cap 
+#define HTMASK(arr_ay) ((arr_ay##_cap) - 1)
+// must be atleast 256 to work!
+#define HTSHIFT(arr_ay) (64 - fit_pwr2_exp(arr_ay##_cap))
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== TEXT ====================
 */
-
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun_hot len32 into_lines(mstr text_to_alter, i32 lines_cap, mstr lines[64]) {
+_fun_hot i32 into_lines(mstr text_to_alter, i32 lines_cap, mstr lines[64]) {
     i32 lines_len = 0;
     
     for (i64 i = 0, current = 0; text_to_alter[i]; ++i) {
@@ -412,7 +570,7 @@ _fun_hot len32 into_lines(mstr text_to_alter, i32 lines_cap, mstr lines[64]) {
     return lines_len;
 }
 
-_fun_hot len32 split(mstr text_to_alter, cchar splitter, i32 words_cap, mstr words[64]) {
+_fun_hot i32 split(mstr text_to_alter, cchar splitter, i32 words_cap, mstr words[64]) {
     i32 i = 0, current = 0, words_len = 0;
 
     for (i = 0; text_to_alter[i]; ++i) {
@@ -435,154 +593,3 @@ _fun_hot len32 split(mstr text_to_alter, cchar splitter, i32 words_cap, mstr wor
     return words_len;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^
-
-/*
-    ==================== TIME BENCHMARK ====================
-*/
-#ifdef CLOCKS_PER_SEC
-
-_fun f64 seconds_since(clock_t start)
-{
-    return (f64)(clock() - start) / CLOCKS_PER_SEC;
-}
-#endif 
-#if defined CLOCKS_PER_SEC && defined stdout
-_proc print_clock(clock_t start) {
-    printf("\n\nExecuted in %f seconds \n", seconds_since(start));
-}
-
-#endif
-//  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
-
-/*
-    ==================== SHELL ====================
-*/
-#if defined RAND_MAX && defined stdout && defined va_start
-
-gcc_attr(format(printf, 3, 4), nonnull)
-i32 shellrun(i32 bufferlen, char buffer [512], ccstr format, ...) {
-    va_list args;
-    u8 *buf = zeromem((u8 *) buffer, 512);
-    assert(buf == (u8 *)buffer && "zeromem returned different address!");
-
-    va_start(args, format);
-
-    vsprintf_s(buffer, (u64) bufferlen, format, args);
-    return system(buffer);
-}
-
-#endif
-//  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
-
-/*
-    ==================== FILES ====================
-*/
-#ifdef stdout
-
-_fun i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
-    #ifdef __cplusplus
-        try { return (i64) fread(dst, (u64) sz, (u64) count, f); } catch(...) {return 0;}
-    #endif 
-              return (i64) fread(dst, (u64) sz, (u64) count, f);
-}
-_fun i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
-    #ifdef __cplusplus
-        try { return (i64) fwrite(Str, (u64) Size, (u64) Count, File); } catch(...) {return 0;}
-    #endif 
-              return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
-}
-
-_fun i64 file_to_cstring(ccstr filename, i64 charbuffer_cap, char charbuffer[64]) {
-    i64 fsize = 0;
-
-        FILE *f = 0; i32 err = 
-    fopen_s(&f, filename, "rb");
-    
-        assert(!err && "Could not open file for reading");
-    
-        fseek(f, 0, SEEK_END);
-        fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
-        assert(charbuffer_cap >= fsize+2 && "charbuffer is not enough for file size");
-
-        {
-            i64 bytesread = fread_noex(charbuffer, 1LL, fsize, f);
-            assert(bytesread == fsize && "could not read fsize#bytes"); 
-            
-            charbuffer[fsize] = charbuffer[fsize-1] != '\n' ? '\n' : '\0';
-            charbuffer[fsize+1] = '\0';
-        }
-
-    fclose(f);
-
-    return fsize;
-}
-
-_fun i32 file_to_lines(ccstr filename, i32 lines_cap, mstr lines[64], i64 charbuffer_cap, char charbuffer[64]) {
-    i64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
-    discard_ charbuffer_len;
-    return into_lines(charbuffer, lines_cap, lines);
-}
-
-_proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
-        FILE *f = 0; i32 err = 
-    fopen_s(&f, filename, "wb");
-        assert(!err && "Could not open file for writting");
-        {
-            i64 fsize = cstrlen(buffer);
-            i64 bytes_written = fwrite_noex(buffer, 1, fsize, f);
-            assert(bytes_written == fsize && "could not write fsize#bytes");
-        }
-    fclose(f);
-}
-
-_proc_hot lines_to_file(i32 lines_len, mstr lines[64], ccstr filename) {
-        FILE *f = 0; i32 err = 
-    fopen_s(&f, filename, "wb");
-        assert(!err && "Could not open file for writting");
-        {
-            i64 bytes_written = 0;
-            i64 fsize = 0;
-
-            for (i32 i = 0; i < lines_len; ++i) {
-                ccstr line = lines[i]; 
-
-                fsize = cstrlen(line);
-                bytes_written = fwrite_noex(line, 1, fsize, f);
-                bytes_written += fwrite_noex("\n", 1, 1, f);
-                assert(bytes_written == fsize + 1 && "could not write fsize#bytes");
-            }
-        }
-    fclose(f);
-}
-
-#define print_array(vec_to_print_, vec_to_print_len_, format_str_) \
-    for(int ivec_ = 0; ivec_ < vec_to_print_len_; ++ivec_) \
-        printf(format_str_, vec_to_print_[ivec_]); \
-    printf("\n")
-
-#endif // stdout
-//  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
-
-/*
-    ==================== STDLIB ====================
-*/ 
-#ifdef RAND_MAX
-
-_proc sort_cstrings(i64 cstrings_len, mstr cstrings[1]) {
-    qsort(
-        cstrings, (u64) cstrings_len,
-        sizeof(mstr), void_compare_strings
-    );
-} 
-
-_proc sort_cstrings_custom(i64 cstrings_len, mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp b)) {
-    qsort(
-        cstrings, (u64)  cstrings_len,
-        sizeof(mstr), compare_fun
-    );
-}
-
-#endif // RAND_MAX
-//  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^

@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include "../ale.h"
+#include "../ale_io.h"
 
 i32 main(i32 argc, ccstr*argv) {
     char buffer[512];

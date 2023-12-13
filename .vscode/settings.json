@@ -19,8 +19,8 @@
         "ale_io.h": "c",
         "assert.h": "c",
         "random": "c",
-        "assert.h": "c",
         "crtdefs.h": "c",
-        "corecrt.h": "c"
+        "corecrt.h": "c",
+        "stdarg.h": "c"
     }
 }

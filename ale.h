@@ -49,8 +49,6 @@
 #define MBs_ 1048576 // malloc(52*MBs_)
 
 // Bool
-typedef int b32; // Boolean
-typedef const b32 cb32;
 #define True 1
 #define False 0
 
@@ -71,7 +69,10 @@ typedef long long i64;
 typedef const i64 ci64;
 
 // Visual Int
+typedef int b32; // Boolean
+typedef const b32 cb32;
 typedef u64 hash64;
+typedef i32 cmp32;
 typedef i32 idx32;
 typedef i32 len32;
 typedef i64 len64;
@@ -117,7 +118,7 @@ _proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
     }
 }
 
-_pure_hot i32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
+_pure_hot cmp32 cmpmem(ccvoidp mem1_, ccvoidp mem2_, ci64 count) {
     ccu8 mem1 = (cu8 *)mem1_, mem2 = (cu8 *)mem2_;
     i64 i = 0; 
     ci64 last = count - 1;
@@ -164,7 +165,7 @@ _pure_hot len64 cstrlen(ccstr cstring) {
 //Only works for COMPILE TIME STRINGS:
 #define compile_time_cstrlen(compile_time_string_) countof(compile_time_string_) - 1
 
-_pure_hot i32 cstrcmp(ccstr cstr1, ccstr cstr2) {
+_pure_hot cmp32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     i64 i = 0;
 
     for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
@@ -172,22 +173,6 @@ _pure_hot i32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     }
     return cstr1[i] - cstr2[i];
 }
-
-_pure_hot u8 is_str_typename(ccstr type_) {
-    static ccstr str_types[] = {
-        "cstr", "ccstr", "mstr", "cchar *", "cchar*",
-        "char *", "char*", "const char*", "const char *",
-        "const char *const", "const char * const"
-    };
-
-    for (int i = 0; i < countof(str_types); ++i) {
-        if (!cstrcmp(str_types[i], type_)) {
-            return True;
-        }
-    }
-    return False;
-}
-#define IS_STR_TYPENAME(type_s_) is_str_typename(#type_s_)
 
 _pure_hot b32 startswith(ccstr string, ccstr prefix) {
     i64 i = 0;
@@ -211,7 +196,7 @@ _pure_hot b32 startswith(ccstr string, ccstr prefix) {
     }
 }
 
-_pure_hot i32 void_compare_strings(cvoidp a, cvoidp b) {
+_pure_hot cmp32 void_compare_strings(cvoidp a, cvoidp b) {
     return cstrcmp(*(ccstr*)a, *(ccstr*)b);
 }
 
@@ -337,12 +322,12 @@ _pure_hot hash64 hash_bytes(ccvoidp bytes_, ci64 count) {
 #define MSI_HT_MASK_   4095 //  Cap - 1
 
 // Mask-Step-Index (MSI) lookup
-_math_hot i32 ht_lookup(
+_math_hot idx32 ht_lookup(
     cu64 hash, // 1st hash acts as base location
     ci32 index // 2nd "hash" steps over the "list of elements" from base-location
 )
 {
-    u32 step = (u32)(hash >> MSI_HT_SHIFT_) | 1;
+    cu32 step = (u32)(hash >> MSI_HT_SHIFT_) | 1;
     return (i32) (((u32)index + step) & MSI_HT_MASK_);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
@@ -399,25 +384,28 @@ _fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr w
 /*
     ==================== TIME BENCHMARK ====================
 */
-#ifdef CLOCKS_PER_SEC
+#ifdef CLOCKS_PER_SEC // time.h
 
 _fun f64 seconds_since(clock_t start)
 {
     return (f64)(clock() - start) / CLOCKS_PER_SEC;
 }
-#endif 
-#if defined CLOCKS_PER_SEC && defined stdout
+
+#endif  // time.h
+
+#if defined CLOCKS_PER_SEC && defined stdout // time.h && stdio.h
+
 _proc print_clock(clock_t start) {
     printf("\n\nExecuted in %f seconds \n", seconds_since(start));
 }
 
-#endif
+#endif // time.h && stdio.h
 //  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== SHELL ====================
 */
-#if defined RAND_MAX && defined stdout && defined va_start
+#if defined RAND_MAX && defined stdout && defined va_start // stdlib.h && stdio.h && stdarg.h
 
 gcc_attr(format(printf, 3, 4), nonnull)
 i32 shellrun(cap32 buffer_cap, bufferchar buffer [512], ccstr format, ...) {
@@ -431,13 +419,13 @@ i32 shellrun(cap32 buffer_cap, bufferchar buffer [512], ccstr format, ...) {
     return system(buffer);
 }
 
-#endif
+#endif // stdlib.h && stdio.h && stdarg.h
 //  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== FILES ====================
 */
-#ifdef stdout
+#ifdef stdout // stdio.h
 
 _fun i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
     #ifdef __cplusplus
@@ -522,13 +510,13 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
         printf(format_str_, vec_to_print_[ivec_]); \
     printf("\n")
 
-#endif // stdout
+#endif // stdio.h
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== STDLIB ====================
 */ 
-#ifdef RAND_MAX
+#ifdef RAND_MAX // stdlib.h
 
 _proc sort_cstrings(len64 cstrings_len, mstr cstrings[1]) {
     qsort(
@@ -537,12 +525,12 @@ _proc sort_cstrings(len64 cstrings_len, mstr cstrings[1]) {
     );
 } 
 
-_proc sort_cstrings_custom(len64 cstrings_len, mstr cstrings[1], int (*compare_fun)(cvoidp a, cvoidp b)) {
+_proc sort_cstrings_custom(len64 cstrings_len, mstr cstrings[1], cmp32 (*compare_fun)(cvoidp a, cvoidp b)) {
     qsort(
         cstrings, (u64)  cstrings_len,
         sizeof(mstr), compare_fun
     );
 }
 
-#endif // RAND_MAX
+#endif // stdlib.h
 //  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^

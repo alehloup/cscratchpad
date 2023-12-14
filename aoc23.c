@@ -5,15 +5,57 @@
 
 #define print(...)  //printf(__VA_ARGS__)
 
-_fun_inlined i32 fuse_lincol(i32 iline, i32 icol) {
-    return 1000*iline + icol;
+_fun i32 count_I(len32 lines_len, mstr lines[64]) {
+    i32 count = 0;
+    for (idx32 iline = 0; iline < lines_len; ++iline) {
+        for (idx32 icol = 0; lines[iline][icol]; ++icol) {
+            count += lines[iline][icol] == 'I' ? 1 : 0;
+        }
+    }    
+
+    return count;
 }
 
-_fun_inlined i32 lin_(i32 fused) {
-    return fused / 1000;
+// returns 1 if X or I, 0 if pipe, -99999 if out of bounds
+_fun i32 fill(idx32 line, idx32 col, len32 lines_len, mstr lines[64]) {
+    i32 is_enclosed = 0;
+    cchar cur = (line < 0 or col < 0 or line >= lines_len or !lines[line][col])
+        ? 'N' : lines[line][col];
+    
+    switch(cur) {
+        case 'N': case 'O': return -99999; // out of bounds
+        
+        case 'X': case 'I': case 'S': // inside enclosement
+        case '^': case '>': case 'v': case '<': return 1; 
+        
+        case '.': // might be I or O
+            lines[line][col] = '?';
+            is_enclosed = 
+                fill(line - 1, col, lines_len, lines)
+                + fill(line, col + 1, lines_len, lines)
+                + fill(line + 1, col, lines_len, lines)
+                + fill(line, col - 1, lines_len, lines)
+
+                + fill(line - 1, col - 1, lines_len, lines)
+                + fill(line - 1, col + 1, lines_len, lines)
+                + fill(line + 1, col - 1, lines_len, lines)
+                + fill(line + 1, col + 1, lines_len, lines)
+            ;
+            lines[line][col] = is_enclosed > 0 ? 'I' : 'O';
+            return lines[line][col] == 'I' ? 1 : -99999;
+
+        case '?': return -1; // do not consider '?' because its being investigated
+        
+        default: lines[line][col] = ' '; return -99999; // pipe
+    }
 }
-_fun_inlined i32 col_(i32 fused) {
-    return fused % 1000;
+
+_proc print_matrix(len32 lines_len, mstr lines[64]) {
+    printf("\nMATRIX:\n");
+    for (idx32 i = 0; i < lines_len; ++i) {
+        printf("%s\n", lines[i]);
+    }
+    printf("\n");
 }
 
 //AoC 10
@@ -66,20 +108,24 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
         cchar cur_pipe = lines[pos_line][pos_col];
         
         if        (/*GO TOP*/ last_move_dir != 'b' and char_in_(cur_pipe, TOPS)) {
+            lines[pos_line][pos_col] = '^';
             --pos_line; 
             last_move_dir = 't';
         } else if (/*GO RIGHT*/ last_move_dir != 'l' and char_in_(cur_pipe, RIGHTS)) {
+            lines[pos_line][pos_col] = '>';
             ++pos_col;
             last_move_dir = 'r';
         } else if (/*GO BOTTOM*/ last_move_dir != 't' and char_in_(cur_pipe, BOTTOMS)) {
+            lines[pos_line][pos_col] = 'v';
             ++pos_line;
             last_move_dir = 'b';
         } else if (/*GO LEFT*/ last_move_dir != 'r' and char_in_(cur_pipe, LEFTS)) {
+            lines[pos_line][pos_col] = '<';
             --pos_col;
             last_move_dir = 'l';
         } else {
             print("ERROR: pipe unrecognized %c %d %d\n", cur_pipe, pos_line, pos_col);
-            print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
+            print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, cur_pipe);
             break;
         }
 
@@ -88,6 +134,16 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
     }
 
     printf("Reached S in [%d] steps (farthest: %d) \n", (stepn - 1), stepn/2);
+
+    for (idx32 iline = 0; iline < lines_len; ++iline) {
+        for (idx32 icol = 0; lines[iline][icol]; ++icol) {
+            stepn = fill(iline, icol, lines_len, lines);
+        }
+    }
+
+    print_matrix(lines_len, lines);
+
+    printf("I tiles: %d\n", count_I(lines_len, lines));
     
 } 
 

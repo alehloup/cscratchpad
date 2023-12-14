@@ -336,7 +336,7 @@ _math_hot idx32 ht_lookup(
     return (i32) (((u32)index + step) & Ht_MASK);
 }
 
-// sets key and updates keys_len if keys_len is not null
+// sets key + updates keys_len if keys_len is not null, returns idx if found, -idx if not set
 _gcc_attr(always_inline, warn_unused_result)
 idx32 str_in_ht_(ccstr search_key, cstr keys[Ht_CAP], len32 *keys_len_ptr) {
     hash64 h = hash_str(search_key);

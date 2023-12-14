@@ -17,14 +17,14 @@ _fun_inlined i32 col_(i32 fused) {
 }
 
 //AoC 10
-_proc aoc(ci32 lines_len, ccstr lines[64]) {
+_proc aoc(ci32 lines_len, mstr lines[64]) {
     static ccstr TOPS = "|LJ";
     static ccstr RIGHTS = "-FL";
     static ccstr BOTTOMS = "|F7";
     static ccstr LEFTS = "-J7";
-    static i32 steps[(Next_power2(140*140))] = {0};
-    len32 steps_len = 0;
-    i32 pos_line = 0, pos_col = 0, fused = 0, start_fused = 0;
+    
+    idx32 pos_line = 0, pos_col = 0;
+    i32 stepn = 0;
     char last_move_dir = '.';
 
     for (idx32 iline = 0; iline < lines_len; ++iline) {
@@ -40,10 +40,6 @@ _proc aoc(ci32 lines_len, ccstr lines[64]) {
             break;
         }        
     }
-
-    fused = fuse_lincol(pos_line, pos_col);
-    steps[steps_len++] = fused;
-    start_fused = fused;
 
     print("Starting Position: %d %d\n", pos_line, pos_col);   
 
@@ -63,12 +59,10 @@ _proc aoc(ci32 lines_len, ccstr lines[64]) {
         print("ERROR: could not move from start");
     }
 
-    print("Move: %c Step: %d Pipe: %c\n", last_move_dir, steps_len, lines[pos_line][pos_col]);
-    fused = fuse_lincol(pos_line, pos_col);
-    steps[steps_len++] = fused;
+    ++stepn;
+    print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
     
-    
-    while(fused != start_fused) {
+    while(lines[pos_line][pos_col] != 'S') {
         cchar cur_pipe = lines[pos_line][pos_col];
         
                if (/*GO TOP*/ last_move_dir != 'b' and char_in_(cur_pipe, TOPS)) {
@@ -85,16 +79,15 @@ _proc aoc(ci32 lines_len, ccstr lines[64]) {
             last_move_dir = 'l';
         } else {
             print("ERROR: pipe unrecognized %c %d %d\n", cur_pipe, pos_line, pos_col);
-            print("Move: %c Step: %d Pipe: %c\n", last_move_dir, steps_len, lines[pos_line][pos_col]);
+            print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
             break;
         }
 
-        print("Move: %c Step: %d Pipe: %c\n", last_move_dir, steps_len, lines[pos_line][pos_col]);
-        fused = fuse_lincol(pos_line, pos_col);
-        steps[steps_len++] = fused;
+        ++stepn;
+        print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
     }
 
-    printf("Reached S in [%d] steps, fused: %d(%d) \n", (steps_len - 1), steps_len/2, steps[steps_len/2]);
+    printf("Reached S in [%d] steps (farthest: %d) \n", (stepn - 1), stepn/2);
     
 } 
 
@@ -109,7 +102,7 @@ i32 main(void) {
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();
-    aoc(lines_len, (ccstr * )lines);
+    aoc(lines_len, lines);
     print_clock(start);
 
     return 0;

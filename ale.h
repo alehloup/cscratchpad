@@ -53,10 +53,6 @@
 */
 #define MBs_ 1048576 // malloc(52*MBs_)
 
-// Bool
-#define True 1
-#define False 0
-
 // Int
 typedef unsigned char u8;
 typedef const u8 cu8;
@@ -104,6 +100,16 @@ typedef void * const voidpc;
 typedef const void * cvoidp;
 typedef const void * const ccvoidp;
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
+
+/*
+    Keyword Alternatives
+*/
+#define True 1
+#define False 0
+#define and &&
+#define or ||
+#define not !
+//  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
 
 /*
     MEMORY
@@ -222,13 +228,17 @@ _pure_hot i64num_i32len cstr_to_num(ccstr str) {
 }
 
 _pure_hot idx32 letter_pos_in_cstring(cchar letter, ccstr cstring) {
-    i32 letter_pos = 0;
-    for (; cstring[letter_pos]; ++letter_pos) {
+    for (idx32 letter_pos = 0; cstring[letter_pos]; ++letter_pos) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
         }
     }
+
     return -1;
+}
+
+_fun_inlined b32 char_in_(cchar letter, ccstr cstring) {
+    return (letter_pos_in_cstring(letter, cstring) + 1);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 

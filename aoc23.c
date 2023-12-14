@@ -34,7 +34,7 @@ _proc aoc(ci32 lines_len, ccstr lines[64]) {
             continue;
         }
 
-        s_pos = letter_pos_in_cstring('S', line);
+        s_pos = char_pos_in_str('S', line);
         if (s_pos > -1) {
             pos_line = iline; pos_col = s_pos;
             break;

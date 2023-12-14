@@ -229,7 +229,7 @@ _pure_hot i64num_i32len cstr_to_num(ccstr str) {
     return ret;
 }
 
-_pure_hot idx32 letter_pos_in_cstring(cchar letter, ccstr cstring) {
+_pure_hot idx32 char_pos_in_str(cchar letter, ccstr cstring) {
     for (idx32 letter_pos = 0; cstring[letter_pos]; ++letter_pos) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
@@ -240,7 +240,7 @@ _pure_hot idx32 letter_pos_in_cstring(cchar letter, ccstr cstring) {
 }
 
 _fun_inlined b32 char_in_(cchar letter, ccstr cstring) {
-    return (letter_pos_in_cstring(letter, cstring) + 1);
+    return (char_pos_in_str(letter, cstring) + 1);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
@@ -336,8 +336,9 @@ _math_hot idx32 ht_lookup(
     return (i32) (((u32)index + step) & Ht_MASK);
 }
 
+// sets key and updates keys_len if keys_len is not null
 _gcc_attr(always_inline, warn_unused_result)
-idx32 cstr_hash_search(ccstr search_key, cstr keys[Ht_CAP], len32 *keys_len) {
+idx32 str_in_ht_(ccstr search_key, cstr keys[Ht_CAP], len32 *keys_len_ptr) {
     hash64 h = hash_str(search_key);
     idx32 i = ht_lookup(h, (i32)h);
 
@@ -345,8 +346,8 @@ idx32 cstr_hash_search(ccstr search_key, cstr keys[Ht_CAP], len32 *keys_len) {
         i = ht_lookup(h, i);
     }
 
-    keys[i] = keys_len && !keys[i] ? (dis_ ++(*keys_len), search_key) : keys[i];
-    return i;
+    keys[i] = keys_len_ptr && !keys[i] ? (dis_ ++(*keys_len_ptr), search_key) : keys[i];
+    return keys[i] ? i : -i;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 

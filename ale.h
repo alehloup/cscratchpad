@@ -23,13 +23,13 @@
     ==================== ATTRIBUTES ====================
 */
 #if defined(__GNUC__) || defined(__clang__)
-    #define gcc_attr(...) __attribute((nonnull, __VA_ARGS__)) inline static
+    #define _gcc_attr(...) __attribute((__VA_ARGS__)) inline static
 #else
-    #define gcc_attr(...) inline static
+    #define _gcc_attr(...) inline static
 #endif
 // 2 types of function attributes: either returns value (fun) or not (proc)
-#define _fun_attr(...) gcc_attr(warn_unused_result, __VA_ARGS__)
-#define _proc_attr(...) gcc_attr(__VA_ARGS__) void
+#define _fun_attr(...) _gcc_attr(nonnull, warn_unused_result, __VA_ARGS__)
+#define _proc_attr(...) _gcc_attr(nonnull, __VA_ARGS__) void
 // math = no pointers, same inputs always produce same output
 #define _math _fun_attr(const) 
 #define _math_hot _fun_attr(const, hot)
@@ -45,7 +45,7 @@
 #define _fun_inlined _fun_attr(always_inline)
 #define _proc_inlined _proc_attr(always_inline)
 // for explicit discarding returns
-#define discard_ (void) 
+#define dis_ (void) 
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -106,9 +106,11 @@ typedef const void * const ccvoidp;
 */
 #define True 1
 #define False 0
-#define and &&
-#define or ||
-#define not !
+#ifndef __cplusplus
+    #define and &&
+    #define or ||
+    #define not !
+#endif
 //  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -260,55 +262,57 @@ _fun_inlined i64 least_common_multiple(i64 m, i64 n) {
 }
 
 // Next Power of 2 for numbers upto 2*31 (2'147'483'648)
-#define NEXT_POWER2(n_) \
+#define Next_power2(n_) \
     ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== RANDOM ====================
 */
-#define RND_POSITIVE_INT32_MASK_ 2147483647
-#define RND_MULTIPLICATIVE_NUMBER_IN_HEX_ 0x9b60933458e17d7dULL
-#define RND_SUMMATIVE_NUMBER_IN_HEX_ 0xd737232eeccdf7edULL
+#define Rnd_positive_mask 2147483647
+#define Rnd_mul_n 0x9b60933458e17d7dULL
+#define Rnd_sum_n 0xd737232eeccdf7edULL
 
 _pure_hot i32 rnd(u64 seed[1]) {
     i32 shift = 29;
-    *seed = *seed * RND_MULTIPLICATIVE_NUMBER_IN_HEX_ + RND_SUMMATIVE_NUMBER_IN_HEX_;
+    *seed = *seed * Rnd_mul_n + Rnd_sum_n;
     shift -= (i32)(*seed >> 61);
     
-    return (i32)((*seed >> shift) & RND_POSITIVE_INT32_MASK_);
+    return (i32)((*seed >> shift) & Rnd_positive_mask);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ RANDOM ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== HASH ====================
 */
-#define HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(cur_hash_)  (cur_hash_ ^ (cur_hash_ >> 31))
 
-#define HASH_STR_H_START_NUMBER_IN_HEX_ 0x7A5662DCDF
-#define HASH_STR_H_MULTIPLICATIVE_NUMBER_ 1111111111111111111 // 11 ones
+// mix high bits into low bits
+#define H_shift_mix(cur_hash_)  (cur_hash_ ^ (cur_hash_ >> 31))
+
+#define H_start_n 0x7A5662DCDF
+#define H_mul_n 1111111111111111111 // 11 ones
 
 _pure_hot hash64 hash_str(ccstr str) {
-    hash64 h = HASH_STR_H_START_NUMBER_IN_HEX_;
+    hash64 h = H_start_n;
     
     for(i64 i = 0; str[i]; ++i) { 
-        h ^= str[i] & 255; h *= HASH_STR_H_MULTIPLICATIVE_NUMBER_;
+        h ^= str[i] & 255; h *= H_mul_n;
     }
-    h = HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(h);
+    h = H_shift_mix(h);
 
     return h >> 1;
 }
 
-#define HASH_INT_MULTIPLICATIVE_NUMBER_1_IN_HEX_ 0x94d049bb133111eb
-#define HASH_INT_MULTIPLICATIVE_NUMBER_2_IN_HEX_ 0xbf58476d1ce4e5b9
+#define H_mul_n_1 0x94d049bb133111eb
+#define H_mul_n_2 0xbf58476d1ce4e5b9
 
 _math_hot hash64 hash_int(i64 integer64) {
     hash64 x = (u64)integer64;
     
-    x *= HASH_INT_MULTIPLICATIVE_NUMBER_1_IN_HEX_; 
-    x = HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(x);
-    x *= HASH_INT_MULTIPLICATIVE_NUMBER_2_IN_HEX_; 
-    x = HASH_MIX_INTO_LOWER_BITS_WITH_SHIFT(x);
+    x *= H_mul_n_1; 
+    x = H_shift_mix(x);
+    x *= H_mul_n_2; 
+    x = H_shift_mix(x);
     
     return x >> 1;
 }
@@ -318,9 +322,9 @@ _math_hot hash64 hash_int(i64 integer64) {
     ==================== HASH TABLE ====================
 */
 
-#define MSI_HT_CAP_    4096 //   2 ^ 12
-#define MSI_HT_MASK_   (MSI_HT_CAP_ - 1)
-#define MSI_HT_SHIFT_  52   //  64 - 12
+#define Ht_CAP    4096 //   2 ^ 12
+#define Ht_MASK   (Ht_CAP - 1)
+#define Ht_SHIFT  52   //  64 - 12
 
 // Mask-Step-Index (MSI) lookup
 _math_hot idx32 ht_lookup(
@@ -328,8 +332,21 @@ _math_hot idx32 ht_lookup(
     ci32 index // 2nd "hash" steps over the "list of elements" from base-location
 )
 {
-    cu32 step = (u32)(hash >> MSI_HT_SHIFT_) | 1;
-    return (i32) (((u32)index + step) & MSI_HT_MASK_);
+    cu32 step = (u32)(hash >> Ht_SHIFT) | 1;
+    return (i32) (((u32)index + step) & Ht_MASK);
+}
+
+_gcc_attr(always_inline, warn_unused_result)
+idx32 cstr_hash_search(ccstr search_key, cstr keys[Ht_CAP], len32 *keys_len) {
+    hash64 h = hash_str(search_key);
+    idx32 i = ht_lookup(h, (i32)h);
+
+    while(keys[i] && cstrcmp(search_key, keys[i])) {
+        i = ht_lookup(h, i);
+    }
+
+    keys[i] = keys_len && !keys[i] ? (dis_ ++(*keys_len), search_key) : keys[i];
+    return i;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
@@ -428,7 +445,7 @@ _proc_inlined print_clock(clock_t start) {
 
 #include <stdarg.h>
 
-gcc_attr(format(printf, 1, 2), nonnull)
+_gcc_attr(format(printf, 1, 2), nonnull)
 i32 shellrun(ccstr format, ...) {
     va_list args;
 
@@ -496,7 +513,7 @@ _fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar char
 
 _fun_inlined len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[64], cap64 charbuffer_cap, bufferchar charbuffer[64]) {
     len64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
-    discard_ charbuffer_len;
+    dis_ charbuffer_len;
     return into_lines(charbuffer, lines_cap, lines);
 }
 

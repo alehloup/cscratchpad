@@ -11,7 +11,7 @@ i32 main(void) {
     i64 buffer_len = 
         file_to_cstring("./txts/exemplo.txt", 
         buffer_cap, buffer);
-    discard_ buffer_len;
+    dis_ buffer_len;
     
     printf("%s", buffer);
 

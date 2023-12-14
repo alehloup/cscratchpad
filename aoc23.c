@@ -22,7 +22,7 @@ _proc aoc(ci32 lines_len, ccstr lines[64]) {
     static ccstr RIGHTS = "-FL";
     static ccstr BOTTOMS = "|F7";
     static ccstr LEFTS = "-J7";
-    static i32 steps[(NEXT_POWER2(140*140))] = {0};
+    static i32 steps[(Next_power2(140*140))] = {0};
     len32 steps_len = 0;
     i32 pos_line = 0, pos_col = 0, fused = 0, start_fused = 0;
     char last_move_dir = '.';
@@ -92,7 +92,7 @@ _proc aoc(ci32 lines_len, ccstr lines[64]) {
         print("Move: %c Step: %d Pipe: %c\n", last_move_dir, steps_len, lines[pos_line][pos_col]);
         fused = fuse_lincol(pos_line, pos_col);
         steps[steps_len++] = fused;
-    };
+    }
 
     printf("Reached S in [%d] steps, fused: %d(%d) \n", (steps_len - 1), steps_len/2, steps[steps_len/2]);
     
@@ -100,7 +100,7 @@ _proc aoc(ci32 lines_len, ccstr lines[64]) {
 
 
 i32 main(void) {
-    static char charbuffer[NEXT_POWER2(64000)] = {0};
+    static char charbuffer[Next_power2(64000)] = {0};
     static mstr lines[256] = {0};
     i64 charbuffer_cap = 64000;
     i32 lines_cap = 256;

@@ -65,7 +65,7 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
     while(lines[pos_line][pos_col] != 'S') {
         cchar cur_pipe = lines[pos_line][pos_col];
         
-               if (/*GO TOP*/ last_move_dir != 'b' and char_in_(cur_pipe, TOPS)) {
+        if        (/*GO TOP*/ last_move_dir != 'b' and char_in_(cur_pipe, TOPS)) {
             --pos_line; 
             last_move_dir = 't';
         } else if (/*GO RIGHT*/ last_move_dir != 'l' and char_in_(cur_pipe, RIGHTS)) {

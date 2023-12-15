@@ -5,8 +5,15 @@
 
 #define print(...)  //printf(__VA_ARGS__)
 
-#define v -66
-#define I -78
+#define t -77
+#define b -77
+#define r -16
+#define l -16
+
+#define I -2 // ■
+#define O -78 // ▓
+
+#define pipe -80 // ░
 
 _fun i32 count_I(len32 lines_len, mstr lines[64]) {
     i32 count = 0;
@@ -19,48 +26,74 @@ _fun i32 count_I(len32 lines_len, mstr lines[64]) {
     return count;
 }
 
-char char_to_fill = '`';
+_proc transform_pipes(len32 lines_len, mstr lines[64]) {
+    for (idx32 iline = 0; iline < lines_len; ++iline) {
+        for (idx32 icol = 0; lines[iline][icol]; ++icol) {
+            switch(lines[iline][icol]) {
+                case '|': case 'L': case 'J': case '-': case 'F': case '7':
+                    lines[iline][icol] = pipe; break;
+                default:
+                    lines[iline][icol] = lines[iline][icol]; break;
+            }
+        }
+    }
+}
 
-// returns 1 if X or I, 0 if pipe, -99999 if out of bounds
-_fun i32 fill(idx32 line, idx32 col, len32 lines_len, mstr lines[64]) {
-    i32 is_enclosed = 0;
-    cchar cur = (line < 0 or col < 0 or line >= lines_len or !lines[line][col])
-        ? 'N' : lines[line][col];
-    cb32 isletter = (cur >= '`' and cur <= 'z');
-    
-    switch(cur) {
-        case 'N': return -99999; // out of bounds
-        
-        case 'X': case 'S': case '*': case '_': // inside enclosement
-        case '^': case v: case '>': case '<': 
-            lines[line][col] =  cur; return 1; 
+_math b32 is_path(cchar tile) {
+    return tile == t || tile == r || tile == b || tile == l;
+}
 
-        case 'I': case ' ': case '?': return -1; // do not consider because its being investigated
+_fun b32 out_of_bounds(idx32 line, idx32 col, len32 lines_len, mstr lines[64]) {
+    return (line < 0 or col < 0 or line >= lines_len or !lines[line][col]);
+}
 
-        case '|': case 'L': case 'J': case '-': case 'F': case '7':
-            lines[line][col] = ' ';
-            return -99999; // pipe
+_proc fill(char char_to_fill, idx32 line, idx32 col, len32 lines_len, mstr lines[64]) {
+    if (
+        out_of_bounds(line, col, lines_len, lines)
+        || ('A' <= lines[line][col] and lines[line][col] <= 'z')
+        || is_path(lines[line][col])
+        || lines[line][col] == O
+        || lines[line][col] == I
+    ) {
+        return;
+    }
 
-        case '.':
-            lines[line][col] = '?';
-                is_enclosed = 
-                    fill(line - 1, col, lines_len, lines)
-                    + fill(line, col + 1, lines_len, lines)
-                    + fill(line + 1, col, lines_len, lines)
-                    + fill(line, col - 1, lines_len, lines)
+    lines[line][col] = char_to_fill;
+    fill(char_to_fill, line-1, col, lines_len, lines);
+    fill(char_to_fill, line, col+1, lines_len, lines);
+    fill(char_to_fill, line+1, col, lines_len, lines);
+    fill(char_to_fill, line, col-1, lines_len, lines);
 
-                    + fill(line - 1, col - 1, lines_len, lines)
-                    + fill(line - 1, col + 1, lines_len, lines)
-                    + fill(line + 1, col - 1, lines_len, lines)
-                    + fill(line + 1, col + 1, lines_len, lines)
-                ;
-                lines[line][col] = is_enclosed > 0 ? I : char_to_fill;
-                return cur == '#' || isletter ? -1 : -99999;
+    fill(char_to_fill, line-1, col-1, lines_len, lines);
+    fill(char_to_fill, line-1, col+1, lines_len, lines);
+    fill(char_to_fill, line+1, col-1, lines_len, lines);
+    fill(char_to_fill, line+1, col+1, lines_len, lines);
+}
 
-        default: // letter
-            return -1;
-            
-            
+_proc fill_outs_matrix(len32 lines_len, mstr lines[64]) {
+    idx32 icol = 0;
+    for (icol = 0; lines[0][icol]; ++icol) {
+        fill(O, 0, icol, lines_len, lines);
+    }
+    for (icol = 0; lines[lines_len-1][icol]; ++icol) {
+        fill(O, lines_len-1, icol, lines_len, lines);
+    }
+    for (idx32 iline = 0; iline < lines_len; ++iline) {
+        fill(O, iline, 0, lines_len, lines);
+    }
+    for (idx32 iline = 0; iline < lines_len; ++iline) {
+        fill(O, iline, icol-1, lines_len, lines);
+    }
+}
+
+_proc fill_ins_matrix(len32 lines_len, mstr lines[64]) {
+    char char_to_fill = 'A';
+    for (idx32 iline = 0; iline < lines_len; ++iline) {
+        for (idx32 icol = 0; lines[iline][icol]; ++icol) {
+            fill(I, iline, icol, lines_len, lines);
+            char_to_fill = 'A' + ((char)(char_to_fill + 1)%58);
+            dis_(char_to_fill);
+        }
     }
 }
 
@@ -100,15 +133,19 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
     print("Starting Position: %d %d\n", pos_line, pos_col);   
 
     if (pos_line > 0 and char_in_(lines[pos_line-1][pos_col], BOTTOMS)) {
+        lines[pos_line][pos_col] = t;
         --pos_line; 
         last_move_dir = 't';
     } else if (char_in_(lines[pos_line][pos_col+1], LEFTS)) {
+        lines[pos_line][pos_col] = r;
         ++pos_col;
         last_move_dir = 'r';
     } else if (pos_line < (lines_len-1) and char_in_(lines[pos_line+1][pos_col], TOPS)) {
+        lines[pos_line][pos_col] = b;
         ++pos_line;
         last_move_dir = 'b';
     } else if (pos_col > 0 and char_in_(lines[pos_line][pos_col-1], RIGHTS)) {
+        lines[pos_line][pos_col] = l;
         --pos_col;
         last_move_dir = 'l';
     } else {
@@ -122,19 +159,19 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
         cchar cur_pipe = lines[pos_line][pos_col];
         
         if        (/*GO TOP*/ last_move_dir != 'b' and char_in_(cur_pipe, TOPS)) {
-            lines[pos_line][pos_col] = '^';
+            lines[pos_line][pos_col] = t;
             --pos_line; 
             last_move_dir = 't';
         } else if (/*GO RIGHT*/ last_move_dir != 'l' and char_in_(cur_pipe, RIGHTS)) {
-            lines[pos_line][pos_col] = '>';
+            lines[pos_line][pos_col] = r;
             ++pos_col;
             last_move_dir = 'r';
         } else if (/*GO BOTTOM*/ last_move_dir != 't' and char_in_(cur_pipe, BOTTOMS)) {
-            lines[pos_line][pos_col] = v;
+            lines[pos_line][pos_col] = b;
             ++pos_line;
             last_move_dir = 'b';
         } else if (/*GO LEFT*/ last_move_dir != 'r' and char_in_(cur_pipe, LEFTS)) {
-            lines[pos_line][pos_col] = '<';
+            lines[pos_line][pos_col] = l;
             --pos_col;
             last_move_dir = 'l';
         } else {
@@ -149,20 +186,18 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
 
     printf("Reached S in [%d] steps (farthest: %d) \n", (stepn - 1), stepn/2);
 
-    for (idx32 iline = 0; iline < lines_len; ++iline) {
-        char_to_fill = (char)(96 + (iline % 26));
-        for (idx32 icol = 0; lines[iline][icol]; ++icol) {
-            stepn = fill(iline, icol, lines_len, lines);
-        }
-    }
+    transform_pipes(lines_len, lines);
+
+    fill_outs_matrix(lines_len, lines);
+    fill_ins_matrix(lines_len, lines);
 
     print_matrix(lines_len, lines);
 
     printf("# tiles: %d\n", count_I(lines_len, lines));
 
-    for (idx32 i = 128; i < 256; ++i) {
-        printf(" %c : %d (%d) \n", (char)i, i, (char)i);
-    }    
+    // for (idx32 i = 128; i < 256; ++i) {
+    //     printf(" %c : %d (%d) \n", (char)i, i, (char)i);
+    // }    
 } 
 
 

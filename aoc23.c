@@ -5,10 +5,10 @@
 
 #define print(...)  //printf(__VA_ARGS__)
 
-#define t -77
-#define b -77
-#define r -16
-#define l -16
+#define t -77 //'^'
+#define b -77 //'v'
+#define r -16 // '>'//-81 //»
+#define l -16 //'<'//-82 //«
 
 #define I -2 // ■
 #define O -78 // ▓
@@ -87,12 +87,9 @@ _proc fill_outs_matrix(len32 lines_len, mstr lines[64]) {
 }
 
 _proc fill_ins_matrix(len32 lines_len, mstr lines[64]) {
-    char char_to_fill = 'A';
     for (idx32 iline = 0; iline < lines_len; ++iline) {
         for (idx32 icol = 0; lines[iline][icol]; ++icol) {
             fill(I, iline, icol, lines_len, lines);
-            char_to_fill = 'A' + ((char)(char_to_fill + 1)%58);
-            dis_(char_to_fill);
         }
     }
 }

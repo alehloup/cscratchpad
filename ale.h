@@ -270,12 +270,12 @@ _fun_inlined i64 least_common_multiple(i64 m, i64 n) {
     ==================== RANDOM ====================
 */
 #define Rnd_positive_mask 2147483647
-#define Rnd_mul_n 0x9b60933458e17d7dULL
+#define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
 
 _pure_hot i32 rnd(u64 seed[1]) {
     i32 shift = 29;
-    *seed = *seed * Rnd_mul_n + Rnd_sum_n;
+    *seed = *seed * Rnd_mult_n + Rnd_sum_n;
     shift -= (i32)(*seed >> 61);
     
     return (i32)((*seed >> shift) & Rnd_positive_mask);
@@ -285,34 +285,32 @@ _pure_hot i32 rnd(u64 seed[1]) {
 /*
     ==================== HASH ====================
 */
+#define Hash_shift_mix(cur_hash_)  (cur_hash_ ^ (cur_hash_ >> 31))
 
-// mix high bits into low bits
-#define H_shift_mix(cur_hash_)  (cur_hash_ ^ (cur_hash_ >> 31))
-
-#define H_start_n 0x7A5662DCDF
-#define H_mul_n 1111111111111111111 // 11 ones
+#define Hash_start_n 0x7A5662DCDF
+#define Hash_mul_n 1111111111111111111 // 11 ones
 
 _pure_hot hash64 hash_str(ccstr str) {
-    hash64 h = H_start_n;
+    hash64 h = Hash_start_n;
     
     for(i64 i = 0; str[i]; ++i) { 
-        h ^= str[i] & 255; h *= H_mul_n;
+        h ^= str[i] & 255; h *= Hash_mul_n;
     }
-    h = H_shift_mix(h);
+    h = Hash_shift_mix(h);
 
     return h >> 1;
 }
 
-#define H_mul_n_1 0x94d049bb133111eb
-#define H_mul_n_2 0xbf58476d1ce4e5b9
+#define Hash_mul_n1 0x94d049bb133111eb
+#define Hash_mul_n2 0xbf58476d1ce4e5b9
 
 _math_hot hash64 hash_int(i64 integer64) {
     hash64 x = (u64)integer64;
     
-    x *= H_mul_n_1; 
-    x = H_shift_mix(x);
-    x *= H_mul_n_2; 
-    x = H_shift_mix(x);
+    x *= Hash_mul_n1; 
+    x = Hash_shift_mix(x);
+    x *= Hash_mul_n2; 
+    x = Hash_shift_mix(x);
     
     return x >> 1;
 }
@@ -324,7 +322,7 @@ _math_hot hash64 hash_int(i64 integer64) {
 
 #define Ht_CAP    4096 //   2 ^ 12
 #define Ht_MASK   (Ht_CAP - 1)
-#define Ht_SHIFT  52   //  64 - 12
+#define Ht_shift  52   //  64 - 12
 
 // Mask-Step-Index (MSI) lookup
 _math_hot idx32 ht_lookup(
@@ -332,22 +330,21 @@ _math_hot idx32 ht_lookup(
     ci32 index // 2nd "hash" steps over the "list of elements" from base-location
 )
 {
-    cu32 step = (u32)(hash >> Ht_SHIFT) | 1;
+    cu32 step = (u32)(hash >> Ht_shift) | 1;
     return (i32) (((u32)index + step) & Ht_MASK);
 }
 
-// sets key + updates keys_len if keys_len is not null, returns idx if found, -idx if not set
-_gcc_attr(always_inline, warn_unused_result)
-idx32 str_in_ht_(ccstr search_key, cstr keys[Ht_CAP], len32 *keys_len_ptr) {
+_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr search_key, cstr *keys, len32 *keys_len) {
     hash64 h = hash_str(search_key);
     idx32 i = ht_lookup(h, (i32)h);
 
-    while(keys[i] && cstrcmp(search_key, keys[i])) {
+    while (keys[i] and cstrcmp(search_key, keys[i])) {
         i = ht_lookup(h, i);
     }
 
-    keys[i] = keys_len_ptr && !keys[i] ? (dis_ ++(*keys_len_ptr), search_key) : keys[i];
-    return keys[i] ? i : -i;
+    keys[i] = keys_len and not keys[i] ? (dis_ (++(*keys_len)), search_key) : keys[i];
+
+    return keys[i] ? i : - i;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 

@@ -5,48 +5,62 @@
 
 #define print(...)  //printf(__VA_ARGS__)
 
+#define v -66
+#define I -78
+
 _fun i32 count_I(len32 lines_len, mstr lines[64]) {
     i32 count = 0;
     for (idx32 iline = 0; iline < lines_len; ++iline) {
         for (idx32 icol = 0; lines[iline][icol]; ++icol) {
-            count += lines[iline][icol] == 'I' ? 1 : 0;
+            count += lines[iline][icol] == I ? 1 : 0;
         }
     }    
 
     return count;
 }
 
+char char_to_fill = '`';
+
 // returns 1 if X or I, 0 if pipe, -99999 if out of bounds
 _fun i32 fill(idx32 line, idx32 col, len32 lines_len, mstr lines[64]) {
     i32 is_enclosed = 0;
     cchar cur = (line < 0 or col < 0 or line >= lines_len or !lines[line][col])
         ? 'N' : lines[line][col];
+    cb32 isletter = (cur >= '`' and cur <= 'z');
     
     switch(cur) {
-        case 'N': case 'O': return -99999; // out of bounds
+        case 'N': return -99999; // out of bounds
         
-        case 'X': case 'I': case 'S': // inside enclosement
-        case '^': case '>': case 'v': case '<': return 1; 
-        
-        case '.': // might be I or O
+        case 'X': case 'S': case '*': case '_': // inside enclosement
+        case '^': case v: case '>': case '<': 
+            lines[line][col] =  cur; return 1; 
+
+        case 'I': case ' ': case '?': return -1; // do not consider because its being investigated
+
+        case '|': case 'L': case 'J': case '-': case 'F': case '7':
+            lines[line][col] = ' ';
+            return -99999; // pipe
+
+        case '.':
             lines[line][col] = '?';
-            is_enclosed = 
-                fill(line - 1, col, lines_len, lines)
-                + fill(line, col + 1, lines_len, lines)
-                + fill(line + 1, col, lines_len, lines)
-                + fill(line, col - 1, lines_len, lines)
+                is_enclosed = 
+                    fill(line - 1, col, lines_len, lines)
+                    + fill(line, col + 1, lines_len, lines)
+                    + fill(line + 1, col, lines_len, lines)
+                    + fill(line, col - 1, lines_len, lines)
 
-                + fill(line - 1, col - 1, lines_len, lines)
-                + fill(line - 1, col + 1, lines_len, lines)
-                + fill(line + 1, col - 1, lines_len, lines)
-                + fill(line + 1, col + 1, lines_len, lines)
-            ;
-            lines[line][col] = is_enclosed > 0 ? 'I' : 'O';
-            return lines[line][col] == 'I' ? 1 : -99999;
+                    + fill(line - 1, col - 1, lines_len, lines)
+                    + fill(line - 1, col + 1, lines_len, lines)
+                    + fill(line + 1, col - 1, lines_len, lines)
+                    + fill(line + 1, col + 1, lines_len, lines)
+                ;
+                lines[line][col] = is_enclosed > 0 ? I : char_to_fill;
+                return cur == '#' || isletter ? -1 : -99999;
 
-        case '?': return -1; // do not consider '?' because its being investigated
-        
-        default: lines[line][col] = ' '; return -99999; // pipe
+        default: // letter
+            return -1;
+            
+            
     }
 }
 
@@ -116,7 +130,7 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
             ++pos_col;
             last_move_dir = 'r';
         } else if (/*GO BOTTOM*/ last_move_dir != 't' and char_in_(cur_pipe, BOTTOMS)) {
-            lines[pos_line][pos_col] = 'v';
+            lines[pos_line][pos_col] = v;
             ++pos_line;
             last_move_dir = 'b';
         } else if (/*GO LEFT*/ last_move_dir != 'r' and char_in_(cur_pipe, LEFTS)) {
@@ -136,6 +150,7 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
     printf("Reached S in [%d] steps (farthest: %d) \n", (stepn - 1), stepn/2);
 
     for (idx32 iline = 0; iline < lines_len; ++iline) {
+        char_to_fill = (char)(96 + (iline % 26));
         for (idx32 icol = 0; lines[iline][icol]; ++icol) {
             stepn = fill(iline, icol, lines_len, lines);
         }
@@ -143,8 +158,11 @@ _proc aoc(ci32 lines_len, mstr lines[64]) {
 
     print_matrix(lines_len, lines);
 
-    printf("I tiles: %d\n", count_I(lines_len, lines));
-    
+    printf("# tiles: %d\n", count_I(lines_len, lines));
+
+    for (idx32 i = 128; i < 256; ++i) {
+        printf(" %c : %d (%d) \n", (char)i, i, (char)i);
+    }    
 } 
 
 

@@ -119,7 +119,7 @@ typedef const void * const ccvoidp;
 #define isizeof(x_element_) ((i64)sizeof(x_element_))
 
 // COMPILE TIME Count Static Sized Array elements:
-#define countof(x_array_) (isizeof(x_array_) / isizeof(*x_array_))
+#define arraysizeof(x_array_) (isizeof(x_array_) / isizeof(*x_array_))
 
 _fun_hot u8 * zeromem(u8 * const __restrict dst, ci64 count) {
     for (idx64 i = 0; i < count; ++i) {
@@ -135,17 +135,32 @@ _proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
 //  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
 
 /*
+    ARRAYS
+*/
+
+#define array_insert_in_pos(array_len_ref_, array_, element_, pos_) \
+    for (idx32 ivec_insert_ = (*array_len_ref_); ivec_insert_ > pos_; --ivec_insert_) \
+        array_[ivec_insert_] = array_[ivec_insert_-1]; \
+    array_[pos_] = element_; ++(*array_len_ref_)
+
+//  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
+
+
+/*
     STRINGS
 */
-_pure_hot len64 cstrlen(ccstr cstring) {
+_pure_hot len64 cstrlen64(ccstr cstring) {
     len64 cstring_len;
     for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
         /* Empty Body */
     }
     return cstring_len;
 }
+_fun_inlined len32 cstrlen32(ccstr cstring) {
+    return (len32) cstrlen64(cstring);
+}
 //Only works for COMPILE TIME STRINGS:
-#define compile_time_cstrlen(compile_time_string_) countof(compile_time_string_) - 1
+#define compile_time_cstrlen(compile_time_string_) arraysizeof(compile_time_string_) - 1
 
 _pure_hot cmp32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     i64 i = 0;
@@ -203,30 +218,6 @@ _pure_hot len32 digitlen(ccstr cstring) {
     
 
     return cstring_len;
-}
-
-typedef struct i64num_i32len{i64 num; len32 num_len;}i64num_i32len;
-
-_pure_hot i64num_i32len cstr_to_num(ccstr str) {
-    i64 power = 1;
-    i64num_i32len ret = {0, digitlen(str)};
-
-    for (i32 i = ret.num_len - 1; i >= 0; --i) {
-        char character = str[i];
-
-        if (character == '-') {
-            ret.num = -ret.num;
-            return ret;
-        }
-        
-        if (is_digit(character)) {
-            ret.num += (character - '0') * power;
-            power *= 10;
-        } else {
-            return ret;
-        }
-    }
-    return ret;
 }
 
 _pure_hot idx32 char_pos_in_str(cchar letter, ccstr cstring) {
@@ -520,7 +511,7 @@ _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");
         {
-            len64 buffer_len = cstrlen(buffer);
+            len64 buffer_len = cstrlen64(buffer);
             i64 bytes_written = fwrite_noex(buffer, 1, buffer_len, f);
             assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
         }
@@ -538,7 +529,7 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
             for (i32 i = 0; i < lines_len; ++i) {
                 ccstr line = lines[i]; 
 
-                line_len = cstrlen(line);
+                line_len = cstrlen64(line);
                 bytes_written = fwrite_noex(line, 1, line_len, f);
                 bytes_written += fwrite_noex("\n", 1, 1, f);
                 assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
@@ -547,14 +538,32 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
     fclose(f);
 }
 
-#define print_array(vec_to_print_, vec_to_print_len, format_str_) \
-    for(int ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
+// stdio.h
+#endif 
+//  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
+
+/*
+    ==================== PRINT ====================
+*/
+#ifdef stdout
+// stdio.h
+
+#define array_print(format_str_, vec_to_print_len, vec_to_print_) \
+    for (idx32 ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
         printf(format_str_, vec_to_print_[ivec_]); \
+    printf("\n")
+
+#define matrix_print(format_str_, number_of_lines_, number_of_columns_, matrix_to_print_) \
+    for (idx32 imatrix_line_ = 0; imatrix_line_ < number_of_lines_; ++imatrix_line_) { \
+        for (idx32 imatrix_column_ = 0; imatrix_column_ < number_of_columns_; ++ imatrix_column_) \
+            printf(format_str_, matrix_to_print_[imatrix_line_][imatrix_column_]); \
+        printf("\n"); \
+    } \
     printf("\n")
 
 // stdio.h
 #endif 
-//  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ PRINT ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== STDLIB ====================

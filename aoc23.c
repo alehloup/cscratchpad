@@ -3,25 +3,82 @@
 #include <time.h>
 #include "ale.h"
 
-#define print(...)  //printf(__VA_ARGS__)
+static len32 M = 0, N = 0;
+static char matrix[512][512] = {0};
 
-_proc transform_matrix(len32 *lines_len_ref, len32 *columns_len_ref, mstr lines[64]) {
-    b32 col_to_has_galaxy[512] = {0};
+typedef struct coord{idx32 line; idx32 column;}coord;
+_proc coord_print(coord c) {
+    print("(%d,%d) ", c.line, c.column);
+}
+_fun i64 distance(coord coord1, coord coord2) {
+    i32 lower_line    = min_(coord1.line, coord2.line);
+    i32 higher_line   = max_(coord1.line, coord2.line);
+    i32 lower_column  = min_(coord1.column, coord2.column);
+    i32 higher_column = max_(coord1.column, coord2.column);
+    i64 dist = 0;
 
-    for (idx32 iline = 0; iline < (*lines_len_ref); ++iline) {
-        idx32 pos = char_pos_in_str('#', lines[iline]);        
-        if (pos == -1) {
-            for (idx32 icol = 0; icol < (*columns_len_ref); ++icol) 
-                lines[iline][icol] = 'v';
-        } else {
-            col_to_has_galaxy[pos] = True;
-        }
+    for (idx32 icolumn = lower_column; icolumn < higher_column ; ++icolumn) {
+        cchar tile = matrix[lower_line][icolumn];
+        dist += tile == ',' or tile == '-' ? 1 : 1;
+    }
+    for (idx32 iline = lower_line; iline < higher_line ; ++iline) {
+        cchar tile = matrix[iline][lower_column];
+        dist += tile == ',' or tile == '-' ? 1 : 1;
     }
 
-    for (idx32 icol = 0; icol < (*columns_len_ref); ++icol) {
-        if (not col_to_has_galaxy[icol]) {
-            for (idx32 iline = 0; iline < (*lines_len_ref); ++iline) {
-                lines[iline][icol] = lines[iline][icol] == 'v' ? '*' : '>';
+    return dist;
+}
+
+static coord galaxies[512] = {0};
+static len32 galaxies_len = 0;
+
+_proc initialize_matrix(mstr lines[64]) {
+    len32 newM = M, newN = N;
+    b32 column_has_galaxy[256] = {0};
+
+    for (idx32 iline = 0, newiline = 0; iline < M; ++iline, ++newiline) {
+        b32 line_has_galaxy = False;
+        for (idx32 icol = 0; icol < N; ++icol) {
+            matrix[newiline][icol] = lines[iline][icol];
+            if (lines[iline][icol] == '#') {
+                line_has_galaxy = True;
+                column_has_galaxy[icol] = True;
+            }   
+        }
+        if (not line_has_galaxy) {
+            for (idx32 icol = 0; icol < N; ++icol) {
+                matrix[newiline+1][icol] = ',';
+            }
+            ++newM;
+            ++newiline;
+        }
+    }
+    M = newM;
+        
+    for (idx32 icolumn = 0, adjust = 0; icolumn < newN; ++icolumn) {
+        if (not column_has_galaxy[icolumn-adjust]) {
+            for (idx32 iline = 0; iline < M; ++iline) {
+                for (idx32 icol = newN; icol > icolumn; --icol) {
+                    matrix[iline][icol] = matrix[iline][icol-1];
+                }
+                matrix[iline][icolumn] = '-';
+            }
+            ++newN;
+            ++icolumn;
+            ++adjust;
+        }
+    }
+    N = newN;
+    dis_ newN;
+    matrix_print("%c ", M, N, matrix);
+}
+
+static void get_galaxies(void) {
+    for (idx32 iline = 0; iline < M; ++iline) {
+        for (idx32 icolumn = 0; icolumn < N; ++icolumn) {
+            if (matrix[iline][icolumn] == '#') {
+                coord galaxy = {iline, icolumn};
+                galaxies[galaxies_len++] = galaxy;
             }
         }
     }
@@ -29,11 +86,23 @@ _proc transform_matrix(len32 *lines_len_ref, len32 *columns_len_ref, mstr lines[
 
 //AoC 11
 _proc aoc(len32 lines_len, mstr lines[64]) {
-    len32 columns_len = cstrlen32(lines[0]);
-    transform_matrix(&lines_len, &columns_len, lines);
+    i64 sum_dists = 0;
+    M = lines_len;
+    N = cstrlen32(lines[0]);
     
-    printf("%d x %d\n", lines_len, columns_len);
-    matrix_print("%c", lines_len, columns_len, lines);
+    initialize_matrix(lines);
+    get_galaxies();
+
+    for (idx32 i = 0; i < galaxies_len; ++i) {
+        for (idx32 j = i+1; j < galaxies_len; ++j) {
+            i64 dist = distance(galaxies[i], galaxies[j]);
+            print("Coord1: "); coord_print(galaxies[i]); 
+            print("Coord2: "); coord_print(galaxies[j]);
+            print(" distance: %lld\n", dist);
+            sum_dists += dist;
+        }
+    }
+    printf("Sum dists: %lld\n", sum_dists);
 } 
 
 
@@ -47,6 +116,7 @@ i32 main(void) {
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();
+    PRINT_ALL_ = True;
     aoc(lines_len, lines);
     print_clock(start);
 

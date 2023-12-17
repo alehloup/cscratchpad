@@ -51,7 +51,7 @@
 /*
     ==================== TYPES ====================
 */
-#define MBs_ 1048576 // malloc(52*MBs_)
+#define MBs_ 1048576
 
 // Int
 typedef unsigned char u8;
@@ -141,7 +141,8 @@ _proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
 #define array_insert_in_pos(array_len_ref_, array_, element_, pos_) \
     for (idx32 ivec_insert_ = (*array_len_ref_); ivec_insert_ > pos_; --ivec_insert_) \
         array_[ivec_insert_] = array_[ivec_insert_-1]; \
-    array_[pos_] = element_; ++(*array_len_ref_)
+    array_[pos_] = element_; \
+    ++(*array_len_ref_)
 
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
 
@@ -238,6 +239,12 @@ _fun_inlined b32 char_in_(cchar letter, ccstr cstring) {
 /*
     ==================== MATH ====================
 */
+
+#define abs_(number_) ((number_) > -1 ? (number_) : -(number_))
+#define min_(number1_, number2_) ((number1_) < (number2_) ? (number1_) : (number2_))
+#define max_(number1_, number2_) ((number1_) > (number2_) ? (number1_) : (number2_))
+
+
 // bitmask for optimized Mod for power 2 numbers
 _math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
     return (number) & (modval - 1);
@@ -548,18 +555,22 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
 #ifdef stdout
 // stdio.h
 
+static b32 PRINT_ALL_ = True;
+#define print(...) if (PRINT_ALL_) printf(__VA_ARGS__)
+
 #define array_print(format_str_, vec_to_print_len, vec_to_print_) \
     for (idx32 ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
-        printf(format_str_, vec_to_print_[ivec_]); \
-    printf("\n")
+        print(format_str_, vec_to_print_[ivec_]); \
+    print("\n")
 
 #define matrix_print(format_str_, number_of_lines_, number_of_columns_, matrix_to_print_) \
+    printf("Matrix %d x %d :\n", number_of_lines_, number_of_columns_); \
     for (idx32 imatrix_line_ = 0; imatrix_line_ < number_of_lines_; ++imatrix_line_) { \
         for (idx32 imatrix_column_ = 0; imatrix_column_ < number_of_columns_; ++ imatrix_column_) \
-            printf(format_str_, matrix_to_print_[imatrix_line_][imatrix_column_]); \
-        printf("\n"); \
+            print(format_str_, matrix_to_print_[imatrix_line_][imatrix_column_]); \
+        print("\n"); \
     } \
-    printf("\n")
+    print("\n")
 
 // stdio.h
 #endif 

@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
-#include "ale.h"
+#include "../ale.h"
 
 static len32 M = 0, N = 0;
 static char matrix[512][512] = {0};
@@ -112,7 +112,7 @@ i32 main(void) {
     i64 charbuffer_cap = 64000;
     i32 lines_cap = 256;
 
-    len32 lines_len = file_to_lines("./txts/aoc.txt",
+    len32 lines_len = file_to_lines("./inputs/aoc11.txt",
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();

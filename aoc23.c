@@ -3,106 +3,29 @@
 #include <time.h>
 #include "ale.h"
 
-static len32 M = 0, N = 0;
-static char matrix[512][512] = {0};
+static const b32 PRINT_ALL_ = True;
+#define print(...) if (PRINT_ALL_) printf(__VA_ARGS__)
 
-typedef struct coord{idx32 line; idx32 column;}coord;
-_proc coord_print(coord c) {
-    print("(%d,%d) ", c.line, c.column);
-}
-_fun i64 distance(coord coord1, coord coord2) {
-    i32 lower_line    = min_(coord1.line, coord2.line);
-    i32 higher_line   = max_(coord1.line, coord2.line);
-    i32 lower_column  = min_(coord1.column, coord2.column);
-    i32 higher_column = max_(coord1.column, coord2.column);
-    i64 dist = 0;
-
-    for (idx32 icolumn = lower_column; icolumn < higher_column ; ++icolumn) {
-        cchar tile = matrix[lower_line][icolumn];
-        dist += tile == ',' or tile == '-' ? 999999 : 1;
-    }
-    for (idx32 iline = lower_line; iline < higher_line ; ++iline) {
-        cchar tile = matrix[iline][lower_column];
-        dist += tile == ',' or tile == '-' ? 999999 : 1;
-    }
-
-    return dist;
+_fun i32 solve_line(mstr line) {
+    mstr words[4] = {0};
+    len32 words_len = split(line, ' ', 4, words);
+    assert(words_len == 2 && "Error parsing");
+    print("%s | %s \n", words[0], words[1]);
+    return cstrlen32(line);
 }
 
-static coord galaxies[512] = {{0,0}};
-static len32 galaxies_len = 0;
-
-_proc initialize_matrix(mstr lines[64]) {
-    len32 newM = M, newN = N;
-    b32 column_has_galaxy[256] = {0};
-
-    for (idx32 iline = 0, newiline = 0; iline < M; ++iline, ++newiline) {
-        b32 line_has_galaxy = False;
-        for (idx32 icol = 0; icol < N; ++icol) {
-            matrix[newiline][icol] = lines[iline][icol];
-            if (lines[iline][icol] == '#') {
-                line_has_galaxy = True;
-                column_has_galaxy[icol] = True;
-            }   
-        }
-        if (not line_has_galaxy) {
-            for (idx32 icol = 0; icol < N; ++icol) {
-                matrix[newiline+1][icol] = ',';
-            }
-            ++newM;
-            ++newiline;
-        }
-    }
-    M = newM;
-        
-    for (idx32 icolumn = 0, adjust = 0; icolumn < newN; ++icolumn) {
-        if (not column_has_galaxy[icolumn-adjust]) {
-            for (idx32 iline = 0; iline < M; ++iline) {
-                for (idx32 icol = newN; icol > icolumn; --icol) {
-                    matrix[iline][icol] = matrix[iline][icol-1];
-                }
-                matrix[iline][icolumn] = '-';
-            }
-            ++newN;
-            ++icolumn;
-            ++adjust;
-        }
-    }
-    N = newN;
-    dis_ newN;
-    matrix_print("%c ", M, N, matrix);
-}
-
-static void get_galaxies(void) {
-    for (idx32 iline = 0; iline < M; ++iline) {
-        for (idx32 icolumn = 0; icolumn < N; ++icolumn) {
-            if (matrix[iline][icolumn] == '#') {
-                coord galaxy = {iline, icolumn};
-                galaxies[galaxies_len++] = galaxy;
-            }
-        }
-    }
-}
-
-//AoC 11
-_proc aoc(len32 lines_len, mstr lines[64]) {
-    i64 sum_dists = 0;
-    M = lines_len;
-    N = cstrlen32(lines[0]);
+//AoC 12
+_proc aoc(len32 lines_len, mstr lines[2]) {
+    i64 sum = 0;
     
-    initialize_matrix(lines);
-    get_galaxies();
-
-    for (idx32 i = 0; i < galaxies_len; ++i) {
-        for (idx32 j = i+1; j < galaxies_len; ++j) {
-            i64 dist = distance(galaxies[i], galaxies[j]);
-            print("Coord1: "); coord_print(galaxies[i]); 
-            print("Coord2: "); coord_print(galaxies[j]);
-            print(" distance: %lld\n", dist);
-            sum_dists += dist;
-        }
+    for (idx32 iline = 0; iline < lines_len; ++iline) {
+        mstr line = lines[iline];
+        i32 res = solve_line(line);
+        print("%s : %d\n", line, res);
+        sum += res;
     }
-    printf("Sum dists: %lld\n", sum_dists);
+
+    printf("\nSum: %lld\n", sum);
 } 
 
 
@@ -116,7 +39,6 @@ i32 main(void) {
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();
-    PRINT_ALL_ = False;
     aoc(lines_len, lines);
     print_clock(start);
 

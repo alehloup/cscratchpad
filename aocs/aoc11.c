@@ -32,7 +32,7 @@ _fun i64 distance(coord coord1, coord coord2) {
 static coord galaxies[512] = {{0,0}};
 static len32 galaxies_len = 0;
 
-_proc initialize_matrix(mstr lines[64]) {
+_proc initialize_matrix(mstr lines[2]) {
     len32 newM = M, newN = N;
     b32 column_has_galaxy[256] = {0};
 
@@ -85,7 +85,7 @@ static void get_galaxies(void) {
 }
 
 //AoC 11
-_proc aoc(len32 lines_len, mstr lines[64]) {
+_proc aoc(len32 lines_len, mstr lines[2]) {
     i64 sum_dists = 0;
     M = lines_len;
     N = cstrlen32(lines[0]);

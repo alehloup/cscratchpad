@@ -351,7 +351,7 @@ _gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr search_key, 
 */
 
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[64], b32 include_empty_lines) {
+_fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[2], b32 include_empty_lines) {
     len32 lines_len = 0;
     
     idx64 current = 0;
@@ -376,14 +376,14 @@ _fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[64], 
 
     return lines_len;
 }
-_fun_inlined len32 into_lines(mstr text_to_alter, cap32 lines_cap, mstr lines[64]) {
+_fun_inlined len32 into_lines(mstr text_to_alter, cap32 lines_cap, mstr lines[2]) {
     return into_lines_(text_to_alter, lines_cap, lines, False);
 }
-_fun_inlined len32 into_lines_including_empty(mstr text_to_alter, cap32 lines_cap, mstr lines[64]) {
+_fun_inlined len32 into_lines_including_empty(mstr text_to_alter, cap32 lines_cap, mstr lines[2]) {
     return into_lines_(text_to_alter, lines_cap, lines, True);
 }
 
-_fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr words[64]) {
+_fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr words[2]) {
     idx32 i = 0, current = 0;
     len32 words_len = 0;
 
@@ -480,7 +480,7 @@ _fun_inlined i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
               return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
 }
 
-_fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar charbuffer[64]) {
+_fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar charbuffer[2]) {
     i64 fsize = 0;
 
         FILE *f = 0; i32 err = 
@@ -507,7 +507,7 @@ _fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar char
     return fsize;
 }
 
-_fun_inlined len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[64], cap64 charbuffer_cap, bufferchar charbuffer[64]) {
+_fun_inlined len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[2], cap64 charbuffer_cap, bufferchar charbuffer[2]) {
     len64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
     dis_ charbuffer_len;
     return into_lines(charbuffer, lines_cap, lines);
@@ -525,7 +525,7 @@ _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
     fclose(f);
 }
 
-_proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
+_proc_hot lines_to_file(len32 lines_len, mstr lines[2], ccstr filename) {
         FILE *f = 0; i32 err = 
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");
@@ -554,9 +554,6 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[64], ccstr filename) {
 */
 #ifdef stdout
 // stdio.h
-
-static b32 PRINT_ALL_ = True;
-#define print(...) if (PRINT_ALL_) printf(__VA_ARGS__)
 
 #define array_print(format_str_, vec_to_print_len, vec_to_print_) \
     for (idx32 ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \

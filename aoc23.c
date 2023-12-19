@@ -3,20 +3,18 @@
 #include <time.h>
 #include "ale.h"
 
-static const b32 PRINT_ALL_ = True;
-#define print(...) if (PRINT_ALL_) printf(__VA_ARGS__)
-
 _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line) {
     i32 npossibili = 0;
     i32 cur_group = groups_len > 0 ? groups[0] : 0;
     
     i32 end = line_len - cur_group;
     
-    //print("%s|%d [%d]|%d\n", line, line_len, cur_group, groups_len);
+    printf("%s|%d [%d]|%d\n", line, line_len, cur_group, groups_len);
 
     if (groups_len < 1) {
         return 1;
     }
+    
     if (line_len < cur_group) {
         return 0;
     }
@@ -47,7 +45,7 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
 
         npossibili += npossibilities(
             groups_len - 1, &groups[1], 
-             line_len - (iplusg + 1), &line[iplusg+1]
+             line_len - (iplusg + 1), &line[iplusg +1 ]
         );
     }
 
@@ -61,13 +59,13 @@ _fun i32 solve_line(mstr line) {
     i32  groups[16] = {0};
     len32 groups_len = split(words[1], ',', 16, groups_str);
 
-    print("%s ", words[0]);
+    printf("%s ", words[0]);
 
     for (idx32 i = 0; i < groups_len; ++i) {
         sscanf_s(groups_str[i], "%d ", &groups[i]);
-        print("%d ", groups[i]);
+        printf("%d ", groups[i]);
     }
-    print("\n");
+    printf("\n");
     
     assert(words_len == 2 && "Error parsing");
     
@@ -81,7 +79,7 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
     for (idx32 iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
         i32 res = solve_line(line);
-        print(" = %d\n", res);
+        printf(" = %d\n", res);
         sum += res;
     }
 

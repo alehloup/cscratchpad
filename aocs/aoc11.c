@@ -7,8 +7,8 @@ static len32 M = 0, N = 0;
 static char matrix[512][512] = {0};
 
 typedef struct coord{idx32 line; idx32 column;}coord;
-_proc coord_print(coord c) {
-    print("(%d,%d) ", c.line, c.column);
+_proc coord_printf(coord c) {
+    printf("(%d,%d) ", c.line, c.column);
 }
 _fun i64 distance(coord coord1, coord coord2) {
     i32 lower_line    = min_(coord1.line, coord2.line);
@@ -69,8 +69,8 @@ _proc initialize_matrix(mstr lines[2]) {
         }
     }
     N = newN;
-    dis_ newN;
-    matrix_print("%c ", M, N, matrix);
+    (void) newN;
+    matrix_printf("%c ", M, N, matrix);
 }
 
 static void get_galaxies(void) {
@@ -96,9 +96,9 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
     for (idx32 i = 0; i < galaxies_len; ++i) {
         for (idx32 j = i+1; j < galaxies_len; ++j) {
             i64 dist = distance(galaxies[i], galaxies[j]);
-            print("Coord1: "); coord_print(galaxies[i]); 
-            print("Coord2: "); coord_print(galaxies[j]);
-            print(" distance: %lld\n", dist);
+            printf("Coord1: "); coord_printf(galaxies[i]); 
+            printf("Coord2: "); coord_printf(galaxies[j]);
+            printf(" distance: %lld\n", dist);
             sum_dists += dist;
         }
     }
@@ -116,7 +116,6 @@ i32 main(void) {
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();
-    PRINT_ALL_ = False;
     aoc(lines_len, lines);
     print_clock(start);
 

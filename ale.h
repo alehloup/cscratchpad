@@ -44,26 +44,17 @@
 // always inline
 #define _fun_inlined _fun_attr(always_inline)
 #define _proc_inlined _proc_attr(always_inline)
-// for explicit discarding returns
-#define dis_ (void) 
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== TYPES ====================
 */
+//
 #define MBs_ 1048576
 
 // Int
-typedef unsigned char u8;
-typedef const u8 cu8;
-typedef const u8* const ccu8;
-typedef u8 bufferbytes; // just for visual:  bufferbytes buffer[64];
 typedef unsigned int u32;
-typedef const u32 cu32;
 typedef unsigned long long u64;
-typedef const u64 cu64;
-typedef signed char i8;
-typedef const i8 ci8;
 typedef int i32;
 typedef const i32 ci32;
 typedef long long i64;
@@ -78,8 +69,8 @@ typedef i32 idx32;
 typedef i64 idx64;
 typedef i32 len32;
 typedef i64 len64;
-typedef i32 cap32;
-typedef i64 cap64;
+typedef ci32 cap32;
+typedef ci64 cap64;
 
 // Float
 typedef float f32;
@@ -95,15 +86,13 @@ typedef char * mstr; // modifiable string
 typedef char bufferchar; // just for visual:  bufferchar buffer[64];
 
 // Void
-typedef void * voidp;
-typedef void * const voidpc;
 typedef const void * cvoidp;
-typedef const void * const ccvoidp;
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
     Keyword Alternatives
 */
+//
 #define True 1
 #define False 0
 #ifndef __cplusplus
@@ -116,28 +105,16 @@ typedef const void * const ccvoidp;
 /*
     MEMORY
 */
+//
 #define isizeof(x_element_) ((i64)sizeof(x_element_))
+#define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
 
-// COMPILE TIME Count Static Sized Array elements:
-#define arraysizeof(x_array_) (isizeof(x_array_) / isizeof(*x_array_))
-
-_fun_hot u8 * zeromem(u8 * const __restrict dst, ci64 count) {
-    for (idx64 i = 0; i < count; ++i) {
-        dst[i] = 0;
-    }
-    return dst;
-}
-_proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
-    for (idx64 i = 0; i < count; ++i) {
-        dst[i] = src[i];
-    }
-}
 //  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ARRAYS
 */
-
+//
 #define array_insert_in_pos(array_len_ref_, array_, element_, pos_) \
     for (idx32 ivec_insert_ = (*array_len_ref_); ivec_insert_ > pos_; --ivec_insert_) \
         array_[ivec_insert_] = array_[ivec_insert_-1]; \
@@ -150,6 +127,7 @@ _proc_hot copymem(u8 * const __restrict dst, ccu8 __restrict src, ci64 count) {
 /*
     STRINGS
 */
+//
 _pure_hot len64 cstrlen64(ccstr cstring) {
     len64 cstring_len;
     for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
@@ -239,11 +217,10 @@ _fun_inlined b32 char_in_(cchar letter, ccstr cstring) {
 /*
     ==================== MATH ====================
 */
-
+//
 #define abs_(number_) ((number_) > -1 ? (number_) : -(number_))
 #define min_(number1_, number2_) ((number1_) < (number2_) ? (number1_) : (number2_))
 #define max_(number1_, number2_) ((number1_) > (number2_) ? (number1_) : (number2_))
-
 
 // bitmask for optimized Mod for power 2 numbers
 _math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
@@ -267,6 +244,7 @@ _fun_inlined i64 least_common_multiple(i64 m, i64 n) {
 /*
     ==================== RANDOM ====================
 */
+//
 #define Rnd_positive_mask 2147483647
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
@@ -283,6 +261,7 @@ _pure_hot i32 rnd(u64 seed[1]) {
 /*
     ==================== HASH ====================
 */
+//
 #define Hash_shift_mix(cur_hash_)  (cur_hash_ ^ (cur_hash_ >> 31))
 
 #define Hash_start_n 0x7A5662DCDF
@@ -324,11 +303,11 @@ _math_hot hash64 hash_int(i64 integer64) {
 
 // Mask-Step-Index (MSI) lookup
 _math_hot idx32 ht_lookup(
-    cu64 hash, // 1st hash acts as base location
+    hash64 hash, // 1st hash acts as base location
     ci32 index // 2nd "hash" steps over the "list of elements" from base-location
 )
 {
-    cu32 step = (u32)(hash >> Ht_shift) | 1;
+    u32 step = (u32)(hash >> Ht_shift) | 1;
     return (i32) (((u32)index + step) & Ht_mask);
 }
 
@@ -340,7 +319,7 @@ _gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr search_key, 
         i = ht_lookup(h, i);
     }
 
-    keys[i] = keys_len and not keys[i] ? (dis_ (++(*keys_len)), search_key) : keys[i];
+    keys[i] = keys_len and not keys[i] ? ((void) (++(*keys_len)), search_key) : keys[i];
 
     return keys[i] ? i : - i;
 }
@@ -349,7 +328,7 @@ _gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr search_key, 
 /*
     ==================== TEXT ====================
 */
-
+//
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
 _fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[2], b32 include_empty_lines) {
     len32 lines_len = 0;
@@ -411,6 +390,7 @@ _fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr w
 /*
     ==================== TIME BENCHMARK ====================
 */
+//
 #ifdef CLOCKS_PER_SEC 
 // time.h
 
@@ -436,6 +416,7 @@ _proc_inlined print_clock(clock_t start) {
 /*
     ==================== SHELL ====================
 */
+//
 #if defined RAND_MAX && defined stdout
 // stdlib.h && stdio.h
 
@@ -464,6 +445,7 @@ i32 shellrun(ccstr format, ...) {
 /*
     ==================== FILES ====================
 */
+//
 #ifdef stdout
 // stdio.h
 
@@ -509,7 +491,7 @@ _fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar char
 
 _fun_inlined len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[2], cap64 charbuffer_cap, bufferchar charbuffer[2]) {
     len64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
-    dis_ charbuffer_len;
+    (void) charbuffer_len;
     return into_lines(charbuffer, lines_cap, lines);
 }
 
@@ -552,22 +534,23 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[2], ccstr filename) {
 /*
     ==================== PRINT ====================
 */
+//
 #ifdef stdout
 // stdio.h
 
-#define array_print(format_str_, vec_to_print_len, vec_to_print_) \
+#define array_printf(format_str_, vec_to_print_len, vec_to_print_) \
     for (idx32 ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
-        print(format_str_, vec_to_print_[ivec_]); \
-    print("\n")
+        printf(format_str_, vec_to_print_[ivec_]); \
+    printf("\n")
 
-#define matrix_print(format_str_, number_of_lines_, number_of_columns_, matrix_to_print_) \
+#define matrix_printf(format_str_, number_of_lines_, number_of_columns_, matrix_to_print_) \
     printf("Matrix %d x %d :\n", number_of_lines_, number_of_columns_); \
     for (idx32 imatrix_line_ = 0; imatrix_line_ < number_of_lines_; ++imatrix_line_) { \
         for (idx32 imatrix_column_ = 0; imatrix_column_ < number_of_columns_; ++ imatrix_column_) \
-            print(format_str_, matrix_to_print_[imatrix_line_][imatrix_column_]); \
-        print("\n"); \
+            printf(format_str_, matrix_to_print_[imatrix_line_][imatrix_column_]); \
+        printf("\n"); \
     } \
-    print("\n")
+    printf("\n")
 
 // stdio.h
 #endif 
@@ -575,7 +558,8 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[2], ccstr filename) {
 
 /*
     ==================== STDLIB ====================
-*/ 
+*/
+// 
 #ifdef RAND_MAX
 // stdlib.h
 

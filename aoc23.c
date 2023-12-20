@@ -3,6 +3,8 @@
 #include <time.h>
 #include "ale.h"
 
+#define X_TIMES 1
+
 _proc print_encoded(i32 x) {
     static bufferchar str[32] = {0};
     static len32 len = 0;
@@ -41,11 +43,11 @@ _proc print_possibilities(i128 set[HT_CAP]) {
     printf("\n");
 }
 
-_fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line, i128 cur_encoded) {
+_fun i64 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line, i128 cur_encoded) {
     static i128 set[HT_CAP] = {0};
     static len32 set_len = 0;
 
-    i32 npossibili = 0;
+    i64 npossibili = 0;
     i32 cur_group = groups_len > 0 ? groups[0] : 0;
     i32 end = line_len - cur_group + 1;
     b32 past_broken = False;
@@ -139,8 +141,10 @@ _fun mstr adjust_springs(mstr line) {
     static bufferchar adjusted_line[128] = {0};
     
     idx32 i = 0;
-    for (i = 0; line[i]; ++i) {
-        adjusted_line[i] = line[i];
+    for (int times = 0; times < X_TIMES; ++times) {
+        for (idx32 iline = 0; line[iline]; ++i, ++iline) {
+            adjusted_line[i] = line[iline];
+        }
     }
     adjusted_line[i] = 0;
 
@@ -157,16 +161,25 @@ _fun mstr adjust_springs(mstr line) {
     return &adjusted_line[i];
 }
 
+#define groups_cap 32
 len32 max_group = 0, max_groups = 0, max_springs = 0;
-_fun i32 solve_line(mstr line) {
+_fun i64 solve_line(mstr line) {
     mstr words[4] = {0};
     len32 words_len = split(line, ' ', 4, words);
-    mstr groups_str[16] = {0};
-    i32  groups[16] = {0};
-    len32 groups_len = split(words[1], ',', 16, groups_str);
+    mstr groups_str[groups_cap] = {0};
+    i32  groups[groups_cap] = {0};
+    len32 groups_len = split(words[1], ',', groups_cap, groups_str);
 
     mstr springs = adjust_springs(line);
     len32 springs_len = cstrlen32(springs);
+
+    idx32 i = groups_len;
+    for (int times = 0; times < (X_TIMES - 1); ++times) {
+        for (idx32 igroups_str = 0; igroups_str < groups_len; ++i, ++igroups_str) {
+            groups_str[i] = groups_str[igroups_str];
+        }
+    }
+    groups_len = i;
 
     max_groups = max_(max_groups, groups_len);
     max_springs = max_(max_springs, springs_len);
@@ -194,8 +207,8 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
     
     for (idx32 iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
-        i32 res = solve_line(line);
-        //printf(" = %d\n", res);
+        i64 res = solve_line(line);
+        //printf(" = %lld\n", res);
         sum += res;
     }
 

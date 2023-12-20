@@ -312,9 +312,10 @@ _math_hot hash64 hash_int(i64 integer64) {
     ==================== HASH TABLE ====================
 */
 
-#define HT_CAP    4096 //   2 ^ 12
+#define Ht_exp 11
+#define HT_CAP    2048 //   2 ^ Ht_exp
 #define Ht_mask   (HT_CAP - 1)
-#define Ht_shift  52   //  64 - 12
+#define Ht_shift  (64 - Ht_exp)
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
 _math_hot idx32 ht_lookup(

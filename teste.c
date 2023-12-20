@@ -22,9 +22,19 @@ int main(void) {
         bigbuffer_len += cstrcpy(&bigbuffer[bigbuffer_len], strtmp, len);
     }
 
-    for(idx32 i = 0; i < array_len; ++i) {
+    for (idx32 i = 0; i < array_len; ++i) {
         printf("%s\n", array[i]);
     }
+
+    printf("\n");
+    for (idx32 i = 0; i < bigbuffer_len; ++i) {
+        if (bigbuffer[i] == 0) {
+            printf("|_|");
+        } else {
+            printf("%c", bigbuffer[i]);
+        }
+    }
+    printf("\n");
 
 
     return 0;

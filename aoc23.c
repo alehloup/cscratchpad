@@ -19,16 +19,16 @@ _proc print_encoded(i32 x) {
     }    
 }
 
-_fun i32 encode_it(ccstr s) {
-    i32 encoded = 1;
+// _fun i32 encode_springs(ccstr s) {
+//     i32 encoded = 1;
 
-    for (idx32 i = 0; s[i]; ++i) {
-        encoded = encoded << 1;
-        encoded += s[i] == '#' ? 1 : 0;
-    }
+//     for (idx32 i = 0; s[i]; ++i) {
+//         encoded = encoded << 1;
+//         encoded += s[i] == '#' ? 1 : 0;
+//     }
 
-    return encoded;
-}
+//     return encoded;
+// }
 
 _proc print_possibilities(i32 set[HT_CAP]) {
     for (idx32 i = 0; i < HT_CAP; ++i) {

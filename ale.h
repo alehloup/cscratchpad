@@ -219,6 +219,7 @@ _fun_hot idx32 cstrcpy(mstr dst, ccstr src, len64 dst_len) {
     for (i = 0; i < dst_len and src[i]; ++i) {
         dst[i] = src[i];
     }
+    dst[i++] = 0;
     return i;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^

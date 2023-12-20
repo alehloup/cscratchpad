@@ -3,7 +3,7 @@
 #include <time.h>
 #include "ale.h"
 
-#define X_TIMES 1
+#define X_TIMES 2
 
 _proc print_encoded(i32 x) {
     static bufferchar str[32] = {0};

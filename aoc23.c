@@ -134,12 +134,35 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
     }
 
     if (print_possib) {
-        print_possibilities(set);
+        //print_possibilities(set);
     }
 
     return npossibili;
 }
 
+_fun mstr adjust_springs(mstr line) {
+    static bufferchar adjusted_line[128] = {0};
+    
+    idx32 i = 0;
+    for (i = 0; line[i]; ++i) {
+        adjusted_line[i] = line[i];
+    }
+    adjusted_line[i] = 0;
+
+    --i;
+    while (adjusted_line[i] == '.') {
+        adjusted_line[i--] = 0;
+    }
+
+    i = 0;
+    while (adjusted_line[i] == '.') {
+        ++i;
+    }
+
+    return &adjusted_line[i];
+}
+
+len32 max_group = 0, max_groups = 0, max_springs = 0;
 _fun i32 solve_line(mstr line) {
     mstr words[4] = {0};
     len32 words_len = split(line, ' ', 4, words);
@@ -147,19 +170,25 @@ _fun i32 solve_line(mstr line) {
     i32  groups[16] = {0};
     len32 groups_len = split(words[1], ',', 16, groups_str);
 
-    printf("{%s} ", words[0]);
+    mstr springs = adjust_springs(line);
+    len32 springs_len = cstrlen32(springs);
+
+    max_groups = max_(max_groups, groups_len);
+    max_springs = max_(max_springs, springs_len);
+
+    printf("{%s} ", springs);
 
     for (idx32 i = 0; i < groups_len; ++i) {
         sscanf_s(groups_str[i], "%d ", &groups[i]);
         printf("%d ", groups[i]);
+        max_group = max_(max_group, groups[i]);
     }
-    printf("\n");
     
     assert(words_len == 2 && "Error parsing");
     
     return npossibilities(
         groups_len, groups, 
-        cstrlen32(line), line, 
+        springs_len, springs, 
         1
     );
 }
@@ -176,6 +205,7 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
     }
 
     printf("\nSum: %lld\n", sum);
+    printf("MSprings: %d, MGroups: %d, MGroup: %d\n", max_springs, max_groups, max_group);
 } 
 
 

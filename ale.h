@@ -60,6 +60,11 @@ typedef const i32 ci32;
 typedef long long i64;
 typedef const i64 ci64;
 
+#ifdef __SIZEOF_INT128__
+__extension__ typedef __int128 i128;
+typedef const i128 ci128;
+#endif
+
 // Visual Int
 typedef int b32; // Boolean
 typedef const b32 cb32;
@@ -378,6 +383,27 @@ _gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 key, i64 keys[
 
     return found ? i : - i;
 }
+
+#ifdef __SIZEOF_INT128__
+// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
+_gcc_attr(always_inline, warn_unused_result) idx32 i128_in_ht_(i128 key, i128 keys[HT_CAP], len32 *keys_len_ref) {
+    hash64 h = hash_int((i64)key);
+    idx32 i = ht_lookup(h, (i32)h);
+    b32 found = False;
+
+    while (i == 0 or (keys[i] and key != keys[i])) {
+        i = ht_lookup(h, i);
+    }
+
+    found = keys[i] ? True : False;
+    if (keys_len_ref) {
+        keys[i] = key;
+        (*keys_len_ref) += found;
+    }
+
+    return found ? i : - i;
+}
+#endif
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 /*

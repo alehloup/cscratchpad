@@ -30,7 +30,7 @@ _proc print_encoded(i32 x) {
 //     return encoded;
 // }
 
-_proc print_possibilities(i32 set[HT_CAP]) {
+_proc print_possibilities(i128 set[HT_CAP]) {
     for (idx32 i = 0; i < HT_CAP; ++i) {
         if (set[i]) {
             printf("{");
@@ -41,8 +41,8 @@ _proc print_possibilities(i32 set[HT_CAP]) {
     printf("\n");
 }
 
-_fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line, i32 cur_encoded) {
-    static i32 set[HT_CAP] = {0};
+_fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line, i128 cur_encoded) {
+    static i128 set[HT_CAP] = {0};
     static len32 set_len = 0;
 
     i32 npossibili = 0;
@@ -66,7 +66,7 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
             cur_encoded = cur_encoded << 1;
         }
 
-        return i32_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1; 
+        return i128_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1; 
     }
 
     if (line_len == cur_group) {
@@ -82,7 +82,7 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
             cur_encoded += 1;
         }
 
-        return i32_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1;
+        return i128_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1;
     }
 
     if (line_len < cur_group) { 
@@ -93,7 +93,7 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
         b32 fit_group = True;
         i32 iplusg = i + cur_group;
 
-        i32 advance_encoded = cur_encoded;
+        i128 advance_encoded = cur_encoded;
 
         if (past_broken) {
             break;

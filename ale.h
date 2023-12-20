@@ -311,7 +311,7 @@ _math_hot hash64 hash_int(i64 integer64) {
 #define Ht_mask   (HT_CAP - 1)
 #define Ht_shift  52   //  64 - 12
 
-// Mask-Step-Index (MSI) lookup
+// Mask-Step-Index (MSI) lookup. Returns the next index. 
 _math_hot idx32 ht_lookup(
     hash64 hash, // 1st hash acts as base location
     ci32 index // 2nd "hash" steps over the "list of elements" from base-location
@@ -319,58 +319,61 @@ _math_hot idx32 ht_lookup(
 {
     u32 step = (u32)(hash >> Ht_shift) | 1;
     idx32 idx = (i32) (((u32)index + step) & Ht_mask);
-    return idx ? idx : 1;
+    return idx;
 }
 
-_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr key, cstr keys[HT_CAP], len32 *keys_len) {
+// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
+_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr key, cstr keys[HT_CAP], len32 *keys_len_ref) {
     hash64 h = hash_str(key);
     idx32 i = ht_lookup(h, (i32)h);
     b32 found = False;
 
-    while (keys[i] and cstrcmp(key, keys[i])) {
+    while (i == 0 or (keys[i] and cstrcmp(key, keys[i]))) {
         i = ht_lookup(h, i);
     }
 
     found = keys[i] ? True : False;
-    if (keys_len) {
+    if (keys_len_ref) {
         keys[i] = key;
-        (*keys_len) += found;
+        (*keys_len_ref) += found;
     }
 
     return found ? i : - i;
 }
 
-_gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 key, i32 keys[HT_CAP], len32 *keys_len) {
+// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
+_gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 key, i32 keys[HT_CAP], len32 *keys_len_ref) {
     hash64 h = hash_int(key);
     idx32 i = ht_lookup(h, (i32)h);
     b32 found = False;
 
-    while (keys[i] and key != keys[i]) {
+    while (i == 0 or (keys[i] and key != keys[i])) {
         i = ht_lookup(h, i);
     }
 
     found = keys[i] ? True : False;
-    if (keys_len) {
+    if (keys_len_ref) {
         keys[i] = key;
-        (*keys_len) += found;
+        (*keys_len_ref) += found;
     }
 
     return found ? i : - i;
 }
 
-_gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 key, i64 keys[HT_CAP], len32 *keys_len) {
+// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
+_gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 key, i64 keys[HT_CAP], len32 *keys_len_ref) {
     hash64 h = hash_int(key);
     idx32 i = ht_lookup(h, (i32)h);
     b32 found = False;
 
-    while (keys[i] and key != keys[i]) {
+    while (i == 0 or (keys[i] and key != keys[i])) {
         i = ht_lookup(h, i);
     }
 
     found = keys[i] ? True : False;
-    if (keys_len) {
+    if (keys_len_ref) {
         keys[i] = key;
-        (*keys_len) += found;
+        (*keys_len_ref) += found;
     }
 
     return found ? i : - i;

@@ -68,10 +68,6 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
 
         return i32_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1; 
     }
-    
-    if (line_len < cur_group) {
-        return 0;
-    }
 
     if (line_len == cur_group) {
         if (groups_len > 1) {
@@ -87,6 +83,10 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
         }
 
         return i32_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1;
+    }
+
+    if (line_len < cur_group) { 
+        return 0; 
     }
 
     for (idx32 i = 0; i < end; ++i) {

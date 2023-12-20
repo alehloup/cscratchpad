@@ -322,54 +322,54 @@ _math_hot idx32 ht_lookup(
     return idx ? idx : 1;
 }
 
-_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr search_key, cstr keys[HT_CAP], len32 *keys_len) {
-    hash64 h = hash_str(search_key);
+_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr key, cstr keys[HT_CAP], len32 *keys_len) {
+    hash64 h = hash_str(key);
     idx32 i = ht_lookup(h, (i32)h);
     b32 found = False;
 
-    while (keys[i] and cstrcmp(search_key, keys[i])) {
+    while (keys[i] and cstrcmp(key, keys[i])) {
         i = ht_lookup(h, i);
     }
 
     found = keys[i] ? True : False;
     if (keys_len) {
-        keys[i] = search_key;
+        keys[i] = key;
         (*keys_len) += found;
     }
 
     return found ? i : - i;
 }
 
-_gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 search_key, i32 keys[HT_CAP], len32 *keys_len) {
-    hash64 h = hash_int(search_key);
+_gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 key, i32 keys[HT_CAP], len32 *keys_len) {
+    hash64 h = hash_int(key);
     idx32 i = ht_lookup(h, (i32)h);
     b32 found = False;
 
-    while (keys[i] and search_key != keys[i]) {
+    while (keys[i] and key != keys[i]) {
         i = ht_lookup(h, i);
     }
 
     found = keys[i] ? True : False;
     if (keys_len) {
-        keys[i] = search_key;
+        keys[i] = key;
         (*keys_len) += found;
     }
 
     return found ? i : - i;
 }
 
-_gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 search_key, i64 keys[HT_CAP], len32 *keys_len) {
-    hash64 h = hash_int(search_key);
+_gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 key, i64 keys[HT_CAP], len32 *keys_len) {
+    hash64 h = hash_int(key);
     idx32 i = ht_lookup(h, (i32)h);
     b32 found = False;
 
-    while (keys[i] and search_key != keys[i]) {
+    while (keys[i] and key != keys[i]) {
         i = ht_lookup(h, i);
     }
 
     found = keys[i] ? True : False;
     if (keys_len) {
-        keys[i] = search_key;
+        keys[i] = key;
         (*keys_len) += found;
     }
 

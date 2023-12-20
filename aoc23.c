@@ -3,8 +3,6 @@
 #include <time.h>
 #include "ale.h"
 
-#define set_cap 4194304
-
 _proc print_encoded(i32 x) {
     static bufferchar str[32] = {0};
     static len32 len = 0;
@@ -32,8 +30,8 @@ _fun i32 encode_it(ccstr s) {
     return encoded;
 }
 
-_proc print_possibilities(char set[set_cap]) {
-    for (idx32 i = 0; i < set_cap; ++i) {
+_proc print_possibilities(i32 set[HT_CAP]) {
+    for (idx32 i = 0; i < HT_CAP; ++i) {
         if (set[i]) {
             printf("{");
             print_encoded(i);
@@ -44,7 +42,9 @@ _proc print_possibilities(char set[set_cap]) {
 }
 
 _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line, i32 cur_encoded) {
-    static char set[set_cap] = {0};
+    static i32 set[HT_CAP] = {0};
+    static len32 set_len = 0;
+
     i32 npossibili = 0;
     i32 cur_group = groups_len > 0 ? groups[0] : 0;
     i32 end = line_len - cur_group + 1;
@@ -52,10 +52,10 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
     b32 print_possib = False;
 
     if (cur_encoded == 1) {
-        for (idx32 i = 0; i < set_cap; ++i) {
+        for (idx32 i = 0; i < HT_CAP; ++i) {
             set[i] = 0;
         }
-        print_possib = True;
+        print_possib = False; //True;
     }
 
     if (groups_len == 0) {
@@ -66,10 +66,7 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
             cur_encoded = cur_encoded << 1;
         }
 
-        if (set[cur_encoded])
-            return 0;
-
-        return set[cur_encoded] = 1;
+        return i32_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1; 
     }
     
     if (line_len < cur_group) {
@@ -89,9 +86,7 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
             cur_encoded += 1;
         }
 
-        if (set[cur_encoded])
-            return 0;
-        return set[cur_encoded] = 1;
+        return i32_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1;
     }
 
     for (idx32 i = 0; i < end; ++i) {
@@ -134,7 +129,7 @@ _fun i32 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
     }
 
     if (print_possib) {
-        //print_possibilities(set);
+        print_possibilities(set);
     }
 
     return npossibili;
@@ -176,11 +171,11 @@ _fun i32 solve_line(mstr line) {
     max_groups = max_(max_groups, groups_len);
     max_springs = max_(max_springs, springs_len);
 
-    printf("{%s} ", springs);
+    //printf("{%s} ", springs);
 
     for (idx32 i = 0; i < groups_len; ++i) {
         sscanf_s(groups_str[i], "%d ", &groups[i]);
-        printf("%d ", groups[i]);
+        //printf("%d ", groups[i]);
         max_group = max_(max_group, groups[i]);
     }
     
@@ -200,7 +195,7 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
     for (idx32 iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
         i32 res = solve_line(line);
-        printf(" = %d\n", res);
+        //printf(" = %d\n", res);
         sum += res;
     }
 

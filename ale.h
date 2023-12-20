@@ -308,20 +308,44 @@ _math_hot idx32 ht_lookup(
 )
 {
     u32 step = (u32)(hash >> Ht_shift) | 1;
-    return (i32) (((u32)index + step) & Ht_mask);
+    idx32 idx = (i32) (((u32)index + step) & Ht_mask);
+    return idx ? idx : 1;
 }
 
-_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr search_key, cstr *keys, len32 *keys_len) {
+_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr search_key, cstr keys[HT_CAP], len32 *keys_len) {
     hash64 h = hash_str(search_key);
     idx32 i = ht_lookup(h, (i32)h);
+    b32 found = False;
 
     while (keys[i] and cstrcmp(search_key, keys[i])) {
         i = ht_lookup(h, i);
     }
 
-    keys[i] = keys_len and not keys[i] ? ((void) (++(*keys_len)), search_key) : keys[i];
+    found = keys[i] ? True : False;
+    if (keys_len) {
+        keys[i] = search_key;
+        (*keys_len) += found;
+    }
 
-    return keys[i] ? i : - i;
+    return found ? i : - i;
+}
+
+_gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 search_key, i32 keys[HT_CAP], len32 *keys_len) {
+    hash64 h = hash_int(search_key);
+    idx32 i = ht_lookup(h, (i32)h);
+    b32 found = False;
+
+    while (keys[i] and search_key != keys[i]) {
+        i = ht_lookup(h, i);
+    }
+
+    found = keys[i] ? True : False;
+    if (keys_len) {
+        keys[i] = search_key;
+        (*keys_len) += found;
+    }
+
+    return found ? i : - i;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 

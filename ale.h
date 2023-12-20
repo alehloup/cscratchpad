@@ -212,6 +212,15 @@ _pure_hot idx32 char_pos_in_str(cchar letter, ccstr cstring) {
 _fun_inlined b32 char_in_(cchar letter, ccstr cstring) {
     return (char_pos_in_str(letter, cstring) + 1);
 }
+
+// returns the index after the last element
+_fun_hot idx32 cstrcpy(mstr dst, ccstr src, len64 dst_len) {
+    idx32 i = 0;
+    for (i = 0; i < dst_len and src[i]; ++i) {
+        dst[i] = src[i];
+    }
+    return i;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
 /*

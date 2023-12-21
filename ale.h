@@ -240,15 +240,15 @@ _fun_hot idx32 cstrcpy(mstr dst, ccstr src, len64 dst_len) {
     return i;
 }
 
-_fun_hot cstr save_str_to_worldbuffer(cstr string, bufferchar buffer[1024], cap64 buffer_cap) {
+_fun_hot cstr save_str_to_worldbuffer(cstr string, bufferchar worldbuffer[1024], cap64 worldbuffer_cap) {
     static idx64 begin = 0;
     
-    cstr new_str = &buffer[begin];
+    cstr new_str = &worldbuffer[begin];
 
-    for (idx32 istr = 0; string[istr] and begin < buffer_cap; ++istr, ++begin) {
-        buffer[begin] = string[istr];
+    for (idx32 istr = 0; string[istr] and begin < worldbuffer_cap; ++istr, ++begin) {
+        worldbuffer[begin] = string[istr];
     }
-    buffer[begin++] = 0;
+    worldbuffer[begin++] = 0;
 
     return new_str;
 }

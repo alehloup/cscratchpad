@@ -5,7 +5,7 @@
 
 #define X_TIMES 1
 
-_fun i64 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line) {
+_fun i64 npossibilities(len32 groups_len, i8 groups[], len32 line_len, mstr line) {
     i64 npossibili = 0, past_broken = False;
     i32 cur_group = groups_len > 0 ? groups[0] : 0, end = line_len - cur_group + 1;
 
@@ -65,14 +65,14 @@ _fun i64 solve_line(mstr line) {
     mstr words[4] = {0};
     len32 words_len = split(line, ' ', 4, words);
     mstr groups_str[groups_cap] = {0};
-    i32  groups[groups_cap] = {0};
+    i8 groups[groups_cap] = {0};
     len32 groups_len = split(words[1], ',', groups_cap, groups_str);
 
     mstr springs = adjust_springs(line);
     len32 springs_len = cstrlen32(springs);
 
     idx32 i = groups_len;
-    for (int times = 0; times < (X_TIMES - 1); ++times) {
+    for (idx32 times = 0; times < (X_TIMES - 1); ++times) {
         for (idx32 igroups_str = 0; igroups_str < groups_len; ++i, ++igroups_str) {
             groups_str[i] = groups_str[igroups_str];
         }

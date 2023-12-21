@@ -53,14 +53,18 @@
 #define MBs_ 1048576
 
 // Int
+typedef unsigned char u8;
 typedef unsigned int u32;
 typedef unsigned long long u64;
+typedef char i8;
 typedef int i32;
-typedef const i32 ci32;
 typedef long long i64;
+typedef const i8 ci8;
+typedef const i32 ci32;
 typedef const i64 ci64;
 
 #ifdef __SIZEOF_INT128__
+__extension__ typedef unsigned __int128 u128;
 __extension__ typedef __int128 i128;
 typedef const i128 ci128;
 #endif

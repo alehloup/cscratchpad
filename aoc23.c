@@ -5,119 +5,33 @@
 
 #define X_TIMES 1
 
-_proc print_encoded(i32 x) {
-    static bufferchar str[32] = {0};
-    static len32 len = 0;
+_fun i64 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line) {
+    i64 npossibili = 0, past_broken = False;
+    i32 cur_group = groups_len > 0 ? groups[0] : 0, end = line_len - cur_group + 1;
 
-    len = 0;
+    if (groups_len == 0) // Base: no more groups
+        return not char_in_substr_('#', line, 0, line_len);
 
-    while (x > 1) {
-        str[len++] = x % 2 ? '#' : '.';
-        x = x >> 1;
+    if (line_len == cur_group) // Base: Groups len == Line len
+        return groups_len == 1 and not char_in_substr_('.', line, 0, cur_group);
+
+    if (line_len < cur_group) // Base: end of line
+        return 0;  
+   
+    for (idx32 i = 0; i < end; ++i) { // Do a Recursion for each index
+        ci32 iplusg = i + cur_group;
+
+        if (past_broken) return npossibili; // past was unaccounted
+        past_broken = line[i] == '#';
+
+        if (line[iplusg] == '#') continue; // Cant fit group since it will colide
+
+        if (char_in_substr_('.', line, i, iplusg)) continue; // Group interrupted
+
+        npossibili += npossibilities(
+            groups_len - 1, &groups[1], line_len - (iplusg + 1), &line[iplusg + 1]
+        );
     }
-
-    while (len) {
-        printf("%c", str[--len]);
-    }    
-}
-
-// _fun i32 encode_springs(ccstr s) {
-//     i32 encoded = 1;
-
-//     for (idx32 i = 0; s[i]; ++i) {
-//         encoded = encoded << 1;
-//         encoded += s[i] == '#' ? 1 : 0;
-//     }
-
-//     return encoded;
-// }
-
-_proc print_possibilities(i128 set[HT_CAP]) {
-    for (idx32 i = 0; i < HT_CAP; ++i) {
-        if (set[i]) {
-            printf("{");
-            print_encoded(i);
-            printf("}, ");
-        }            
-    }
-    printf("\n");
-}
-
-_fun i64 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line, i128 cur_encoded) {
-    i64 npossibili = 0;
-    i32 cur_group = groups_len > 0 ? groups[0] : 0;
-    i32 end = line_len - cur_group + 1;
-    b32 past_broken = False;
-
-    if (groups_len == 0) { // Caso Base: acabaram os grupos
-        for (idx32 i = 0; i < line_len; ++i) {
-            if (line[i] == '#') {
-                return 0;
-            }
-            cur_encoded = cur_encoded << 1;
-        }
-        return 1;
-    }
-
-    if (line_len == cur_group) { // Caso Base: Grupo é do tamanho da linha
-        if (groups_len > 1) {
-            return 0;
-        }
-
-        for (idx32 i = 0; i < cur_group; ++i) {
-            cur_encoded = cur_encoded << 1;
-            if (line[i] == '.') {
-                return 0;
-            }
-            cur_encoded += 1;
-        }
-
-        return 1;
-    }
-
-    if (line_len < cur_group) {  // Caso base, acabou a linha
-        return 0; 
-    }
-
-    for (idx32 i = 0; i < end; ++i) {
-        b32 fit_group = True;
-        i32 iplusg = i + cur_group;
-
-        i128 advance_encoded = cur_encoded;
-
-        if (past_broken) {
-            break;
-        }
-
-        cur_encoded = cur_encoded << 1;
-        cur_encoded += (past_broken = line[i] == '#');
-
-
-        for (idx32 j = i; j < iplusg; ++j) {
-            cchar letter = line[j];
-            advance_encoded = advance_encoded << 1;
-
-            if (letter == '.') {
-                fit_group = False;
-            } else {
-                advance_encoded += 1;
-            }
-        }
-        if (not fit_group or line[iplusg] == '#') {
-            continue;
-        } else {
-            if (iplusg < line_len) {
-                advance_encoded = advance_encoded << 1;
-            }
-
-            npossibili += npossibilities(
-                groups_len - 1, &groups[1], 
-                line_len - (iplusg + 1), &line[iplusg + 1 ],
-                advance_encoded
-            );
-        }
-    }
-
     return npossibili;
 }
 
@@ -180,8 +94,7 @@ _fun i64 solve_line(mstr line) {
     
     return npossibilities(
         groups_len, groups, 
-        springs_len, springs, 
-        1
+        springs_len, springs
     );
 }
 

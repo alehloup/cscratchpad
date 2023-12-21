@@ -213,9 +213,21 @@ _pure_hot idx32 char_pos_in_str(cchar letter, ccstr cstring) {
 
     return -1;
 }
-
 _fun_inlined b32 char_in_(cchar letter, ccstr cstring) {
     return (char_pos_in_str(letter, cstring) + 1);
+}
+
+_pure_hot idx32 char_pos_in_substr(cchar letter, ccstr cstring, idx32 start, idx32 end) {
+    for (idx32 letter_pos = start; cstring[letter_pos] and letter_pos < end; ++letter_pos) {
+        if(cstring[letter_pos] == letter) {
+            return letter_pos;
+        }
+    }
+
+    return -1;
+}
+_fun_inlined b32 char_in_substr_(cchar letter, ccstr cstring, idx32 start, idx32 end) {
+    return (char_pos_in_substr(letter, cstring, start, end) + 1);
 }
 
 // returns the index after the last element
@@ -226,6 +238,19 @@ _fun_hot idx32 cstrcpy(mstr dst, ccstr src, len64 dst_len) {
     }
     dst[i++] = 0;
     return i;
+}
+
+_fun_hot cstr save_str_to_worldbuffer(cstr string, bufferchar buffer[1024], cap64 buffer_cap) {
+    static idx64 begin = 0;
+    
+    cstr new_str = &buffer[begin];
+
+    for (idx32 istr = 0; string[istr] and begin < buffer_cap; ++istr, ++begin) {
+        buffer[begin] = string[istr];
+    }
+    buffer[begin++] = 0;
+
+    return new_str;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 

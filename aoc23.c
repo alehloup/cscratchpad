@@ -3,7 +3,7 @@
 #include <time.h>
 #include "ale.h"
 
-#define X_TIMES 2
+#define X_TIMES 1
 
 _proc print_encoded(i32 x) {
     static bufferchar str[32] = {0};
@@ -44,34 +44,22 @@ _proc print_possibilities(i128 set[HT_CAP]) {
 }
 
 _fun i64 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr line, i128 cur_encoded) {
-    static i128 set[HT_CAP] = {0};
-    static len32 set_len = 0;
-
     i64 npossibili = 0;
     i32 cur_group = groups_len > 0 ? groups[0] : 0;
     i32 end = line_len - cur_group + 1;
     b32 past_broken = False;
-    b32 print_possib = False;
 
-    if (cur_encoded == 1) {
-        for (idx32 i = 0; i < HT_CAP; ++i) {
-            set[i] = 0;
-        }
-        print_possib = False; //True;
-    }
-
-    if (groups_len == 0) {
+    if (groups_len == 0) { // Caso Base: acabaram os grupos
         for (idx32 i = 0; i < line_len; ++i) {
             if (line[i] == '#') {
                 return 0;
             }
             cur_encoded = cur_encoded << 1;
         }
-
-        return i128_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1; 
+        return 1;
     }
 
-    if (line_len == cur_group) {
+    if (line_len == cur_group) { // Caso Base: Grupo é do tamanho da linha
         if (groups_len > 1) {
             return 0;
         }
@@ -84,10 +72,10 @@ _fun i64 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
             cur_encoded += 1;
         }
 
-        return i128_in_ht_(cur_encoded, set, &set_len) > 0 ? 0 : 1;
+        return 1;
     }
 
-    if (line_len < cur_group) { 
+    if (line_len < cur_group) {  // Caso base, acabou a linha
         return 0; 
     }
 
@@ -128,10 +116,6 @@ _fun i64 npossibilities(len32 groups_len, i32 groups[], len32 line_len, mstr lin
                 advance_encoded
             );
         }
-    }
-
-    if (print_possib) {
-        print_possibilities(set);
     }
 
     return npossibili;

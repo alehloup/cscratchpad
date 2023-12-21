@@ -5,15 +5,15 @@
 
 #define X_TIMES 1
 
-_fun i64 npossibilities(len32 groups_len, i8 groups[], len32 line_len, mstr line) {
+_fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
     i64 npossibili = 0, past_broken = False;
-    i32 cur_group = groups_len > 0 ? groups[0] : 0, end = line_len - cur_group + 1;
+    i32 cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1;
 
-    if (groups_len == 0) // Base: no more groups
+    if (not groups[0]) // Base: no more groups
         return not char_in_substr_('#', line, 0, line_len);
 
     if (line_len == cur_group) // Base: Groups len == Line len
-        return groups_len == 1 and not char_in_substr_('.', line, 0, cur_group);
+        return not groups[1] and not char_in_substr_('.', line, 0, cur_group);
 
     if (line_len < cur_group) // Base: end of line
         return 0;  
@@ -29,7 +29,7 @@ _fun i64 npossibilities(len32 groups_len, i8 groups[], len32 line_len, mstr line
         if (char_in_substr_('.', line, i, iplusg)) continue; // Group interrupted
 
         npossibili += npossibilities(
-            groups_len - 1, &groups[1], line_len - (iplusg + 1), &line[iplusg + 1]
+            &groups[1], line_len - (iplusg + 1), &line[iplusg + 1]
         );
     }
     return npossibili;
@@ -92,10 +92,7 @@ _fun i64 solve_line(mstr line) {
     
     assert(words_len == 2 && "Error parsing");
     
-    return npossibilities(
-        groups_len, groups, 
-        springs_len, springs
-    );
+    return npossibilities(groups, springs_len, springs);
 }
 
 //AoC 12

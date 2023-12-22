@@ -47,42 +47,33 @@ _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
     i64 npossibili = 0, past_broken = False;
     i32 cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1;
 
-    i64 memo = in_memo(groups, line);
-    if (memo > -1) return memo; // Base: memoized
-
     if (not groups[0]) // Base: no more groups
-        return memo_it(groups, line,
-            not char_in_substr_('#', line, 0, line_len)
-        );
+        return not char_in_substr_('#', line, 0, line_len);
 
     if (line_len == cur_group) // Base: Groups len == Line len
-        return memo_it(groups, line,
-            not groups[1] and not char_in_substr_('.', line, 0, cur_group)
-        );
+        return not groups[1] and not char_in_substr_('.', line, 0, cur_group);
 
     if (line_len < cur_group) // Base: end of line
-        return memo_it(groups, line, 
-            0
-        );
+        return 0;
    
     for (idx32 i = 0; i < end; ++i) { // Do a Recursion for each index
         ci32 iplusg = i + cur_group;
 
-        if (past_broken) return memo_it(groups, line,npossibili); // past was unaccounted
+        if (past_broken) return npossibili; // past was unaccounted
         past_broken = line[i] == '#';
 
         if (line[iplusg] == '#') continue; // Cant fit group since it will colide
 
         if (char_in_substr_('.', line, i, iplusg)) continue; // Group interrupted
-
-        npossibili += memo_it(&groups[1], &line[iplusg + 1],
-            npossibilities(&groups[1], line_len - (iplusg + 1), &line[iplusg + 1])
-        );
+    
+        i64 memo = in_memo(&groups[1], &line[iplusg + 1]);
+        npossibili += (memo > -1) 
+            ? memo 
+            : memo_it(&groups[1], &line[iplusg + 1],
+                npossibilities(&groups[1], line_len - (iplusg + 1), &line[iplusg + 1])   
+            );
     }
-
-    return memo_it(groups, line, 
-        npossibili
-    );
+    return npossibili;
 }
 
 _fun mstr adjust_springs(mstr line) {

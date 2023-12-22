@@ -2,18 +2,18 @@
 #include <stdio.h>
 #include "ale.h"
 
-i32 main(void) {
-    u64 seed = 41635984;
+int main(void) {
+    unsigned Long seed = 41635984;
 
     #define N 20
-    i32 counts[N] = {0};
+    int counts[N] = {0};
 
     clock_t start = clock();
-    for(i32 i = 0; i < 1000000000; ++i) {
+    for(int i = 0; i < 1000000000; ++i) {
         counts[rnd(&seed) % N] +=1;
     }
     {
-        for(i32 i = 0; i < N; ++i) {
+        for(int i = 0; i < N; ++i) {
             printf("%d: %d\n", i+1, counts[i]);
         }
         print_clock(start);

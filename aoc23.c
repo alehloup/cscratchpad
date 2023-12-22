@@ -3,15 +3,15 @@
 #include <time.h>
 #include "ale.h"
 
-#define X_TIMES 5
+#define X_TIMES 1
 
 #define groups_cap 32
 
-static i64 (*memo)[512][32] = 0;
+static Long (*memo)[512][32] = 0;
 
-_fun i64 npossibilities(i8 groups[], len32 line_len, mstr line, i32 igroup) {
-    i64 npossibili = 0, ipossib = 0;
-    i32 cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1, past_broken = False;
+_fun Long npossibilities(int groups[], int line_len, mstr line, int igroup) {
+    Long npossibili = 0, ipossib = 0;
+    int cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1, past_broken = False;
 
     if (not groups[0]) // Base: no more groups
         return not char_in_substr_('#', line, 0, line_len);
@@ -27,9 +27,9 @@ _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line, i32 igroup) {
         return (*memo)[line_len+1][igroup] - 1;
     }
    
-    for (idx32 i = 0; i < end; ++i) { // Do a Recursion for each index
-        ci32 iplusg = i + cur_group;
-        ci32 nextline_len = (line_len - (iplusg + 1));
+    for (int i = 0; i < end; ++i) { // Do a Recursion for each index
+        int iplusg = i + cur_group;
+        int nextline_len = (line_len - (iplusg + 1));
 
         if (nextline_len + 1 < 0) continue; 
 
@@ -56,11 +56,11 @@ _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line, i32 igroup) {
 }
 
 _fun mstr adjust_springs(mstr line) {
-    static bufferchar adjusted_line[128] = {0};
+    static char adjusted_line[128] = {0};
     
-    idx32 i = 0;
+    int i = 0;
     for (int times = 0; times < X_TIMES; ++times) {
-        for (idx32 iline = 0; line[iline]; ++i, ++iline) {
+        for (int iline = 0; line[iline]; ++i, ++iline) {
             adjusted_line[i] = line[iline];
         }
     }
@@ -79,21 +79,21 @@ _fun mstr adjust_springs(mstr line) {
     return &adjusted_line[i];
 }
 
-static len32 max_group = 0, max_groups = 0, max_springs = 0;
-_fun i64 solve_line(mstr line) {
-    i64 lmemo [512][32] = {0};
+static int max_group = 0, max_groups = 0, max_springs = 0;
+_fun Long solve_line(mstr line) {
+    Long lmemo [512][32] = {0};
     mstr words[4] = {0};
-    len32 words_len = split(line, ' ', 4, words);
+    int words_len = split(line, ' ', 4, words);
     mstr groups_str[groups_cap] = {0};
-    i8 groups[groups_cap] = {0};
-    len32 groups_len = split(words[1], ',', groups_cap, groups_str);
+    int groups[groups_cap] = {0};
+    int groups_len = split(words[1], ',', groups_cap, groups_str);
 
     mstr springs = adjust_springs(line);
-    len32 springs_len = cstrlen32(springs);
+    int springs_len = cstrint(springs);
 
-    idx32 i = groups_len;
-    for (idx32 times = 0; times < (X_TIMES - 1); ++times) {
-        for (idx32 igroups_str = 0; igroups_str < groups_len; ++i, ++igroups_str) {
+    int i = groups_len;
+    for (int times = 0; times < (X_TIMES - 1); ++times) {
+        for (int igroups_str = 0; igroups_str < groups_len; ++i, ++igroups_str) {
             groups_str[i] = groups_str[igroups_str];
         }
     }
@@ -118,12 +118,12 @@ _fun i64 solve_line(mstr line) {
 }
 
 //AoC 12
-_proc aoc(len32 lines_len, mstr lines[2]) {
-    i64 sum = 0;
+_proc aoc(int lines_len, mstr lines[2]) {
+    Long sum = 0;
     
-    for (idx32 iline = 0; iline < lines_len; ++iline) {
+    for (int iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
-        i64 res = solve_line(line);
+        Long res = solve_line(line);
         printf("%d = %lld\n", iline, res);
         sum += res;
     }
@@ -133,13 +133,13 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
 } 
 
 
-i32 main(void) {
+int main(void) {
     static char charbuffer[Next_power2(64000)] = {0};
     static mstr lines[1024] = {0};
-    i64 charbuffer_cap = 64000;
-    i32 lines_cap = 1024;
+    Long charbuffer_cap = 64000;
+    int lines_cap = 1024;
 
-    len32 lines_len = file_to_lines("./txts/aoc.txt",
+    int lines_len = file_to_lines("./txts/aoc.txt",
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();

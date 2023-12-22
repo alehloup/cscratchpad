@@ -53,49 +53,18 @@
 #define MBs_ 1048576
 
 // Int
-typedef unsigned char u8;
-typedef unsigned int u32;
-typedef unsigned long long u64;
-typedef char i8;
-typedef int i32;
-typedef long long i64;
-typedef const i8 ci8;
-typedef const i32 ci32;
-typedef const i64 ci64;
+#define Long long long
 
 #ifdef __SIZEOF_INT128__
-__extension__ typedef unsigned __int128 u128;
-__extension__ typedef __int128 i128;
-typedef const i128 ci128;
+__extension__ typedef unsigned __int128 UBig;
+__extension__ typedef __int128 Big;
 #endif
-
-// Visual Int
-typedef int b32; // Boolean
-typedef const b32 cb32;
-typedef u64 hash64;
-typedef i32 cmp32;
-typedef i32 idx32;
-typedef i64 idx64;
-typedef i32 len32;
-typedef i64 len64;
-typedef ci32 cap32;
-typedef ci64 cap64;
-
-// Float
-typedef float f32;
-typedef const f32 cf32;
-typedef double f64;
-typedef const f64 cf64;
 
 // String
 typedef const char cchar; // const char
 typedef cchar * const ccstr; // const string const pointer
 typedef cchar * cstr; // const string
 typedef char * mstr; // modifiable string
-typedef char bufferchar; // just for visual:  bufferchar buffer[64];
-
-// Void
-typedef const void * cvoidp;
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -115,7 +84,7 @@ typedef const void * cvoidp;
     MEMORY
 */
 //
-#define isizeof(x_element_) ((i64)sizeof(x_element_))
+#define isizeof(x_element_) ((Long)sizeof(x_element_))
 #define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
 
 //  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
@@ -125,7 +94,7 @@ typedef const void * cvoidp;
 */
 //
 #define array_insert_in_pos(array_len_ref_, array_, element_, pos_) \
-    for (idx32 ivec_insert_ = (*array_len_ref_); ivec_insert_ > pos_; --ivec_insert_) \
+    for (int ivec_insert_ = (*array_len_ref_); ivec_insert_ > pos_; --ivec_insert_) \
         array_[ivec_insert_] = array_[ivec_insert_-1]; \
     array_[pos_] = element_; \
     ++(*array_len_ref_)
@@ -137,21 +106,21 @@ typedef const void * cvoidp;
     STRINGS
 */
 //
-_pure_hot len64 cstrlen64(ccstr cstring) {
-    len64 cstring_len;
+_pure_hot Long cstrLong(ccstr cstring) {
+    Long cstring_len;
     for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
         /* Empty Body */
     }
     return cstring_len;
 }
-_fun_inlined len32 cstrlen32(ccstr cstring) {
-    return (len32) cstrlen64(cstring);
+_fun_inlined int cstrint(ccstr cstring) {
+    return (int) cstrLong(cstring);
 }
 //Only works for COMPILE TIME STRINGS:
 #define compile_time_cstrlen(compile_time_string_) arraysizeof(compile_time_string_) - 1
 
-_pure_hot cmp32 cstrcmp(ccstr cstr1, ccstr cstr2) {
-    i64 i = 0;
+_pure_hot int cstrcmp(ccstr cstr1, ccstr cstr2) {
+    Long i = 0;
 
     for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
         /* Empty Body */
@@ -159,8 +128,8 @@ _pure_hot cmp32 cstrcmp(ccstr cstr1, ccstr cstr2) {
     return cstr1[i] - cstr2[i];
 }
 
-_pure_hot b32 startswith(ccstr string, ccstr prefix) {
-    i64 i = 0;
+_pure_hot int startswith(ccstr string, ccstr prefix) {
+    Long i = 0;
     if (!prefix[0]) {
         return True;
     }
@@ -181,12 +150,12 @@ _pure_hot b32 startswith(ccstr string, ccstr prefix) {
     }
 }
 
-_fun_inlined cmp32 void_compare_strings(cvoidp a, cvoidp b) {
+_fun_inlined int void_compare_strings(const void * a, const void * b) {
     return cstrcmp(*(ccstr*)a, *(ccstr*)b);
 }
 
-_pure_hot b32 is_empty_string(ccstr string) {
-    for (i64 i = 0; string[i]; ++i) {
+_pure_hot int is_empty_string(ccstr string) {
+    for (Long i = 0; string[i]; ++i) {
         if (string[i] != ' ') {
             return False;
         }
@@ -194,12 +163,12 @@ _pure_hot b32 is_empty_string(ccstr string) {
     return True;
 }
 
-_math_hot b32 is_digit(cchar character) {
+_math_hot int is_digit(cchar character) {
     return character >= '0' && character <= '9';
 }
 
-_pure_hot len32 digitlen(ccstr cstring) {
-    len32 cstring_len;
+_pure_hot int digitlen(ccstr cstring) {
+    int cstring_len;
     for (cstring_len = 0; is_digit(cstring[cstring_len]); ++cstring_len) {
         /* Empty Body */
     }
@@ -208,8 +177,8 @@ _pure_hot len32 digitlen(ccstr cstring) {
     return cstring_len;
 }
 
-_pure_hot idx32 char_pos_in_str(cchar letter, ccstr cstring) {
-    for (idx32 letter_pos = 0; cstring[letter_pos]; ++letter_pos) {
+_pure_hot int char_pos_in_str(cchar letter, ccstr cstring) {
+    for (int letter_pos = 0; cstring[letter_pos]; ++letter_pos) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
         }
@@ -217,12 +186,12 @@ _pure_hot idx32 char_pos_in_str(cchar letter, ccstr cstring) {
 
     return -1;
 }
-_fun_inlined b32 char_in_(cchar letter, ccstr cstring) {
+_fun_inlined int char_in_(cchar letter, ccstr cstring) {
     return (char_pos_in_str(letter, cstring) + 1);
 }
 
-_pure_hot idx32 char_pos_in_substr(cchar letter, ccstr cstring, idx32 start, i32 count) {
-    for (idx32 letter_pos = start, i = 0; cstring[letter_pos] and i < count; ++letter_pos, ++i) {
+_pure_hot int char_pos_in_substr(cchar letter, ccstr cstring, int start, int count) {
+    for (int letter_pos = start, i = 0; cstring[letter_pos] and i < count; ++letter_pos, ++i) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
         }
@@ -230,13 +199,13 @@ _pure_hot idx32 char_pos_in_substr(cchar letter, ccstr cstring, idx32 start, i32
 
     return -1;
 }
-_fun_inlined b32 char_in_substr_(cchar letter, ccstr cstring, idx32 start, i32 count) {
+_fun_inlined int char_in_substr_(cchar letter, ccstr cstring, int start, int count) {
     return (char_pos_in_substr(letter, cstring, start, count) + 1);
 }
 
 // returns the index after the last element
-_fun_hot idx32 cstrcpy(mstr dst, ccstr src, len64 dst_len) {
-    idx32 i = 0;
+_fun_hot int cstrcpy(mstr dst, ccstr src, Long dst_len) {
+    int i = 0;
     for (i = 0; i < dst_len and src[i]; ++i) {
         dst[i] = src[i];
     }
@@ -244,16 +213,17 @@ _fun_hot idx32 cstrcpy(mstr dst, ccstr src, len64 dst_len) {
     return i;
 }
 
-_fun_hot cstr save_str_to_worldbuffer(cstr string, bufferchar worldbuffer[1024], cap64 worldbuffer_cap) {
-    static idx64 begin = 0;
+_fun_hot cstr save_str_to_worldbuffer(cstr string, char worldbuffer[], Long *worldbuffer_len_ref, const Long worldbuffer_cap) {
+    Long begin = (*worldbuffer_len_ref);
     
     cstr new_str = &worldbuffer[begin];
 
-    for (idx32 istr = 0; string[istr] and begin < worldbuffer_cap; ++istr, ++begin) {
+    for (int istr = 0; string[istr] and begin < worldbuffer_cap; ++istr, ++begin) {
         worldbuffer[begin] = string[istr];
     }
     worldbuffer[begin++] = 0;
 
+    (*worldbuffer_len_ref) = begin;
     return new_str;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
@@ -267,16 +237,16 @@ _fun_hot cstr save_str_to_worldbuffer(cstr string, bufferchar worldbuffer[1024],
 #define max_(number1_, number2_) ((number1_) > (number2_) ? (number1_) : (number2_))
 
 // bitmask for optimized Mod for power 2 numbers
-_math_hot i64 mod_pwr2(ci64 number, ci64 modval) {
+_math_hot Long mod_pwr2(Long number, Long modval) {
     return (number) & (modval - 1);
 }
 
-_math_hot i64 greatest_common_divisor(i64 m, i64 n) {
-    i64 tmp;
+_math_hot Long greatest_common_divisor(Long m, Long n) {
+    Long tmp;
     while(m) { tmp = m; m = n % m; n = tmp; }       
     return n;
 }
-_fun_inlined i64 least_common_multiple(i64 m, i64 n) {
+_fun_inlined Long least_common_multiple(Long m, Long n) {
      return m / greatest_common_divisor(m, n) * n;
 }
 
@@ -293,12 +263,12 @@ _fun_inlined i64 least_common_multiple(i64 m, i64 n) {
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
 
-_pure_hot i32 rnd(u64 seed[1]) {
-    i32 shift = 29;
+_pure_hot int rnd(unsigned Long seed[1]) {
+    int shift = 29;
     *seed = *seed * Rnd_mult_n + Rnd_sum_n;
-    shift -= (i32)(*seed >> 61);
+    shift -= (int)(*seed >> 61);
     
-    return (i32)((*seed >> shift) & Rnd_positive_mask);
+    return (int)((*seed >> shift) & Rnd_positive_mask);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ RANDOM ^^^^^^^^^^^^^^^^^^^^
 
@@ -311,10 +281,10 @@ _pure_hot i32 rnd(u64 seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_pure_hot hash64 hash_str(ccstr str) {
-    hash64 h = Hash_start_n;
+_pure_hot unsigned Long hash_str(ccstr str) {
+    unsigned Long h = Hash_start_n;
     
-    for(i64 i = 0; str[i]; ++i) { 
+    for(Long i = 0; str[i]; ++i) { 
         h ^= str[i] & 255; h *= Hash_mul_n;
     }
     h = Hash_shift_mix(h);
@@ -325,8 +295,8 @@ _pure_hot hash64 hash_str(ccstr str) {
 #define Hash_mul_n1 0x94d049bb133111eb
 #define Hash_mul_n2 0xbf58476d1ce4e5b9
 
-_math_hot hash64 hash_int(i64 integer64) {
-    hash64 x = (u64)integer64;
+_math_hot unsigned Long hash_int(Long integer64) {
+    unsigned Long x = (unsigned Long)integer64;
     
     x *= Hash_mul_n1; 
     x = Hash_shift_mix(x);
@@ -347,21 +317,21 @@ _math_hot hash64 hash_int(i64 integer64) {
 #define Ht_shift  (64 - Ht_exp)
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
-_math_hot idx32 ht_lookup(
-    hash64 hash, // 1st hash acts as base location
-    ci32 index // 2nd "hash" steps over the "list of elements" from base-location
+_math_hot int ht_lookup(
+    unsigned Long hash, // 1st hash acts as base location
+    int index // 2nd "hash" steps over the "list of elements" from base-location
 )
 {
-    u32 step = (u32)(hash >> Ht_shift) | 1;
-    idx32 idx = (i32) (((u32)index + step) & Ht_mask);
+    unsigned int step = (unsigned int)(hash >> Ht_shift) | 1;
+    int idx = (int) (((unsigned int)index + step) & Ht_mask);
     return idx;
 }
 
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
-_gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr key, cstr keys[HT_CAP], len32 *keys_len_ref) {
-    hash64 h = hash_str(key);
-    idx32 i = ht_lookup(h, (i32)h);
-    b32 found = False;
+_gcc_attr(always_inline, warn_unused_result) int str_in_ht_(ccstr key, cstr keys[HT_CAP], int *keys_len_ref) {
+    unsigned Long h = hash_str(key);
+    int i = ht_lookup(h, (int)h);
+    int found = False;
 
     while (i == 0 or (keys[i] and cstrcmp(key, keys[i]))) {
         i = ht_lookup(h, i);
@@ -377,10 +347,10 @@ _gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr key, cstr ke
 }
 
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
-_gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 key, i32 keys[HT_CAP], len32 *keys_len_ref) {
-    hash64 h = hash_int(key);
-    idx32 i = ht_lookup(h, (i32)h);
-    b32 found = False;
+_gcc_attr(always_inline, warn_unused_result) int int_in_ht_(int key, int keys[HT_CAP], int *keys_len_ref) {
+    unsigned Long h = hash_int(key);
+    int i = ht_lookup(h, (int)h);
+    int found = False;
 
     while (i == 0 or (keys[i] and key != keys[i])) {
         i = ht_lookup(h, i);
@@ -396,10 +366,10 @@ _gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 key, i32 keys[
 }
 
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
-_gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 key, i64 keys[HT_CAP], len32 *keys_len_ref) {
-    hash64 h = hash_int(key);
-    idx32 i = ht_lookup(h, (i32)h);
-    b32 found = False;
+_gcc_attr(always_inline, warn_unused_result) int long_in_ht_(Long key, Long keys[HT_CAP], int *keys_len_ref) {
+    unsigned Long h = hash_int(key);
+    int i = ht_lookup(h, (int)h);
+    int found = False;
 
     while (i == 0 or (keys[i] and key != keys[i])) {
         i = ht_lookup(h, i);
@@ -416,10 +386,10 @@ _gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 key, i64 keys[
 
 #ifdef __SIZEOF_INT128__
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
-_gcc_attr(always_inline, warn_unused_result) idx32 i128_in_ht_(i128 key, i128 keys[HT_CAP], len32 *keys_len_ref) {
-    hash64 h = hash_int((i64)key);
-    idx32 i = ht_lookup(h, (i32)h);
-    b32 found = False;
+_gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT_CAP], int *keys_len_ref) {
+    unsigned Long h = hash_int((Long)key);
+    int i = ht_lookup(h, (int)h);
+    int found = False;
 
     while (i == 0 or (keys[i] and key != keys[i])) {
         i = ht_lookup(h, i);
@@ -441,11 +411,11 @@ _gcc_attr(always_inline, warn_unused_result) idx32 i128_in_ht_(i128 key, i128 ke
 */
 //
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[2], b32 include_empty_lines) {
-    len32 lines_len = 0;
+_fun_hot int into_lines_(mstr text_to_alter, const int lines_cap, mstr lines[2], int include_empty_lines) {
+    int lines_len = 0;
     
-    idx64 current = 0;
-    for (idx64 i = 0; text_to_alter[i]; ++i) {
+    Long current = 0;
+    for (Long i = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == '\r') {
             text_to_alter[i] = '\0';
         }
@@ -466,16 +436,16 @@ _fun_hot len32 into_lines_(mstr text_to_alter, cap32 lines_cap, mstr lines[2], b
 
     return lines_len;
 }
-_fun_inlined len32 into_lines(mstr text_to_alter, cap32 lines_cap, mstr lines[2]) {
+_fun_inlined int into_lines(mstr text_to_alter, const int lines_cap, mstr lines[2]) {
     return into_lines_(text_to_alter, lines_cap, lines, False);
 }
-_fun_inlined len32 into_lines_including_empty(mstr text_to_alter, cap32 lines_cap, mstr lines[2]) {
+_fun_inlined int into_lines_including_empty(mstr text_to_alter, const int lines_cap, mstr lines[2]) {
     return into_lines_(text_to_alter, lines_cap, lines, True);
 }
 
-_fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr words[2]) {
-    idx32 i = 0, current = 0;
-    len32 words_len = 0;
+_fun_hot int split(mstr text_to_alter, cchar splitter, const int words_cap, mstr words[2]) {
+    int i = 0, current = 0;
+    int words_len = 0;
 
     for (i = 0; text_to_alter[i]; ++i) {
         if (text_to_alter[i] == splitter) {
@@ -505,9 +475,9 @@ _fun_hot len32 split(mstr text_to_alter, cchar splitter, cap32 words_cap, mstr w
 #ifdef CLOCKS_PER_SEC 
 // time.h
 
-_fun_inlined f64 seconds_since(clock_t start)
+_fun_inlined double seconds_since(clock_t start)
 {
-    return (f64)(clock() - start) / CLOCKS_PER_SEC;
+    return (double)(clock() - start) / CLOCKS_PER_SEC;
 }
 
 // time.h
@@ -534,15 +504,15 @@ _proc_inlined print_clock(clock_t start) {
 #include <stdarg.h>
 
 _gcc_attr(format(printf, 1, 2), nonnull)
-i32 shellrun(ccstr format, ...) {
+int shellrun(ccstr format, ...) {
     va_list args;
 
-    cap32 buffer_cap = 512; 
-    bufferchar buffer [512] = {0};
+    const int buffer_cap = 512; 
+    char buffer [512] = {0};
 
     va_start(args, format);
 
-    vsprintf_s(buffer, (u64) buffer_cap, format, args);
+    vsprintf_s(buffer, (unsigned Long) buffer_cap, format, args);
     printf("\n");
     vprintf(format, args);
     printf("\n");
@@ -560,23 +530,23 @@ i32 shellrun(ccstr format, ...) {
 #ifdef stdout
 // stdio.h
 
-_fun_inlined i64 fread_noex(mstr dst, i64 sz, i64 count, FILE * f) {
+_fun_inlined Long fread_noex(mstr dst, Long sz, Long count, FILE * f) {
     #ifdef __cplusplus
-        try { return (i64) fread(dst, (u64) sz, (u64) count, f); } catch(...) {return 0;}
+        try { return (Long) fread(dst, (unsigned Long) sz, (unsigned Long) count, f); } catch(...) {return 0;}
     #endif 
-              return (i64) fread(dst, (u64) sz, (u64) count, f);
+              return (Long) fread(dst, (unsigned Long) sz, (unsigned Long) count, f);
 }
-_fun_inlined i64 fwrite_noex(ccstr Str, i64 Size, i64 Count, FILE * File) {
+_fun_inlined Long fwrite_noex(ccstr Str, Long Size, Long Count, FILE * File) {
     #ifdef __cplusplus
-        try { return (i64) fwrite(Str, (u64) Size, (u64) Count, File); } catch(...) {return 0;}
+        try { return (Long) fwrite(Str, (unsigned Long) Size, (unsigned Long) Count, File); } catch(...) {return 0;}
     #endif 
-              return (i64) fwrite(Str, (u64) Size, (u64) Count, File);
+              return (Long) fwrite(Str, (unsigned Long) Size, (unsigned Long) Count, File);
 }
 
-_fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar charbuffer[2]) {
-    i64 fsize = 0;
+_fun Long file_to_cstring(ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
+    Long fsize = 0;
 
-        FILE *f = 0; i32 err = 
+        FILE *f = 0; int err = 
     fopen_s(&f, filename, "rb");
     
         assert(!err && "Could not open file for reading");
@@ -588,7 +558,7 @@ _fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar char
         assert(charbuffer_cap >= fsize+2 && "charbuffer is not enough for file size");
 
         {
-            i64 bytesread = fread_noex(charbuffer, 1LL, fsize, f);
+            Long bytesread = fread_noex(charbuffer, 1LL, fsize, f);
             assert(bytesread == fsize && "could not read fsize#bytes"); 
             
             charbuffer[fsize] = charbuffer[fsize-1] != '\n' ? '\n' : '\0';
@@ -600,36 +570,36 @@ _fun len64 file_to_cstring(ccstr filename, cap64 charbuffer_cap, bufferchar char
     return fsize;
 }
 
-_fun_inlined len32 file_to_lines(ccstr filename, cap32 lines_cap, mstr lines[2], cap64 charbuffer_cap, bufferchar charbuffer[2]) {
-    len64 charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
+_fun_inlined int file_to_lines(ccstr filename, const int lines_cap, mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+    Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
     (void) charbuffer_len;
     return into_lines(charbuffer, lines_cap, lines);
 }
 
 _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
-        FILE *f = 0; i32 err = 
+        FILE *f = 0; int err = 
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");
         {
-            len64 buffer_len = cstrlen64(buffer);
-            i64 bytes_written = fwrite_noex(buffer, 1, buffer_len, f);
+            Long buffer_len = cstrLong(buffer);
+            Long bytes_written = fwrite_noex(buffer, 1, buffer_len, f);
             assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
         }
     fclose(f);
 }
 
-_proc_hot lines_to_file(len32 lines_len, mstr lines[2], ccstr filename) {
-        FILE *f = 0; i32 err = 
+_proc_hot lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
+        FILE *f = 0; int err = 
     fopen_s(&f, filename, "wb");
         assert(!err && "Could not open file for writting");
         {
-            i64 bytes_written = 0;
-            len64 line_len = 0;
+            Long bytes_written = 0;
+            Long line_len = 0;
 
-            for (i32 i = 0; i < lines_len; ++i) {
+            for (int i = 0; i < lines_len; ++i) {
                 ccstr line = lines[i]; 
 
-                line_len = cstrlen64(line);
+                line_len = cstrLong(line);
                 bytes_written = fwrite_noex(line, 1, line_len, f);
                 bytes_written += fwrite_noex("\n", 1, 1, f);
                 assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
@@ -650,14 +620,14 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[2], ccstr filename) {
 // stdio.h
 
 #define array_printf(format_str_, vec_to_print_len, vec_to_print_) \
-    for (idx32 ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
+    for (int ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
         printf(format_str_, vec_to_print_[ivec_]); \
     printf("\n")
 
 #define matrix_printf(format_str_, number_of_lines_, number_of_columns_, matrix_to_print_) \
     printf("Matrix %d x %d :\n", number_of_lines_, number_of_columns_); \
-    for (idx32 imatrix_line_ = 0; imatrix_line_ < number_of_lines_; ++imatrix_line_) { \
-        for (idx32 imatrix_column_ = 0; imatrix_column_ < number_of_columns_; ++ imatrix_column_) \
+    for (int imatrix_line_ = 0; imatrix_line_ < number_of_lines_; ++imatrix_line_) { \
+        for (int imatrix_column_ = 0; imatrix_column_ < number_of_columns_; ++ imatrix_column_) \
             printf(format_str_, matrix_to_print_[imatrix_line_][imatrix_column_]); \
         printf("\n"); \
     } \
@@ -674,16 +644,18 @@ _proc_hot lines_to_file(len32 lines_len, mstr lines[2], ccstr filename) {
 #ifdef RAND_MAX
 // stdlib.h
 
-_proc_inlined sort_cstrings(len64 cstrings_len, mstr cstrings[1]) {
+_proc_inlined sort_cstrings(Long cstrings_len, mstr cstrings[1]) {
     qsort(
-        cstrings, (u64) cstrings_len,
+        cstrings, (unsigned Long) cstrings_len,
         sizeof(mstr), void_compare_strings
     );
 } 
 
-_proc_inlined sort_cstrings_custom(len64 cstrings_len, mstr cstrings[1], cmp32 (*compare_fun)(cvoidp a, cvoidp b)) {
+_proc_inlined sort_cstrings_custom(Long cstrings_len, mstr cstrings[1], 
+                                   int (*compare_fun)(const void * a, const void * b)) 
+{
     qsort(
-        cstrings, (u64)  cstrings_len,
+        cstrings, (unsigned Long)  cstrings_len,
         sizeof(mstr), compare_fun
     );
 }

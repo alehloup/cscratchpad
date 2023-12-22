@@ -8,24 +8,28 @@
 #define groups_cap 32
 
 static Long (*memo)[512][32] = 0;
+_fun Long find_nemo(int line_len, int igroup) {
+    if ((*memo)[line_len+1][igroup]) {
+        return (*memo)[line_len+1][igroup];
+    } else {
+        return 0;
+    }
+}
+_fun Long nemo_it(int line_len, int igroup, Long possibilities) {
+    (*memo)[line_len+1][igroup] = possibilities + 1;
+    return possibilities;
+}
 
 _fun Long npossibilities(int groups[], int line_len, mstr line, int igroup) {
-    Long npossibili = 0, ipossib = 0;
+    Long npossibili = 0, nemo = 0;
     int cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1, past_broken = False;
 
-    if (not groups[0]) // Base: no more groups
-        return not char_in_substr_('#', line, 0, line_len);
-
+    if (not groups[0]) return not char_in_substr_('#', line, 0, line_len);
+    if (line_len < cur_group) return 0; // Base: end of line
     if (line_len == cur_group) // Base: Groups len == Line len
         return not groups[1] and not char_in_substr_('.', line, 0, cur_group);
-
-    if (line_len < cur_group) // Base: end of line
-        return 0;
-
-    
-    if ((*memo)[line_len+1][igroup]) {
-        return (*memo)[line_len+1][igroup] - 1;
-    }
+        
+    nemo = find_nemo(line_len, igroup); if (nemo) return nemo - 1;
    
     for (int i = 0; i < end; ++i) { // Do a Recursion for each index
         int iplusg = i + cur_group;
@@ -33,26 +37,18 @@ _fun Long npossibilities(int groups[], int line_len, mstr line, int igroup) {
 
         if (nextline_len + 1 < 0) continue; 
 
-        if (past_broken) return npossibili; // past was unaccounted
-        past_broken = line[i] == '#';
+        if (past_broken) {return npossibili;}; past_broken = line[i] == '#'; // past was unaccounted
 
         if (line[iplusg] == '#') continue; // Cant fit group since it will colide
 
         if (char_in_substr_('.', line, i, cur_group)) continue; // Group interrupted
         
-        if ((*memo)[nextline_len+1][igroup+1]) {
-            ipossib = (*memo)[nextline_len+1][igroup+1] - 1;
-            npossibili += ipossib;
-        } else {
-            ipossib = npossibilities(&groups[1], nextline_len, &line[iplusg + 1], igroup + 1);
-            npossibili += ipossib;
-
-            (*memo)[nextline_len+1][igroup+1] = ipossib + 1;
-        }
+        nemo = find_nemo(nextline_len, igroup + 1);
+        if (nemo) { npossibili += (nemo - 1); continue;}
+        
+        npossibili += npossibilities(&groups[1], nextline_len, &line[iplusg+1], igroup+1);
     }
-
-    (*memo)[line_len+1][igroup] = npossibili + 1;
-    return npossibili;
+    return nemo_it(line_len, igroup, npossibili);
 }
 
 _fun mstr adjust_springs(mstr line) {

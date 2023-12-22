@@ -5,43 +5,7 @@
 
 #define X_TIMES 1
 
-cstr memo_keys[HT_CAP] = {0};
-i64 memo_vals[HT_CAP] = {0};
-i32 memo_len = 0;
-
 #define groups_cap 32
-#define buffer_cap 256
-#define worldbuffer_cap 67108864
-
-_fun cstr stringify(i8 groups[], mstr line) {
-    static bufferchar buffer[buffer_cap] = {0};
-
-    len32 len = sprintf_s(buffer, buffer_cap, "%s", line, groups);
-    for (idx32 i = 0; groups[i]; ++i) {
-        len += sprintf_s(&buffer[len], (u64)(buffer_cap-len), " %d ", groups[i]);
-    }
-    return (cstr) buffer;
-}
-
-_fun i64 in_memo (i8 groups[], mstr line) {
-    ccstr stringfied = stringify(groups, line);
-
-    idx32 pos = str_in_ht_(stringfied, memo_keys, 0);
-    return pos < 1 ? -1 : memo_vals[pos];
-}
-
-_fun i64 memo_it(i8 groups[], mstr line, i64 possibilties) {
-    static bufferchar worldbuffer[worldbuffer_cap];
-    
-    ccstr stringfied = save_str_to_worldbuffer(
-        stringify(groups, line), worldbuffer, worldbuffer_cap
-    );
-
-    idx32 pos = str_in_ht_(stringfied, memo_keys, &memo_len);
-    pos = pos < 0 ? -pos : pos;
-
-    return memo_vals[pos] = possibilties;
-}
 
 _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
     i64 npossibili = 0, past_broken = False;
@@ -66,12 +30,7 @@ _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
 
         if (char_in_substr_('.', line, i, iplusg)) continue; // Group interrupted
     
-        i64 memo = in_memo(&groups[1], &line[iplusg + 1]);
-        npossibili += (memo > -1) 
-            ? memo 
-            : memo_it(&groups[1], &line[iplusg + 1],
-                npossibilities(&groups[1], line_len - (iplusg + 1), &line[iplusg + 1])   
-            );
+        npossibili += npossibilities(&groups[1], line_len - (iplusg + 1), &line[iplusg + 1]);
     }
     return npossibili;
 }
@@ -132,9 +91,7 @@ _fun i64 solve_line(mstr line) {
     
     assert(words_len == 2 && "Error parsing");
     
-    return memo_it(groups, springs, 
-        npossibilities(groups, springs_len, springs)
-    );
+    return npossibilities(groups, springs_len, springs);
 }
 
 //AoC 12
@@ -150,13 +107,6 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
 
     printf("\nSum: %lld\n", sum);
     printf("MSprings: %d, MGroups: %d, MGroup: %d\n", max_springs, max_groups, max_group);
-    printf("memo_len: %d\n", memo_len);
-
-    // for (idx32 i = 0; i < HT_CAP; ++i) {
-    //     if (not memo_keys[i]) continue;
-
-    //     printf("%s = %lld\n", memo_keys[i], memo_vals[i]);
-    // }
 } 
 
 

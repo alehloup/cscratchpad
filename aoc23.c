@@ -3,13 +3,15 @@
 #include <time.h>
 #include "ale.h"
 
-#define X_TIMES 1
+#define X_TIMES 5
 
 #define groups_cap 32
 
-_fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
-    i64 npossibili = 0, past_broken = False;
-    i32 cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1;
+static i64 (*memo)[512][32] = 0;
+
+_fun i64 npossibilities(i8 groups[], len32 line_len, mstr line, i32 igroup) {
+    i64 npossibili = 0, ipossib = 0;
+    i32 cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1, past_broken = False;
 
     if (not groups[0]) // Base: no more groups
         return not char_in_substr_('#', line, 0, line_len);
@@ -19,9 +21,17 @@ _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
 
     if (line_len < cur_group) // Base: end of line
         return 0;
+
+    
+    if ((*memo)[line_len+1][igroup]) {
+        return (*memo)[line_len+1][igroup] - 1;
+    }
    
     for (idx32 i = 0; i < end; ++i) { // Do a Recursion for each index
         ci32 iplusg = i + cur_group;
+        ci32 nextline_len = (line_len - (iplusg + 1));
+
+        if (nextline_len + 1 < 0) continue; 
 
         if (past_broken) return npossibili; // past was unaccounted
         past_broken = line[i] == '#';
@@ -29,9 +39,19 @@ _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
         if (line[iplusg] == '#') continue; // Cant fit group since it will colide
 
         if (char_in_substr_('.', line, i, cur_group)) continue; // Group interrupted
-    
-        npossibili += npossibilities(&groups[1], line_len - (iplusg + 1), &line[iplusg + 1]);
+        
+        if ((*memo)[nextline_len+1][igroup+1]) {
+            ipossib = (*memo)[nextline_len+1][igroup+1] - 1;
+            npossibili += ipossib;
+        } else {
+            ipossib = npossibilities(&groups[1], nextline_len, &line[iplusg + 1], igroup + 1);
+            npossibili += ipossib;
+
+            (*memo)[nextline_len+1][igroup+1] = ipossib + 1;
+        }
     }
+
+    (*memo)[line_len+1][igroup] = npossibili + 1;
     return npossibili;
 }
 
@@ -59,8 +79,9 @@ _fun mstr adjust_springs(mstr line) {
     return &adjusted_line[i];
 }
 
-len32 max_group = 0, max_groups = 0, max_springs = 0;
+static len32 max_group = 0, max_groups = 0, max_springs = 0;
 _fun i64 solve_line(mstr line) {
+    i64 lmemo [512][32] = {0};
     mstr words[4] = {0};
     len32 words_len = split(line, ' ', 4, words);
     mstr groups_str[groups_cap] = {0};
@@ -81,17 +102,19 @@ _fun i64 solve_line(mstr line) {
     max_groups = max_(max_groups, groups_len);
     max_springs = max_(max_springs, springs_len);
 
-    //printf("{%s} ", springs);
 
-    for (idx32 i = 0; i < groups_len; ++i) {
+    for (i = 0; i < groups_len; ++i) {
         sscanf_s(groups_str[i], "%d ", &groups[i]);
         //printf("%d ", groups[i]);
         max_group = max_(max_group, groups[i]);
     }
     
     assert(words_len == 2 && "Error parsing");
-    
-    return npossibilities(groups, springs_len, springs);
+
+    (void) memo;
+    memo = &lmemo;
+
+    return npossibilities(groups, springs_len, springs, 0);
 }
 
 //AoC 12
@@ -101,7 +124,7 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
     for (idx32 iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
         i64 res = solve_line(line);
-        //printf("%d = %lld\n", iline, res);
+        printf("%d = %lld\n", iline, res);
         sum += res;
     }
 

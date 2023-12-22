@@ -28,7 +28,7 @@ _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
 
         if (line[iplusg] == '#') continue; // Cant fit group since it will colide
 
-        if (char_in_substr_('.', line, i, iplusg)) continue; // Group interrupted
+        if (char_in_substr_('.', line, i, cur_group)) continue; // Group interrupted
     
         npossibili += npossibilities(&groups[1], line_len - (iplusg + 1), &line[iplusg + 1]);
     }

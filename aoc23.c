@@ -5,34 +5,84 @@
 
 #define X_TIMES 1
 
+cstr memo_keys[HT_CAP] = {0};
+i64 memo_vals[HT_CAP] = {0};
+i32 memo_len = 0;
+
+#define groups_cap 32
+#define buffer_cap 256
+#define worldbuffer_cap 67108864
+
+_fun cstr stringify(i8 groups[], mstr line) {
+    static bufferchar buffer[buffer_cap] = {0};
+
+    len32 len = sprintf_s(buffer, buffer_cap, "%s", line, groups);
+    for (idx32 i = 0; groups[i]; ++i) {
+        len += sprintf_s(&buffer[len], (u64)(buffer_cap-len), " %d ", groups[i]);
+    }
+    return (cstr) buffer;
+}
+
+_fun i64 in_memo (i8 groups[], mstr line) {
+    ccstr stringfied = stringify(groups, line);
+
+    idx32 pos = str_in_ht_(stringfied, memo_keys, 0);
+    return pos < 1 ? -1 : memo_vals[pos];
+}
+
+_fun i64 memo_it(i8 groups[], mstr line, i64 possibilties) {
+    static bufferchar worldbuffer[worldbuffer_cap];
+    
+    ccstr stringfied = save_str_to_worldbuffer(
+        stringify(groups, line), worldbuffer, worldbuffer_cap
+    );
+
+    idx32 pos = str_in_ht_(stringfied, memo_keys, &memo_len);
+    pos = pos < 0 ? -pos : pos;
+
+    return memo_vals[pos] = possibilties;
+}
+
 _fun i64 npossibilities(i8 groups[], len32 line_len, mstr line) {
     i64 npossibili = 0, past_broken = False;
     i32 cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1;
 
+    i64 memo = in_memo(groups, line);
+    if (memo > -1) return memo; // Base: memoized
+
     if (not groups[0]) // Base: no more groups
-        return not char_in_substr_('#', line, 0, line_len);
+        return memo_it(groups, line,
+            not char_in_substr_('#', line, 0, line_len)
+        );
 
     if (line_len == cur_group) // Base: Groups len == Line len
-        return not groups[1] and not char_in_substr_('.', line, 0, cur_group);
+        return memo_it(groups, line,
+            not groups[1] and not char_in_substr_('.', line, 0, cur_group)
+        );
 
     if (line_len < cur_group) // Base: end of line
-        return 0;  
+        return memo_it(groups, line, 
+            0
+        );
    
     for (idx32 i = 0; i < end; ++i) { // Do a Recursion for each index
         ci32 iplusg = i + cur_group;
 
-        if (past_broken) return npossibili; // past was unaccounted
+        if (past_broken) return memo_it(groups, line,npossibili); // past was unaccounted
         past_broken = line[i] == '#';
 
         if (line[iplusg] == '#') continue; // Cant fit group since it will colide
 
         if (char_in_substr_('.', line, i, iplusg)) continue; // Group interrupted
 
-        npossibili += npossibilities(
-            &groups[1], line_len - (iplusg + 1), &line[iplusg + 1]
+        npossibili += memo_it(&groups[1], &line[iplusg + 1],
+            npossibilities(&groups[1], line_len - (iplusg + 1), &line[iplusg + 1])
         );
     }
-    return npossibili;
+
+    return memo_it(groups, line, 
+        npossibili
+    );
 }
 
 _fun mstr adjust_springs(mstr line) {
@@ -59,7 +109,6 @@ _fun mstr adjust_springs(mstr line) {
     return &adjusted_line[i];
 }
 
-#define groups_cap 32
 len32 max_group = 0, max_groups = 0, max_springs = 0;
 _fun i64 solve_line(mstr line) {
     mstr words[4] = {0};
@@ -92,7 +141,9 @@ _fun i64 solve_line(mstr line) {
     
     assert(words_len == 2 && "Error parsing");
     
-    return npossibilities(groups, springs_len, springs);
+    return memo_it(groups, springs, 
+        npossibilities(groups, springs_len, springs)
+    );
 }
 
 //AoC 12
@@ -102,12 +153,19 @@ _proc aoc(len32 lines_len, mstr lines[2]) {
     for (idx32 iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
         i64 res = solve_line(line);
-        //printf(" = %lld\n", res);
+        //printf("%d = %lld\n", iline, res);
         sum += res;
     }
 
     printf("\nSum: %lld\n", sum);
     printf("MSprings: %d, MGroups: %d, MGroup: %d\n", max_springs, max_groups, max_group);
+    printf("memo_len: %d\n", memo_len);
+
+    // for (idx32 i = 0; i < HT_CAP; ++i) {
+    //     if (not memo_keys[i]) continue;
+
+    //     printf("%s = %lld\n", memo_keys[i], memo_vals[i]);
+    // }
 } 
 
 

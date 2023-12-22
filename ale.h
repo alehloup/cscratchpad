@@ -341,8 +341,8 @@ _math_hot hash64 hash_int(i64 integer64) {
     ==================== HASH TABLE ====================
 */
 
-#define Ht_exp 11
-#define HT_CAP    2048 //   2 ^ Ht_exp
+#define Ht_exp 18
+#define HT_CAP    262144 //   2 ^ Ht_exp
 #define Ht_mask   (HT_CAP - 1)
 #define Ht_shift  (64 - Ht_exp)
 
@@ -370,7 +370,7 @@ _gcc_attr(always_inline, warn_unused_result) idx32 str_in_ht_(ccstr key, cstr ke
     found = keys[i] ? True : False;
     if (keys_len_ref) {
         keys[i] = key;
-        (*keys_len_ref) += found;
+        (*keys_len_ref) += not found;
     }
 
     return found ? i : - i;
@@ -389,7 +389,7 @@ _gcc_attr(always_inline, warn_unused_result) idx32 i32_in_ht_(i32 key, i32 keys[
     found = keys[i] ? True : False;
     if (keys_len_ref) {
         keys[i] = key;
-        (*keys_len_ref) += found;
+        (*keys_len_ref) += not found;
     }
 
     return found ? i : - i;
@@ -408,7 +408,7 @@ _gcc_attr(always_inline, warn_unused_result) idx32 i64_in_ht_(i64 key, i64 keys[
     found = keys[i] ? True : False;
     if (keys_len_ref) {
         keys[i] = key;
-        (*keys_len_ref) += found;
+        (*keys_len_ref) += not found;
     }
 
     return found ? i : - i;

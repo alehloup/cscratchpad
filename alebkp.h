@@ -512,7 +512,7 @@ int shellrun(ccstr format, ...) {
 
     va_start(args, format);
 
-    vsprintf(buffer, format, args);
+    vsprintf_s(buffer, (unsigned Long) buffer_cap, format, args);
     printf("\n");
     vprintf(format, args);
     printf("\n");
@@ -546,10 +546,10 @@ _fun_inlined Long fwrite_noex(ccstr Str, Long Size, Long Count, FILE * File) {
 _fun Long file_to_cstring(ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
     Long fsize = 0;
 
-        FILE *f =  
-    fopen(filename, "rb");
+        FILE *f = 0; int err = 
+    fopen_s(&f, filename, "rb");
     
-        assert(f && "Could not open file for reading");
+        assert(!err && "Could not open file for reading");
     
         fseek(f, 0, SEEK_END);
         fsize = ftell(f);
@@ -577,9 +577,9 @@ _fun_inlined int file_to_lines(ccstr filename, const int lines_cap, mstr lines[2
 }
 
 _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
-        FILE *f =  
-    fopen(filename, "wb");
-        assert(f && "Could not open file for writting");
+        FILE *f = 0; int err = 
+    fopen_s(&f, filename, "wb");
+        assert(!err && "Could not open file for writting");
         {
             Long buffer_len = cstrLong(buffer);
             Long bytes_written = fwrite_noex(buffer, 1, buffer_len, f);
@@ -589,9 +589,9 @@ _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
 }
 
 _proc_hot lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
-        FILE *f =  
-    fopen(filename, "wb");
-        assert(f && "Could not open file for writting");
+        FILE *f = 0; int err = 
+    fopen_s(&f, filename, "wb");
+        assert(!err && "Could not open file for writting");
         {
             Long bytes_written = 0;
             Long line_len = 0;
@@ -618,8 +618,6 @@ _proc_hot lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
 //
 #ifdef stdout
 // stdio.h
-
-#define println(format, ...) printf(format, __VA_ARGS__); printf("\n")
 
 #define array_printf(format_str_, vec_to_print_len, vec_to_print_) \
     for (int ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \

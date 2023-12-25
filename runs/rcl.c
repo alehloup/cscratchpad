@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "../ale.h"
 
-int main(int argc, ccstr*argv) {
+int main(int argc, mstr *argv) {
     ccstr _1_c = argc > 1 ? argv[1] : "\0";
     char _1_[512] = {0};
     for (int i = 0; _1_c[i] and _1_c[i] != '.'; ++i) {
@@ -10,8 +10,7 @@ int main(int argc, ccstr*argv) {
     }
     
     shellrun(
-        " msvc"
-        " && clang-cl" 
+        " clang" 
         " -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero"
         " -Weverything -Werror -fsanitize-trap -fsanitize=undefined -Wno-unsafe-buffer-usage -Wno-unused-function"
         " %s -o \"./%s.exe\"" 

@@ -37,7 +37,7 @@ _fun Long npossibilities(int groups[], int line_len, mstr line, int igroup) {
 
         if (nextline_len + 1 < 0) continue; 
 
-        if (past_broken) {return npossibili;}; past_broken = line[i] == '#'; // past was unaccounted
+        if (past_broken) {return npossibili;} past_broken = line[i] == '#'; // past was unaccounted
 
         if (line[iplusg] == '#') continue; // Cant fit group since it will colide
 
@@ -100,7 +100,7 @@ _fun Long solve_line(mstr line) {
 
 
     for (i = 0; i < groups_len; ++i) {
-        sscanf_s(groups_str[i], "%d ", &groups[i]);
+        sscanf(groups_str[i], "%d ", &groups[i]);
         //printf("%d ", groups[i]);
         max_group = max_(max_group, groups[i]);
     }

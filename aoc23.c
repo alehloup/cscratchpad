@@ -22,7 +22,7 @@ _fun Long nemo_it(int line_len, int igroup, Long possibilities) {
 
 _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len, mstr line) {
     Long npossibili = 0;
-    //Long nemo = 0;
+    Long nemo = 0;
     int end_of_groups = igroup==groups_len, end_of_line = line_len==0;
     int cur_group = groups[igroup], end = line_len - cur_group + 1, past_broken = False;
 
@@ -31,11 +31,12 @@ _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len
     if (line_len == cur_group) // Base: Groups len == Line len
         return (igroup+1)==groups_len and not char_in_substr_('.', line, 0, cur_group);
         
-    //nemo = find_nemo(line_len, igroup); if (nemo) return nemo - 1;
+    nemo = find_nemo(line_len, igroup); if (nemo) return nemo - 1;
    
     for (int i = 0; i < end; ++i) { // Do a Recursion for each index
         int iplusg = i + cur_group;
         int nextline_len = (line_len - (iplusg + 1));
+        Long possib=0;
 
         if (nextline_len + 1 < 0) continue; 
 
@@ -45,10 +46,11 @@ _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len
 
         if (char_in_substr_('.', line, i, cur_group)) continue; // Group interrupted
         
-        //nemo = find_nemo(nextline_len, igroup + 1);
-        //if (nemo) { npossibili += (nemo - 1); continue;}
-        
-        npossibili += npossibilities(groups_len, groups, igroup+1, nextline_len, &line[iplusg+1]);
+        nemo = find_nemo(nextline_len, igroup + 1);
+        if (nemo) { npossibili += (nemo - 1); continue;}
+
+        possib = npossibilities(groups_len, groups, igroup+1, nextline_len, &line[iplusg+1]);
+        npossibili += possib;
     }
     return npossibili;
 }

@@ -38,7 +38,7 @@ _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len
         int nextline_len = (line_len - (iplusg + 1));
         Long possib=0;
 
-        if (nextline_len + 1 < 0) continue; 
+        if (nextline_len + 1 < 0) return npossibili; 
 
         if (past_broken) {return npossibili;} past_broken = line[i] == '#'; // past was unaccounted
 
@@ -66,17 +66,7 @@ _fun mstr adjust_springs(mstr line) {
     }
     adjusted_line[i] = 0;
 
-    --i;
-    while (adjusted_line[i] == '.') {
-        adjusted_line[i--] = 0;
-    }
-
-    i = 0;
-    while (adjusted_line[i] == '.') {
-        ++i;
-    }
-
-    return &adjusted_line[i];
+    return adjusted_line;
 }
 
 static int max_group = 0, max_groups = 0, max_springs = 0;

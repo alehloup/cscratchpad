@@ -50,7 +50,7 @@ _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len
         if (nemo) { npossibili += (nemo - 1); continue;}
 
         possib = npossibilities(groups_len, groups, igroup+1, nextline_len, &line[iplusg+1]);
-        npossibili += possib;
+        npossibili += nemo_it(nextline_len, igroup+1, possib);
     }
     return npossibili;
 }

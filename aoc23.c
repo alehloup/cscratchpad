@@ -3,7 +3,7 @@
 #include <time.h>
 #include "ale.h"
 
-#define X_TIMES 1
+#define X_TIMES 5
 
 #define groups_cap 32
 

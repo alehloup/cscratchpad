@@ -20,15 +20,16 @@ _fun Long nemo_it(int line_len, int igroup, Long possibilities) {
     return possibilities;
 }
 
-_fun Long npossibilities(int groups[], int line_len, mstr line, int igroup) {
+_fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len, mstr line) {
     Long npossibili = 0;
     //Long nemo = 0;
-    int cur_group = groups[0] ? groups[0] : 0, end = line_len - cur_group + 1, past_broken = False;
+    int end_of_groups = igroup==groups_len, end_of_line = line_len==0;
+    int cur_group = groups[igroup], end = line_len - cur_group + 1, past_broken = False;
 
-    if (not groups[0]) return not char_in_substr_('#', line, 0, line_len);
-    if (line_len < cur_group) return 0; // Base: end of line
+    if (end_of_groups) return not char_in_substr_('#', line, 0, line_len);
+    if (end_of_line or line_len < cur_group) return 0; // Base: end of line
     if (line_len == cur_group) // Base: Groups len == Line len
-        return groups[1]==0 and not char_in_substr_('.', line, 0, cur_group);
+        return (igroup+1)==groups_len and not char_in_substr_('.', line, 0, cur_group);
         
     //nemo = find_nemo(line_len, igroup); if (nemo) return nemo - 1;
    
@@ -47,7 +48,7 @@ _fun Long npossibilities(int groups[], int line_len, mstr line, int igroup) {
         //nemo = find_nemo(nextline_len, igroup + 1);
         //if (nemo) { npossibili += (nemo - 1); continue;}
         
-        npossibili += npossibilities(&groups[1], nextline_len, &line[iplusg+1], igroup+1);
+        npossibili += npossibilities(groups_len, groups, igroup+1, nextline_len, &line[iplusg+1]);
     }
     return npossibili;
 }
@@ -111,7 +112,7 @@ _fun Long solve_line(mstr line) {
     (void) memo;
     memo = &lmemo;
 
-    return npossibilities(groups, springs_len, springs, 0);
+    return npossibilities(groups_len, groups, 0, springs_len, springs);
 }
 
 //AoC 12

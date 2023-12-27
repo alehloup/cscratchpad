@@ -21,16 +21,13 @@ _fun Long nemo_it(int line_len, int igroup, Long possibilities) {
 }
 
 _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len, mstr line) {
-    Long npossibili = 0;
-    Long nemo = 0;
+    Long npossibili = 0, nemo = 0;
     int end_of_groups = igroup==groups_len, end_of_line = line_len==0;
     int cur_group = groups[igroup], end = line_len - cur_group + 1, past_broken = False;
 
-    if (end_of_groups) return not char_in_substr_('#', line, 0, line_len);
-    if (end_of_line or line_len < cur_group) return 0; // Base: end of line
-    if (line_len == cur_group) // Base: Groups len == Line len
-        return (igroup+1)==groups_len and not char_in_substr_('.', line, 0, cur_group);
-        
+    if (end_of_groups) return not char_in_substr_('#', line, 0, line_len);// Base: end of groups
+    if (end_of_line or line_len <= cur_group) return 0; // Base: end of line
+ 
     nemo = find_nemo(line_len, igroup); if (nemo) return nemo - 1;
    
     for (int i = 0; i < end; ++i) { // Do a Recursion for each index
@@ -64,7 +61,8 @@ _fun mstr adjust_springs(mstr line) {
             adjusted_line[i] = line[iline];
         }
     }
-    adjusted_line[i] = 0;
+    adjusted_line[i++] = '.';
+    adjusted_line[i++] = 0;
 
     return adjusted_line;
 }
@@ -100,8 +98,7 @@ _fun Long solve_line(mstr line) {
     }
     
     assert(words_len == 2 && "Error parsing");
-
-    (void) memo;
+    
     memo = &lmemo;
 
     return npossibilities(groups_len, groups, 0, springs_len, springs);

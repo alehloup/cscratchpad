@@ -3,9 +3,8 @@
 #include <time.h>
 #include "ale.h"
 
-#define X_TIMES 5
-
 #define groups_cap 32
+static int X_TIMES = 1;
 
 static Long (*memo)[512][32] = 0;
 _fun Long find_nemo(int line_len, int igroup) {
@@ -27,8 +26,6 @@ _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len
 
     if (end_of_groups) return not char_in_substr_('#', line, 0, line_len);// Base: end of groups
     if (end_of_line or line_len <= cur_group) return 0; // Base: end of line
- 
-    nemo = find_nemo(line_len, igroup); if (nemo) return nemo - 1;
    
     for (int i = 0; i < end; ++i) { // Do a Recursion for each index
         int iplusg = i + cur_group;
@@ -67,7 +64,6 @@ _fun mstr adjust_springs(mstr line) {
     return adjusted_line;
 }
 
-static int max_group = 0, max_groups = 0, max_springs = 0;
 _fun Long solve_line(mstr line) {
     Long lmemo [512][32] = {0};
     mstr words[4] = {0};
@@ -87,14 +83,11 @@ _fun Long solve_line(mstr line) {
     }
     groups_len = i;
 
-    max_groups = max_(max_groups, groups_len);
-    max_springs = max_(max_springs, springs_len);
-
+	printf("%s ", springs);
 
     for (i = 0; i < groups_len; ++i) {
         sscanf(groups_str[i], "%d ", &groups[i]);
-        //printf("%d ", groups[i]);
-        max_group = max_(max_group, groups[i]);
+        printf("%d ", groups[i]);
     }
     
     assert(words_len == 2 && "Error parsing");
@@ -111,27 +104,33 @@ _proc aoc(int lines_len, mstr lines[2]) {
     for (int iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
         Long res = solve_line(line);
-        printf("%d = %lld\n", iline, res);
+        printf(" = %lld\n", res);
         sum += res;
     }
 
     printf("\nSum: %lld\n", sum);
-    printf("MSprings: %d, MGroups: %d, MGroup: %d\n", max_springs, max_groups, max_group);
 } 
 
 
-int main(void) {
+_proc solve(ccstr filename, int times) {
     static char charbuffer[Next_power2(64000)] = {0};
     static mstr lines[1024] = {0};
     Long charbuffer_cap = 64000;
     int lines_cap = 1024;
 
-    int lines_len = file_to_lines("./txts/aoc.txt",
-        lines_cap, lines, charbuffer_cap, charbuffer);
+    int lines_len = file_to_lines(filename, lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();
+    lines[lines_len] = 0;
+    X_TIMES = times;
     aoc(lines_len, lines);
     print_clock(start);
+}
 
-    return 0;
+int main(void) {
+	solve("./txts/big.txt", 1);
+	solve("./txts/big.txt", 5);
+	solve("./txts/small.txt", 5);
+
+	return 0;
 }

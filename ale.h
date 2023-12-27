@@ -106,15 +106,13 @@ typedef char * mstr; // modifiable string
     STRINGS
 */
 //
-_pure_hot Long cstrLong(ccstr cstring) {
+
+_pure_hot Long cstrlen(ccstr cstring) {
     Long cstring_len;
     for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
         /* Empty Body */
     }
     return cstring_len;
-}
-_fun_inlined int cstrint(ccstr cstring) {
-    return (int) cstrLong(cstring);
 }
 //Only works for COMPILE TIME STRINGS:
 #define compile_time_cstrlen(compile_time_string_) arraysizeof(compile_time_string_) - 1
@@ -503,12 +501,13 @@ _proc_inlined print_clock(clock_t start) {
 
 #include <stdarg.h>
 
+#define shellrun_buffer_cap 512
+
 _gcc_attr(format(printf, 1, 2), nonnull)
 int shellrun(ccstr format, ...) {
     va_list args;
-
-    const int buffer_cap = 512; 
-    char buffer [512] = {0};
+ 
+    char buffer [shellrun_buffer_cap] = {0};
 
     va_start(args, format);
 
@@ -581,7 +580,7 @@ _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
     fopen(filename, "wb");
         assert(f && "Could not open file for writting");
         {
-            Long buffer_len = cstrLong(buffer);
+            Long buffer_len = cstrlen(buffer);
             Long bytes_written = fwrite_noex(buffer, 1, buffer_len, f);
             assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
         }
@@ -599,7 +598,7 @@ _proc_hot lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
             for (int i = 0; i < lines_len; ++i) {
                 ccstr line = lines[i]; 
 
-                line_len = cstrLong(line);
+                line_len = cstrlen(line);
                 bytes_written = fwrite_noex(line, 1, line_len, f);
                 bytes_written += fwrite_noex("\n", 1, 1, f);
                 assert(bytes_written == line_len + 1 && "could not write line_len#bytes");

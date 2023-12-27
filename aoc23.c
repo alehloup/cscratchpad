@@ -77,7 +77,7 @@ _fun Long solve_line(mstr line) {
     int groups_len = split(words[1], ',', groups_cap, groups_str);
 
     mstr springs = adjust_springs(line);
-    int springs_len = cstrint(springs);
+    int springs_len = (int) cstrlen(springs);
 
     int i = groups_len;
     for (int times = 0; times < (X_TIMES - 1); ++times) {

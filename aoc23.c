@@ -6,33 +6,34 @@
 #define groups_cap 32
 static int X_TIMES = 1;
 
+static const int MEMO_ON = False;
+
 static Long (*memo)[512][32] = 0;
 _fun Long find_nemo(int line_len, int igroup) {
-    if ((*memo)[line_len+1][igroup]) {
+    if (MEMO_ON and (*memo)[line_len+1][igroup]) {
         return (*memo)[line_len+1][igroup];
     } else {
         return 0;
     }
 }
 _fun Long nemo_it(int line_len, int igroup, Long possibilities) {
-    (*memo)[line_len+1][igroup] = possibilities + 1;
+	if (MEMO_ON)
+    	(*memo)[line_len+1][igroup] = possibilities + 1l;
     return possibilities;
 }
 
 _fun Long npossibilities(int groups_len, int groups[], int igroup,  int line_len, mstr line) {
     Long npossibili = 0, nemo = 0;
-    int end_of_groups = igroup==groups_len, end_of_line = line_len==0;
-    int cur_group = groups[igroup], end = line_len - cur_group + 1, past_broken = False;
+    int cur_group = groups[igroup]; 
+    int past_broken = False;
 
-    if (end_of_groups) return not char_in_substr_('#', line, 0, line_len);// Base: end of groups
-    if (end_of_line or line_len <= cur_group) return 0; // Base: end of line
+    if (groups_len <= igroup) return not char_in_substr_('#', line, 0, line_len);// Base: end of groups
+    if (line_len <= cur_group) return 0; // Base: end of line
    
-    for (int i = 0; i < end; ++i) { // Do a Recursion for each index
+    for (int i = 0; i < line_len; ++i) { // Do a Recursion for each index
         int iplusg = i + cur_group;
         int nextline_len = (line_len - (iplusg + 1));
         Long possib=0;
-
-        if (nextline_len + 1 < 0) return npossibili; 
 
         if (past_broken) {return npossibili;} past_broken = line[i] == '#'; // past was unaccounted
 
@@ -61,6 +62,9 @@ _fun mstr adjust_springs(mstr line) {
     adjusted_line[i++] = '.';
     adjusted_line[i++] = 0;
 
+    for (; i < 128; ++i)
+        	adjusted_line[i] = 0;
+
     return adjusted_line;
 }
 
@@ -83,12 +87,13 @@ _fun Long solve_line(mstr line) {
     }
     groups_len = i;
 
-	printf("%s ", springs);
+	printf("%s[%d]", springs, springs_len);
 
     for (i = 0; i < groups_len; ++i) {
         sscanf(groups_str[i], "%d ", &groups[i]);
         printf("%d ", groups[i]);
     }
+    printf("[%d]", groups_len);
     
     assert(words_len == 2 && "Error parsing");
     
@@ -125,12 +130,13 @@ _proc solve(ccstr filename, int times) {
     X_TIMES = times;
     aoc(lines_len, lines);
     print_clock(start);
+    printf("\n");
 }
 
 int main(void) {
 	solve("./txts/big.txt", 1);
-	solve("./txts/big.txt", 5);
-	solve("./txts/small.txt", 5);
+//	solve("./txts/big.txt", 5);
+	solve("./txts/small.txt", 1);
 
 	return 0;
 }

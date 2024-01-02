@@ -6,7 +6,7 @@
 #define groups_cap 32
 static int X_TIMES = 1;
 
-static const int MEMO_ON = False;
+static const int MEMO_ON = True;
 
 static Long (*memo)[512][32] = 0;
 _fun Long find_nemo(int line_len, int igroup) {
@@ -54,9 +54,12 @@ _fun mstr adjust_springs(mstr line) {
     static char adjusted_line[128] = {0};
     
     int i = 0;
-    for (int times = 0; times < X_TIMES; ++times) {
+    for (int times = 1; times <= X_TIMES; ++times) {
         for (int iline = 0; line[iline]; ++i, ++iline) {
             adjusted_line[i] = line[iline];
+        }
+        if (times != X_TIMES) {
+            adjusted_line[i++] = '?';
         }
     }
     adjusted_line[i++] = '.';
@@ -80,20 +83,16 @@ _fun Long solve_line(mstr line) {
     int springs_len = (int) cstrlen(springs);
 
     int i = groups_len;
-    for (int times = 0; times < (X_TIMES - 1); ++times) {
+    for (int times = 1; times < X_TIMES; ++times) {
         for (int igroups_str = 0; igroups_str < groups_len; ++i, ++igroups_str) {
             groups_str[i] = groups_str[igroups_str];
         }
     }
     groups_len = i;
 
-	printf("%s[%d]", springs, springs_len);
-
     for (i = 0; i < groups_len; ++i) {
         sscanf(groups_str[i], "%d ", &groups[i]);
-        printf("%d ", groups[i]);
     }
-    printf("[%d]", groups_len);
     
     assert(words_len == 2 && "Error parsing");
     
@@ -109,7 +108,6 @@ _proc aoc(int lines_len, mstr lines[2]) {
     for (int iline = 0; iline < lines_len; ++iline) {
         mstr line = lines[iline];
         Long res = solve_line(line);
-        printf(" = %lld\n", res);
         sum += res;
     }
 
@@ -134,9 +132,9 @@ _proc solve(ccstr filename, int times) {
 }
 
 int main(void) {
-	solve("./txts/big.txt", 1);
-//	solve("./txts/big.txt", 5);
-	solve("./txts/small.txt", 1);
+//	solve("./txts/big.txt", 1);
+	solve("./txts/big.txt", 5);
+//	solve("./txts/small.txt", 5);
 
 	return 0;
 }

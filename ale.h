@@ -27,23 +27,13 @@
 #else
     #define _gcc_attr(...) inline static
 #endif
-// 2 types of function attributes: either returns value (fun) or not (proc)
-#define _fun_attr(...) _gcc_attr(nonnull, warn_unused_result, __VA_ARGS__)
-#define _proc_attr(...) _gcc_attr(nonnull, __VA_ARGS__) void
-// math = no pointers, same inputs always produce same output
-#define _math _fun_attr(const) 
-#define _math_hot _fun_attr(const, hot)
-// pure = do not uses global variables, uses only its input
-#define _pure _fun_attr(pure)
-#define _pure_hot _fun_attr(pure, hot)
-// "normal" function / procedure
-#define _fun _fun_attr()
-#define _fun_hot _fun_attr(hot)
-#define _proc _proc_attr()
-#define _proc_hot _proc_attr(hot)
-// always inline
-#define _fun_inlined _fun_attr(always_inline)
-#define _proc_inlined _proc_attr(always_inline)
+
+#define _fun  _gcc_attr(nonnull, warn_unused_result)
+#define _math _gcc_attr(nonnull, warn_unused_result, const) // math = no pointers, same inputs always produce same output
+#define _pure _gcc_attr(nonnull, warn_unused_result, pure) // pure = do not uses global variables, uses only its input
+#define _fun_inlined  _gcc_attr(nonnull, warn_unused_result, always_inline)
+#define _proc _gcc_attr(nonnull) void
+#define _proc_inlined _gcc_attr(nonnull, always_inline) void
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
 /*
@@ -107,7 +97,7 @@ typedef char * mstr; // modifiable string
 */
 //
 
-_pure_hot Long cstrlen(ccstr cstring) {
+_pure Long cstrlen(ccstr cstring) {
     Long cstring_len;
     for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
         /* Empty Body */
@@ -117,7 +107,7 @@ _pure_hot Long cstrlen(ccstr cstring) {
 //Only works for COMPILE TIME STRINGS:
 #define compile_time_cstrlen(compile_time_string_) arraysizeof(compile_time_string_) - 1
 
-_pure_hot int cstrcmp(ccstr cstr1, ccstr cstr2) {
+_pure int cstrcmp(ccstr cstr1, ccstr cstr2) {
     Long i = 0;
 
     for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
@@ -126,7 +116,7 @@ _pure_hot int cstrcmp(ccstr cstr1, ccstr cstr2) {
     return cstr1[i] - cstr2[i];
 }
 
-_pure_hot int startswith(ccstr string, ccstr prefix) {
+_pure int startswith(ccstr string, ccstr prefix) {
     Long i = 0;
     if (!prefix[0]) {
         return True;
@@ -152,7 +142,7 @@ _fun_inlined int void_compare_strings(const void * a, const void * b) {
     return cstrcmp(*(ccstr*)a, *(ccstr*)b);
 }
 
-_pure_hot int is_empty_string(ccstr string) {
+_pure int is_empty_string(ccstr string) {
     for (Long i = 0; string[i]; ++i) {
         if (string[i] != ' ') {
             return False;
@@ -161,11 +151,11 @@ _pure_hot int is_empty_string(ccstr string) {
     return True;
 }
 
-_math_hot int is_digit(cchar character) {
+_math int is_digit(cchar character) {
     return character >= '0' && character <= '9';
 }
 
-_pure_hot int digitlen(ccstr cstring) {
+_pure int digitlen(ccstr cstring) {
     int cstring_len;
     for (cstring_len = 0; is_digit(cstring[cstring_len]); ++cstring_len) {
         /* Empty Body */
@@ -175,7 +165,7 @@ _pure_hot int digitlen(ccstr cstring) {
     return cstring_len;
 }
 
-_pure_hot int char_pos_in_str(cchar letter, ccstr cstring) {
+_pure int char_pos_in_str(cchar letter, ccstr cstring) {
     for (int letter_pos = 0; cstring[letter_pos]; ++letter_pos) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
@@ -188,7 +178,7 @@ _fun_inlined int char_in_(cchar letter, ccstr cstring) {
     return (char_pos_in_str(letter, cstring) + 1);
 }
 
-_pure_hot int char_pos_in_substr(cchar letter, ccstr cstring, int start, int count) {
+_pure int char_pos_in_substr(cchar letter, ccstr cstring, int start, int count) {
     for (int letter_pos = start, i = 0; cstring[letter_pos] and i < count; ++letter_pos, ++i) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
@@ -202,7 +192,7 @@ _fun_inlined int char_in_substr_(cchar letter, ccstr cstring, int start, int cou
 }
 
 // returns the index after the last element
-_fun_hot int cstrcpy(mstr dst, ccstr src, Long dst_len) {
+_fun int cstrcpy(mstr dst, ccstr src, Long dst_len) {
     int i = 0;
     for (i = 0; i < dst_len and src[i]; ++i) {
         dst[i] = src[i];
@@ -211,7 +201,7 @@ _fun_hot int cstrcpy(mstr dst, ccstr src, Long dst_len) {
     return i;
 }
 
-_fun_hot cstr save_str_to_worldbuffer(cstr string, char worldbuffer[], Long *worldbuffer_len_ref, const Long worldbuffer_cap) {
+_fun cstr save_str_to_worldbuffer(cstr string, char worldbuffer[], Long *worldbuffer_len_ref, const Long worldbuffer_cap) {
     Long begin = (*worldbuffer_len_ref);
     
     cstr new_str = &worldbuffer[begin];
@@ -235,11 +225,11 @@ _fun_hot cstr save_str_to_worldbuffer(cstr string, char worldbuffer[], Long *wor
 #define max_(number1_, number2_) ((number1_) > (number2_) ? (number1_) : (number2_))
 
 // bitmask for optimized Mod for power 2 numbers
-_math_hot Long mod_pwr2(Long number, Long modval) {
+_math Long mod_pwr2(Long number, Long modval) {
     return (number) & (modval - 1);
 }
 
-_math_hot Long greatest_common_divisor(Long m, Long n) {
+_math Long greatest_common_divisor(Long m, Long n) {
     Long tmp;
     while(m) { tmp = m; m = n % m; n = tmp; }       
     return n;
@@ -261,7 +251,7 @@ _fun_inlined Long least_common_multiple(Long m, Long n) {
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
 
-_pure_hot int rnd(unsigned Long seed[1]) {
+_pure int rnd(unsigned Long seed[1]) {
     int shift = 29;
     *seed = *seed * Rnd_mult_n + Rnd_sum_n;
     shift -= (int)(*seed >> 61);
@@ -279,7 +269,7 @@ _pure_hot int rnd(unsigned Long seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_pure_hot unsigned Long hash_str(ccstr str) {
+_pure unsigned Long hash_str(ccstr str) {
     unsigned Long h = Hash_start_n;
     
     for(Long i = 0; str[i]; ++i) { 
@@ -293,7 +283,7 @@ _pure_hot unsigned Long hash_str(ccstr str) {
 #define Hash_mul_n1 0x94d049bb133111eb
 #define Hash_mul_n2 0xbf58476d1ce4e5b9
 
-_math_hot unsigned Long hash_int(Long integer64) {
+_math unsigned Long hash_int(Long integer64) {
     unsigned Long x = (unsigned Long)integer64;
     
     x *= Hash_mul_n1; 
@@ -315,7 +305,7 @@ _math_hot unsigned Long hash_int(Long integer64) {
 #define Ht_shift  (64 - Ht_exp)
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
-_math_hot int ht_lookup(
+_math int ht_lookup(
     unsigned Long hash, // 1st hash acts as base location
     int index // 2nd "hash" steps over the "list of elements" from base-location
 )
@@ -409,7 +399,7 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 */
 //
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun_hot int into_lines_(mstr text_to_alter, const int lines_cap, mstr lines[2], int include_empty_lines) {
+_fun int into_lines_(mstr text_to_alter, const int lines_cap, mstr lines[2], int include_empty_lines) {
     int lines_len = 0;
     
     Long current = 0;
@@ -441,7 +431,7 @@ _fun_inlined int into_lines_including_empty(mstr text_to_alter, const int lines_
     return into_lines_(text_to_alter, lines_cap, lines, True);
 }
 
-_fun_hot int split(mstr text_to_alter, cchar splitter, const int words_cap, mstr words[2]) {
+_fun int split(mstr text_to_alter, cchar splitter, const int words_cap, mstr words[2]) {
     int i = 0, current = 0;
     int words_len = 0;
 
@@ -575,7 +565,7 @@ _fun_inlined int file_to_lines(ccstr filename, const int lines_cap, mstr lines[2
     return into_lines(charbuffer, lines_cap, lines);
 }
 
-_proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
+_proc cstring_to_file(ccstr buffer, ccstr filename) {
         FILE *f =  
     fopen(filename, "wb");
         assert(f && "Could not open file for writting");
@@ -587,7 +577,7 @@ _proc_hot cstring_to_file(ccstr buffer, ccstr filename) {
     fclose(f);
 }
 
-_proc_hot lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
+_proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
         FILE *f =  
     fopen(filename, "wb");
         assert(f && "Could not open file for writting");

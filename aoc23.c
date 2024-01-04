@@ -6,13 +6,14 @@
 #define print(...)  printf(__VA_ARGS__)
 
 #define t -77 //'^'
-#define b -77 //'v'
-#define r -16 // '>'//-81 //»
+#define b -35 //'v'
+#define r -60 // '>'//-81 //»
 #define l -16 //'<'//-82 //«
 
 #define I -2 // ■
 #define O -78 // ▓
 
+#define empty 32 // space
 #define pipe -80 // ░
 
 _fun int count_I(int lines_len, mstr lines[64]) {
@@ -58,7 +59,9 @@ _proc fill(char char_to_fill, int line, int col, int lines_len, mstr lines[64]) 
         return;
     }
 
-    lines[line][col] = char_to_fill;
+    if (lines[line][col] != empty) {
+        lines[line][col] = char_to_fill;
+    }
     fill(char_to_fill, line-1, col, lines_len, lines);
     fill(char_to_fill, line, col+1, lines_len, lines);
     fill(char_to_fill, line+1, col, lines_len, lines);
@@ -97,12 +100,64 @@ _proc print_matrix(int lines_len, mstr lines[64]) {
     printf("\n");
 }
 
+typedef char (*bigmatrix)[300][300];
+_fun bigmatrix padded_matrix(int lines_len, mstr lines[64]) {
+    static char padded[300][300] = {0};
+    int cols_len = (int) cstrlen(lines[0]);
+    int new_cols_len = (cols_len * 2) + 2;
+    int new_lines_len = (lines_len * 2) + 2;
+    
+    for (int i = 0; i < new_lines_len; ++i) {
+        for (int j = 0; j < new_cols_len; ++j) {
+            padded[i][j] = empty;
+        }
+    }
+
+    for (int i = 0, ni = 1; i < lines_len; ++i, ni+=2) {
+        for (int j = 0, nj = 1; j < cols_len; ++j, nj+=2) {
+            char tile = lines[i][j];
+            char previousline_tile = i > 0 ? lines[i-1][j] : r;
+            char nextline_tile = i < lines_len - 1 ? lines[i+1][j] : r;
+            char previouscol_tile  = j > 0 ? lines[i][j-1] : t;
+            char nextcol_tile  = j < cols_len  - 1 ? lines[i][j+1] : t;
+            
+            padded[ni][nj] = tile;
+            if ((tile == t or tile == b) and (previouscol_tile != r and previouscol_tile != l)) {
+                padded[ni+1][nj] = tile;
+                if (nextcol_tile == r or nextcol_tile == l) {
+                    padded[ni][nj+1] = nextcol_tile;
+                }
+            }
+            if ((tile == r or tile == l) and (previousline_tile != t and previousline_tile != b)) {
+                padded[ni][nj+1] = tile;
+                if (nextline_tile == t or nextline_tile == b) {
+                    padded[ni+1][nj] = nextline_tile;
+                }
+            }
+        }
+    }
+
+
+
+    return &padded;
+}
+
+_proc print_big_matrix(bigmatrix matrix) {
+    printf("\nMATRIX:\n");
+    for (int i = 0; (*matrix)[i][0]; ++i) {
+        printf("%s\n", (*matrix)[i]);
+    }
+    printf("\n");
+}
+
 //AoC 10
 _proc aoc(int lines_len, mstr lines[64]) {
     static ccstr TOPS = "|LJ";
     static ccstr RIGHTS = "-FL";
     static ccstr BOTTOMS = "|F7";
     static ccstr LEFTS = "-J7";
+
+    bigmatrix padded = 0;
     
     int pos_line = 0, pos_col = 0;
     int stepn = 0;
@@ -186,6 +241,9 @@ _proc aoc(int lines_len, mstr lines[64]) {
     print_matrix(lines_len, lines);
 
     printf("# tiles: %d\n", count_I(lines_len, lines));
+
+    padded = padded_matrix(lines_len, lines);
+    print_big_matrix(padded);
 
     // for (int i = 128; i < 256; ++i) {
     //     printf(" %c : %d (%d) \n", (char)i, i, (char)i);

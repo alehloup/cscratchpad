@@ -9,6 +9,9 @@
 #define b -35 //'v'
 #define r -60 // '>'//-81 //»
 #define l -16 //'<'//-82 //«
+//#define F 5
+
+//F7LJ
 
 #define I -2 // ■
 #define O -78 // ▓
@@ -40,7 +43,7 @@ _proc transform_pipes(int lines_len, mstr lines[64]) {
     }
 }
 
-_math int is_path(cchar tile) {
+_math int is_path(char tile) {
     return tile == t || tile == r || tile == b || tile == l || tile == 'S';
 }
 
@@ -203,7 +206,7 @@ _proc aoc(int lines_len, mstr lines[64]) {
     print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
     
     while(not is_path(lines[pos_line][pos_col])) {
-        cchar cur_pipe = lines[pos_line][pos_col];
+        char cur_pipe = lines[pos_line][pos_col];
         
         if        (/*GO TOP*/ last_move_dir != 'b' and char_in_(cur_pipe, TOPS)) {
             lines[pos_line][pos_col] = t;
@@ -245,9 +248,9 @@ _proc aoc(int lines_len, mstr lines[64]) {
     padded = padded_matrix(lines_len, lines);
     print_big_matrix(padded);
 
-    // for (int i = 128; i < 256; ++i) {
-    //     printf(" %c : %d (%d) \n", (char)i, i, (char)i);
-    // }    
+    for (int i = 128; i < 256; ++i) {
+        printf(" %c : %d (%d) \n", (char)i, i, (char)i);
+    }    
 } 
 
 

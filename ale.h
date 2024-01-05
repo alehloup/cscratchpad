@@ -40,20 +40,14 @@
     ==================== TYPES ====================
 */
 //
-#define MBs_ 1048576
-
-// Int
 #define Long long long
-
 #ifdef __SIZEOF_INT128__
-__extension__ typedef unsigned __int128 UBig;
 __extension__ typedef __int128 Big;
 #endif
 
 // String
-typedef const char cchar; // const char
-typedef cchar * const ccstr; // const string const pointer
-typedef cchar * cstr; // const string
+typedef const char * const ccstr; // const string const pointer
+typedef const char * cstr; // const string
 typedef char * mstr; // modifiable string
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
@@ -151,7 +145,7 @@ _pure int is_empty_string(ccstr string) {
     return True;
 }
 
-_math int is_digit(cchar character) {
+_math int is_digit(char character) {
     return character >= '0' && character <= '9';
 }
 
@@ -165,7 +159,7 @@ _pure int digitlen(ccstr cstring) {
     return cstring_len;
 }
 
-_pure int char_pos_in_str(cchar letter, ccstr cstring) {
+_pure int char_pos_in_str(char letter, ccstr cstring) {
     for (int letter_pos = 0; cstring[letter_pos]; ++letter_pos) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
@@ -174,11 +168,11 @@ _pure int char_pos_in_str(cchar letter, ccstr cstring) {
 
     return -1;
 }
-_fun_inlined int char_in_(cchar letter, ccstr cstring) {
+_fun_inlined int char_in_(char letter, ccstr cstring) {
     return (char_pos_in_str(letter, cstring) + 1);
 }
 
-_pure int char_pos_in_substr(cchar letter, ccstr cstring, int start, int count) {
+_pure int char_pos_in_substr(char letter, ccstr cstring, int start, int count) {
     for (int letter_pos = start, i = 0; cstring[letter_pos] and i < count; ++letter_pos, ++i) {
         if(cstring[letter_pos] == letter) {
             return letter_pos;
@@ -187,7 +181,7 @@ _pure int char_pos_in_substr(cchar letter, ccstr cstring, int start, int count) 
 
     return -1;
 }
-_fun_inlined int char_in_substr_(cchar letter, ccstr cstring, int start, int count) {
+_fun_inlined int char_in_substr_(char letter, ccstr cstring, int start, int count) {
     return (char_pos_in_substr(letter, cstring, start, count) + 1);
 }
 
@@ -431,7 +425,7 @@ _fun_inlined int into_lines_including_empty(mstr text_to_alter, const int lines_
     return into_lines_(text_to_alter, lines_cap, lines, True);
 }
 
-_fun int split(mstr text_to_alter, cchar splitter, const int words_cap, mstr words[2]) {
+_fun int split(mstr text_to_alter, char splitter, const int words_cap, mstr words[2]) {
     int i = 0, current = 0;
     int words_len = 0;
 
@@ -519,19 +513,6 @@ int shellrun(ccstr format, ...) {
 #ifdef stdout
 // stdio.h
 
-_fun_inlined Long fread_noex(mstr dst, Long sz, Long count, FILE * f) {
-    #ifdef __cplusplus
-        try { return (Long) fread(dst, (unsigned Long) sz, (unsigned Long) count, f); } catch(...) {return 0;}
-    #endif 
-              return (Long) fread(dst, (unsigned Long) sz, (unsigned Long) count, f);
-}
-_fun_inlined Long fwrite_noex(ccstr Str, Long Size, Long Count, FILE * File) {
-    #ifdef __cplusplus
-        try { return (Long) fwrite(Str, (unsigned Long) Size, (unsigned Long) Count, File); } catch(...) {return 0;}
-    #endif 
-              return (Long) fwrite(Str, (unsigned Long) Size, (unsigned Long) Count, File);
-}
-
 _fun Long file_to_cstring(ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
     Long fsize = 0;
 
@@ -547,7 +528,7 @@ _fun Long file_to_cstring(ccstr filename, const Long charbuffer_cap, char charbu
         assert(charbuffer_cap >= fsize+2 && "charbuffer is not enough for file size");
 
         {
-            Long bytesread = fread_noex(charbuffer, 1LL, fsize, f);
+            Long bytesread = (Long) fread(charbuffer, 1LL, (unsigned Long)fsize, f);
             assert(bytesread == fsize && "could not read fsize#bytes"); 
             
             charbuffer[fsize] = charbuffer[fsize-1] != '\n' ? '\n' : '\0';
@@ -568,18 +549,21 @@ _fun_inlined int file_to_lines(ccstr filename, const int lines_cap, mstr lines[2
 _proc cstring_to_file(ccstr buffer, ccstr filename) {
         FILE *f =  
     fopen(filename, "wb");
+
         assert(f && "Could not open file for writting");
         {
             Long buffer_len = cstrlen(buffer);
-            Long bytes_written = fwrite_noex(buffer, 1, buffer_len, f);
+            Long bytes_written = (Long) fwrite(buffer, 1, (unsigned Long)buffer_len, f);
             assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
         }
+
     fclose(f);
 }
 
 _proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
         FILE *f =  
     fopen(filename, "wb");
+
         assert(f && "Could not open file for writting");
         {
             Long bytes_written = 0;
@@ -589,11 +573,12 @@ _proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
                 ccstr line = lines[i]; 
 
                 line_len = cstrlen(line);
-                bytes_written = fwrite_noex(line, 1, line_len, f);
-                bytes_written += fwrite_noex("\n", 1, 1, f);
+                bytes_written = (Long) fwrite(line, 1, (unsigned Long)line_len, f);
+                bytes_written += (Long) fwrite("\n", 1, 1, f);
                 assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
             }
         }
+
     fclose(f);
 }
 

@@ -18,11 +18,11 @@ _fun Long distance(coord coord1, coord coord2) {
     Long dist = 0;
 
     for (int icolumn = lower_column; icolumn < higher_column ; ++icolumn) {
-        cchar tile = matrix[lower_line][icolumn];
+        char tile = matrix[lower_line][icolumn];
         dist += tile == ',' or tile == '-' ? 999999 : 1;
     }
     for (int iline = lower_line; iline < higher_line ; ++iline) {
-        cchar tile = matrix[iline][lower_column];
+        char tile = matrix[iline][lower_column];
         dist += tile == ',' or tile == '-' ? 999999 : 1;
     }
 

@@ -10,9 +10,11 @@ int main(int argc, mstr *argv) {
     }
     
     shellrun(
-        " clang" 
+        "msvc"
+        " && clang" 
         " -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero"
         " -Weverything -Werror -fsanitize-trap -fsanitize=undefined -Wno-unsafe-buffer-usage -Wno-unused-function"
+        " -D_CRT_SECURE_NO_WARNINGS"
         " %s -o \"./%s.exe\"" 
         " && \"./%s.exe\""
         " && rm \"./%s.exe\""

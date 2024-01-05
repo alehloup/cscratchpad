@@ -16,6 +16,7 @@ int main(int argc, ccstr*argv) {
         " -Wall -Wextra -Wpedantic -Werror -fsanitize-trap -fsanitize=undefined -fanalyzer"
         " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
         " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
+        " -fno-exceptions"
         " %s -o \"./%s.exe\"" 
         " && \"./%s.exe\""
         " && rm \"./%s.exe\""

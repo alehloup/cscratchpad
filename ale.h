@@ -201,17 +201,17 @@ _fun int cstrcpy(mstr dst, ccstr src, Long dst_len) {
     return i;
 }
 
-_fun cstr save_str_to_worldbuffer(cstr string, char worldbuffer[], Long *worldbuffer_len_ref, const Long worldbuffer_cap) {
-    Long begin = (*worldbuffer_len_ref);
+_fun cstr save_str_to_buffer(cstr string, char buffer[], Long *buffer_len_ref, const Long buffer_cap) {
+    Long begin = (*buffer_len_ref);
     
-    cstr new_str = &worldbuffer[begin];
+    cstr new_str = &buffer[begin];
 
-    for (int istr = 0; string[istr] and begin < worldbuffer_cap; ++istr, ++begin) {
-        worldbuffer[begin] = string[istr];
+    for (int istr = 0; string[istr] and begin < buffer_cap; ++istr, ++begin) {
+        buffer[begin] = string[istr];
     }
-    worldbuffer[begin++] = 0;
+    buffer[begin++] = 0;
 
-    (*worldbuffer_len_ref) = begin;
+    (*buffer_len_ref) = begin;
     return new_str;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^

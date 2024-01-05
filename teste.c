@@ -7,6 +7,7 @@
 
 int main(void) {
     static char bigbuffer[bigbuffer_cap] = {0};
+    static Long bigbuffer_len = 0;
 
     static char smallbuffer[32] = {0};
     
@@ -15,7 +16,9 @@ int main(void) {
 
     for (int i = 0; i < 16; ++i) {
         sprintf_s(smallbuffer, 32, "123 |%d| 321", i);
-        array[array_len++] = save_str_to_worldbuffer(smallbuffer, bigbuffer, bigbuffer_cap);
+        array[array_len++] = 
+            save_str_to_buffer(smallbuffer, 
+                bigbuffer, &bigbuffer_len, bigbuffer_cap);
     }
 
     for (int i = 0; i < array_len; ++i) {

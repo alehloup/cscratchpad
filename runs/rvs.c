@@ -11,13 +11,13 @@ int main(int argc, ccstr*argv) {
 
     shellrun(
         "msvc"
-        " && cl /W4 /Ox /Fo:%s.obj /Fe:%s.exe %s" 
+        " && cl /W4 /Ox /Fo:%s.obj /Fe:%s.exe -D_CRT_SECURE_NO_WARNINGS %s" 
         " && \"./%s.exe\""
         " && rm \"./%s.exe\""
         " && rm \"./%s.obj\""
         "\n"
         , 
-        _1_c, _1_, _1_, _1_, _1_, _1_
+        _1_, _1_, _1_c, _1_, _1_, _1_
     );
 
     return 0;

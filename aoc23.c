@@ -20,13 +20,18 @@
 #define O '\''
 
 #define empty ' '
-#define pipe '"'
+#define visited ','
+#define pipe 'x'
 
-_fun int count_I(int lines_len, mstr lines[64]) {
+typedef char (*padded_matrix_ptr)[300][300];
+static int padded_cols_len = 0;
+static int padded_lines_len = 0;
+
+_fun int count_I(padded_matrix_ptr padded_ptr) {
     int count = 0;
-    for (int iline = 0; iline < lines_len; ++iline) {
-        for (int icol = 0; lines[iline][icol]; ++icol) {
-            count += lines[iline][icol] == I ? 1 : 0;
+    for (int iline = 0; iline < padded_lines_len; ++iline) {
+        for (int icol = 0; (*padded_ptr)[iline][icol]; ++icol) {
+            count += (*padded_ptr)[iline][icol] == I ? 1 : 0;
         }
     }    
 
@@ -53,50 +58,44 @@ _math int is_path(char tile) {
         || tile == cornerL || tile == cornerJ;
 }
 
-_fun int out_of_bounds(int line, int col, int lines_len, mstr lines[64]) {
-    return (line < 0 or col < 0 or line >= lines_len or !lines[line][col]);
+_fun int out_of_bounds(int line, int col) {
+    return (line < 0 or col < 0 or line >= (padded_lines_len - 1) or col >= (padded_cols_len - 1));
 }
 
-_proc fill(char char_to_fill, int line, int col, int lines_len, mstr lines[64]) {
+_proc fill(char char_to_fill, int line, int col, padded_matrix_ptr padded) {
     if (
-        out_of_bounds(line, col, lines_len, lines)
-        || ('A' <= lines[line][col] and lines[line][col] <= 'z')
-        || is_path(lines[line][col])
-        || lines[line][col] == O
-        || lines[line][col] == I
+        out_of_bounds(line, col)
+        || is_path((*padded)[line][col])
+        || (*padded)[line][col] == O
+        || (*padded)[line][col] == I
+        || (*padded)[line][col] == visited
     ) {
         return;
     }
 
-    if (lines[line][col] != empty) {
-        lines[line][col] = char_to_fill;
-    }
-    fill(char_to_fill, line-1, col, lines_len, lines);
-    fill(char_to_fill, line, col+1, lines_len, lines);
-    fill(char_to_fill, line+1, col, lines_len, lines);
-    fill(char_to_fill, line, col-1, lines_len, lines);
+    (*padded)[line][col] = (*padded)[line][col] == empty ? visited : char_to_fill;
+
+    fill(char_to_fill, line-1, col, padded);
+    fill(char_to_fill, line, col+1, padded);
+    fill(char_to_fill, line+1, col, padded);
+    fill(char_to_fill, line, col-1, padded);
 }
 
-_proc fill_outs_matrix(int lines_len, mstr lines[64]) {
-    int icol = 0;
-    for (icol = 0; lines[0][icol]; ++icol) {
-        fill(O, 0, icol, lines_len, lines);
-    }
-    for (icol = 0; lines[lines_len-1][icol]; ++icol) {
-        fill(O, lines_len-1, icol, lines_len, lines);
-    }
-    for (int iline = 0; iline < lines_len; ++iline) {
-        fill(O, iline, 0, lines_len, lines);
-    }
-    for (int iline = 0; iline < lines_len; ++iline) {
-        fill(O, iline, icol-1, lines_len, lines);
-    }
+_fun int erase(char to_erase) {
+    return to_erase == empty or to_erase == visited or to_erase == pipe or to_erase == O;
 }
 
-_proc fill_ins_matrix(int lines_len, mstr lines[64]) {
-    for (int iline = 0; iline < lines_len; ++iline) {
-        for (int icol = 0; lines[iline][icol]; ++icol) {
-            fill(I, iline, icol, lines_len, lines);
+_proc fill_matrix(padded_matrix_ptr padded) {
+    fill(O, 0, 0, padded);
+    for (int iline = 0; iline < padded_lines_len; ++iline) {
+        for (int icol = 0; (*padded)[iline][icol]; ++icol) {
+            fill(I, iline, icol, padded);
+        }
+    }
+
+    for (int iline = 0; iline < padded_lines_len; ++iline) {
+        for (int icol = 0; (*padded)[iline][icol]; ++icol) {
+            (*padded)[iline][icol] = erase((*padded)[iline][icol]) ? ' ' : (*padded)[iline][icol];
         }
     }
 }
@@ -109,8 +108,7 @@ _proc print_matrix(int lines_len, mstr lines[64]) {
     printf("\n");
 }
 
-typedef char (*bigmatrix)[300][300];
-_fun bigmatrix padded_matrix(int lines_len, mstr lines[64]) {
+_fun padded_matrix_ptr padded_matrix(int lines_len, mstr lines[64]) {
     static char padded[300][300] = {0};
     int cols_len = (int) cstrlen(lines[0]);
     int new_cols_len = (cols_len * 2) + 2;
@@ -143,13 +141,14 @@ _fun bigmatrix padded_matrix(int lines_len, mstr lines[64]) {
         }
     }
 
-
+    padded_cols_len = (int) cstrlen(padded[0]);
+    for (padded_lines_len = 0; padded[padded_lines_len][0]; ++padded_lines_len);
 
     return &padded;
 }
 
-_proc print_big_matrix(bigmatrix matrix) {
-    printf("\nMATRIX:\n");
+_proc print_padded_matrix(padded_matrix_ptr matrix) {
+    printf("\nMATRIX %dx%d :\n", padded_lines_len, padded_cols_len);
     for (int i = 0; (*matrix)[i][0]; ++i) {
         printf("%s\n", (*matrix)[i]);
     }
@@ -163,7 +162,7 @@ _proc aoc(int lines_len, mstr lines[64]) {
     static ccstr BOTTOMS = "|F7";
     static ccstr LEFTS = "-J7";
 
-    bigmatrix padded = 0;
+    padded_matrix_ptr padded = 0;
     
     int pos_line = 0, pos_col = 0;
     int stepn = 0;
@@ -246,7 +245,7 @@ _proc aoc(int lines_len, mstr lines[64]) {
         else if (last_move_dir == 'b' and past_move_dir == 'r') lines[cur_line][cur_col] = corner7;
 
         ++stepn;
-        print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
+        //print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
     }
 
     cur_pipe = lines[pos_line][pos_col];
@@ -262,16 +261,15 @@ _proc aoc(int lines_len, mstr lines[64]) {
     printf("Reached S in [%d] steps (farthest: %d) \n", (stepn - 1), stepn/2);
 
     transform_pipes(lines_len, lines);
+    //print_matrix(lines_len, lines);
 
     padded = padded_matrix(lines_len, lines);
-    print_big_matrix(padded);
 
-    fill_outs_matrix(lines_len, lines);
-    fill_ins_matrix(lines_len, lines);
+    fill_matrix(padded);
 
-    print_matrix(lines_len, lines);
+    //print_padded_matrix(padded);
 
-    printf("# tiles: %d\n", count_I(lines_len, lines));
+    printf("# tiles: %d\n", count_I(padded));
 } 
 
 
@@ -281,7 +279,7 @@ int main(void) {
     Long charbuffer_cap = 64000;
     int lines_cap = 256;
 
-    int lines_len = file_to_lines("./txts/aoc.txt", \
+    int lines_len = file_to_lines("./txts/big.txt",
         lines_cap, lines, charbuffer_cap, charbuffer);
 
     clock_t start = clock();

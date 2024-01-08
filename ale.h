@@ -546,6 +546,12 @@ _fun_inlined int file_to_lines(ccstr filename, const int lines_cap, mstr lines[2
     return into_lines(charbuffer, lines_cap, lines);
 }
 
+_fun_inlined int file_to_lines_including_empty(ccstr filename, const int lines_cap, mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+    Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
+    (void) charbuffer_len;
+    return into_lines_including_empty(charbuffer, lines_cap, lines);
+}
+
 _proc cstring_to_file(ccstr buffer, ccstr filename) {
         FILE *f =  
     fopen(filename, "wb");

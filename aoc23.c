@@ -125,24 +125,21 @@ _fun bigmatrix padded_matrix(int lines_len, mstr lines[64]) {
     for (int i = 0, ni = 1; i < lines_len; ++i, ni+=2) {
         for (int j = 0, nj = 1; j < cols_len; ++j, nj+=2) {
             char tile = lines[i][j];
-            char previousline_tile = i > 0 ? lines[i-1][j] : r;
-            char nextline_tile = i < lines_len - 1 ? lines[i+1][j] : r;
-            char previouscol_tile  = j > 0 ? lines[i][j-1] : t;
-            char nextcol_tile  = j < cols_len  - 1 ? lines[i][j+1] : t;
             
             padded[ni][nj] = tile;
-            if ((tile == t or tile == b) and (previouscol_tile != r and previouscol_tile != l)) {
+            if (tile == t or tile == b) {
                 padded[ni+1][nj] = tile;
-                if (nextcol_tile == r or nextcol_tile == l) {
-                    padded[ni][nj+1] = nextcol_tile;
-                }
-            }
-            if ((tile == r or tile == l) and (previousline_tile != t and previousline_tile != b)) {
+            } else if (tile == r or tile == l) {
                 padded[ni][nj+1] = tile;
-                if (nextline_tile == t or nextline_tile == b) {
-                    padded[ni+1][nj] = nextline_tile;
-                }
+            } else if (tile == cornerF) {
+                padded[ni+1][nj] = lines[i+1][j];
+                padded[ni][nj+1] = lines[i][j+1];
+            } else if (tile == corner7) {
+                padded[ni+1][nj] = lines[i+1][j];
+            } else if (tile == cornerL) {
+                padded[ni][nj+1] = lines[i][j+1];
             }
+
         }
     }
 
@@ -165,18 +162,13 @@ _proc aoc(int lines_len, mstr lines[64]) {
     static ccstr RIGHTS = "-FL";
     static ccstr BOTTOMS = "|F7";
     static ccstr LEFTS = "-J7";
-    static ccstr CORNERS = "F7LJ";
-    static char corner_to_path[128] = {0};
-    corner_to_path[(int)'F'] = cornerF;
-    corner_to_path[(int)'7'] = corner7;
-    corner_to_path[(int)'L'] = cornerL;
-    corner_to_path[(int)'J'] = cornerJ;
 
     bigmatrix padded = 0;
     
     int pos_line = 0, pos_col = 0;
     int stepn = 0;
     char last_move_dir = '.';
+    char cur_pipe = '.';
 
     for (int iline = 0; iline < lines_len; ++iline) {
         ccstr line = lines[iline];
@@ -218,23 +210,24 @@ _proc aoc(int lines_len, mstr lines[64]) {
     print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
     
     while(not is_path(lines[pos_line][pos_col])) {
-        char cur_pipe = lines[pos_line][pos_col];
-        char corner_char = char_in_(cur_pipe, CORNERS) ? corner_to_path[(int)cur_pipe] : 0;
+        char past_move_dir = last_move_dir;
+        int cur_line = pos_line, cur_col = pos_col;
+        cur_pipe = lines[pos_line][pos_col];
         
         if        (/*GO TOP*/ last_move_dir != 'b' and char_in_(cur_pipe, TOPS)) {
-            lines[pos_line][pos_col] = corner_char ? corner_char : t;
+            lines[pos_line][pos_col] = t;
             --pos_line; 
             last_move_dir = 't';
         } else if (/*GO RIGHT*/ last_move_dir != 'l' and char_in_(cur_pipe, RIGHTS)) {
-            lines[pos_line][pos_col] = corner_char ? corner_char : r;
+            lines[pos_line][pos_col] = r;
             ++pos_col;
             last_move_dir = 'r';
         } else if (/*GO BOTTOM*/ last_move_dir != 't' and char_in_(cur_pipe, BOTTOMS)) {
-            lines[pos_line][pos_col] = corner_char ? corner_char : b;
+            lines[pos_line][pos_col] = b;
             ++pos_line;
             last_move_dir = 'b';
         } else if (/*GO LEFT*/ last_move_dir != 'r' and char_in_(cur_pipe, LEFTS)) {
-            lines[pos_line][pos_col] = corner_char ? corner_char : l;
+            lines[pos_line][pos_col] = l;
             --pos_col;
             last_move_dir = 'l';
         } else {
@@ -243,13 +236,35 @@ _proc aoc(int lines_len, mstr lines[64]) {
             break;
         }
 
+             if (last_move_dir == 'r' and past_move_dir == 't') lines[cur_line][cur_col] = cornerF;
+        else if (last_move_dir == 'r' and past_move_dir == 'b') lines[cur_line][cur_col] = cornerL;
+        else if (last_move_dir == 'l' and past_move_dir == 't') lines[cur_line][cur_col] = corner7;
+        else if (last_move_dir == 'l' and past_move_dir == 'b') lines[cur_line][cur_col] = cornerJ;
+        else if (last_move_dir == 't' and past_move_dir == 'l') lines[cur_line][cur_col] = cornerL;
+        else if (last_move_dir == 't' and past_move_dir == 'r') lines[cur_line][cur_col] = cornerJ;
+        else if (last_move_dir == 'b' and past_move_dir == 'l') lines[cur_line][cur_col] = cornerF;
+        else if (last_move_dir == 'b' and past_move_dir == 'r') lines[cur_line][cur_col] = corner7;
+
         ++stepn;
         print("Move: %c Step: %d Pipe: %c\n", last_move_dir, stepn, lines[pos_line][pos_col]);
     }
 
+    cur_pipe = lines[pos_line][pos_col];
+         if (cur_pipe == r and last_move_dir == 't') lines[pos_line][pos_col] = cornerF;
+    else if (cur_pipe == r and last_move_dir == 'b') lines[pos_line][pos_col] = cornerL;
+    else if (cur_pipe == l and last_move_dir == 't') lines[pos_line][pos_col] = corner7;
+    else if (cur_pipe == l and last_move_dir == 'b') lines[pos_line][pos_col] = cornerJ;
+    else if (cur_pipe == t and last_move_dir == 'l') lines[pos_line][pos_col] = cornerL;
+    else if (cur_pipe == t and last_move_dir == 'r') lines[pos_line][pos_col] = cornerJ;
+    else if (cur_pipe == b and last_move_dir == 'l') lines[pos_line][pos_col] = cornerF;
+    else if (cur_pipe == b and last_move_dir == 'r') lines[pos_line][pos_col] = corner7;
+
     printf("Reached S in [%d] steps (farthest: %d) \n", (stepn - 1), stepn/2);
 
     transform_pipes(lines_len, lines);
+
+    padded = padded_matrix(lines_len, lines);
+    print_big_matrix(padded);
 
     fill_outs_matrix(lines_len, lines);
     fill_ins_matrix(lines_len, lines);
@@ -257,9 +272,6 @@ _proc aoc(int lines_len, mstr lines[64]) {
     print_matrix(lines_len, lines);
 
     printf("# tiles: %d\n", count_I(lines_len, lines));
-
-    padded = padded_matrix(lines_len, lines);
-    print_big_matrix(padded);
 } 
 
 

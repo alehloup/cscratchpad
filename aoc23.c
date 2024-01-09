@@ -3,29 +3,47 @@
 #include <time.h>
 #include "ale.h"
 
-_fun int per_matrix(int lines_len, mstr lines) {
-    static Long cols_hash[64] = {0};
+_fun int per_matrix(int lines_len, mstr lines[]) {
     static Long lins_hash[64] = {0};
-    for (int i = 0; i < 64; ++i) {
-        cols_hash[i] = 0;
+    static Long cols_hash[64] = {0};
+    int cols_len = (int)cstrlen(lines[0]);
+
+    for (int i = 0; i < 64; ++i) lins_hash[i] = 1;
+    for (int i = 0; i < 64; ++i) cols_hash[i] = 1;
+
+    for (int j = 0; j < cols_len; ++j) {
+        for (int i = 0; i < lines_len and not is_empty_string(lines[i]); ++i) 
+            cols_hash[j] = (cols_hash[j] << 1) + (lines[i][j] == '#' ? 1 : 0);
+        printf("%lld ", cols_hash[j]);
     }
-    for (int i = 0; i < 64; ++i) {
-        lins_hash[i] = 1;
+    printf("\n");
+
+    for (int i = 1; i < cols_len; ++i) {
+        
     }
 
     for (int i = 0; i < lines_len and not is_empty_string(lines[i]); ++i) {
-
+        for (int j = 0; j < cols_len; ++j) 
+            lins_hash[i] = (lins_hash[i] << 1) + (lines[i][j] == '#' ? 1 : 0);
+        printf("%lld ", lins_hash[i]);
     }
-
+    printf("\n");
     
+    return (int)cstrlen(lines[0]);
 }
 
 //AoC 13
 _proc aoc(int lines_len, mstr lines[]) {
-    int i = 0;
-    while (i < (lines_len - 2))
+    while (lines_len > 2) {
         int res = per_matrix(lines_len, lines);
-        printf("%d\n", res);
+        printf(" (%d) \n\n", res);
+        
+        while (lines_len > 2 and not is_empty_string(lines[0])) {
+            lines = &lines[1];
+            --lines_len;
+        }
+        lines = &lines[1];
+        --lines_len;
     }
 } 
 

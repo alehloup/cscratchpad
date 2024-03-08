@@ -77,6 +77,10 @@ typedef char * mstr; // modifiable string
     ARRAYS
 */
 //
+#define _structarray_type(element_type) struct { const int cap; int len; element_type *array; }
+#define _structarray_init(base_static_array, starting_len) \
+    { arraysizeof(base_static_array), starting_len, base_static_array }
+
 #define array_insert_in_pos(array_len_ref_, array_, element_, pos_) \
     for (int ivec_insert_ = (*array_len_ref_); ivec_insert_ > pos_; --ivec_insert_) \
         array_[ivec_insert_] = array_[ivec_insert_-1]; \

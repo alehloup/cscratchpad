@@ -40,10 +40,14 @@
     ==================== TYPES ====================
 */
 //
+#define Char char
+#define Int int
 #define Long long long
 #ifdef __SIZEOF_INT128__
 __extension__ typedef __int128 Big;
 #endif
+#define Float float
+#define Double double
 
 // String
 typedef const char * const ccstr; // const string const pointer
@@ -61,6 +65,11 @@ typedef char * mstr; // modifiable string
     #define and &&
     #define or ||
     #define not !
+
+    #define _create(Type) (Type)
+#endif
+#ifdef __cplusplus
+    #define _create(Type)
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
 
@@ -77,15 +86,26 @@ typedef char * mstr; // modifiable string
     ARRAYS
 */
 //
-#define _structarray_type(element_type) struct { const int cap; int len; element_type *array; }
-#define _structarray_init(base_static_array, starting_len) \
-    { arraysizeof(base_static_array), starting_len, base_static_array }
+#define _structarray(element_type) struct { const Long cap; Long len; element_type *data; }
+#define _array_init(base_static_array, starting_len) \
+    { arraysizeof(base_static_array) - 1, starting_len, base_static_array }
 
-#define array_insert_in_pos(array_len_ref_, array_, element_, pos_) \
-    for (int ivec_insert_ = (*array_len_ref_); ivec_insert_ > pos_; --ivec_insert_) \
-        array_[ivec_insert_] = array_[ivec_insert_-1]; \
-    array_[pos_] = element_; \
-    ++(*array_len_ref_)
+#define _append(mut_array, new_element) \
+    assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
+    (mut_array)->data[(mut_array)->len++] = new_element;
+
+#define _delidx(mut_array, idx_to_del) \
+    assert((mut_array)->len > 0 && "Array Underflow"); \
+    (mut_array)->data[idx_to_del] = (mut_array)->data[--(mut_array)->len]
+
+
+typedef _structarray(Char)    Array_char;
+typedef _structarray(Int)     Array_int;
+typedef _structarray(Long)    Array_long;
+typedef _structarray(Float)   Array_float;
+typedef _structarray(Double)  Array_double;
+
+#define _structslice(element_type) struct { const Long len; element_type const * const data; }
 
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
 
@@ -95,6 +115,15 @@ typedef char * mstr; // modifiable string
 */
 //
 
+typedef _structarray(Char) Buffer;
+typedef _structslice(Char) String;
+
+typedef _structarray(Buffer)  Array_buffer;
+typedef _structarray(String)  Array_string;
+
+//Only works for COMPILE TIME STRINGS:
+#define compile_time_cstrlen(compile_time_string_) arraysizeof(compile_time_string_) - 1
+
 _pure Long cstrlen(ccstr cstring) {
     Long cstring_len;
     for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
@@ -102,8 +131,8 @@ _pure Long cstrlen(ccstr cstring) {
     }
     return cstring_len;
 }
-//Only works for COMPILE TIME STRINGS:
-#define compile_time_cstrlen(compile_time_string_) arraysizeof(compile_time_string_) - 1
+
+#define String(string) _create(String) {cstrlen(string), string}
 
 _pure int cstrcmp(ccstr cstr1, ccstr cstr2) {
     Long i = 0;
@@ -313,7 +342,7 @@ _math int ht_lookup(
     return idx;
 }
 
-// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
+// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed it will insert the key, if its null then no insert.  
 _gcc_attr(always_inline, warn_unused_result) int str_in_ht_(ccstr key, cstr keys[HT_CAP], int *keys_len_ref) {
     unsigned Long h = hash_str(key);
     int i = ht_lookup(h, (int)h);

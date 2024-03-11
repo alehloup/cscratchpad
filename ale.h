@@ -66,9 +66,11 @@ typedef char * mstr; // modifiable string
     #define or ||
     #define not !
 
+    //stupid C++ does not accept (type) before brace struct
     #define _create(Type) (Type)
 #endif
 #ifdef __cplusplus
+    //stupid C++ does not accept (type) before brace struct
     #define _create(Type)
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
@@ -88,7 +90,8 @@ typedef char * mstr; // modifiable string
 //
 #define _structarray(element_type) struct { const Long cap; Long len; element_type *data; }
 #define _array_init(base_static_array, starting_len) \
-    { arraysizeof(base_static_array) - 1, starting_len, base_static_array }
+    { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ starting_len, /*data:*/ base_static_array }
+//remove 1 from CAP to make the array "zero" terminated
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \

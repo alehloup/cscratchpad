@@ -41,6 +41,7 @@
 */
 //
 #define Char char
+#define Bool int
 #define Int int
 #define Long long long
 #ifdef __SIZEOF_INT128__
@@ -59,8 +60,8 @@ typedef char * mstr; // modifiable string
     Keyword Alternatives
 */
 //
-#define True 1
-#define False 0
+#define True (Bool)1
+#define False (Bool)0
 #ifndef __cplusplus
     #define and &&
     #define or ||
@@ -88,7 +89,8 @@ typedef char * mstr; // modifiable string
     ARRAYS
 */
 //
-#define _structarray(element_type) struct { const Long cap; Long len; element_type *data; }
+#define _structarray(element_type) { const Long cap; Long len; element_type *data; }
+#define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name;
 #define _array_init(base_static_array, starting_len) \
     { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ starting_len, /*data:*/ base_static_array }
 //remove 1 from CAP to make the array "zero" terminated
@@ -101,14 +103,11 @@ typedef char * mstr; // modifiable string
     assert((mut_array)->len > 0 && "Array Underflow"); \
     (mut_array)->data[idx_to_del] = (mut_array)->data[--(mut_array)->len]
 
-
-typedef _structarray(Char)    Array_char;
-typedef _structarray(Int)     Array_int;
-typedef _structarray(Long)    Array_long;
-typedef _structarray(Float)   Array_float;
-typedef _structarray(Double)  Array_double;
-
-#define _structslice(element_type) struct { const Long len; element_type const * const data; }
+_typedef_structarray(Array_char,   Char);
+_typedef_structarray(Array_int,    Int);
+_typedef_structarray(Array_long,   Long);
+_typedef_structarray(Array_float,  Float);
+_typedef_structarray(Array_double, Double);
 
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
 
@@ -118,131 +117,148 @@ typedef _structarray(Double)  Array_double;
 */
 //
 
-typedef _structarray(Char) Buffer;
-typedef _structslice(Char) String;
+typedef Array_char Buffer;
+typedef struct String { const long long len; char const * const data; } String;
 
-typedef _structarray(Buffer)  Array_buffer;
-typedef _structarray(String)  Array_string;
-
-//Only works for COMPILE TIME STRINGS:
-#define compile_time_cstrlen(compile_time_string_) arraysizeof(compile_time_string_) - 1
+typedef struct Array_buffer { const long long cap; long long len; Buffer *data; } Array_buffer;
+typedef struct Array_string { const long long cap; long long len; String *data; } Array_string;
 
 _pure Long cstrlen(ccstr cstring) {
     Long cstring_len;
-    for (cstring_len = 0; cstring[cstring_len]; ++cstring_len) {
+    for (cstring_len = 0; cstring[cstring_len] != 0; ++cstring_len) {
         /* Empty Body */
     }
     return cstring_len;
 }
 
-#define String(string) _create(String) {cstrlen(string), string}
-
-_pure int cstrcmp(ccstr cstr1, ccstr cstr2) {
-    Long i = 0;
-
-    for (i = 0; cstr1[i] && cstr2[i] && cstr1[i] == cstr2[i]; ++i) {
-        /* Empty Body */
+_fun_inlined Bool is_empty_cstr(ccstr string) {
+    Long i;
+    for (i = 0; string[i] > 32; ++i) {
+        /* empty body */
     }
-    return cstr1[i] - cstr2[i];
+    return (Bool) string[i] == 0;
 }
 
-_pure int startswith(ccstr string, ccstr prefix) {
+#define String(string) _create(String) {cstrlen(string), string}
+
+_pure Int string_compare(const String str1, const String str2) {
     Long i = 0;
-    if (!prefix[0]) {
+
+    ccstr ccstr1 = str1.data, ccstr2 = str2.data;
+    Long len1 = str1.len, len2 = str2.len;
+
+    for (i = 0; i < len1 and i < len2 and ccstr1[i] == ccstr2[i]; ++i) {
+        /* Empty Body */
+    }
+    return (Bool)(ccstr1[i] - ccstr2[i]);
+}
+
+_pure Bool string_startswith(const String string, const String prefix) {
+    Long i = 0;
+
+    ccstr ccstring = string.data, ccprefix = prefix.data;
+    Long lenstring = string.len, lenprefix = prefix.len;
+
+    if (!ccprefix[0]) {
         return True;
     }
-    if (!string[0]) {
+    if (!ccstring[0] or lenprefix > lenstring) {
         return False;
     }
 
-    for (i = 0; string[i] && prefix[i] && string[i] == prefix[i]; ++i) {
+    for (i = 0; i < lenprefix and i < lenstring and ccstring[i] == ccprefix[i]; ++i) {
         /* Empty Body */
     }
 
-    if (!string[i] && prefix[i]) { 
-        return False;
-    } else if (!prefix[i]) {
+    if (i == lenprefix) {
         return True;
     } else {
         return False;
     }
 }
 
-_fun_inlined int void_compare_strings(const void * a, const void * b) {
-    return cstrcmp(*(ccstr*)a, *(ccstr*)b);
+_fun_inlined Int string_voidcompare(const void * a, const void * b) {
+    return stringcmp(*(String*)a, *(String*)b);
 }
 
-_pure int is_empty_string(ccstr string) {
-    for (Long i = 0; string[i]; ++i) {
-        if (string[i] != ' ') {
-            return False;
-        }
-    }
-    return True;
+_fun_inlined Bool string_isempty(const String string) {
+    return (Bool) string.len == 0;
 }
 
-_math int is_digit(char character) {
+_math Bool isdigit(const Char character) {
     return character >= '0' && character <= '9';
 }
 
-_pure int digitlen(ccstr cstring) {
-    int cstring_len;
-    for (cstring_len = 0; is_digit(cstring[cstring_len]); ++cstring_len) {
+_pure Long string_digitlen(const String string) {
+    Long i = 0;
+    Long lenstring = string.len;
+    ccstr ccstring = string.data;
+
+    for (; i < lenstring and is_digit(ccstring[i]); ++i) {
         /* Empty Body */
     }
-    
 
-    return cstring_len;
-}
-
-_pure int char_pos_in_str(char letter, ccstr cstring) {
-    for (int letter_pos = 0; cstring[letter_pos]; ++letter_pos) {
-        if(cstring[letter_pos] == letter) {
-            return letter_pos;
-        }
-    }
-
-    return -1;
-}
-_fun_inlined int char_in_(char letter, ccstr cstring) {
-    return (char_pos_in_str(letter, cstring) + 1);
-}
-
-_pure int char_pos_in_substr(char letter, ccstr cstring, int start, int count) {
-    for (int letter_pos = start, i = 0; cstring[letter_pos] and i < count; ++letter_pos, ++i) {
-        if(cstring[letter_pos] == letter) {
-            return letter_pos;
-        }
-    }
-
-    return -1;
-}
-_fun_inlined int char_in_substr_(char letter, ccstr cstring, int start, int count) {
-    return (char_pos_in_substr(letter, cstring, start, count) + 1);
-}
-
-// returns the index after the last element
-_fun int cstrcpy(mstr dst, ccstr src, Long dst_len) {
-    int i = 0;
-    for (i = 0; i < dst_len and src[i]; ++i) {
-        dst[i] = src[i];
-    }
-    dst[i++] = 0;
     return i;
 }
 
-_fun cstr save_str_to_buffer(cstr string, char buffer[], Long *buffer_len_ref, const Long buffer_cap) {
-    Long begin = (*buffer_len_ref);
-    
-    cstr new_str = &buffer[begin];
+_pure Long char_pos_in_string(const Char letter, const String string) {
+    Long lenstring = string.len;
+    ccstr ccstring = string.data;
 
-    for (int istr = 0; string[istr] and begin < buffer_cap; ++istr, ++begin) {
-        buffer[begin] = string[istr];
+    for (int letter_pos = 0; letter_pos < lenstring; ++letter_pos) {
+        if(ccstring[letter_pos] == letter) {
+            return letter_pos;
+        }
     }
-    buffer[begin++] = 0;
 
-    (*buffer_len_ref) = begin;
-    return new_str;
+    return -1;
+}
+_fun_inlined Bool char_in_(const Char letter, const String string) {
+    return (Bool) (char_pos_in_string(letter, string) != -1);
+}
+
+_pure Long char_pos_in_sub(const Char letter, const String string, const Int start, const Int count) {
+    Long lenstring = string.len;
+    ccstr ccstring = string.data;
+
+    for (int letter_pos = start, i = 0; i < lenstring and i < count; ++letter_pos, ++i) {
+        if(ccstring[letter_pos] == letter) {
+            return letter_pos;
+        }
+    }
+
+    return -1;
+}
+_fun_inlined Bool char_in_sub_(const Char letter, const String string, int start, int count) {
+    return (Bool) (char_pos_in_substr(letter, string, start, count) != -1);
+}
+
+_proc string_copy(Buffer *dst, const String src) {
+    Long i = 0;
+    Long capdst = dst->cap, lensrc = src.len;
+    ccstr ccsrc = src.data;
+    mstr databuffer = dst->data;
+
+    assert(capdst <= lensrc and "stringcpy: Buffer would overflow!");
+
+    for (i = 0; i < lensrc; ++i) {
+        databuffer[i] = ccsrc[i];
+    }
+
+    dst->len = lensrc;
+}
+
+_proc buffer_append(Buffer *dst, const String src) {
+    Long begin = dst->len, lensrc = src.len, capdst = dst->cap;
+    ccstr ccsrc = src.data;
+    mstr databuffer = dst->data;
+
+    assert(capdst <= lensrc and "append_string_to_buffer: Buffer would overflow!");
+
+    for (Long i = 0; i < lensrc; ++i, ++begin) {
+        databuffer[begin] = ccsrc[i];
+    }
+    dst->len += lensrc;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
@@ -268,7 +284,7 @@ _fun_inlined Long least_common_multiple(Long m, Long n) {
      return m / greatest_common_divisor(m, n) * n;
 }
 
-// Next Power of 2 for numbers upto 2*31 (2'147'483'648)
+// Next Power of 2 for numbers upto 2*31 (2 147 483 648)
 #define Next_power2(n_) \
     ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
@@ -440,14 +456,14 @@ _fun int into_lines_(mstr text_to_alter, const int lines_cap, mstr lines[2], int
         else if (text_to_alter[i] == '\n') {
             text_to_alter[i] = '\0';
             
-            if (include_empty_lines || !is_empty_string(&text_to_alter[current])) {
+            if (include_empty_lines || !is_empty_cstr(&text_to_alter[current])) {
                 assert(lines_len < lines_cap && "lines not big enough to store all lines");
                 lines[lines_len++] = &text_to_alter[current];
             }
             current = i+1;
         }
     }
-    if (include_empty_lines || !is_empty_string(&text_to_alter[current])) {
+    if (include_empty_lines || !is_empty_cstr(&text_to_alter[current])) {
         assert(lines_len < lines_cap && "lines not big enough to store all lines");
         lines[lines_len++] = &text_to_alter[current];
     }
@@ -469,7 +485,7 @@ _fun int split(mstr text_to_alter, char splitter, const int words_cap, mstr word
         if (text_to_alter[i] == splitter) {
             text_to_alter[i] = '\0';
             
-            if (!is_empty_string(&text_to_alter[current])) {
+            if (!is_empty_cstr(&text_to_alter[current])) {
                 assert(words_len < words_cap && "words not big enough to store all words");
                 words[words_len++] = &text_to_alter[current];
             }
@@ -477,7 +493,7 @@ _fun int split(mstr text_to_alter, char splitter, const int words_cap, mstr word
         }
     }
 
-    if (current != i && !is_empty_string(&text_to_alter[current])) {
+    if (current != i && !is_empty_cstr(&text_to_alter[current])) {
         assert(words_len < words_cap && "words not big enough to store all words");
         words[words_len++] = &text_to_alter[current];
     }

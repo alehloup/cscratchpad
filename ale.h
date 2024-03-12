@@ -1,8 +1,10 @@
 #pragma once
 
+
 /*
     ==================== ASSERT ====================
 */ 
+//
 #ifdef stdout
     // Print Assert if stdio.h was included
     #define diagnostic_ printf("\n\n  |ASSERT FAILED %s:%s:%d|  \n\n", __FILE__, __func__, __LINE__)
@@ -19,9 +21,11 @@
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
 
+
 /*
     ==================== ATTRIBUTES ====================
 */
+//
 #if defined(__GNUC__) || defined(__clang__)
     #define _gcc_attr(...) __attribute((__VA_ARGS__)) inline static
 #else
@@ -35,6 +39,7 @@
 #define _proc _gcc_attr(nonnull) void
 #define _proc_inlined _gcc_attr(nonnull, always_inline) void
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     ==================== TYPES ====================
@@ -50,11 +55,12 @@ __extension__ typedef __int128 Big;
 #define Float float
 #define Double double
 
-// String
-typedef const char * const ccstr; // const string const pointer
-typedef const char * cstr; // const string
-typedef char * mstr; // modifiable string
+
+typedef const char * const ccstr; // const cstr const pointer
+typedef const char * cstr; // const cstr
+typedef char * mstr; // modifiable cstr
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     Keyword Alternatives
@@ -76,21 +82,22 @@ typedef char * mstr; // modifiable string
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
 
+
 /*
     MEMORY
 */
 //
 #define isizeof(x_element_) ((Long)sizeof(x_element_))
 #define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
-
 //  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     ARRAYS
 */
 //
 #define _structarray(element_type) { const Long cap; Long len; element_type *data; }
-#define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name;
+#define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name
 #define _array_init(base_static_array, starting_len) \
     { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ starting_len, /*data:*/ base_static_array }
 //remove 1 from CAP to make the array "zero" terminated
@@ -108,29 +115,13 @@ _typedef_structarray(Array_int,    Int);
 _typedef_structarray(Array_long,   Long);
 _typedef_structarray(Array_float,  Float);
 _typedef_structarray(Array_double, Double);
-
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
-    STRINGS
+    CSTRS
 */
 //
-
-typedef Array_char Buffer;
-typedef struct String { const long long len; char const * const data; } String;
-
-typedef struct Array_buffer { const long long cap; long long len; Buffer *data; } Array_buffer;
-typedef struct Array_string { const long long cap; long long len; String *data; } Array_string;
-
-_pure Long cstrlen(ccstr cstring) {
-    Long cstring_len;
-    for (cstring_len = 0; cstring[cstring_len] != 0; ++cstring_len) {
-        /* Empty Body */
-    }
-    return cstring_len;
-}
-
 _fun_inlined Bool is_empty_cstr(ccstr string) {
     Long i;
     for (i = 0; string[i] > 32; ++i) {
@@ -139,7 +130,37 @@ _fun_inlined Bool is_empty_cstr(ccstr string) {
     return (Bool) string[i] == 0;
 }
 
+_pure Int cstr_compare(ccstr str1, ccstr str2) {
+    Long i = 0;
+
+    for (i = 0; str1[i] != 0 and str2[i] != 0 and str1[i] == str2[i]; ++i) {
+        /* Empty Body */
+    }
+    return (Int)(str1[i] - str2[i]);
+}
+
+_pure Long cstrlen(ccstr cstring) {
+    Long cstring_len;
+    for (cstring_len = 0; cstring[cstring_len] != 0; ++cstring_len) {
+        /* Empty Body */
+    }
+    return cstring_len;
+}
+//  ^^^^^^^^^^^^^^^^^^^^ CSTRS ^^^^^^^^^^^^^^^^^^^^
+
+
+/*
+    STRINGS
+*/
+//
+typedef Array_char Buffer;
+typedef struct String { const long long len; char const * const data; } String;
+
+typedef struct Array_buffer { const long long cap; long long len; Buffer *data; } Array_buffer;
+typedef struct Array_string { const long long cap; long long len; String *data; } Array_string;
+
 #define String(string) _create(String) {cstrlen(string), string}
+#define S(string) String(string)
 
 _pure Int string_compare(const String str1, const String str2) {
     Long i = 0;
@@ -150,7 +171,8 @@ _pure Int string_compare(const String str1, const String str2) {
     for (i = 0; i < len1 and i < len2 and ccstr1[i] == ccstr2[i]; ++i) {
         /* Empty Body */
     }
-    return (Bool)(ccstr1[i] - ccstr2[i]);
+
+    return (Int)(ccstr1[i] - ccstr2[i]);
 }
 
 _pure Bool string_startswith(const String string, const String prefix) {
@@ -178,14 +200,14 @@ _pure Bool string_startswith(const String string, const String prefix) {
 }
 
 _fun_inlined Int string_voidcompare(const void * a, const void * b) {
-    return stringcmp(*(String*)a, *(String*)b);
+    return string_compare(*(String*)a, *(String*)b);
 }
 
 _fun_inlined Bool string_isempty(const String string) {
     return (Bool) string.len == 0;
 }
 
-_math Bool isdigit(const Char character) {
+_math Bool is_digit(const Char character) {
     return character >= '0' && character <= '9';
 }
 
@@ -230,20 +252,31 @@ _pure Long char_pos_in_sub(const Char letter, const String string, const Int sta
     return -1;
 }
 _fun_inlined Bool char_in_sub_(const Char letter, const String string, int start, int count) {
-    return (Bool) (char_pos_in_substr(letter, string, start, count) != -1);
+    return (Bool) (char_pos_in_sub(letter, string, start, count) != -1);
 }
+//  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
-_proc string_copy(Buffer *dst, const String src) {
+
+/*
+    BUFFERS
+*/
+//
+_proc buffer_set(Buffer *dst, const String src) {
     Long i = 0;
-    Long capdst = dst->cap, lensrc = src.len;
+    Long capdst = dst->cap, lensrc = src.len, lendst = dst->len;
     ccstr ccsrc = src.data;
     mstr databuffer = dst->data;
 
-    assert(capdst <= lensrc and "stringcpy: Buffer would overflow!");
+    assert(lensrc <= capdst and "stringcpy: Buffer would overflow!");
+
+    for (Long x = 0; x < lendst; ++x) {
+        databuffer[x] = 0;
+    }
 
     for (i = 0; i < lensrc; ++i) {
         databuffer[i] = ccsrc[i];
     }
+    databuffer[i] = 0;
 
     dst->len = lensrc;
 }
@@ -253,14 +286,15 @@ _proc buffer_append(Buffer *dst, const String src) {
     ccstr ccsrc = src.data;
     mstr databuffer = dst->data;
 
-    assert(capdst <= lensrc and "append_string_to_buffer: Buffer would overflow!");
+    assert(lensrc <= capdst and "append_string_to_buffer: Buffer would overflow!");
 
     for (Long i = 0; i < lensrc; ++i, ++begin) {
         databuffer[begin] = ccsrc[i];
     }
     dst->len += lensrc;
 }
-//  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ BUFFERS ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     ==================== MATH ====================
@@ -289,6 +323,7 @@ _fun_inlined Long least_common_multiple(Long m, Long n) {
     ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
+
 /*
     ==================== RANDOM ====================
 */
@@ -305,6 +340,7 @@ _pure int rnd(unsigned Long seed[1]) {
     return (int)((*seed >> shift) & Rnd_positive_mask);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ RANDOM ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     ==================== HASH ====================
@@ -341,6 +377,7 @@ _math unsigned Long hash_int(Long integer64) {
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH ^^^^^^^^^^^^^^^^^^^^
 
+
 /*
     ==================== HASH TABLE ====================
 */
@@ -367,7 +404,7 @@ _gcc_attr(always_inline, warn_unused_result) int str_in_ht_(ccstr key, cstr keys
     int i = ht_lookup(h, (int)h);
     int found = False;
 
-    while (i == 0 or (keys[i] and cstrcmp(key, keys[i]))) {
+    while (i == 0 or (keys[i] and cstr_compare(key, keys[i]))) {
         i = ht_lookup(h, i);
     }
 
@@ -440,6 +477,7 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
+
 /*
     ==================== TEXT ====================
 */
@@ -502,6 +540,7 @@ _fun int split(mstr text_to_alter, char splitter, const int words_cap, mstr word
 }
 //  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^
 
+
 /*
     ==================== TIME BENCHMARK ====================
 */
@@ -527,6 +566,7 @@ _proc_inlined print_clock(clock_t start) {
 // time.h && stdio.h
 #endif 
 //  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     ==================== SHELL ====================
@@ -557,6 +597,7 @@ int shellrun(ccstr format, ...) {
 // stdlib.h && stdio.h
 #endif 
 //  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     ==================== FILES ====================
@@ -644,6 +685,7 @@ _proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
 #endif 
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 
+
 /*
     ==================== PRINT ====================
 */
@@ -670,6 +712,7 @@ _proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
 // stdio.h
 #endif 
 //  ^^^^^^^^^^^^^^^^^^^^ PRINT ^^^^^^^^^^^^^^^^^^^^
+
 
 /*
     ==================== STDLIB ====================

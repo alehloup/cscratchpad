@@ -1,0 +1,15 @@
+
+C:\Users\Aleh\cscratchpad>call vcvarsall.bat amd64 
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.8.1
+** Copyright (c) 2022 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+Woa |3| 
+b11 a10 Alessandro
+b4 a4 Luiz
+b9 a8 Stamatto
+b8 a8 Ferreira
+
+msvc && clang -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero -Weverything -Werror -fsanitize-trap -fsanitize=undefined -Wno-unsafe-buffer-usage -Wno-unused-function -D_CRT_SECURE_NO_WARNINGS strings.c -o "./strings.exe" && "./strings.exe" && rm "./strings.exe"
+

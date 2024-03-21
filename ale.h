@@ -98,13 +98,13 @@ typedef char * Mstr; // modifiable Cstr
 //
 #define _structarray(element_type) { const Long cap; Long len; element_type *data; }
 #define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name
-#define _array_init(base_static_array, starting_len) \
-    { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ starting_len, /*data:*/ base_static_array }
+#define _array_init(base_static_array) \
+    { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*data:*/ base_static_array }
 //remove 1 capacity to make the array "zero" terminated (if zero alocated)
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
-    (mut_array)->data[(mut_array)->len++] = new_element;
+    (mut_array)->data[(mut_array)->len++] = (new_element)
 
 #define _delidx(mut_array, idx_to_del) \
     assert((mut_array)->len > 0 && "Array Underflow"); \
@@ -154,28 +154,27 @@ _pure Long Cstrlen(Ccstr Cstring) {
 */
 //
 typedef Array_char Buffer;
-typedef struct String { const Long len; char const * const data; } String;
+typedef struct String { Long len; Cstr data; } String;
 
-typedef struct Array_buffer { const long long cap; long long len; Buffer *data; } Array_buffer;
-typedef struct Array_string { const long long cap; long long len; String *data; } Array_string;
+typedef struct Array_buffer { const Long cap; Long len; Buffer *data; } Array_buffer;
+typedef struct Array_string { const Long cap; Long len; String *data; } Array_string;
 
-#define String(string) _create(String) {Cstrlen(string), string}
-#define S(string) String(string)
+#define S(string) _create(String) {Cstrlen(string), string}
 
-_pure Int string_compare(const String str1, const String str2) {
+_pure Int scompare(const String str1, const String str2) {
     Long i = 0;
 
-    Ccstr Ccstr1 = str1.data, Ccstr2 = str2.data;
+    Ccstr ccstr1 = str1.data, ccstr2 = str2.data;
     Long len1 = str1.len, len2 = str2.len;
 
-    for (i = 0; i < len1 and i < len2 and Ccstr1[i] == Ccstr2[i]; ++i) {
+    for (i = 0; i < len1 and i < len2 and ccstr1[i] == ccstr2[i]; ++i) {
         /* Empty Body */
     }
 
-    return (Int)(Ccstr1[i] - Ccstr2[i]);
+    return (Int)(ccstr1[i] - ccstr2[i]);
 }
 
-_pure Bool string_startswith(const String string, const String prefix) {
+_pure Bool startswith(const String string, const String prefix) {
     Long i = 0;
 
     Ccstr Ccstring = string.data, ccprefix = prefix.data;
@@ -199,11 +198,27 @@ _pure Bool string_startswith(const String string, const String prefix) {
     }
 }
 
-_fun_inlined Int string_voidcompare(const void * a, const void * b) {
-    return string_compare(*(String*)a, *(String*)b);
+_fun String trim(String str) {
+    Long i = 0;
+
+    for (/* i = 0 */; i < str.len and str.data[i] <= ' '; ++i) {
+        --str.len;
+    }
+
+    str.data = &str.data[i];
+
+    for (i = str.len - 1; i >= 0 and str.data[i] <= ' '; --i) {
+        --str.len;
+    }
+
+    return str;
 }
 
-_fun_inlined Bool string_isempty(const String string) {
+_fun_inlined Int svoidcompare(const void * a, const void * b) {
+    return scompare(*(const String*)a, *(const String*)b);
+}
+
+_fun_inlined Bool sisempty(const String string) {
     return (Bool) string.len == 0;
 }
 
@@ -211,19 +226,7 @@ _math Bool is_digit(const Char character) {
     return character >= '0' && character <= '9';
 }
 
-_pure Long string_digitlen(const String string) {
-    Long i = 0;
-    Long lenstring = string.len;
-    Ccstr Ccstring = string.data;
-
-    for (; i < lenstring and is_digit(Ccstring[i]); ++i) {
-        /* Empty Body */
-    }
-
-    return i;
-}
-
-_pure Long char_pos_in_string(const Char letter, const String string) {
+_pure Long char_pos(const Char letter, const String string) {
     Long lenstring = string.len;
     Ccstr Ccstring = string.data;
 
@@ -236,7 +239,7 @@ _pure Long char_pos_in_string(const Char letter, const String string) {
     return -1;
 }
 _fun_inlined Bool char_in_(const Char letter, const String string) {
-    return (Bool) (char_pos_in_string(letter, string) != -1);
+    return (Bool) (char_pos(letter, string) != -1);
 }
 
 _pure Long char_pos_in_sub(const Char letter, const String string, const Int start, const Int count) {
@@ -482,63 +485,81 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
     ==================== TEXT ====================
 */
 //
-// Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun int into_lines_(Mstr text_to_alter, const int lines_cap, Mstr lines[2], int include_empty_lines) {
-    int lines_len = 0;
-    
+// Returns a Array_string of the lines in a String
+_proc to_lines_base(Array_string *dest_lines, String src_text, Bool include_empty_lines) {
+    Ccstr text = src_text.data;
+    Long text_len = src_text.len;
+    Bool not_empty = False;
     Long current = 0;
-    for (Long i = 0; text_to_alter[i]; ++i) {
-        if (text_to_alter[i] == '\r') {
-            text_to_alter[i] = '\0';
-        }
-        else if (text_to_alter[i] == '\n') {
-            text_to_alter[i] = '\0';
+    
+    for (Long i = 0; i < text_len; ++i) {
+        not_empty = not_empty or text[i] > 32;
+
+        if (text[i] == '\n') {
             
-            if (include_empty_lines || !is_empty_cstr(&text_to_alter[current])) {
-                assert(lines_len < lines_cap && "lines not big enough to store all lines");
-                lines[lines_len++] = &text_to_alter[current];
+            if (include_empty_lines || not_empty) {
+                String line = {(i - current), (&text[current])};
+                _append(dest_lines, line);
             }
+
+            not_empty = False;
             current = i+1;
         }
     }
-    if (include_empty_lines || !is_empty_cstr(&text_to_alter[current])) {
-        assert(lines_len < lines_cap && "lines not big enough to store all lines");
-        lines[lines_len++] = &text_to_alter[current];
+    if (include_empty_lines || not_empty) {
+        String line = {(text_len - current), (&text[current])};
+        _append(dest_lines, line);
     }
-
-    return lines_len;
-}
-_fun_inlined int into_lines(Mstr text_to_alter, const int lines_cap, Mstr lines[2]) {
-    return into_lines_(text_to_alter, lines_cap, lines, False);
-}
-_fun_inlined int into_lines_including_empty(Mstr text_to_alter, const int lines_cap, Mstr lines[2]) {
-    return into_lines_(text_to_alter, lines_cap, lines, True);
 }
 
-_fun int split(Mstr text_to_alter, char splitter, const int words_cap, Mstr words[2]) {
-    int i = 0, current = 0;
-    int words_len = 0;
+_proc_inlined to_lines(Array_string *dest_lines, String src_text) {
+    to_lines_base(dest_lines, src_text, False);
+}
+_proc_inlined to_lines_including_empty(Array_string *dest_lines, String src_text) {
+    to_lines_base(dest_lines, src_text, True);
+}
 
-    for (i = 0; text_to_alter[i]; ++i) {
-        if (text_to_alter[i] == splitter) {
-            text_to_alter[i] = '\0';
+// _fun int split(Mstr text_to_alter, char splitter, const int words_cap, Mstr words[2]) {
+//     int i = 0, current = 0;
+//     int words_len = 0;
+
+//     for (i = 0; text_to_alter[i]; ++i) {
+//         if (text_to_alter[i] == splitter) {
+//             text_to_alter[i] = '\0';
             
-            if (!is_empty_cstr(&text_to_alter[current])) {
-                assert(words_len < words_cap && "words not big enough to store all words");
-                words[words_len++] = &text_to_alter[current];
-            }
-            current = i+1;
-        }
-    }
+//             if (!is_empty_cstr(&text_to_alter[current])) {
+//                 assert(words_len < words_cap && "words not big enough to store all words");
+//                 words[words_len++] = &text_to_alter[current];
+//             }
+//             current = i+1;
+//         }
+//     }
 
-    if (current != i && !is_empty_cstr(&text_to_alter[current])) {
-        assert(words_len < words_cap && "words not big enough to store all words");
-        words[words_len++] = &text_to_alter[current];
-    }
+//     if (current != i && !is_empty_cstr(&text_to_alter[current])) {
+//         assert(words_len < words_cap && "words not big enough to store all words");
+//         words[words_len++] = &text_to_alter[current];
+//     }
 
-    return words_len;
-}
+//     return words_len;
+// }
 //  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^
+
+
+/*
+    ==================== OUT ====================
+*/
+//
+#ifdef stdout
+// stdio.h
+
+_proc_inlined print_s(String str) {
+    printf("%.*s", (Int) str.len, str.data);
+}
+
+#define printn printf("\n")
+
+#endif
+//  ^^^^^^^^^^^^^^^^^^^^ OUT ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
@@ -587,7 +608,7 @@ int shellrun(Ccstr format, ...) {
 
     va_start(args, format);
 
-    vsprintf(buffer, format, args);
+    vprint_sf(buffer, format, args);
     printf("\n");
     vprintf(format, args);
     printf("\n");
@@ -606,112 +627,84 @@ int shellrun(Ccstr format, ...) {
 #ifdef stdout
 // stdio.h
 
-_fun Long file_to_cstring(Ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
-    Long fsize = 0;
+// _fun Long file_to_cstring(Ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
+//     Long fsize = 0;
 
-        FILE *f =  
-    fopen(filename, "rb");
+//         FILE *f =  
+//     fopen(filename, "rb");
     
-        assert(f && "Could not open file for reading");
+//         assert(f && "Could not open file for reading");
     
-        fseek(f, 0, SEEK_END);
-        fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
+//         fseek(f, 0, SEEK_END);
+//         fsize = ftell(f);
+//         fseek(f, 0, SEEK_SET);
 
-        assert(charbuffer_cap >= fsize+2 && "charbuffer is not enough for file size");
+//         assert(charbuffer_cap >= fsize+2 && "charbuffer is not enough for file size");
 
-        {
-            Long bytesread = (Long) fread(charbuffer, 1LL, (unsigned Long)fsize, f);
-            assert(bytesread == fsize && "could not read fsize#bytes"); 
+//         {
+//             Long bytesread = (Long) fread(charbuffer, 1LL, (unsigned Long)fsize, f);
+//             assert(bytesread == fsize && "could not read fsize#bytes"); 
             
-            charbuffer[fsize] = charbuffer[fsize-1] != '\n' ? '\n' : '\0';
-            charbuffer[fsize+1] = '\0';
-        }
+//             charbuffer[fsize] = charbuffer[fsize-1] != '\n' ? '\n' : '\0';
+//             charbuffer[fsize+1] = '\0';
+//         }
 
-    fclose(f);
+//     fclose(f);
 
-    return fsize;
-}
+//     return fsize;
+// }
 
-_fun_inlined int file_to_lines(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
-    Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
-    (void) charbuffer_len;
-    return into_lines(charbuffer, lines_cap, lines);
-}
+// _fun_inlined int file_to_lines(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+//     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
+//     (void) charbuffer_len;
+//     return into_lines(charbuffer, lines_cap, lines);
+// }
 
-_fun_inlined int file_to_lines_including_empty(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
-    Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
-    (void) charbuffer_len;
-    return into_lines_including_empty(charbuffer, lines_cap, lines);
-}
+// _fun_inlined int file_to_lines_including_empty(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+//     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
+//     (void) charbuffer_len;
+//     return into_lines_including_empty(charbuffer, lines_cap, lines);
+// }
 
-_proc Cstring_to_file(Ccstr buffer, Ccstr filename) {
-        FILE *f =  
-    fopen(filename, "wb");
+// _proc Cstring_to_file(Ccstr buffer, Ccstr filename) {
+//         FILE *f =  
+//     fopen(filename, "wb");
 
-        assert(f && "Could not open file for writting");
-        {
-            Long buffer_len = Cstrlen(buffer);
-            Long bytes_written = (Long) fwrite(buffer, 1, (unsigned Long)buffer_len, f);
-            assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
-        }
+//         assert(f && "Could not open file for writting");
+//         {
+//             Long buffer_len = Cstrlen(buffer);
+//             Long bytes_written = (Long) fwrite(buffer, 1, (unsigned Long)buffer_len, f);
+//             assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
+//         }
 
-    fclose(f);
-}
+//     fclose(f);
+// }
 
-_proc lines_to_file(int lines_len, Mstr lines[2], Ccstr filename) {
-        FILE *f =  
-    fopen(filename, "wb");
+// _proc lines_to_file(int lines_len, Mstr lines[2], Ccstr filename) {
+//         FILE *f =  
+//     fopen(filename, "wb");
 
-        assert(f && "Could not open file for writting");
-        {
-            Long bytes_written = 0;
-            Long line_len = 0;
+//         assert(f && "Could not open file for writting");
+//         {
+//             Long bytes_written = 0;
+//             Long line_len = 0;
 
-            for (int i = 0; i < lines_len; ++i) {
-                Ccstr line = lines[i]; 
+//             for (int i = 0; i < lines_len; ++i) {
+//                 Ccstr line = lines[i]; 
 
-                line_len = Cstrlen(line);
-                bytes_written = (Long) fwrite(line, 1, (unsigned Long)line_len, f);
-                bytes_written += (Long) fwrite("\n", 1, 1, f);
-                assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
-            }
-        }
+//                 line_len = Cstrlen(line);
+//                 bytes_written = (Long) fwrite(line, 1, (unsigned Long)line_len, f);
+//                 bytes_written += (Long) fwrite("\n", 1, 1, f);
+//                 assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
+//             }
+//         }
 
-    fclose(f);
-}
+//     fclose(f);
+// }
 
 // stdio.h
 #endif 
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    ==================== PRINT ====================
-*/
-//
-#ifdef stdout
-// stdio.h
-
-#define println(format, ...) printf(format, __VA_ARGS__); printf("\n")
-
-#define array_printf(format_str_, vec_to_print_len, vec_to_print_) \
-    for (int ivec_ = 0; ivec_ < vec_to_print_len; ++ivec_) \
-        printf(format_str_, vec_to_print_[ivec_]); \
-    printf("\n")
-
-#define matrix_printf(format_str_, number_of_lines_, number_of_columns_, matrix_to_print_) \
-    printf("Matrix %d x %d :\n", number_of_lines_, number_of_columns_); \
-    for (int imatrix_line_ = 0; imatrix_line_ < number_of_lines_; ++imatrix_line_) { \
-        for (int imatrix_column_ = 0; imatrix_column_ < number_of_columns_; ++ imatrix_column_) \
-            printf(format_str_, matrix_to_print_[imatrix_line_][imatrix_column_]); \
-        printf("\n"); \
-    } \
-    printf("\n")
-
-// stdio.h
-#endif 
-//  ^^^^^^^^^^^^^^^^^^^^ PRINT ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
@@ -721,21 +714,21 @@ _proc lines_to_file(int lines_len, Mstr lines[2], Ccstr filename) {
 #ifdef RAND_MAX
 // stdlib.h
 
-_proc_inlined sort_cstrings(Long Cstrings_len, Mstr Cstrings[1]) {
-    qsort(
-        Cstrings, (unsigned Long) Cstrings_len,
-        sizeof(Mstr), void_compare_strings
-    );
-} 
+// _proc_inlined sort_cstrings(Long Cstrings_len, Mstr Cstrings[1]) {
+//     qsort(
+//         Cstrings, (unsigned Long) Cstrings_len,
+//         sizeof(Mstr), void_compare_strings
+//     );
+// } 
 
-_proc_inlined sort_cstrings_custom(Long Cstrings_len, Mstr Cstrings[1], 
-                                   int (*compare_fun)(const void * a, const void * b)) 
-{
-    qsort(
-        Cstrings, (unsigned Long)  Cstrings_len,
-        sizeof(Mstr), compare_fun
-    );
-}
+// _proc_inlined sort_cstrings_custom(Long Cstrings_len, Mstr Cstrings[1], 
+//                                    int (*compare_fun)(const void * a, const void * b)) 
+// {
+//     qsort(
+//         Cstrings, (unsigned Long)  Cstrings_len,
+//         sizeof(Mstr), compare_fun
+//     );
+// }
 
 // stdlib.h
 #endif 

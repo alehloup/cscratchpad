@@ -2,7 +2,7 @@
 #include "ale.h"
 
 _proc test_strset(void) {
-    static cstr keys[HT_CAP] = {0};
+    static Cstr keys[HT_CAP] = {0};
     int keys_len = 0;
 
     printf("Insert %s = %d (len: %d)\n", "Alex", str_in_ht_("Alex", keys, &keys_len), keys_len);

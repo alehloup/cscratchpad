@@ -56,9 +56,9 @@ __extension__ typedef __int128 Big;
 #define Double double
 
 
-typedef const char * const ccstr; // const cstr const pointer
-typedef const char * cstr; // const cstr
-typedef char * mstr; // modifiable cstr
+typedef const char * const Ccstr; // const Cstr const pointer
+typedef const char * Cstr; // const Cstr
+typedef char * Mstr; // modifiable Cstr
 //  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -100,7 +100,7 @@ typedef char * mstr; // modifiable cstr
 #define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name
 #define _array_init(base_static_array, starting_len) \
     { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ starting_len, /*data:*/ base_static_array }
-//remove 1 from CAP to make the array "zero" terminated
+//remove 1 capacity to make the array "zero" terminated (if zero alocated)
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
@@ -122,7 +122,7 @@ _typedef_structarray(Array_double, Double);
     CSTRS
 */
 //
-_fun_inlined Bool is_empty_cstr(ccstr string) {
+_fun_inlined Bool is_empty_cstr(Ccstr string) {
     Long i;
     for (i = 0; string[i] > 32; ++i) {
         /* empty body */
@@ -130,7 +130,7 @@ _fun_inlined Bool is_empty_cstr(ccstr string) {
     return (Bool) string[i] == 0;
 }
 
-_pure Int cstr_compare(ccstr str1, ccstr str2) {
+_pure Int Cstr_compare(Ccstr str1, Ccstr str2) {
     Long i = 0;
 
     for (i = 0; str1[i] != 0 and str2[i] != 0 and str1[i] == str2[i]; ++i) {
@@ -139,12 +139,12 @@ _pure Int cstr_compare(ccstr str1, ccstr str2) {
     return (Int)(str1[i] - str2[i]);
 }
 
-_pure Long cstrlen(ccstr cstring) {
-    Long cstring_len;
-    for (cstring_len = 0; cstring[cstring_len] != 0; ++cstring_len) {
+_pure Long Cstrlen(Ccstr Cstring) {
+    Long Cstring_len;
+    for (Cstring_len = 0; Cstring[Cstring_len] != 0; ++Cstring_len) {
         /* Empty Body */
     }
-    return cstring_len;
+    return Cstring_len;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ CSTRS ^^^^^^^^^^^^^^^^^^^^
 
@@ -154,41 +154,41 @@ _pure Long cstrlen(ccstr cstring) {
 */
 //
 typedef Array_char Buffer;
-typedef struct String { const long long len; char const * const data; } String;
+typedef struct String { const Long len; char const * const data; } String;
 
 typedef struct Array_buffer { const long long cap; long long len; Buffer *data; } Array_buffer;
 typedef struct Array_string { const long long cap; long long len; String *data; } Array_string;
 
-#define String(string) _create(String) {cstrlen(string), string}
+#define String(string) _create(String) {Cstrlen(string), string}
 #define S(string) String(string)
 
 _pure Int string_compare(const String str1, const String str2) {
     Long i = 0;
 
-    ccstr ccstr1 = str1.data, ccstr2 = str2.data;
+    Ccstr Ccstr1 = str1.data, Ccstr2 = str2.data;
     Long len1 = str1.len, len2 = str2.len;
 
-    for (i = 0; i < len1 and i < len2 and ccstr1[i] == ccstr2[i]; ++i) {
+    for (i = 0; i < len1 and i < len2 and Ccstr1[i] == Ccstr2[i]; ++i) {
         /* Empty Body */
     }
 
-    return (Int)(ccstr1[i] - ccstr2[i]);
+    return (Int)(Ccstr1[i] - Ccstr2[i]);
 }
 
 _pure Bool string_startswith(const String string, const String prefix) {
     Long i = 0;
 
-    ccstr ccstring = string.data, ccprefix = prefix.data;
+    Ccstr Ccstring = string.data, ccprefix = prefix.data;
     Long lenstring = string.len, lenprefix = prefix.len;
 
     if (!ccprefix[0]) {
         return True;
     }
-    if (!ccstring[0] or lenprefix > lenstring) {
+    if (!Ccstring[0] or lenprefix > lenstring) {
         return False;
     }
 
-    for (i = 0; i < lenprefix and i < lenstring and ccstring[i] == ccprefix[i]; ++i) {
+    for (i = 0; i < lenprefix and i < lenstring and Ccstring[i] == ccprefix[i]; ++i) {
         /* Empty Body */
     }
 
@@ -214,9 +214,9 @@ _math Bool is_digit(const Char character) {
 _pure Long string_digitlen(const String string) {
     Long i = 0;
     Long lenstring = string.len;
-    ccstr ccstring = string.data;
+    Ccstr Ccstring = string.data;
 
-    for (; i < lenstring and is_digit(ccstring[i]); ++i) {
+    for (; i < lenstring and is_digit(Ccstring[i]); ++i) {
         /* Empty Body */
     }
 
@@ -225,10 +225,10 @@ _pure Long string_digitlen(const String string) {
 
 _pure Long char_pos_in_string(const Char letter, const String string) {
     Long lenstring = string.len;
-    ccstr ccstring = string.data;
+    Ccstr Ccstring = string.data;
 
     for (int letter_pos = 0; letter_pos < lenstring; ++letter_pos) {
-        if(ccstring[letter_pos] == letter) {
+        if(Ccstring[letter_pos] == letter) {
             return letter_pos;
         }
     }
@@ -241,10 +241,10 @@ _fun_inlined Bool char_in_(const Char letter, const String string) {
 
 _pure Long char_pos_in_sub(const Char letter, const String string, const Int start, const Int count) {
     Long lenstring = string.len;
-    ccstr ccstring = string.data;
+    Ccstr Ccstring = string.data;
 
     for (int letter_pos = start, i = 0; i < lenstring and i < count; ++letter_pos, ++i) {
-        if(ccstring[letter_pos] == letter) {
+        if(Ccstring[letter_pos] == letter) {
             return letter_pos;
         }
     }
@@ -264,8 +264,8 @@ _fun_inlined Bool char_in_sub_(const Char letter, const String string, int start
 _proc buffer_set(Buffer *dst, const String src) {
     Long i = 0;
     Long capdst = dst->cap, lensrc = src.len, lendst = dst->len;
-    ccstr ccsrc = src.data;
-    mstr databuffer = dst->data;
+    Ccstr ccsrc = src.data;
+    Mstr databuffer = dst->data;
 
     assert(lensrc <= capdst and "stringcpy: Buffer would overflow!");
 
@@ -283,8 +283,8 @@ _proc buffer_set(Buffer *dst, const String src) {
 
 _proc buffer_append(Buffer *dst, const String src) {
     Long begin = dst->len, lensrc = src.len, capdst = dst->cap;
-    ccstr ccsrc = src.data;
-    mstr databuffer = dst->data;
+    Ccstr ccsrc = src.data;
+    Mstr databuffer = dst->data;
 
     assert(lensrc <= capdst and "append_string_to_buffer: Buffer would overflow!");
 
@@ -318,7 +318,7 @@ _fun_inlined Long least_common_multiple(Long m, Long n) {
      return m / greatest_common_divisor(m, n) * n;
 }
 
-// Next Power of 2 for numbers upto 2*31 (2 147 483 648)
+// Next Power of 2 for numbers upto 2*31 (2_147_483_648)
 #define Next_power2(n_) \
     ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
@@ -351,7 +351,7 @@ _pure int rnd(unsigned Long seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_pure unsigned Long hash_str(ccstr str) {
+_pure unsigned Long hash_str(Ccstr str) {
     unsigned Long h = Hash_start_n;
     
     for(Long i = 0; str[i]; ++i) { 
@@ -399,12 +399,12 @@ _math int ht_lookup(
 }
 
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed it will insert the key, if its null then no insert.  
-_gcc_attr(always_inline, warn_unused_result) int str_in_ht_(ccstr key, cstr keys[HT_CAP], int *keys_len_ref) {
+_gcc_attr(always_inline, warn_unused_result) int str_in_ht_(Ccstr key, Cstr keys[HT_CAP], int *keys_len_ref) {
     unsigned Long h = hash_str(key);
     int i = ht_lookup(h, (int)h);
     int found = False;
 
-    while (i == 0 or (keys[i] and cstr_compare(key, keys[i]))) {
+    while (i == 0 or (keys[i] and Cstr_compare(key, keys[i]))) {
         i = ht_lookup(h, i);
     }
 
@@ -483,7 +483,7 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 */
 //
 // Alters a text by converting \n to \0 and pushing each line into lines, return number of lines
-_fun int into_lines_(mstr text_to_alter, const int lines_cap, mstr lines[2], int include_empty_lines) {
+_fun int into_lines_(Mstr text_to_alter, const int lines_cap, Mstr lines[2], int include_empty_lines) {
     int lines_len = 0;
     
     Long current = 0;
@@ -508,14 +508,14 @@ _fun int into_lines_(mstr text_to_alter, const int lines_cap, mstr lines[2], int
 
     return lines_len;
 }
-_fun_inlined int into_lines(mstr text_to_alter, const int lines_cap, mstr lines[2]) {
+_fun_inlined int into_lines(Mstr text_to_alter, const int lines_cap, Mstr lines[2]) {
     return into_lines_(text_to_alter, lines_cap, lines, False);
 }
-_fun_inlined int into_lines_including_empty(mstr text_to_alter, const int lines_cap, mstr lines[2]) {
+_fun_inlined int into_lines_including_empty(Mstr text_to_alter, const int lines_cap, Mstr lines[2]) {
     return into_lines_(text_to_alter, lines_cap, lines, True);
 }
 
-_fun int split(mstr text_to_alter, char splitter, const int words_cap, mstr words[2]) {
+_fun int split(Mstr text_to_alter, char splitter, const int words_cap, Mstr words[2]) {
     int i = 0, current = 0;
     int words_len = 0;
 
@@ -580,7 +580,7 @@ _proc_inlined print_clock(clock_t start) {
 #define shellrun_buffer_cap 512
 
 _gcc_attr(format(printf, 1, 2), nonnull)
-int shellrun(ccstr format, ...) {
+int shellrun(Ccstr format, ...) {
     va_list args;
  
     char buffer [shellrun_buffer_cap] = {0};
@@ -606,7 +606,7 @@ int shellrun(ccstr format, ...) {
 #ifdef stdout
 // stdio.h
 
-_fun Long file_to_cstring(ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
+_fun Long file_to_cstring(Ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
     Long fsize = 0;
 
         FILE *f =  
@@ -633,25 +633,25 @@ _fun Long file_to_cstring(ccstr filename, const Long charbuffer_cap, char charbu
     return fsize;
 }
 
-_fun_inlined int file_to_lines(ccstr filename, const int lines_cap, mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+_fun_inlined int file_to_lines(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
     (void) charbuffer_len;
     return into_lines(charbuffer, lines_cap, lines);
 }
 
-_fun_inlined int file_to_lines_including_empty(ccstr filename, const int lines_cap, mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+_fun_inlined int file_to_lines_including_empty(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
     (void) charbuffer_len;
     return into_lines_including_empty(charbuffer, lines_cap, lines);
 }
 
-_proc cstring_to_file(ccstr buffer, ccstr filename) {
+_proc Cstring_to_file(Ccstr buffer, Ccstr filename) {
         FILE *f =  
     fopen(filename, "wb");
 
         assert(f && "Could not open file for writting");
         {
-            Long buffer_len = cstrlen(buffer);
+            Long buffer_len = Cstrlen(buffer);
             Long bytes_written = (Long) fwrite(buffer, 1, (unsigned Long)buffer_len, f);
             assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
         }
@@ -659,7 +659,7 @@ _proc cstring_to_file(ccstr buffer, ccstr filename) {
     fclose(f);
 }
 
-_proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
+_proc lines_to_file(int lines_len, Mstr lines[2], Ccstr filename) {
         FILE *f =  
     fopen(filename, "wb");
 
@@ -669,9 +669,9 @@ _proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
             Long line_len = 0;
 
             for (int i = 0; i < lines_len; ++i) {
-                ccstr line = lines[i]; 
+                Ccstr line = lines[i]; 
 
-                line_len = cstrlen(line);
+                line_len = Cstrlen(line);
                 bytes_written = (Long) fwrite(line, 1, (unsigned Long)line_len, f);
                 bytes_written += (Long) fwrite("\n", 1, 1, f);
                 assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
@@ -721,19 +721,19 @@ _proc lines_to_file(int lines_len, mstr lines[2], ccstr filename) {
 #ifdef RAND_MAX
 // stdlib.h
 
-_proc_inlined sort_cstrings(Long cstrings_len, mstr cstrings[1]) {
+_proc_inlined sort_cstrings(Long Cstrings_len, Mstr Cstrings[1]) {
     qsort(
-        cstrings, (unsigned Long) cstrings_len,
-        sizeof(mstr), void_compare_strings
+        Cstrings, (unsigned Long) Cstrings_len,
+        sizeof(Mstr), void_compare_strings
     );
 } 
 
-_proc_inlined sort_cstrings_custom(Long cstrings_len, mstr cstrings[1], 
+_proc_inlined sort_cstrings_custom(Long Cstrings_len, Mstr Cstrings[1], 
                                    int (*compare_fun)(const void * a, const void * b)) 
 {
     qsort(
-        cstrings, (unsigned Long)  cstrings_len,
-        sizeof(mstr), compare_fun
+        Cstrings, (unsigned Long)  Cstrings_len,
+        sizeof(Mstr), compare_fun
     );
 }
 

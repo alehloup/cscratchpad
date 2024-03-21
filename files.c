@@ -4,7 +4,7 @@
 
 int main(void) {
     static char buffer[256] = {0};
-    static mstr lines[64] = {0};
+    static Mstr lines[64] = {0};
     Long buffer_cap = 256;
     int lines_cap = 64;
     
@@ -24,7 +24,7 @@ int main(void) {
         for (int i = 0; i < lines_len; ++i) {
             printf("%d: %s\n", i, lines[i]);
         }
-        cstring_to_file(lines[0], "./txts/first.txt");
+        Cstring_to_file(lines[0], "./txts/first.txt");
         
 
         lines_to_file(lines_len, lines, "./txts/sorted.txt");

@@ -32,7 +32,7 @@ _fun Long distance(coord coord1, coord coord2) {
 static coord galaxies[512] = {{0,0}};
 static int galaxies_len = 0;
 
-_proc initialize_matrix(mstr lines[2]) {
+_proc initialize_matrix(Mstr lines[2]) {
     int newM = M, newN = N;
     int column_has_galaxy[256] = {0};
 
@@ -85,10 +85,10 @@ static void get_galaxies(void) {
 }
 
 //AoC 11
-_proc aoc(int lines_len, mstr lines[2]) {
+_proc aoc(int lines_len, Mstr lines[2]) {
     Long sum_dists = 0;
     M = lines_len;
-    N = cstrint(lines[0]);
+    N = Cstrint(lines[0]);
     
     initialize_matrix(lines);
     get_galaxies();
@@ -108,7 +108,7 @@ _proc aoc(int lines_len, mstr lines[2]) {
 
 int main(void) {
     static char charbuffer[Next_power2(64000)] = {0};
-    static mstr lines[256] = {0};
+    static Mstr lines[256] = {0};
     Long charbuffer_cap = 64000;
     int lines_cap = 256;
 

@@ -18,14 +18,14 @@ _proc test_buffers(void) {
 _proc test_to_lines(void) {
     String text = S("Alessandro \n Luiz\n Stamatto \n Ferreira");
     String blines[256] = {S("")};
-    Array_string lines = _array_init(blines);
+    Strings lines = _array_init(blines);
 
     to_lines(&lines, text);
 
-    print_s(trim(blines[0])); printn;
-    print_s(trim(blines[1])); printn;
-    print_s(trim(blines[2])); printn;
-    print_s(trim(blines[3])); printn;
+    string_print(trim(blines[0])); printn;
+    string_print(trim(blines[1])); printn;
+    string_print(trim(blines[2])); printn;
+    string_print(trim(blines[3])); printn;
 }
 
 int main(void) {

@@ -74,11 +74,11 @@ typedef char * Mstr; // modifiable Cstr
     #define not !
 
     //stupid C++ does not accept (type) before brace struct
-    #define _create(Type) (Type)
+    #define _struct(Type) (Type)
 #endif
 #ifdef __cplusplus
     //stupid C++ does not accept (type) before brace struct
-    #define _create(Type)
+    #define _struct(Type)
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
 
@@ -110,11 +110,11 @@ typedef char * Mstr; // modifiable Cstr
     assert((mut_array)->len > 0 && "Array Underflow"); \
     (mut_array)->data[idx_to_del] = (mut_array)->data[--(mut_array)->len]
 
-_typedef_structarray(Array_char,   Char);
-_typedef_structarray(Array_int,    Int);
-_typedef_structarray(Array_long,   Long);
-_typedef_structarray(Array_float,  Float);
-_typedef_structarray(Array_double, Double);
+_typedef_structarray(Chars,   Char);
+_typedef_structarray(Ints,    Int);
+_typedef_structarray(Longs,   Long);
+_typedef_structarray(Floats,  Float);
+_typedef_structarray(Doubles, Double);
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -153,13 +153,24 @@ _pure Long Cstrlen(Ccstr Cstring) {
     STRINGS
 */
 //
-typedef Array_char Buffer;
+typedef Chars Buffer;
 typedef struct String { Long len; Cstr data; } String;
 
-typedef struct Array_buffer { const Long cap; Long len; Buffer *data; } Array_buffer;
-typedef struct Array_string { const Long cap; Long len; String *data; } Array_string;
+typedef struct Buffers { const Long cap; Long len; Buffer *data; } Buffers;
+typedef struct Strings { const Long cap; Long len; String *data; } Strings;
 
-#define S(string) _create(String) {Cstrlen(string), string}
+#define S(string) _struct(String) {Cstrlen(string), string}
+
+#ifdef stdout
+// stdio.h
+
+_proc_inlined string_print(String str) {
+    printf("%.*s", (Int) str.len, str.data);
+}
+
+#define printn printf("\n")
+
+#endif
 
 _pure Int scompare(const String str1, const String str2) {
     Long i = 0;
@@ -256,6 +267,43 @@ _pure Long char_pos_in_sub(const Char letter, const String string, const Int sta
 }
 _fun_inlined Bool char_in_sub_(const Char letter, const String string, int start, int count) {
     return (Bool) (char_pos_in_sub(letter, string, start, count) != -1);
+}
+
+// Returns the lines in a String
+_proc to_lines_base(Strings *dest_lines, String src_text, Bool include_empty_lines) {
+    Ccstr text = src_text.data;
+    Long text_len = src_text.len;
+    Bool not_empty = False;
+    Long current = 0;
+    
+    for (Long i = 0; i < text_len; ++i) {
+        not_empty = not_empty or text[i] > 32;
+
+        if (text[i] == '\n') {
+            
+            if (include_empty_lines || not_empty) {
+                String line = {(i - current), (&text[current])};
+                _append(dest_lines, line);
+            }
+
+            not_empty = False;
+            current = i+1;
+        }
+    }
+    if (include_empty_lines || not_empty) {
+        String line = {(text_len - current), (&text[current])};
+        _append(dest_lines, line);
+    }
+}
+
+// Returns the non-empty lines in a String
+_proc_inlined to_lines(Strings *dest_lines, String src_text) {
+    to_lines_base(dest_lines, src_text, False);
+}
+
+// Returns the lines in a String, including empty ones
+_proc_inlined to_lines_including_empty(Strings *dest_lines, String src_text) {
+    to_lines_base(dest_lines, src_text, True);
 }
 //  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
@@ -354,10 +402,24 @@ _pure int rnd(unsigned Long seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_pure unsigned Long hash_str(Ccstr str) {
+_pure unsigned Long hash_cstr(Ccstr str) {
     unsigned Long h = Hash_start_n;
     
     for(Long i = 0; str[i]; ++i) { 
+        h ^= str[i] & 255; h *= Hash_mul_n;
+    }
+    h = Hash_shift_mix(h);
+
+    return h >> 1;
+}
+
+_pure unsigned Long hash_string(String text) {
+    Ccstr str = text.data;
+    Long str_len = text.len;
+
+    unsigned Long h = Hash_start_n;
+    
+    for(Long i = 0; i < str_len; ++i) { 
         h ^= str[i] & 255; h *= Hash_mul_n;
     }
     h = Hash_shift_mix(h);
@@ -403,7 +465,7 @@ _math int ht_lookup(
 
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed it will insert the key, if its null then no insert.  
 _gcc_attr(always_inline, warn_unused_result) int str_in_ht_(Ccstr key, Cstr keys[HT_CAP], int *keys_len_ref) {
-    unsigned Long h = hash_str(key);
+    unsigned Long h = hash_cstr(key);
     int i = ht_lookup(h, (int)h);
     int found = False;
 
@@ -485,39 +547,7 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
     ==================== TEXT ====================
 */
 //
-// Returns a Array_string of the lines in a String
-_proc to_lines_base(Array_string *dest_lines, String src_text, Bool include_empty_lines) {
-    Ccstr text = src_text.data;
-    Long text_len = src_text.len;
-    Bool not_empty = False;
-    Long current = 0;
-    
-    for (Long i = 0; i < text_len; ++i) {
-        not_empty = not_empty or text[i] > 32;
 
-        if (text[i] == '\n') {
-            
-            if (include_empty_lines || not_empty) {
-                String line = {(i - current), (&text[current])};
-                _append(dest_lines, line);
-            }
-
-            not_empty = False;
-            current = i+1;
-        }
-    }
-    if (include_empty_lines || not_empty) {
-        String line = {(text_len - current), (&text[current])};
-        _append(dest_lines, line);
-    }
-}
-
-_proc_inlined to_lines(Array_string *dest_lines, String src_text) {
-    to_lines_base(dest_lines, src_text, False);
-}
-_proc_inlined to_lines_including_empty(Array_string *dest_lines, String src_text) {
-    to_lines_base(dest_lines, src_text, True);
-}
 
 // _fun int split(Mstr text_to_alter, char splitter, const int words_cap, Mstr words[2]) {
 //     int i = 0, current = 0;
@@ -543,23 +573,6 @@ _proc_inlined to_lines_including_empty(Array_string *dest_lines, String src_text
 //     return words_len;
 // }
 //  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    ==================== OUT ====================
-*/
-//
-#ifdef stdout
-// stdio.h
-
-_proc_inlined print_s(String str) {
-    printf("%.*s", (Int) str.len, str.data);
-}
-
-#define printn printf("\n")
-
-#endif
-//  ^^^^^^^^^^^^^^^^^^^^ OUT ^^^^^^^^^^^^^^^^^^^^
 
 
 /*

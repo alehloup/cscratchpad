@@ -97,7 +97,14 @@ typedef char * Mstr; // modifiable Cstr
 */
 //
 #define _structarray(element_type) { const Long cap; Long len; element_type *data; }
+
 #define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name
+_typedef_structarray(Chars,   Char);
+_typedef_structarray(Ints,    Int);
+_typedef_structarray(Longs,   Long);
+_typedef_structarray(Floats,  Float);
+_typedef_structarray(Doubles, Double);
+
 #define _array_init(base_static_array) \
     { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*data:*/ base_static_array }
 //remove 1 capacity to make the array "zero" terminated (if zero alocated)
@@ -110,11 +117,29 @@ typedef char * Mstr; // modifiable Cstr
     assert((mut_array)->len > 0 && "Array Underflow"); \
     (mut_array)->data[idx_to_del] = (mut_array)->data[--(mut_array)->len]
 
-_typedef_structarray(Chars,   Char);
-_typedef_structarray(Ints,    Int);
-_typedef_structarray(Longs,   Long);
-_typedef_structarray(Floats,  Float);
-_typedef_structarray(Doubles, Double);
+#define _isempty(container_with_len) ((Bool) container_with_len.len == 0)
+
+#ifdef RAND_MAX
+// stdlib.h
+//
+#define _sort(ptr_array_of_things, sort_function) \
+     qsort(ptr_array_of_things, ptr_array_of_things->len, sizeof(ptr_array_of_things->data[0]), sort_function)
+
+_proc_inlined strings_sort(Strings *array_of_strings) {
+    Cstr cstrings = array_of_strings->data;
+    unsigned Long cstrings_len = (unsigned Long) array_of_strings->len;
+    qsort(cstrings, cstrings_len, sizeof(String), string_voidcompare);
+} 
+
+_proc_inlined strings_custom_sort(Strings *array_of_strings, int (*compare_fun)(const void * a, const void * b)) 
+{
+    Cstr cstrings = array_of_strings->data;
+    unsigned Long cstrings_len = (unsigned Long) array_of_strings->len;
+    qsort(cstrings, cstrings_len, sizeof(String), compare_fun);
+}
+
+// stdlib.h
+#endif
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -172,7 +197,7 @@ _proc_inlined string_print(String str) {
 
 #endif
 
-_pure Int scompare(const String str1, const String str2) {
+_pure Int string_compare(const String str1, const String str2) {
     Long i = 0;
 
     Ccstr ccstr1 = str1.data, ccstr2 = str2.data;
@@ -225,12 +250,8 @@ _fun String trim(String str) {
     return str;
 }
 
-_fun_inlined Int svoidcompare(const void * a, const void * b) {
-    return scompare(*(const String*)a, *(const String*)b);
-}
-
-_fun_inlined Bool sisempty(const String string) {
-    return (Bool) string.len == 0;
+_fun Int string_voidcompare(const void * a, const void * b) {
+    return string_compare(*(const String*)a, *(const String*)b);
 }
 
 _math Bool is_digit(const Char character) {
@@ -305,13 +326,7 @@ _proc_inlined to_lines(Strings *dest_lines, String src_text) {
 _proc_inlined to_lines_including_empty(Strings *dest_lines, String src_text) {
     to_lines_base(dest_lines, src_text, True);
 }
-//  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
-
-/*
-    BUFFERS
-*/
-//
 _proc buffer_set(Buffer *dst, const String src) {
     Long i = 0;
     Long capdst = dst->cap, lensrc = src.len, lendst = dst->len;
@@ -344,7 +359,7 @@ _proc buffer_append(Buffer *dst, const String src) {
     }
     dst->len += lensrc;
 }
-//  ^^^^^^^^^^^^^^^^^^^^ BUFFERS ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
@@ -576,64 +591,6 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 
 
 /*
-    ==================== TIME BENCHMARK ====================
-*/
-//
-#ifdef CLOCKS_PER_SEC 
-// time.h
-
-_fun_inlined double seconds_since(clock_t start)
-{
-    return (double)(clock() - start) / CLOCKS_PER_SEC;
-}
-
-// time.h
-#endif  
-
-#if defined CLOCKS_PER_SEC && defined stdout 
-// time.h && stdio.h
-
-_proc_inlined print_clock(clock_t start) {
-    printf("\n\nExecuted in %f seconds \n", seconds_since(start));
-}
-
-// time.h && stdio.h
-#endif 
-//  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    ==================== SHELL ====================
-*/
-//
-#if defined RAND_MAX && defined stdout
-// stdlib.h && stdio.h
-
-#include <stdarg.h>
-
-#define shellrun_buffer_cap 512
-
-_gcc_attr(format(printf, 1, 2), nonnull)
-int shellrun(Ccstr format, ...) {
-    va_list args;
- 
-    char buffer [shellrun_buffer_cap] = {0};
-
-    va_start(args, format);
-
-    vprint_sf(buffer, format, args);
-    printf("\n");
-    vprintf(format, args);
-    printf("\n");
-    return system(buffer);
-}
-
-// stdlib.h && stdio.h
-#endif 
-//  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
     ==================== FILES ====================
 */
 //
@@ -721,28 +678,58 @@ int shellrun(Ccstr format, ...) {
 
 
 /*
-    ==================== STDLIB ====================
+    ==================== TIME BENCHMARK ====================
 */
-// 
-#ifdef RAND_MAX
-// stdlib.h
+//
+#ifdef CLOCKS_PER_SEC 
+// time.h
 
-// _proc_inlined sort_cstrings(Long Cstrings_len, Mstr Cstrings[1]) {
-//     qsort(
-//         Cstrings, (unsigned Long) Cstrings_len,
-//         sizeof(Mstr), void_compare_strings
-//     );
-// } 
+_fun_inlined double seconds_since(clock_t start)
+{
+    return (double)(clock() - start) / CLOCKS_PER_SEC;
+}
 
-// _proc_inlined sort_cstrings_custom(Long Cstrings_len, Mstr Cstrings[1], 
-//                                    int (*compare_fun)(const void * a, const void * b)) 
-// {
-//     qsort(
-//         Cstrings, (unsigned Long)  Cstrings_len,
-//         sizeof(Mstr), compare_fun
-//     );
-// }
+// time.h
+#endif  
 
-// stdlib.h
+#if defined CLOCKS_PER_SEC && defined stdout 
+// time.h && stdio.h
+
+_proc_inlined print_clock(clock_t start) {
+    printf("\n\nExecuted in %f seconds \n", seconds_since(start));
+}
+
+// time.h && stdio.h
 #endif 
-//  ^^^^^^^^^^^^^^^^^^^^ STDLIB ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
+
+
+/*
+    ==================== SHELL ====================
+*/
+//
+#if defined RAND_MAX && defined stdout
+// stdlib.h && stdio.h
+
+#include <stdarg.h>
+
+#define shellrun_buffer_cap 512
+
+_gcc_attr(format(printf, 1, 2), nonnull)
+int shellrun(Ccstr format, ...) {
+    va_list args;
+ 
+    char buffer [shellrun_buffer_cap] = {0};
+
+    va_start(args, format);
+
+    vprint_sf(buffer, format, args);
+    printf("\n");
+    vprintf(format, args);
+    printf("\n");
+    return system(buffer);
+}
+
+// stdlib.h && stdio.h
+#endif 
+//  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^

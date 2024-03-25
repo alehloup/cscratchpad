@@ -4,7 +4,7 @@
 _proc test_buffers(void) {
     String string = S("Alessandro");
     char bdata[256] = {0};
-    Buffer buff = _array_init(bdata);
+    Buffer buff = A(bdata);
 
     buffer_append(&buff, string);
     buffer_append(&buff, S(" Luiz"));
@@ -18,7 +18,7 @@ _proc test_buffers(void) {
 _proc test_to_lines(void) {
     String text = S("Alessandro \n Luiz\n Stamatto \n Ferreira");
     String blines[256] = {S("")};
-    Strings lines = _array_init(blines);
+    Strings lines = A(blines);
 
     to_lines(&lines, text);
 
@@ -31,7 +31,7 @@ _proc test_to_lines(void) {
 _proc test_split(void) {
     String text = S("Alessandro  Luiz Stamatto  Ferreira");
     String bwords[256] = {S("")};
-    Strings words = _array_init(bwords);
+    Strings words = A(bwords);
 
     split(&words, text, ' ');
 

@@ -3,7 +3,7 @@
 
 int main(void) {
     Double array[256] = { 1.1, 2.2, 3.3 };
-    Array_double arr = _array_init(array, 3);
+    Array_double arr = A(array, 3);
 
     _append(&arr, 5.2);
 

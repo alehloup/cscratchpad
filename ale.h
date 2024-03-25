@@ -101,7 +101,7 @@ _typedef_structarray(Longs,   Long);
 _typedef_structarray(Floats,  Float);
 _typedef_structarray(Doubles, Double);
 
-#define _array_init(base_static_array) \
+#define A(base_static_array) \
     { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*data:*/ base_static_array }
 //remove 1 capacity to make the array "zero" terminated (if zero alocated)
 

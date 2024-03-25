@@ -8,17 +8,17 @@
 #ifdef stdout
     // Print Assert if stdio.h was included
     #define diagnostic_ printf("\n\n  |ASSERT FAILED %s:%s:%d|  \n\n", __FILE__, __func__, __LINE__)
-#endif
+#endif // stdout
 #ifndef stdout
     static int assert_trapped_ = 0;
     #define diagnostic_ assert_trapped_ = 1
-#endif
+#endif //not stdout
 
 #if defined(_MSC_VER)
     #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
 #else
     #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
-#endif
+#endif // _MSC_VER
 //  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -30,7 +30,7 @@
     #define _gcc_attr(...) __attribute((__VA_ARGS__)) inline static
 #else
     #define _gcc_attr(...) inline static
-#endif
+#endif // defined(__GNUC__) || defined(__clang__)
 
 #define _fun  _gcc_attr(nonnull, warn_unused_result)
 #define _proc _gcc_attr(nonnull) void
@@ -48,7 +48,7 @@
 #define Long long long
 #ifdef __SIZEOF_INT128__
 __extension__ typedef __int128 Big;
-#endif
+#endif // __SIZEOF_INT128__
 #define Float float
 #define Double double
 
@@ -72,11 +72,11 @@ typedef char * Mstr; // modifiable Cstr
 
     //stupid C++ does not accept (type) before brace struct
     #define _struct(Type) (Type)
-#endif
+#endif // not __cplusplus
 #ifdef __cplusplus
     //stupid C++ does not accept (type) before brace struct
     #define _struct(Type)
-#endif
+#endif // __cplusplus
 //  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -152,39 +152,8 @@ _typedef_structarray(Doubles, Double);
      qsort(ptr_array_of_things, ptr_array_of_things->len, sizeof(ptr_array_of_things->data[0]), sort_function)
 
 // stdlib.h
-#endif
+#endif // RAND_MAX
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    CSTRS
-*/
-//
-_fun Bool is_empty_cstr(Ccstr string) {
-    Long i;
-    for (i = 0; string[i] > 32; ++i) {
-        /* empty body */
-    }
-    return (Bool) string[i] == 0;
-}
-
-_fun Int Cstr_compare(Ccstr str1, Ccstr str2) {
-    Long i = 0;
-
-    for (i = 0; str1[i] != 0 and str2[i] != 0 and str1[i] == str2[i]; ++i) {
-        /* Empty Body */
-    }
-    return (Int)(str1[i] - str2[i]);
-}
-
-_fun Long Cstrlen(Ccstr Cstring) {
-    Long Cstring_len;
-    for (Cstring_len = 0; Cstring[Cstring_len] != 0; ++Cstring_len) {
-        /* Empty Body */
-    }
-    return Cstring_len;
-}
-//  ^^^^^^^^^^^^^^^^^^^^ CSTRS ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
@@ -198,6 +167,14 @@ typedef struct String { Long len; Cstr data; } String;
 typedef struct Buffers { const Long cap; Long len; Buffer *data; } Buffers;
 typedef struct Strings { const Long cap; Long len; String *data; } Strings;
 
+_fun Long Cstrlen(Ccstr Cstring) {
+    Long Cstring_len;
+    for (Cstring_len = 0; Cstring[Cstring_len] != 0; ++Cstring_len) {
+        /* Empty Body */
+    }
+    return Cstring_len;
+}
+
 #define S(string) _struct(String) {Cstrlen(string), string}
 
 #ifdef stdout
@@ -209,7 +186,8 @@ _proc string_print(String str) {
 
 #define printn printf("\n")
 
-#endif
+// stdio.h
+#endif //stdout
 
 _fun Int string_compare(const String str1, const String str2) {
     Long i = 0;
@@ -505,25 +483,6 @@ _fun int ht_lookup(
     return idx;
 }
 
-// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed it will insert the key, if its null then no insert.  
-_gcc_attr(always_inline, warn_unused_result) int str_in_ht_(Ccstr key, Cstr keys[HT_CAP], int *keys_len_ref) {
-    unsigned Long h = hash_cstr(key);
-    int i = ht_lookup(h, (int)h);
-    int found = False;
-
-    while (i == 0 or (keys[i] and Cstr_compare(key, keys[i]))) {
-        i = ht_lookup(h, i);
-    }
-
-    found = keys[i] ? True : False;
-    if (keys_len_ref) {
-        keys[i] = key;
-        (*keys_len_ref) += not found;
-    }
-
-    return found ? i : - i;
-}
-
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
 _gcc_attr(always_inline, warn_unused_result) int int_in_ht_(int key, int keys[HT_CAP], int *keys_len_ref) {
     unsigned Long h = hash_int(key);
@@ -542,46 +501,6 @@ _gcc_attr(always_inline, warn_unused_result) int int_in_ht_(int key, int keys[HT
 
     return found ? i : - i;
 }
-
-// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
-_gcc_attr(always_inline, warn_unused_result) int long_in_ht_(Long key, Long keys[HT_CAP], int *keys_len_ref) {
-    unsigned Long h = hash_int(key);
-    int i = ht_lookup(h, (int)h);
-    int found = False;
-
-    while (i == 0 or (keys[i] and key != keys[i])) {
-        i = ht_lookup(h, i);
-    }
-
-    found = keys[i] ? True : False;
-    if (keys_len_ref) {
-        keys[i] = key;
-        (*keys_len_ref) += not found;
-    }
-
-    return found ? i : - i;
-}
-
-#ifdef __SIZEOF_INT128__
-// Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
-_gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT_CAP], int *keys_len_ref) {
-    unsigned Long h = hash_int((Long)key);
-    int i = ht_lookup(h, (int)h);
-    int found = False;
-
-    while (i == 0 or (keys[i] and key != keys[i])) {
-        i = ht_lookup(h, i);
-    }
-
-    found = keys[i] ? True : False;
-    if (keys_len_ref) {
-        keys[i] = key;
-        (*keys_len_ref) += found;
-    }
-
-    return found ? i : - i;
-}
-#endif
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 

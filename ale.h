@@ -85,6 +85,30 @@ typedef char * Mstr; // modifiable Cstr
 //
 #define isizeof(x_element_) ((Long)sizeof(x_element_))
 #define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
+
+_fun Int memocmp(void *any_ele1, void *any_ele2, Long sz) {
+    Long i = 0;
+    char *bytes1 = (char*) any_ele1, *bytes2 = (char*) any_ele2;
+
+    if (sz == 0) {
+        return 0;
+    }
+    --sz;
+
+    for (i = 0; i < sz and bytes1[i] == bytes2[i]; ++i) {
+        /* Empty Body */
+    }
+
+    return (Int)(bytes1[i] - bytes2[i]);
+}
+
+_proc memozero(void *any_element, Long sz) {
+    char *bytes = (char*) any_element;
+
+    for (Long i = 0; i < sz; ++i) {
+        bytes[i] = 0;
+    }
+}
 //  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
 
 

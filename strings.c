@@ -42,10 +42,24 @@ _proc test_split(void) {
 }
 
 _proc test_string_eq(void) {
-    String s1 = S("Alessandro"), s2 = S("Alessandro");
+    String s1 = S("Alessandro"), s2 = S("Alessandr");
 
-    printf("%d", Cstr_compare(&s1, &s2));
+    printf("memocmp: %d\n", memocmp(&s1, &s2, sizeof(s1)));
     
+}
+
+_proc test_memoset(void) {
+    Long x = 5;
+    String s = S("Alessandro");
+
+    printf("Antes: %lld %s|%lld \n", x, s.data, s.len);
+
+    memozero(&x, sizeof(x));
+    memozero(&s, sizeof(s));
+
+    printf("Depois: %lld %s|%lld \n", x, s.data, s.len);
+
+
 }
 
 int main(void) {
@@ -53,6 +67,7 @@ int main(void) {
     test_to_lines();
     test_split();
     test_string_eq();
+    test_memoset();
 
     return 0;
 }

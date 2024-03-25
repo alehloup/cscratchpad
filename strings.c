@@ -41,10 +41,18 @@ _proc test_split(void) {
     string_print(trim(bwords[3])); printn;
 }
 
+_proc test_string_eq(void) {
+    String s1 = S("Alessandro"), s2 = S("Alessandro");
+
+    printf("%d", Cstr_compare(&s1, &s2));
+    
+}
+
 int main(void) {
     test_buffers();
     test_to_lines();
     test_split();
+    test_string_eq();
 
     return 0;
 }

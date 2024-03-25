@@ -121,19 +121,6 @@ _typedef_structarray(Doubles, Double);
 #define _sort(ptr_array_of_things, sort_function) \
      qsort(ptr_array_of_things, ptr_array_of_things->len, sizeof(ptr_array_of_things->data[0]), sort_function)
 
-_proc strings_sort(Strings *array_of_strings) {
-    Cstr cstrings = array_of_strings->data;
-    unsigned Long cstrings_len = (unsigned Long) array_of_strings->len;
-    qsort(cstrings, cstrings_len, sizeof(String), string_voidcompare);
-} 
-
-_proc strings_custom_sort(Strings *array_of_strings, int (*compare_fun)(const void * a, const void * b)) 
-{
-    Cstr cstrings = array_of_strings->data;
-    unsigned Long cstrings_len = (unsigned Long) array_of_strings->len;
-    qsort(cstrings, cstrings_len, sizeof(String), compare_fun);
-}
-
 // stdlib.h
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^

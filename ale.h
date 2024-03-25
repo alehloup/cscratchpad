@@ -41,6 +41,7 @@
     ==================== TYPES ====================
 */
 //
+#define Byte char
 #define Char char
 #define Bool int
 #define Int int
@@ -127,7 +128,12 @@ _typedef_structarray(Doubles, Double);
 
 #define A(base_static_array) \
     { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*data:*/ base_static_array }
-//remove 1 capacity to make the array "zero" terminated (if zero alocated)
+//  remove 1 capacity to make the array "zero" terminated (if zero alocated)
+
+#define _new_array(varname, typename, capacity) \
+    typename varname##_base[capacity]; \
+    typename##s varname = A(varname##_base)
+//  just for convenience, there must be an Array type of the typename##s (like Char -> Chars)
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
@@ -185,6 +191,7 @@ _fun Long Cstrlen(Ccstr Cstring) {
     STRINGS
 */
 //
+typedef Chars Bytes;
 typedef Chars Buffer;
 typedef struct String { Long len; Cstr data; } String;
 
@@ -585,44 +592,42 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 #ifdef stdout
 // stdio.h
 
-// _fun Long file_to_cstring(Ccstr filename, const Long charbuffer_cap, char charbuffer[2]) {
-//     Long fsize = 0;
+_proc file_to_buffer(String filename, Buffer *dest_buffer) {
+    Long fsize = 0;
 
-//         FILE *f =  
-//     fopen(filename, "rb");
+        FILE *f =  
+    fopen(filename.data, "rb");
     
-//         assert(f && "Could not open file for reading");
+        assert(f && "Could not open file for reading");
     
-//         fseek(f, 0, SEEK_END);
-//         fsize = ftell(f);
-//         fseek(f, 0, SEEK_SET);
+        fseek(f, 0, SEEK_END);
+        fsize = ftell(f);
+        fseek(f, 0, SEEK_SET);
 
-//         assert(charbuffer_cap >= fsize+2 && "charbuffer is not enough for file size");
+        assert(dest_buffer->cap >= fsize+2 && "buffer is not enough for file size");
 
-//         {
-//             Long bytesread = (Long) fread(charbuffer, 1LL, (unsigned Long)fsize, f);
-//             assert(bytesread == fsize && "could not read fsize#bytes"); 
+        {
+            Long bytesread = (Long) fread(dest_buffer->data, 1LL, (unsigned Long)fsize, f);
+            assert(bytesread == fsize && "could not read fsize#bytes"); 
             
-//             charbuffer[fsize] = charbuffer[fsize-1] != '\n' ? '\n' : '\0';
-//             charbuffer[fsize+1] = '\0';
-//         }
+            dest_buffer->data[fsize] = '\0';
+            dest_buffer->len = fsize;
+        }
 
-//     fclose(f);
+    fclose(f);
+}
 
-//     return fsize;
-// }
+_proc file_to_lines(String filename, Strings *dest_lines, Buffer *dest_buffer) {
+    file_to_buffer(filename, dest_buffer);
+    String src_text = {dest_buffer->len, dest_buffer->data};
+    to_lines(dest_lines, src_text);
+}
 
-// _fun int file_to_lines(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
-//     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
-//     (void) charbuffer_len;
-//     return into_lines(charbuffer, lines_cap, lines);
-// }
-
-// _fun int file_to_lines_including_empty(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
-//     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
-//     (void) charbuffer_len;
-//     return into_lines_including_empty(charbuffer, lines_cap, lines);
-// }
+_proc file_to_lines_including_empty(String filename, Strings *dest_lines, Buffer *dest_buffer) {
+    file_to_buffer(filename, dest_buffer);
+    String src_text = {dest_buffer->len, dest_buffer->data};
+    to_lines_including_empty(dest_lines, src_text);
+}
 
 // _proc Cstring_to_file(Ccstr buffer, Ccstr filename) {
 //         FILE *f =  
@@ -661,7 +666,7 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 // }
 
 // stdio.h
-#endif 
+#endif
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 
 

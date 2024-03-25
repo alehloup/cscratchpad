@@ -58,8 +58,24 @@ _proc test_memoset(void) {
     memozero(&s, sizeof(s));
 
     printf("Depois: %lld %s|%lld \n", x, s.data, s.len);
+}
 
+_proc test_fileread(void) {
+    _new_array(b, Byte, 2048);
+    file_to_buffer(S("commands.txt"), &b);
 
+    printf("|%lld|\n%s\n", b.len, b.data);
+}
+
+_proc test_fileread_to_lines(void) {
+    _new_array(b, Byte, 2048);
+    _new_array(lines, String, 64);
+
+    file_to_lines(S("commands.txt"), &lines, &b);
+
+    for (Long i = 0; i < lines.len; ++i) {
+        printf("%lld: ", i); string_print(lines.data[i]); printn;
+    }
 }
 
 int main(void) {
@@ -68,6 +84,8 @@ int main(void) {
     test_split();
     test_string_eq();
     test_memoset();
+    test_fileread();
+    test_fileread_to_lines();
 
     return 0;
 }

@@ -419,13 +419,7 @@ _fun Long least_common_multiple(Long m, Long n) {
 // Next Power of 2 for numbers upto 2*31 (2_147_483_648)
 #define Next_power2(n_) \
     ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
-//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
-
-/*
-    ==================== RANDOM ====================
-*/
-//
 #define Rnd_positive_mask 2147483647
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
@@ -437,13 +431,7 @@ _fun int rnd(unsigned Long seed[1]) {
     
     return (int)((*seed >> shift) & Rnd_positive_mask);
 }
-//  ^^^^^^^^^^^^^^^^^^^^ RANDOM ^^^^^^^^^^^^^^^^^^^^
 
-
-/*
-    ==================== HASH ====================
-*/
-//
 #define Hash_shift_mix(cur_hash_)  (cur_hash_ ^ (cur_hash_ >> 31))
 
 #define Hash_start_n 0x7A5662DCDF
@@ -487,7 +475,7 @@ _fun unsigned Long hash_int(Long integer64) {
     
     return x >> 1;
 }
-//  ^^^^^^^^^^^^^^^^^^^^ HASH ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 
 /*

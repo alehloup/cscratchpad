@@ -205,6 +205,9 @@ _fun Int string_compare(const String str1, const String str2) {
 
     return (Int)(ccstr1[i] - ccstr2[i]);
 }
+_fun Int string_voidcompare(const void * a, const void * b) {
+    return string_compare(*(const String*)a, *(const String*)b);
+}
 
 _fun Bool startswith(const String string, const String prefix) {
     Long i = 0;
@@ -212,10 +215,10 @@ _fun Bool startswith(const String string, const String prefix) {
     Ccstr Ccstring = string.data, ccprefix = prefix.data;
     Long lenstring = string.len, lenprefix = prefix.len;
 
-    if (!ccprefix[0]) {
+    if (_isempty(prefix)) {
         return True;
     }
-    if (!Ccstring[0] or lenprefix > lenstring) {
+    if (_isempty(string) or lenprefix > lenstring) {
         return False;
     }
 
@@ -244,10 +247,6 @@ _fun String trim(String str) {
     }
 
     return str;
-}
-
-_fun Int string_voidcompare(const void * a, const void * b) {
-    return string_compare(*(const String*)a, *(const String*)b);
 }
 
 _fun Bool is_digit(const Char character) {
@@ -288,12 +287,11 @@ _fun Bool char_in_sub_(const Char letter, const String string, int start, int co
 
 // Returns the lines in a String
 _proc to_lines_base(Strings *dest_lines, String src_text, Bool include_empty_lines) {
-    Ccstr text = src_text.data;
-    Long text_len = src_text.len;
     Bool not_empty = False;
     Long current = 0;
     
-    for (Long i = 0; i < text_len; ++i) {
+    Ccstr text = src_text.data;
+    for (Long i = 0; i < src_text.len; ++i) {
         not_empty = not_empty or text[i] > 32;
 
         if (text[i] == '\n') {
@@ -308,7 +306,7 @@ _proc to_lines_base(Strings *dest_lines, String src_text, Bool include_empty_lin
         }
     }
     if (include_empty_lines || not_empty) {
-        String line = {(text_len - current), (&text[current])};
+        String line = {(src_text.len - current), (&text[current])};
         _append(dest_lines, line);
     }
 }
@@ -321,6 +319,33 @@ _proc to_lines(Strings *dest_lines, String src_text) {
 // Returns the lines in a String, including empty ones
 _proc to_lines_including_empty(Strings *dest_lines, String src_text) {
     to_lines_base(dest_lines, src_text, True);
+}
+
+// Returns the words of a line, the line is divided by the splitter
+_proc split(Strings *dest_words, String src_text, char splitter) {
+    Bool not_empty = False;
+    int i = 0, current = 0;
+    
+    Ccstr text = src_text.data;
+
+    for (i = 0; i < src_text.len; ++i) {
+        not_empty = not_empty or text[i] > 32;
+
+        if (text[i] == splitter) {
+            if (not_empty) {
+                String word = {(i - current), (&text[current])};
+                _append(dest_words, word);
+            }
+
+            not_empty = False;
+            current = i+1;
+        }
+    }
+
+    if (not_empty) {
+        String word = {(src_text.len - current), (&text[current])};
+        _append(dest_words, word);
+    }
 }
 
 _proc buffer_set(Buffer *dst, const String src) {
@@ -552,38 +577,6 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 }
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    ==================== TEXT ====================
-*/
-//
-
-
-// _fun int split(Mstr text_to_alter, char splitter, const int words_cap, Mstr words[2]) {
-//     int i = 0, current = 0;
-//     int words_len = 0;
-
-//     for (i = 0; text_to_alter[i]; ++i) {
-//         if (text_to_alter[i] == splitter) {
-//             text_to_alter[i] = '\0';
-            
-//             if (!is_empty_cstr(&text_to_alter[current])) {
-//                 assert(words_len < words_cap && "words not big enough to store all words");
-//                 words[words_len++] = &text_to_alter[current];
-//             }
-//             current = i+1;
-//         }
-//     }
-
-//     if (current != i && !is_empty_cstr(&text_to_alter[current])) {
-//         assert(words_len < words_cap && "words not big enough to store all words");
-//         words[words_len++] = &text_to_alter[current];
-//     }
-
-//     return words_len;
-// }
-//  ^^^^^^^^^^^^^^^^^^^^ TEXT ^^^^^^^^^^^^^^^^^^^^
 
 
 /*

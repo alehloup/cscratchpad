@@ -28,9 +28,23 @@ _proc test_to_lines(void) {
     string_print(trim(blines[3])); printn;
 }
 
+_proc test_split(void) {
+    String text = S("Alessandro  Luiz Stamatto  Ferreira");
+    String bwords[256] = {S("")};
+    Strings words = _array_init(bwords);
+
+    split(&words, text, ' ');
+
+    string_print(trim(bwords[0])); printn;
+    string_print(trim(bwords[1])); printn;
+    string_print(trim(bwords[2])); printn;
+    string_print(trim(bwords[3])); printn;
+}
+
 int main(void) {
     test_buffers();
     test_to_lines();
+    test_split();
 
     return 0;
 }

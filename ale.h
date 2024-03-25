@@ -548,41 +548,35 @@ _proc file_to_lines_including_empty(String filename, Strings *dest_lines, Buffer
     to_lines_including_empty(dest_lines, src_text);
 }
 
-// _proc Cstring_to_file(Ccstr buffer, Ccstr filename) {
-//         FILE *f =  
-//     fopen(filename, "wb");
+_proc string_to_file(String filename, String src_text) {
+        FILE *f =  
+    fopen(filename.data, "wb");
 
-//         assert(f && "Could not open file for writting");
-//         {
-//             Long buffer_len = Cstrlen(buffer);
-//             Long bytes_written = (Long) fwrite(buffer, 1, (unsigned Long)buffer_len, f);
-//             assert(bytes_written == buffer_len && "could not write buffer_len#bytes");
-//         }
+        assert(f && "Could not open file for writting");
+        {
+            Long bytes_written = (Long) fwrite(src_text.data, 1, (unsigned Long)src_text.len, f);
+            assert(bytes_written == src_text.len && "could not write buffer_len#bytes");
+        }
 
-//     fclose(f);
-// }
+    fclose(f);
+}
 
-// _proc lines_to_file(int lines_len, Mstr lines[2], Ccstr filename) {
-//         FILE *f =  
-//     fopen(filename, "wb");
+_proc lines_to_file(String filename, Strings lines) {
+        FILE *f =  
+    fopen(filename.data, "wb");
 
-//         assert(f && "Could not open file for writting");
-//         {
-//             Long bytes_written = 0;
-//             Long line_len = 0;
+        assert(f && "Could not open file for writting");
+        {
+            for (int i = 0; i < lines.len; ++i) {
+                String line = lines.data[i];
+                Long bytes_written = (Long) fwrite(line.data, 1, (unsigned Long)line.len, f);
+                bytes_written += (Long) fwrite("\n", 1, 1, f);
+                assert(bytes_written == line.len + 1 && "could not write line_len#bytes");
+            }
+        }
 
-//             for (int i = 0; i < lines_len; ++i) {
-//                 Ccstr line = lines[i]; 
-
-//                 line_len = Cstrlen(line);
-//                 bytes_written = (Long) fwrite(line, 1, (unsigned Long)line_len, f);
-//                 bytes_written += (Long) fwrite("\n", 1, 1, f);
-//                 assert(bytes_written == line_len + 1 && "could not write line_len#bytes");
-//             }
-//         }
-
-//     fclose(f);
-// }
+    fclose(f);
+}
 
 // stdio.h
 #endif

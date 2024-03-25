@@ -76,6 +76,12 @@ _proc test_fileread_to_lines(void) {
     for (Long i = 0; i < lines.len; ++i) {
         printf("%lld: ", i); string_print(lines.data[i]); printn;
     }
+
+    lines_to_file(S("linhas.txt"), lines);
+}
+
+_proc test_filewrite(void) {
+    string_to_file(S("saida.txt"), S("Woa\nTestando arquivos!\n"));
 }
 
 int main(void) {
@@ -86,6 +92,7 @@ int main(void) {
     test_memoset();
     test_fileread();
     test_fileread_to_lines();
+    test_filewrite();
 
     return 0;
 }

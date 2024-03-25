@@ -33,11 +33,7 @@
 #endif
 
 #define _fun  _gcc_attr(nonnull, warn_unused_result)
-#define _math _gcc_attr(nonnull, warn_unused_result, const) // math = no pointers, same inputs always produce same output
-#define _pure _gcc_attr(nonnull, warn_unused_result, pure) // pure = do not uses global variables, uses only its input
-#define _fun_inlined  _gcc_attr(nonnull, warn_unused_result, always_inline)
 #define _proc _gcc_attr(nonnull) void
-#define _proc_inlined _gcc_attr(nonnull, always_inline) void
 //  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -125,13 +121,13 @@ _typedef_structarray(Doubles, Double);
 #define _sort(ptr_array_of_things, sort_function) \
      qsort(ptr_array_of_things, ptr_array_of_things->len, sizeof(ptr_array_of_things->data[0]), sort_function)
 
-_proc_inlined strings_sort(Strings *array_of_strings) {
+_proc strings_sort(Strings *array_of_strings) {
     Cstr cstrings = array_of_strings->data;
     unsigned Long cstrings_len = (unsigned Long) array_of_strings->len;
     qsort(cstrings, cstrings_len, sizeof(String), string_voidcompare);
 } 
 
-_proc_inlined strings_custom_sort(Strings *array_of_strings, int (*compare_fun)(const void * a, const void * b)) 
+_proc strings_custom_sort(Strings *array_of_strings, int (*compare_fun)(const void * a, const void * b)) 
 {
     Cstr cstrings = array_of_strings->data;
     unsigned Long cstrings_len = (unsigned Long) array_of_strings->len;
@@ -147,7 +143,7 @@ _proc_inlined strings_custom_sort(Strings *array_of_strings, int (*compare_fun)(
     CSTRS
 */
 //
-_fun_inlined Bool is_empty_cstr(Ccstr string) {
+_fun Bool is_empty_cstr(Ccstr string) {
     Long i;
     for (i = 0; string[i] > 32; ++i) {
         /* empty body */
@@ -155,7 +151,7 @@ _fun_inlined Bool is_empty_cstr(Ccstr string) {
     return (Bool) string[i] == 0;
 }
 
-_pure Int Cstr_compare(Ccstr str1, Ccstr str2) {
+_fun Int Cstr_compare(Ccstr str1, Ccstr str2) {
     Long i = 0;
 
     for (i = 0; str1[i] != 0 and str2[i] != 0 and str1[i] == str2[i]; ++i) {
@@ -164,7 +160,7 @@ _pure Int Cstr_compare(Ccstr str1, Ccstr str2) {
     return (Int)(str1[i] - str2[i]);
 }
 
-_pure Long Cstrlen(Ccstr Cstring) {
+_fun Long Cstrlen(Ccstr Cstring) {
     Long Cstring_len;
     for (Cstring_len = 0; Cstring[Cstring_len] != 0; ++Cstring_len) {
         /* Empty Body */
@@ -189,7 +185,7 @@ typedef struct Strings { const Long cap; Long len; String *data; } Strings;
 #ifdef stdout
 // stdio.h
 
-_proc_inlined string_print(String str) {
+_proc string_print(String str) {
     printf("%.*s", (Int) str.len, str.data);
 }
 
@@ -197,7 +193,7 @@ _proc_inlined string_print(String str) {
 
 #endif
 
-_pure Int string_compare(const String str1, const String str2) {
+_fun Int string_compare(const String str1, const String str2) {
     Long i = 0;
 
     Ccstr ccstr1 = str1.data, ccstr2 = str2.data;
@@ -210,7 +206,7 @@ _pure Int string_compare(const String str1, const String str2) {
     return (Int)(ccstr1[i] - ccstr2[i]);
 }
 
-_pure Bool startswith(const String string, const String prefix) {
+_fun Bool startswith(const String string, const String prefix) {
     Long i = 0;
 
     Ccstr Ccstring = string.data, ccprefix = prefix.data;
@@ -254,11 +250,11 @@ _fun Int string_voidcompare(const void * a, const void * b) {
     return string_compare(*(const String*)a, *(const String*)b);
 }
 
-_math Bool is_digit(const Char character) {
+_fun Bool is_digit(const Char character) {
     return character >= '0' && character <= '9';
 }
 
-_pure Long char_pos(const Char letter, const String string) {
+_fun Long char_pos(const Char letter, const String string) {
     Long lenstring = string.len;
     Ccstr Ccstring = string.data;
 
@@ -270,11 +266,11 @@ _pure Long char_pos(const Char letter, const String string) {
 
     return -1;
 }
-_fun_inlined Bool char_in_(const Char letter, const String string) {
+_fun Bool char_in_(const Char letter, const String string) {
     return (Bool) (char_pos(letter, string) != -1);
 }
 
-_pure Long char_pos_in_sub(const Char letter, const String string, const Int start, const Int count) {
+_fun Long char_pos_in_sub(const Char letter, const String string, const Int start, const Int count) {
     Long lenstring = string.len;
     Ccstr Ccstring = string.data;
 
@@ -286,7 +282,7 @@ _pure Long char_pos_in_sub(const Char letter, const String string, const Int sta
 
     return -1;
 }
-_fun_inlined Bool char_in_sub_(const Char letter, const String string, int start, int count) {
+_fun Bool char_in_sub_(const Char letter, const String string, int start, int count) {
     return (Bool) (char_pos_in_sub(letter, string, start, count) != -1);
 }
 
@@ -318,12 +314,12 @@ _proc to_lines_base(Strings *dest_lines, String src_text, Bool include_empty_lin
 }
 
 // Returns the non-empty lines in a String
-_proc_inlined to_lines(Strings *dest_lines, String src_text) {
+_proc to_lines(Strings *dest_lines, String src_text) {
     to_lines_base(dest_lines, src_text, False);
 }
 
 // Returns the lines in a String, including empty ones
-_proc_inlined to_lines_including_empty(Strings *dest_lines, String src_text) {
+_proc to_lines_including_empty(Strings *dest_lines, String src_text) {
     to_lines_base(dest_lines, src_text, True);
 }
 
@@ -371,16 +367,16 @@ _proc buffer_append(Buffer *dst, const String src) {
 #define max_(number1_, number2_) ((number1_) > (number2_) ? (number1_) : (number2_))
 
 // bitmask for optimized Mod for power 2 numbers
-_math Long mod_pwr2(Long number, Long modval) {
+_fun Long mod_pwr2(Long number, Long modval) {
     return (number) & (modval - 1);
 }
 
-_math Long greatest_common_divisor(Long m, Long n) {
+_fun Long greatest_common_divisor(Long m, Long n) {
     Long tmp;
     while(m) { tmp = m; m = n % m; n = tmp; }       
     return n;
 }
-_fun_inlined Long least_common_multiple(Long m, Long n) {
+_fun Long least_common_multiple(Long m, Long n) {
      return m / greatest_common_divisor(m, n) * n;
 }
 
@@ -398,7 +394,7 @@ _fun_inlined Long least_common_multiple(Long m, Long n) {
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
 
-_pure int rnd(unsigned Long seed[1]) {
+_fun int rnd(unsigned Long seed[1]) {
     int shift = 29;
     *seed = *seed * Rnd_mult_n + Rnd_sum_n;
     shift -= (int)(*seed >> 61);
@@ -417,7 +413,7 @@ _pure int rnd(unsigned Long seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_pure unsigned Long hash_cstr(Ccstr str) {
+_fun unsigned Long hash_cstr(Ccstr str) {
     unsigned Long h = Hash_start_n;
     
     for(Long i = 0; str[i]; ++i) { 
@@ -428,7 +424,7 @@ _pure unsigned Long hash_cstr(Ccstr str) {
     return h >> 1;
 }
 
-_pure unsigned Long hash_string(String text) {
+_fun unsigned Long hash_string(String text) {
     Ccstr str = text.data;
     Long str_len = text.len;
 
@@ -445,7 +441,7 @@ _pure unsigned Long hash_string(String text) {
 #define Hash_mul_n1 0x94d049bb133111eb
 #define Hash_mul_n2 0xbf58476d1ce4e5b9
 
-_math unsigned Long hash_int(Long integer64) {
+_fun unsigned Long hash_int(Long integer64) {
     unsigned Long x = (unsigned Long)integer64;
     
     x *= Hash_mul_n1; 
@@ -468,7 +464,7 @@ _math unsigned Long hash_int(Long integer64) {
 #define Ht_shift  (64 - Ht_exp)
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
-_math int ht_lookup(
+_fun int ht_lookup(
     unsigned Long hash, // 1st hash acts as base location
     int index // 2nd "hash" steps over the "list of elements" from base-location
 )
@@ -624,13 +620,13 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 //     return fsize;
 // }
 
-// _fun_inlined int file_to_lines(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+// _fun int file_to_lines(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
 //     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
 //     (void) charbuffer_len;
 //     return into_lines(charbuffer, lines_cap, lines);
 // }
 
-// _fun_inlined int file_to_lines_including_empty(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
+// _fun int file_to_lines_including_empty(Ccstr filename, const int lines_cap, Mstr lines[2], const Long charbuffer_cap, char charbuffer[2]) {
 //     Long charbuffer_len = file_to_cstring(filename, charbuffer_cap, charbuffer);
 //     (void) charbuffer_len;
 //     return into_lines_including_empty(charbuffer, lines_cap, lines);
@@ -684,7 +680,7 @@ _gcc_attr(always_inline, warn_unused_result) int big_in_ht_(Big key, Big keys[HT
 #ifdef CLOCKS_PER_SEC 
 // time.h
 
-_fun_inlined double seconds_since(clock_t start)
+_fun double seconds_since(clock_t start)
 {
     return (double)(clock() - start) / CLOCKS_PER_SEC;
 }
@@ -695,7 +691,7 @@ _fun_inlined double seconds_since(clock_t start)
 #if defined CLOCKS_PER_SEC && defined stdout 
 // time.h && stdio.h
 
-_proc_inlined print_clock(clock_t start) {
+_proc print_clock(clock_t start) {
     printf("\n\nExecuted in %f seconds \n", seconds_since(start));
 }
 

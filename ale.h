@@ -467,10 +467,10 @@ _fun unsigned Long hash_int(Long integer64) {
     ==================== HASH TABLE ====================
 */
 
-#define Ht_exp 18
-#define HT_CAP    262144 //   2 ^ Ht_exp
-#define Ht_mask   (HT_CAP - 1)
-#define Ht_shift  (64 - Ht_exp)
+#define Ht_exp 15
+#define HT_CAP    32768 //   2 ^ Ht_exp
+#define Ht_mask   32767 //  (HT_CAP - 1)
+#define Ht_shift  49 //  (64 - Ht_exp)
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
 _fun int ht_lookup(

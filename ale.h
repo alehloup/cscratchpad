@@ -472,6 +472,8 @@ _fun unsigned Long hash_int(Long integer64) {
 #define Ht_mask   32767 //  (HT_CAP - 1)
 #define Ht_shift  49 //  (64 - Ht_exp)
 
+// Fazer hash table considerando 1 vetor de entries (key, val). Talvez (filled, key, val) e usar filled para indicar que não tá vazio?
+
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
 _fun int ht_lookup(
     unsigned Long hash, // 1st hash acts as base location

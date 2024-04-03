@@ -17,7 +17,7 @@ _proc test_buffers(void) {
 
 _proc test_to_lines(void) {
     String text = S("Alessandro \n Luiz\n Stamatto \n Ferreira");
-    String blines[256] = {S("")};
+    String blines[256];
     Strings lines = A(blines);
 
     to_lines(&lines, text);

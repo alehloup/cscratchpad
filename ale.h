@@ -133,7 +133,7 @@ _typedef_structarray(Doubles, Double);
 #define _new_array(varname, typename, capacity) \
     typename varname##_base[capacity]; \
     typename##s varname = A(varname##_base)
-//  just for convenience, there must be an Array type of the typename##s (like Char -> Chars)
+//  creates a local struct array, there must be a base Array of type typename##s (like Char -> Chars)
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
@@ -539,14 +539,18 @@ _proc file_to_buffer(String filename, Buffer *dest_buffer) {
 }
 
 _proc file_to_lines(String filename, Strings *dest_lines, Buffer *dest_buffer) {
+    String src_text;
     file_to_buffer(filename, dest_buffer);
-    String src_text = {dest_buffer->len, dest_buffer->data};
+    src_text.len = dest_buffer->len; 
+    src_text.data = dest_buffer->data;
     to_lines(dest_lines, src_text);
 }
 
 _proc file_to_lines_including_empty(String filename, Strings *dest_lines, Buffer *dest_buffer) {
+    String src_text;
     file_to_buffer(filename, dest_buffer);
-    String src_text = {dest_buffer->len, dest_buffer->data};
+    src_text.len = dest_buffer->len; 
+    src_text.data = dest_buffer->data;
     to_lines_including_empty(dest_lines, src_text);
 }
 

@@ -30,7 +30,7 @@ _proc test_to_lines(void) {
 
 _proc test_split(void) {
     String text = S("Alessandro  Luiz Stamatto  Ferreira");
-    String bwords[256] = {S("")};
+    String bwords[256];
     Strings words = A(bwords);
 
     split(&words, text, ' ');

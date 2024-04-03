@@ -1,0 +1,4 @@
+eval "$(ssh-agent -s)"
+ssh-add /data/data/com.termux/files/home/.ssh/id_alehloup
+alias r='~/cscratchpad/r' $1
+cd ~/cscratchpad/

@@ -117,7 +117,7 @@ _proc memozero(void *any_element, Long sz) {
     ARRAYS
 */
 //
-#define _structarray(element_type) { const Long cap; Long len; element_type *data; }
+#define _structarray(element_type) { const Long cap; Long len; element_type *elements; }
 
 #define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name
 _typedef_structarray(Chars,   Char);
@@ -127,7 +127,7 @@ _typedef_structarray(Floats,  Float);
 _typedef_structarray(Doubles, Double);
 
 #define A(base_static_array) \
-    { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*data:*/ base_static_array }
+    { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*elements:*/ base_static_array }
 //  remove 1 capacity to make the array "zero" terminated (if zero alocated)
 
 #define _new_array(varname, typename, capacity) \
@@ -137,11 +137,11 @@ _typedef_structarray(Doubles, Double);
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
-    (mut_array)->data[(mut_array)->len++] = (new_element)
+    (mut_array)->elements[(mut_array)->len++] = (new_element)
 
 #define _delidx(mut_array, idx_to_del) \
     assert((mut_array)->len > 0 && "Array Underflow"); \
-    (mut_array)->data[idx_to_del] = (mut_array)->data[--(mut_array)->len]
+    (mut_array)->elements[idx_to_del] = (mut_array)->elements[--(mut_array)->len]
 
 #define _isempty(container_with_len) ((Bool) container_with_len.len == 0)
 
@@ -149,7 +149,7 @@ _typedef_structarray(Doubles, Double);
 // stdlib.h
 //
 #define _sort(ptr_array_of_things, sort_function) \
-     qsort(ptr_array_of_things, ptr_array_of_things->len, sizeof(ptr_array_of_things->data[0]), sort_function)
+     qsort(ptr_array_of_things, ptr_array_of_things->len, sizeof(ptr_array_of_things->elements[0]), sort_function)
 
 // stdlib.h
 #endif // RAND_MAX
@@ -162,10 +162,10 @@ _typedef_structarray(Doubles, Double);
 //
 typedef Chars Bytes;
 typedef Chars Buffer;
-typedef struct String { Long len; Cstr data; } String;
+typedef struct String { Long len; Cstr text; } String;
 
-typedef struct Buffers { const Long cap; Long len; Buffer *data; } Buffers;
-typedef struct Strings { const Long cap; Long len; String *data; } Strings;
+typedef struct Buffers { const Long cap; Long len; Buffer *elements; } Buffers;
+typedef struct Strings { const Long cap; Long len; String *elements; } Strings;
 
 _fun Long Cstrlen(Ccstr Cstring) {
     Long Cstring_len;
@@ -181,7 +181,7 @@ _fun Long Cstrlen(Ccstr Cstring) {
 // stdio.h
 
 _proc string_print(String str) {
-    printf("%.*s", (Int) str.len, str.data);
+    printf("%.*s", (Int) str.len, str.text);
 }
 
 #define printn printf("\n")
@@ -192,7 +192,7 @@ _proc string_print(String str) {
 _fun Int string_compare(const String str1, const String str2) {
     Long i = 0;
 
-    Ccstr ccstr1 = str1.data, ccstr2 = str2.data;
+    Ccstr ccstr1 = str1.text, ccstr2 = str2.text;
     Long len1 = str1.len, len2 = str2.len;
 
     for (i = 0; i < len1 and i < len2 and ccstr1[i] == ccstr2[i]; ++i) {
@@ -208,7 +208,7 @@ _fun Int string_voidcompare(const void * a, const void * b) {
 _fun Bool startswith(const String string, const String prefix) {
     Long i = 0;
 
-    Ccstr Ccstring = string.data, ccprefix = prefix.data;
+    Ccstr Ccstring = string.text, ccprefix = prefix.text;
     Long lenstring = string.len, lenprefix = prefix.len;
 
     if (_isempty(prefix)) {
@@ -232,13 +232,13 @@ _fun Bool startswith(const String string, const String prefix) {
 _fun String trim(String str) {
     Long i = 0;
 
-    for (/* i = 0 */; i < str.len and str.data[i] <= ' '; ++i) {
+    for (/* i = 0 */; i < str.len and str.text[i] <= ' '; ++i) {
         --str.len;
     }
 
-    str.data = &str.data[i];
+    str.text = &str.text[i];
 
-    for (i = str.len - 1; i >= 0 and str.data[i] <= ' '; --i) {
+    for (i = str.len - 1; i >= 0 and str.text[i] <= ' '; --i) {
         --str.len;
     }
 
@@ -251,7 +251,7 @@ _fun Bool is_digit(const Char character) {
 
 _fun Long char_pos(const Char letter, const String string) {
     Long lenstring = string.len;
-    Ccstr Ccstring = string.data;
+    Ccstr Ccstring = string.text;
 
     for (int letter_pos = 0; letter_pos < lenstring; ++letter_pos) {
         if(Ccstring[letter_pos] == letter) {
@@ -267,7 +267,7 @@ _fun Bool char_in_(const Char letter, const String string) {
 
 _fun Long char_pos_in_sub(const Char letter, const String string, const Int start, const Int count) {
     Long lenstring = string.len;
-    Ccstr Ccstring = string.data;
+    Ccstr Ccstring = string.text;
 
     for (int letter_pos = start, i = 0; i < lenstring and i < count; ++letter_pos, ++i) {
         if(Ccstring[letter_pos] == letter) {
@@ -286,7 +286,7 @@ _proc to_lines_base(Strings *dest_lines, String src_text, Bool include_empty_lin
     Bool not_empty = False;
     Long current = 0;
     
-    Ccstr text = src_text.data;
+    Ccstr text = src_text.text;
     for (Long i = 0; i < src_text.len; ++i) {
         not_empty = not_empty or text[i] > 32;
 
@@ -322,7 +322,7 @@ _proc split(Strings *dest_words, String src_text, char splitter) {
     Bool not_empty = False;
     int i = 0, current = 0;
     
-    Ccstr text = src_text.data;
+    Ccstr text = src_text.text;
 
     for (i = 0; i < src_text.len; ++i) {
         not_empty = not_empty or text[i] > 32;
@@ -347,8 +347,8 @@ _proc split(Strings *dest_words, String src_text, char splitter) {
 _proc buffer_set(Buffer *dst, const String src) {
     Long i = 0;
     Long capdst = dst->cap, lensrc = src.len, lendst = dst->len;
-    Ccstr ccsrc = src.data;
-    Mstr databuffer = dst->data;
+    Ccstr ccsrc = src.text;
+    Mstr databuffer = dst->elements;
 
     assert(lensrc <= capdst and "stringcpy: Buffer would overflow!");
 
@@ -366,8 +366,8 @@ _proc buffer_set(Buffer *dst, const String src) {
 
 _proc buffer_append(Buffer *dst, const String src) {
     Long begin = dst->len, lensrc = src.len, capdst = dst->cap;
-    Ccstr ccsrc = src.data;
-    Mstr databuffer = dst->data;
+    Ccstr ccsrc = src.text;
+    Mstr databuffer = dst->elements;
 
     assert(lensrc <= capdst and "append_string_to_buffer: Buffer would overflow!");
 
@@ -434,7 +434,7 @@ _fun unsigned Long hash_cstr(Ccstr str) {
 }
 
 _fun unsigned Long hash_string(String text) {
-    Ccstr str = text.data;
+    Ccstr str = text.text;
     Long str_len = text.len;
 
     unsigned Long h = Hash_start_n;
@@ -517,7 +517,7 @@ _proc file_to_buffer(String filename, Buffer *dest_buffer) {
     Long fsize = 0;
 
         FILE *f =  
-    fopen(filename.data, "rb");
+    fopen(filename.text, "rb");
     
         assert(f && "Could not open file for reading");
     
@@ -528,10 +528,10 @@ _proc file_to_buffer(String filename, Buffer *dest_buffer) {
         assert(dest_buffer->cap >= fsize+2 && "buffer is not enough for file size");
 
         {
-            Long bytesread = (Long) fread(dest_buffer->data, 1LL, (unsigned Long)fsize, f);
+            Long bytesread = (Long) fread(dest_buffer->elements, 1LL, (unsigned Long)fsize, f);
             assert(bytesread == fsize && "could not read fsize#bytes"); 
             
-            dest_buffer->data[fsize] = '\0';
+            dest_buffer->elements[fsize] = '\0';
             dest_buffer->len = fsize;
         }
 
@@ -542,7 +542,7 @@ _proc file_to_lines(String filename, Strings *dest_lines, Buffer *dest_buffer) {
     String src_text;
     file_to_buffer(filename, dest_buffer);
     src_text.len = dest_buffer->len; 
-    src_text.data = dest_buffer->data;
+    src_text.text = dest_buffer->elements;
     to_lines(dest_lines, src_text);
 }
 
@@ -550,17 +550,17 @@ _proc file_to_lines_including_empty(String filename, Strings *dest_lines, Buffer
     String src_text;
     file_to_buffer(filename, dest_buffer);
     src_text.len = dest_buffer->len; 
-    src_text.data = dest_buffer->data;
+    src_text.text = dest_buffer->elements;
     to_lines_including_empty(dest_lines, src_text);
 }
 
 _proc string_to_file(String filename, String src_text) {
         FILE *f =  
-    fopen(filename.data, "wb");
+    fopen(filename.text, "wb");
 
         assert(f && "Could not open file for writting");
         {
-            Long bytes_written = (Long) fwrite(src_text.data, 1, (unsigned Long)src_text.len, f);
+            Long bytes_written = (Long) fwrite(src_text.text, 1, (unsigned Long)src_text.len, f);
             assert(bytes_written == src_text.len && "could not write buffer_len#bytes");
         }
 
@@ -569,13 +569,13 @@ _proc string_to_file(String filename, String src_text) {
 
 _proc lines_to_file(String filename, Strings lines) {
         FILE *f =  
-    fopen(filename.data, "wb");
+    fopen(filename.text, "wb");
 
         assert(f && "Could not open file for writting");
         {
             for (int i = 0; i < lines.len; ++i) {
-                String line = lines.data[i];
-                Long bytes_written = (Long) fwrite(line.data, 1, (unsigned Long)line.len, f);
+                String line = lines.elements[i];
+                Long bytes_written = (Long) fwrite(line.text, 1, (unsigned Long)line.len, f);
                 bytes_written += (Long) fwrite("\n", 1, 1, f);
                 assert(bytes_written == line.len + 1 && "could not write line_len#bytes");
             }

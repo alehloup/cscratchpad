@@ -12,7 +12,7 @@ _proc test_buffers(void) {
 
     buffer_set(&buff, S("Woa"));
 
-    printf("%s |%lld| \n", buff.data, buff.len);
+    printf("%s |%lld| \n", buff.elements, buff.len);
 }
 
 _proc test_to_lines(void) {
@@ -52,19 +52,19 @@ _proc test_memoset(void) {
     Long x = 5;
     String s = S("Alessandro");
 
-    printf("Antes: %lld %s|%lld \n", x, s.data, s.len);
+    printf("Antes: %lld %s|%lld \n", x, s.text, s.len);
 
     memozero(&x, sizeof(x));
     memozero(&s, sizeof(s));
 
-    printf("Depois: %lld %s|%lld \n", x, s.data, s.len);
+    printf("Depois: %lld %s|%lld \n", x, s.text, s.len);
 }
 
 _proc test_fileread(void) {
     _new_array(b, Byte, 2048);
     file_to_buffer(S("commands.txt"), &b);
 
-    printf("|%lld|\n%s\n", b.len, b.data);
+    printf("|%lld|\n%s\n", b.len, b.elements);
 }
 
 _proc test_fileread_to_lines(void) {
@@ -74,7 +74,7 @@ _proc test_fileread_to_lines(void) {
     file_to_lines(S("commands.txt"), &lines, &b);
 
     for (Long i = 0; i < lines.len; ++i) {
-        printf("%lld: ", i); string_print(lines.data[i]); printn;
+        printf("%lld: ", i); string_print(lines.elements[i]); printn;
     }
 
     lines_to_file(S("linhas.txt"), lines);

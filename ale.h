@@ -131,7 +131,7 @@ _typedef_structarray(Doubles, Double);
 //  remove 1 capacity to make the array "zero" terminated (if zero alocated)
 
 #define _new_array(varname, typename, capacity) \
-    typename varname##_base[capacity]; \
+    typename varname##_base[(capacity)]; \
     typename##s varname = A(varname##_base)
 //  creates a local struct array, there must be a base Array of type typename##s (like Char -> Chars)
 
@@ -449,60 +449,58 @@ _fun unsigned Long long_hash(Long integer64) {
     
     return x >> 1;
 }
+
+// Mask-Step-Index (MSI) lookup. Returns the next index. 
+_fun Int ht_lookup(
+    unsigned Long hash, // 1st hash acts as base location
+    Int index, // 2nd "hash" steps over the "list of elements" from base-location
+    Int exp // power-2 exp used as the Hash Table capacity
+) {
+    unsigned Int step = (unsigned Int)(hash >> (64 - exp)) | 1;
+    Int idx = (Int) (((unsigned Int)index + step) & ((unsigned Int) ((1 << exp) - 1)));
+    return idx;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
     ==================== HASH TABLE ====================
 */
-
-#define HT_EXP          15
-#define HT_CAP    (1 << HT_EXP)
-#define HT_MASK   (HT_CAP - 1)
-#define HT_SHIFT  (64 - HT_EXP)
-
-#define _structentry(key_type, val_type) { const key_type key; val_type value; }
+//
+#define _structentry(key_type, val_type) { key_type key; val_type value; }
 
 #define _typedef_structentry(type_name, key_type, val_type) typedef struct type_name _structentry(key_type, val_type) type_name
-_typedef_structentry(String_String, String, String);
-_typedef_structentry(String_Long,   String, Long);
-_typedef_structentry(Long_Long,     Long, Long);
-_typedef_structentry(Long_String,   Long, String);
+_typedef_structentry(Long_Long,   Long, Long);
+_typedef_structentry(String_Long, String, Long);
 
-//A Hash Table is just an Array of entries, defining them for Long and String:
-_typedef_structarray(Ht_String_String, String_String);
-_typedef_structarray(Ht_String_Long,   String_Long);
-_typedef_structarray(Ht_Long_Long,     Long_Long);
-_typedef_structarray(Ht_Long_String,   Long_String);
+//A Hash Table is just an Array of entries that map Type to a Long, defining them for Long and String:
+_typedef_structarray(Long_Longs,     Long_Long);
+_typedef_structarray(String_Longs,   String_Long);
 
-
-// Mask-Step-Index (MSI) lookup. Returns the next index. 
-_fun Int ht_lookup(
-    unsigned Long hash, // 1st hash acts as base location
-    Int index // 2nd "hash" steps over the "list of elements" from base-location
-) {
-    unsigned Int step = (unsigned Int)(hash >> HT_SHIFT) | 1;
-    Int idx = (Int) (((unsigned Int)index + step) & HT_MASK);
-    return idx;
+Int ht_get_exp(Long_Longs haystack) {
+    Long true_cap = haystack.cap + 1;
+    switch (true_cap) {
+        case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
+        case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
+        case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
+        case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
+        default: assert(False and "Not a power-2 in range 10 <= exp <= 21"); return 0;
+    }
 }
 
-#define ht_long_pos_of(pos_var, search_key, entries_haystack) \
-    do { \
-        unsigned Long pos_var##_hash = long_hash(search_key); \
-        pos_var = ht_lookup(pos_var##_hash, (Int) pos_var##_hash); \
-        while (entries_haystack.elements[i].key != 0 \
-         and (pos_var == 0 or search_key != entries_haystack.elements[i].key)) \
-            pos_var = ht_lookup(pos_var##_hash, pos_var); \
-    } while (true)
+Int ht_long_long_pos_of(Long search_key, Long_Longs haystack) {
+    Long_Long *elements = haystack.elements;
 
-#define ht_string_pos_of(pos_var, search_key, entries_haystack) \
-    do { \
-        unsigned Long pos_var##_hash = string_hash(search_key); \
-        pos_var = ht_lookup(pos_var##_hash, (Int) pos_var##_hash); \
-        while (entries_haystack.elements[i].key.len != 0 \
-         and (pos_var == 0 or memocmp(search_key, entries_haystack.elements[i].key) != 0)) \
-            pos_var = ht_lookup(pos_var##_hash, pos_var); \
-    } while (true)
+    Int exp = ht_get_exp(haystack);    
+    unsigned Long h = long_hash(search_key);
+    Int pos = ht_lookup(h, (Int) h, exp);
+
+    while (elements[pos].key != 0 and (pos == 0 or search_key != elements[pos].key)) {
+        pos = ht_lookup(h, pos, exp);
+    }
+
+    return pos;
+}
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 

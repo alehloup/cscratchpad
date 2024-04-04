@@ -422,18 +422,7 @@ _fun int rnd(unsigned Long seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_fun unsigned Long hash_cstr(Ccstr str) {
-    unsigned Long h = Hash_start_n;
-    
-    for(Long i = 0; str[i]; ++i) { 
-        h ^= str[i] & 255; h *= Hash_mul_n;
-    }
-    h = Hash_shift_mix(h);
-
-    return h >> 1;
-}
-
-_fun unsigned Long hash_string(String text) {
+_fun unsigned Long string_hash(String text) {
     Ccstr str = text.text;
     Long str_len = text.len;
 
@@ -450,7 +439,7 @@ _fun unsigned Long hash_string(String text) {
 #define Hash_mul_n1 0x94d049bb133111eb
 #define Hash_mul_n2 0xbf58476d1ce4e5b9
 
-_fun unsigned Long hash_int(Long integer64) {
+_fun unsigned Long int_hash(Long integer64) {
     unsigned Long x = (unsigned Long)integer64;
     
     x *= Hash_mul_n1; 
@@ -487,7 +476,7 @@ _fun int ht_lookup(
 
 // Returns +idx if the key was in keys, -idx if was not. If keys_len_ref is passed (is not null) it will insert the key.  
 _gcc_attr(always_inline, warn_unused_result) int int_in_ht_(int key, int keys[HT_CAP], int *keys_len_ref) {
-    unsigned Long h = hash_int(key);
+    unsigned Long h = int_hash(key);
     int i = ht_lookup(h, (int)h);
     int found = False;
 
@@ -538,20 +527,22 @@ _proc file_to_buffer(String filename, Buffer *dest_buffer) {
     fclose(f);
 }
 
-_proc file_to_lines(String filename, Strings *dest_lines, Buffer *dest_buffer) {
+_fun String file_to_string(String filename, Buffer *dest_buffer) {
     String src_text;
+    
     file_to_buffer(filename, dest_buffer);
     src_text.len = dest_buffer->len; 
     src_text.text = dest_buffer->elements;
-    to_lines(dest_lines, src_text);
+    
+    return src_text;
+}
+
+_proc file_to_lines(String filename, Strings *dest_lines, Buffer *dest_buffer) {
+    to_lines(dest_lines, file_to_string(filename, dest_buffer));
 }
 
 _proc file_to_lines_including_empty(String filename, Strings *dest_lines, Buffer *dest_buffer) {
-    String src_text;
-    file_to_buffer(filename, dest_buffer);
-    src_text.len = dest_buffer->len; 
-    src_text.text = dest_buffer->elements;
-    to_lines_including_empty(dest_lines, src_text);
+    to_lines_including_empty(dest_lines, file_to_string(filename, dest_buffer));
 }
 
 _proc string_to_file(String filename, String src_text) {

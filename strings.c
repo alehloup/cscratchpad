@@ -3,7 +3,7 @@
 
 _proc test_buffers(void) {
     String string = S("Alessandro");
-    char bdata[256] = {0};
+    char bdata[256] = ZERO_INIT;
     Buffer buff = A(bdata);
 
     buffer_append(&buff, string);
@@ -17,7 +17,7 @@ _proc test_buffers(void) {
 
 _proc test_to_lines(void) {
     String text = S("Alessandro \n Luiz\n Stamatto \n Ferreira");
-    String blines[256];
+    String blines[256] = ZERO_INIT;
     Strings lines = A(blines);
 
     to_lines(&lines, text);
@@ -30,7 +30,7 @@ _proc test_to_lines(void) {
 
 _proc test_split(void) {
     String text = S("Alessandro  Luiz Stamatto  Ferreira");
-    String bwords[256];
+    String bwords[256] = ZERO_INIT;
     Strings words = A(bwords);
 
     split(&words, text, ' ');
@@ -54,8 +54,8 @@ _proc test_memoset(void) {
 
     printf("Antes: %lld %s|%lld \n", x, s.text, s.len);
 
-    memozero(&x, sizeof(x));
-    memozero(&s, sizeof(s));
+    x = ZERO_VAL(Long); //memozero(&x, sizeof(x));
+    s = ZERO_VAL(typeof(s)); //memozero(&s, sizeof(s));
 
     printf("Depois: %lld %s|%lld \n", x, s.text, s.len);
 }

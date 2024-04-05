@@ -11,7 +11,7 @@ int main(int argc, Ccstr*argv) {
     
     shellrun(
         " gcc"
-        " -Ofast -march=native -static-pie -flto"
+        " -std=gnu2x -Ofast -march=native -static-pie -flto"
         " -D_FORTIFY_SOURCE=3 -g3 -fcf-protection=full -fstack-protector-strong -ftrivial-auto-var-init=zero"
         " -Wall -Wextra -Wpedantic -Werror -fsanitize-trap -fsanitize=undefined -fanalyzer"
         " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"

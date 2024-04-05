@@ -12,8 +12,9 @@ int main(int argc, Mstr *argv) {
     shellrun(
         "msvc"
         " && clang" 
-        " -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero"
-        " -Weverything -Werror -fsanitize-trap -fsanitize=undefined -Wno-unsafe-buffer-usage -Wno-unused-function"
+        " -std=gnu2x -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero"
+        " -Weverything -Werror -fsanitize-trap -fsanitize=undefined" 
+        " -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage -Wno-unused-function -Wno-declaration-after-statement"
         " -D_CRT_SECURE_NO_WARNINGS"
         " %s -o \"./%s.exe\"" 
         " && \"./%s.exe\""

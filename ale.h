@@ -70,13 +70,16 @@ typedef char * Mstr; // modifiable Cstr
     #define or ||
     #define not !
 
-    //stupid C++ does not accept (type) before brace struct
     #define _struct(Type) (Type)
+    #define ZERO_INIT {0}
 #endif // not __cplusplus
 #ifdef __cplusplus
-    //stupid C++ does not accept (type) before brace struct
-    #define _struct(Type)
+
+    #define _struct(Type) //C++ does not accept compund literal
+    #define ZERO_INIT {} //C++ uses empty braces
 #endif // __cplusplus
+
+#define ZERO_VAL(Type) _struct(Type) ZERO_INIT
 //  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -131,7 +134,7 @@ _typedef_structarray(Doubles, Double);
 //  remove 1 capacity to make the array "zero" terminated (if zero alocated)
 
 #define _new_array(varname, typename, capacity) \
-    typename varname##_base[(capacity)]; \
+    typename varname##_base[(capacity)] = ZERO_INIT; \
     typename##s varname = A(varname##_base)
 //  creates a local struct array, there must be a base Array of type typename##s (like Char -> Chars)
 
@@ -477,18 +480,18 @@ _typedef_structentry(String_Long, String, Long);
 _typedef_structarray(Long_Longs,     Long_Long);
 _typedef_structarray(String_Longs,   String_Long);
 
-Int ht_get_exp(Long_Longs haystack) {
+_fun Int ht_get_exp(Long_Longs haystack) {
     Long true_cap = haystack.cap + 1;
     switch (true_cap) {
         case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
         case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
         case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
-        default: assert(False and "Not a power-2 in range 10 <= exp <= 21"); return 0;
+        default: assert(true_cap == 52 and "Not a power-2 in range 10 <= exp <= 21"); return 0;
     }
 }
 
-Int ht_long_long_pos_of(Long search_key, Long_Longs haystack) {
+_fun Int ht_long_long_pos_of(Long search_key, Long_Longs haystack) {
     Long_Long *elements = haystack.elements;
 
     Int exp = ht_get_exp(haystack);    
@@ -628,14 +631,14 @@ _proc print_clock(clock_t start) {
 #define shellrun_buffer_cap 512
 
 _gcc_attr(format(printf, 1, 2), nonnull)
-int shellrun(Ccstr format, ...) {
+Int shellrun(Ccstr format, ...) {
     va_list args;
  
     char buffer [shellrun_buffer_cap] = {0};
 
     va_start(args, format);
 
-    vprint_sf(buffer, format, args);
+    vsprintf(buffer, format, args);
     printf("\n");
     vprintf(format, args);
     printf("\n");

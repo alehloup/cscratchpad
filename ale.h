@@ -423,6 +423,23 @@ _fun unsigned Long long_hash(Long integer64) {
     return x >> 1;
 }
 
+//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
+
+
+/*
+    ==================== HASH TABLE ====================
+*/
+//
+_fun Int array_cap_to_exp(Long cap) {
+    switch (cap + 1) {
+        case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
+        case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
+        case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
+        case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
+        default: assert(cap == 52 and "Not a power-2 in range 10 <= exp <= 21"); return 0;
+    }
+}
+
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
 _fun Int ht_lookup(
     unsigned Long hash, // 1st hash acts as base location
@@ -433,42 +450,29 @@ _fun Int ht_lookup(
     Int idx = (Int) (((unsigned Int)index + step) & ((unsigned Int) ((1 << exp) - 1)));
     return idx;
 }
-//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
 
+_fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
+    Long *elements = haystack_keys.elements;
 
-/*
-    ==================== HASH TABLE ====================
-*/
-//
-#define _structentry(key_type, val_type) { key_type key; val_type value; }
-
-#define _typedef_structentry(type_name, key_type, val_type) typedef struct type_name _structentry(key_type, val_type) type_name
-_typedef_structentry(Long_Long,   Long, Long);
-_typedef_structentry(String_Long, String, Long);
-
-//A Hash Table is just an Array of entries that map Type to a Long, defining them for Long and String:
-_typedef_structarray(Long_Longs,     Long_Long);
-_typedef_structarray(String_Longs,   String_Long);
-
-_fun Int ht_get_exp(Long_Longs haystack) {
-    Long true_cap = haystack.cap + 1;
-    switch (true_cap) {
-        case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
-        case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
-        case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
-        case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
-        default: assert(true_cap == 52 and "Not a power-2 in range 10 <= exp <= 21"); return 0;
-    }
-}
-
-_fun Int ht_long_long_pos_of(Long search_key, Long_Longs haystack) {
-    Long_Long *elements = haystack.elements;
-
-    Int exp = ht_get_exp(haystack);    
+    Int exp = array_cap_to_exp(haystack_keys.cap);    
     unsigned Long h = long_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
-    while (elements[pos].key != 0 and (pos == 0 or search_key != elements[pos].key)) {
+    while (elements[pos] != 0 and (pos == 0 or search_key != elements[pos])) {
+        pos = ht_lookup(h, pos, exp);
+    }
+
+    return pos;
+}
+
+_fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
+    String *elements = haystack_keys.elements;
+
+    Int exp = array_cap_to_exp(haystack_keys.cap);    
+    unsigned Long h = string_hash(search_key);
+    Int pos = ht_lookup(h, (Int) h, exp);
+
+    while (elements[pos].len != 0 and (pos == 0 or string_cmp(search_key, elements[pos]) != 0)) {
         pos = ht_lookup(h, pos, exp);
     }
 

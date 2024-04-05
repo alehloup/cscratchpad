@@ -103,10 +103,10 @@ _typedef_structarray(Doubles, Double);
     { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*elements:*/ base_static_array }
 //  remove 1 capacity to make the array "zero" terminated (if zero alocated)
 
+//  creates local structarray using a base Array of type typename##s (like Char -> Chars)
 #define _new_array(varname, typename, capacity) \
     typename varname##_base[(capacity)] = ZERO_INIT; \
     typename##s varname = A(varname##_base)
-//  creates a local struct array, there must be a base Array of type typename##s (like Char -> Chars)
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
@@ -373,10 +373,6 @@ _fun Long greatest_common_divisor(Long m, Long n) {
 _fun Long least_common_multiple(Long m, Long n) {
      return m / greatest_common_divisor(m, n) * n;
 }
-
-// Next Power of 2 for numbers upto 2*31 (2_147_483_648)
-#define Next_power2(n_) \
-    ((((n_)-1) | (((n_)-1) >> 1) | (((n_)-1) >> 2) | (((n_)-1) >> 4) | (((n_)-1) >> 8) | (((n_)-1) >> 16))+1)
 
 #define Rnd_positive_mask 2147483647
 #define Rnd_mult_n 0x9b60933458e17d7dULL

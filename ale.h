@@ -458,10 +458,22 @@ _fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
     unsigned Long h = long_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
+    assert(search_key != 0 && "this msi keys do not support a Zero Long Key");
+
     while (elements[pos] != 0 and (pos == 0 or search_key != elements[pos])) {
         pos = ht_lookup(h, pos, exp);
     }
 
+    return pos;
+}
+
+_fun Int longs_msi_upsert(Long search_key, Longs *haystack_keys) {
+    Int pos = longs_msi_lookup(search_key, *haystack_keys);
+    if (haystack_keys->elements[pos] != 0) {
+        assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
+        ++haystack_keys->len;
+    }
+    haystack_keys->elements[pos] = search_key;
     return pos;
 }
 
@@ -472,10 +484,22 @@ _fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
     unsigned Long h = string_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
+    assert(search_key.len != 0 && "this msi keys do not support the Empty String Key");
+
     while (elements[pos].len != 0 and (pos == 0 or string_cmp(search_key, elements[pos]) != 0)) {
         pos = ht_lookup(h, pos, exp);
     }
 
+    return pos;
+}
+
+_fun Int strings_msi_upsert(String search_key, Strings *haystack_keys) {
+    Int pos = strings_msi_lookup(search_key, *haystack_keys);
+    if (haystack_keys->elements[pos].len != 0) {
+        assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
+        ++haystack_keys->len;
+    }
+    haystack_keys->elements[pos] = search_key;
     return pos;
 }
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^

@@ -2,8 +2,8 @@
 #include "ale.h"
 
 _proc test_get_exp(void) {
-    _new_array(hash_table, Long_Long, 1 << 21);
-    printf("exp: %d", ht_get_exp(hash_table));
+    _new_array(hash_table, Long, 1 << 21);
+    printf("exp: %d", array_cap_to_exp(hash_table.cap));
 }
 
 int main(void) {

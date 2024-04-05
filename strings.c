@@ -44,7 +44,7 @@ _proc test_split(void) {
 _proc test_string_eq(void) {
     String s1 = S("Alessandro"), s2 = S("Alessandr");
 
-    printf("memocmp: %d\n", memocmp(&s1, &s2, sizeof(s1)));
+    printf("string_cmp: %d\n", string_cmp(s1, s2));
     
 }
 

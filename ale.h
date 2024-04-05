@@ -84,42 +84,12 @@ typedef char * Mstr; // modifiable Cstr
 
 
 /*
-    MEMORY
+    ARRAYS
 */
 //
 #define isizeof(x_element_) ((Long)sizeof(x_element_))
 #define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
 
-_fun Int memocmp(void *any_ele1, void *any_ele2, Long sz) {
-    Long i = 0;
-    char *bytes1 = (char*) any_ele1, *bytes2 = (char*) any_ele2;
-
-    if (sz == 0) {
-        return 0;
-    }
-    --sz;
-
-    for (i = 0; i < sz and bytes1[i] == bytes2[i]; ++i) {
-        /* Empty Body */
-    }
-
-    return (Int)(bytes1[i] - bytes2[i]);
-}
-
-_proc memozero(void *any_element, Long sz) {
-    char *bytes = (char*) any_element;
-
-    for (Long i = 0; i < sz; ++i) {
-        bytes[i] = 0;
-    }
-}
-//  ^^^^^^^^^^^^^^^^^^^^ MEMORY ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    ARRAYS
-*/
-//
 #define _structarray(element_type) { const Long cap; Long len; element_type *elements; }
 
 #define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name
@@ -192,7 +162,7 @@ _proc string_print(String str) {
 // stdio.h
 #endif //stdout
 
-_fun Int string_compare(const String str1, const String str2) {
+_fun Int string_cmp(const String str1, const String str2) {
     Long i = 0;
 
     Ccstr ccstr1 = str1.text, ccstr2 = str2.text;
@@ -204,8 +174,8 @@ _fun Int string_compare(const String str1, const String str2) {
 
     return (Int)(ccstr1[i] - ccstr2[i]);
 }
-_fun Int string_voidcompare(const void * a, const void * b) {
-    return string_compare(*(const String*)a, *(const String*)b);
+_fun Int string_voidcmp(const void * a, const void * b) {
+    return string_cmp(*(const String*)a, *(const String*)b);
 }
 
 _fun Bool startswith(const String string, const String prefix) {

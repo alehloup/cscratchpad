@@ -45,7 +45,8 @@
 #define Char char
 #define Bool int
 #define Int int
-#define Long long long
+typedef long long Long;
+typedef unsigned long long ULong;
 #ifdef __SIZEOF_INT128__
 __extension__ typedef __int128 Big;
 #endif // __SIZEOF_INT128__
@@ -92,21 +93,18 @@ typedef char * Mstr; // modifiable Cstr
 
 #define _structarray(element_type) { const Long cap; Long len; element_type *elements; }
 
-#define _typedef_structarray(type_name, element_type) typedef struct type_name _structarray(element_type) type_name
-_typedef_structarray(Chars,   Char);
-_typedef_structarray(Ints,    Int);
-_typedef_structarray(Longs,   Long);
-_typedef_structarray(Floats,  Float);
-_typedef_structarray(Doubles, Double);
-
-#define A(base_static_array) \
-    { /*cap:*/ arraysizeof(base_static_array) - 1, /*len:*/ 0, /*elements:*/ base_static_array }
-//  remove 1 capacity to make the array "zero" terminated (if zero alocated)
+// Creates a new array type, typename is Element_types, Char -> Chars
+#define _typedef_structarray(element_type) typedef struct element_type##s _structarray(element_type) element_type##s
+_typedef_structarray(Char);
+_typedef_structarray(Int);
+_typedef_structarray(Long);
+_typedef_structarray(Float);
+_typedef_structarray(Double);
 
 //  creates local structarray using a base Array of type typename##s (like Char -> Chars)
 #define _new_array(varname, typename, capacity) \
-    typename varname##_base[(capacity)] = ZERO_INIT; \
-    typename##s varname = A(varname##_base)
+    typename varname##_base[(capacity)+1] = ZERO_INIT; \
+    typename##s varname = { /*cap:*/ arraysizeof(varname##_base) - 1, /*len:*/ 0, /*elements:*/ varname##_base }
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
@@ -378,7 +376,7 @@ _fun Long least_common_multiple(Long m, Long n) {
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
 
-_fun int rnd(unsigned Long seed[1]) {
+_fun int rnd(ULong seed[1]) {
     int shift = 29;
     *seed = *seed * Rnd_mult_n + Rnd_sum_n;
     shift -= (int)(*seed >> 61);
@@ -391,11 +389,11 @@ _fun int rnd(unsigned Long seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_fun unsigned Long string_hash(String text) {
+_fun ULong string_hash(String text) {
     Ccstr str = text.text;
     Long str_len = text.len;
 
-    unsigned Long h = Hash_start_n;
+    ULong h = Hash_start_n;
     
     for(Long i = 0; i < str_len; ++i) { 
         h ^= str[i] & 255; h *= Hash_mul_n;
@@ -408,8 +406,8 @@ _fun unsigned Long string_hash(String text) {
 #define Hash_mul_n1 0x94d049bb133111eb
 #define Hash_mul_n2 0xbf58476d1ce4e5b9
 
-_fun unsigned Long long_hash(Long integer64) {
-    unsigned Long x = (unsigned Long)integer64;
+_fun ULong long_hash(Long integer64) {
+    ULong x = (ULong)integer64;
     
     x *= Hash_mul_n1; 
     x = Hash_shift_mix(x);
@@ -426,8 +424,25 @@ _fun unsigned Long long_hash(Long integer64) {
     ==================== HASH TABLE ====================
 */
 //
+#define _structhtable(key_type, value_type) { key_type##s keys;  value_type##s values; }
+
+// Creates a new HashTable type, typename is Keytype2Valtype, String String -> String2String
+#define _typedef_structhtable(key_type, value_type) \
+    typedef struct key_type##2##value_type _structhtable(key_type, value_type) key_type##2##value_type
+
+_typedef_structhtable(String, String);
+_typedef_structhtable(String, Long);
+_typedef_structhtable(Long, Long);
+_typedef_structhtable(Long, String);
+
+#define _new_htable(var_name, keytype, valtype, exponent) \
+    _new_array(var_name##keys, keytype, 1 << exponent); \
+    _new_array(var_name##values, valtype, 1 << exponent); \
+    keytype##2##valtype var_name = { var_name##keys, var_name##values }
+
+
 _fun Int array_cap_to_exp(Long cap) {
-    switch (cap + 1) {
+    switch (cap) {
         case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
         case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
@@ -438,7 +453,7 @@ _fun Int array_cap_to_exp(Long cap) {
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
 _fun Int ht_lookup(
-    unsigned Long hash, // 1st hash acts as base location
+    ULong hash, // 1st hash acts as base location
     Int index, // 2nd "hash" steps over the "list of elements" from base-location
     Int exp // power-2 exp used as the Hash Table capacity
 ) {
@@ -451,12 +466,12 @@ _fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
     Long *elements = haystack_keys.elements;
 
     Int exp = array_cap_to_exp(haystack_keys.cap);    
-    unsigned Long h = long_hash(search_key);
+    ULong h = long_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
     assert(search_key != 0 && "this msi keys do not support a Zero Long Key");
 
-    while (elements[pos] != 0 and (pos == 0 or search_key != elements[pos])) {
+    while (elements[pos] != 0 and search_key != elements[pos]) {
         pos = ht_lookup(h, pos, exp);
     }
 
@@ -465,7 +480,7 @@ _fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
 
 _fun Int longs_msi_upsert(Long search_key, Longs *haystack_keys) {
     Int pos = longs_msi_lookup(search_key, *haystack_keys);
-    if (haystack_keys->elements[pos] != 0) {
+    if (haystack_keys->elements[pos] == 0) {
         assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
         ++haystack_keys->len;
     }
@@ -477,12 +492,12 @@ _fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
     String *elements = haystack_keys.elements;
 
     Int exp = array_cap_to_exp(haystack_keys.cap);    
-    unsigned Long h = string_hash(search_key);
+    ULong h = string_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
     assert(search_key.len != 0 && "this msi keys do not support the Empty String Key");
 
-    while (elements[pos].len != 0 and (pos == 0 or string_cmp(search_key, elements[pos]) != 0)) {
+    while (elements[pos].len != 0 and string_cmp(search_key, elements[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);
     }
 
@@ -491,7 +506,7 @@ _fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
 
 _fun Int strings_msi_upsert(String search_key, Strings *haystack_keys) {
     Int pos = strings_msi_lookup(search_key, *haystack_keys);
-    if (haystack_keys->elements[pos].len != 0) {
+    if (haystack_keys->elements[pos].len == 0) {
         assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
         ++haystack_keys->len;
     }
@@ -523,7 +538,7 @@ _proc file_to_buffer(String filename, Buffer *dest_buffer) {
         assert(dest_buffer->cap >= fsize+2 && "buffer is not enough for file size");
 
         {
-            Long bytesread = (Long) fread(dest_buffer->elements, 1LL, (unsigned Long)fsize, f);
+            Long bytesread = (Long) fread(dest_buffer->elements, 1LL, (ULong)fsize, f);
             assert(bytesread == fsize && "could not read fsize#bytes"); 
             
             dest_buffer->elements[fsize] = '\0';
@@ -557,7 +572,7 @@ _proc string_to_file(String filename, String src_text) {
 
         assert(f && "Could not open file for writting");
         {
-            Long bytes_written = (Long) fwrite(src_text.text, 1, (unsigned Long)src_text.len, f);
+            Long bytes_written = (Long) fwrite(src_text.text, 1, (ULong)src_text.len, f);
             assert(bytes_written == src_text.len && "could not write buffer_len#bytes");
         }
 
@@ -572,7 +587,7 @@ _proc lines_to_file(String filename, Strings lines) {
         {
             for (int i = 0; i < lines.len; ++i) {
                 String line = lines.elements[i];
-                Long bytes_written = (Long) fwrite(line.text, 1, (unsigned Long)line.len, f);
+                Long bytes_written = (Long) fwrite(line.text, 1, (ULong)line.len, f);
                 bytes_written += (Long) fwrite("\n", 1, 1, f);
                 assert(bytes_written == line.len + 1 && "could not write line_len#bytes");
             }

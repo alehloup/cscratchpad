@@ -3,8 +3,7 @@
 
 _proc test_buffers(void) {
     String string = S("Alessandro");
-    char bdata[256] = ZERO_INIT;
-    Buffer buff = A(bdata);
+    _new_array(buff, Char, 256);
 
     buffer_append(&buff, string);
     buffer_append(&buff, S(" Luiz"));
@@ -17,28 +16,26 @@ _proc test_buffers(void) {
 
 _proc test_to_lines(void) {
     String text = S("Alessandro \n Luiz\n Stamatto \n Ferreira");
-    String blines[256] = ZERO_INIT;
-    Strings lines = A(blines);
+    _new_array(lines, String, 256);
 
     to_lines(&lines, text);
 
-    string_print(trim(blines[0])); printn;
-    string_print(trim(blines[1])); printn;
-    string_print(trim(blines[2])); printn;
-    string_print(trim(blines[3])); printn;
+    string_print(trim(lines.elements[0])); printn;
+    string_print(trim(lines.elements[1])); printn;
+    string_print(trim(lines.elements[2])); printn;
+    string_print(trim(lines.elements[3])); printn;
 }
 
 _proc test_split(void) {
     String text = S("Alessandro  Luiz Stamatto  Ferreira");
-    String bwords[256] = ZERO_INIT;
-    Strings words = A(bwords);
+    _new_array(words, String, 256);
 
     split(&words, text, ' ');
 
-    string_print(trim(bwords[0])); printn;
-    string_print(trim(bwords[1])); printn;
-    string_print(trim(bwords[2])); printn;
-    string_print(trim(bwords[3])); printn;
+    string_print(trim(words.elements[0])); printn;
+    string_print(trim(words.elements[1])); printn;
+    string_print(trim(words.elements[2])); printn;
+    string_print(trim(words.elements[3])); printn;
 }
 
 _proc test_string_eq(void) {

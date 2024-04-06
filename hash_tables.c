@@ -11,10 +11,15 @@ _proc test_keys(void) {
     printf("cap: %lld %d\n", keys.cap, array_cap_to_exp(keys.cap));
 }
 
+_proc test_new_hashtable(void) {
+    _new_htable(ht, String, String, 8);
+    printf("%lld %lld %lld \n", ht.keys.cap, ht.values.cap, arraysizeof(htkeys_base));
+}
+
 int main(void) {
     test_get_exp();
-
     test_keys();
+    test_new_hashtable();
 
     return 0;
 }

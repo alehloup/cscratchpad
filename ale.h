@@ -38,26 +38,27 @@
 
 
 /*
-    ==================== TYPES ====================
+    ==================== TYPEDEFS ====================
 */
 //
-#define Byte char
-#define Char char
-#define Bool int
-#define Int int
+typedef int Bool;
+typedef char Char;
+typedef char Byte;
+typedef int Int;
+typedef unsigned int UInt;
 typedef long long Long;
 typedef unsigned long long ULong;
 #ifdef __SIZEOF_INT128__
 __extension__ typedef __int128 Big;
+__extension__ typedef unsigned __int128 UBig;
 #endif // __SIZEOF_INT128__
-#define Float float
-#define Double double
-
+typedef float Float;
+typedef double Double;
 
 typedef const char * const Ccstr; // const Cstr const pointer
 typedef const char * Cstr; // const Cstr
 typedef char * Mstr; // modifiable Cstr
-//  ^^^^^^^^^^^^^^^^^^^^ TYPES ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ TYPEDEFS ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
@@ -457,8 +458,8 @@ _fun Int ht_lookup(
     Int index, // 2nd "hash" steps over the "list of elements" from base-location
     Int exp // power-2 exp used as the Hash Table capacity
 ) {
-    unsigned Int step = (unsigned Int)(hash >> (64 - exp)) | 1;
-    Int idx = (Int) (((unsigned Int)index + step) & ((unsigned Int) ((1 << exp) - 1)));
+    UInt step = (UInt)(hash >> (64 - exp)) | 1;
+    Int idx = (Int) (((UInt)index + step) & ((UInt) ((1 << exp) - 1)));
     return idx;
 }
 

@@ -7,7 +7,7 @@
 //
 #ifdef stdout
     // Print Assert if stdio.h was included
-    #define diagnostic_(c) printf("\n\n  |ASSERT FAILED %s:%s:%d %s |  \n\n", __FILE__, __func__, __LINE__, #c)
+    #define diagnostic_(c) printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
 #endif // stdout
 #ifndef stdout
     static int assert_trapped_ = 0;
@@ -447,6 +447,7 @@ _typedef_structhtable(Long, String);
 
 _fun Int array_cap_to_exp(Long cap) {
     switch (cap) {
+        case (1 << 3): return 3; // for testing, cap 8
         case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
         case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
@@ -483,11 +484,9 @@ _fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
 }
 
 _fun Int longs_msi_upsert(Long search_key, Longs *haystack_keys) {
+    assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
     Int pos = longs_msi_lookup(search_key, *haystack_keys);
-    if (haystack_keys->elements[pos] == 0) {
-        assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
-        ++haystack_keys->len;
-    }
+    haystack_keys->len += (haystack_keys->elements[pos] == 0) ? 1 : 0;
     haystack_keys->elements[pos] = search_key;
     return pos;
 }
@@ -509,11 +508,9 @@ _fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
 }
 
 _fun Int strings_msi_upsert(String search_key, Strings *haystack_keys) {
+    assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
     Int pos = strings_msi_lookup(search_key, *haystack_keys);
-    if (haystack_keys->elements[pos].len == 0) {
-        assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
-        ++haystack_keys->len;
-    }
+    haystack_keys->len += (haystack_keys->elements[pos].len == 0) ? 1 : 0;
     haystack_keys->elements[pos] = search_key;
     return pos;
 }

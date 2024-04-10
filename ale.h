@@ -7,17 +7,17 @@
 //
 #ifdef stdout
     // Print Assert if stdio.h was included
-    #define diagnostic_ printf("\n\n  |ASSERT FAILED %s:%s:%d|  \n\n", __FILE__, __func__, __LINE__)
+    #define diagnostic_(c) printf("\n\n  |ASSERT FAILED %s:%s:%d %s |  \n\n", __FILE__, __func__, __LINE__, #c)
 #endif // stdout
 #ifndef stdout
     static int assert_trapped_ = 0;
-    #define diagnostic_ assert_trapped_ = 1
+    #define diagnostic_(c) assert_trapped_ = 1
 #endif //not stdout
 
 #if defined(_MSC_VER)
-    #define assert(c) if(!(c)) (diagnostic_, __debugbreak())
+    #define assert(c) if(!(c)) (diagnostic_(c), __debugbreak())
 #else
-    #define assert(c) if(!(c)) (diagnostic_, __builtin_trap())
+    #define assert(c) if(!(c)) (diagnostic_(c), __builtin_trap())
 #endif // _MSC_VER
 //  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
 
@@ -448,7 +448,7 @@ _fun Int array_cap_to_exp(Long cap) {
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
         case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
         case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
-        default: assert(cap == 52 and "Not a power-2 in range 10 <= exp <= 21"); return 0;
+        default: assert( (10 & 21) and "Not a power-2 in range 10 <= exp <= 21"); return 0;
     }
 }
 
@@ -514,6 +514,8 @@ _fun Int strings_msi_upsert(String search_key, Strings *haystack_keys) {
     haystack_keys->elements[pos] = search_key;
     return pos;
 }
+
+
 //  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
 
 

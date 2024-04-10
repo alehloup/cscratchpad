@@ -92,10 +92,12 @@ typedef char * Mstr; // modifiable Cstr
 #define isizeof(x_element_) ((Long)sizeof(x_element_))
 #define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
 
-#define _structarray(element_type) { const Long cap; Long len; element_type *elements; }
-
-// Creates a new array type, typename is Element_types, Char -> Chars
-#define _typedef_structarray(element_type) typedef struct element_type##s _structarray(element_type) element_type##s
+// { const Long cap; Long len; element_type *elements; }, typename is Element_type##s
+#define _typedef_structarray(element_type) \
+    typedef struct \
+    element_type##s \
+        { const Long cap; Long len; element_type *elements; } \
+    element_type##s
 _typedef_structarray(Char);
 _typedef_structarray(Int);
 _typedef_structarray(Long);
@@ -105,7 +107,8 @@ _typedef_structarray(Double);
 //  creates local structarray using a base Array of type typename##s (like Char -> Chars)
 #define _new_array(varname, typename, capacity) \
     typename varname##_base[(capacity)+1] = ZERO_INIT; \
-    typename##s varname = { /*cap:*/ arraysizeof(varname##_base) - 1, /*len:*/ 0, /*elements:*/ varname##_base }
+    typename##s varname = { /*cap:*/ arraysizeof(varname##_base) - 1, /*len:*/ 0, /*elements:*/ 0 }; \
+    varname.elements = varname##_base
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \

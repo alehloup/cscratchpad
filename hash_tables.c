@@ -16,6 +16,12 @@ _proc test_new_hashtable(void) {
     printf("%lld %lld %lld \n", ht.keys.cap, ht.values.cap, arraysizeof(htkeys_base));
 }
 
+_fun Long test_static_array(void) {
+    _new_array(vetor, static thread_local Int, 16);
+
+    return vetor.len;
+}
+
 int main(void) {
     test_get_exp();
     test_keys();

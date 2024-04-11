@@ -5,15 +5,15 @@
     ==================== ASSERT ====================
 */ 
 //
-static int _assert_trapped_triggered_ = 0; //long name to not collide
+static int assert_trapped_triggered__ = 0; //long name to not collide
 #ifdef stdout
     // Print Assert if stdio.h was included
-    #define diagnostic_(c) _assert_trapped_triggered_ = 1, \
+    #define diagnostic_(c) assert_trapped_triggered__ = 1, \
         printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
 #endif // stdout
 #ifndef stdout
     // No stdout, don't print anything
-    #define diagnostic_(c) _assert_trapped_triggered_ = 1
+    #define diagnostic_(c) assert_trapped_triggered__ = 1
 #endif //not stdout
 
 #if defined(_MSC_VER)
@@ -436,7 +436,7 @@ _fun Int array_cap_to_exp(Long cap) {
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
         case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
         case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
-        default: assert( (10 & 21) and "Not a power-2 in range 10 <= exp <= 21"); return 0;
+        default: assert( cap == (10 & 21) and "Not a power-2 in range 10 <= exp <= 21"); return 0;
     }
 }
 

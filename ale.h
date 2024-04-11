@@ -509,18 +509,20 @@ _fun Int strings_msi_upsert(String search_key, Strings *haystack_keys) {
 //
 #ifdef stdout
 // stdio.h
+_fun Long file_size(FILE* f) {
+    fseek(f, 0, SEEK_END);
+    Long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    return fsize;
+}
 
 _proc file_to_buffer(String filename, Buffer *dest_buffer) {
-    Long fsize = 0;
-
         FILE *f =  
     fopen(filename.text, "rb");
-    
+    {
         assert(f && "Could not open file for reading");
     
-        fseek(f, 0, SEEK_END);
-        fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
+        Long fsize = file_size(f);
 
         assert(dest_buffer->cap >= fsize+2 && "buffer is not enough for file size");
 
@@ -531,7 +533,7 @@ _proc file_to_buffer(String filename, Buffer *dest_buffer) {
             dest_buffer->elements[fsize] = '\0';
             dest_buffer->len = fsize;
         }
-
+    }
     fclose(f);
 }
 
@@ -556,30 +558,28 @@ _proc file_to_lines_including_empty(String filename, Strings *dest_lines, Buffer
 _proc string_to_file(String filename, String src_text) {
         FILE *f =  
     fopen(filename.text, "wb");
-
+    {
         assert(f && "Could not open file for writting");
-        {
-            Long bytes_written = (Long) fwrite(src_text.text, 1, (ULong)src_text.len, f);
-            assert(bytes_written == src_text.len && "could not write buffer_len#bytes");
-        }
-
+     
+        Long bytes_written = (Long) fwrite(src_text.text, 1, (ULong)src_text.len, f);
+        assert(bytes_written == src_text.len && "could not write buffer_len#bytes");
+    }
     fclose(f);
 }
 
 _proc lines_to_file(String filename, Strings lines) {
         FILE *f =  
     fopen(filename.text, "wb");
-
+    {
         assert(f && "Could not open file for writting");
-        {
+        
             for (int i = 0; i < lines.len; ++i) {
                 String line = lines.elements[i];
                 Long bytes_written = (Long) fwrite(line.text, 1, (ULong)line.len, f);
                 bytes_written += (Long) fwrite("\n", 1, 1, f);
                 assert(bytes_written == line.len + 1 && "could not write line_len#bytes");
             }
-        }
-
+    }
     fclose(f);
 }
 

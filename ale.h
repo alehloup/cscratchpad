@@ -5,13 +5,15 @@
     ==================== ASSERT ====================
 */ 
 //
+static int _assert_trapped_triggered_ = 0; //long name to not collide
 #ifdef stdout
     // Print Assert if stdio.h was included
-    #define diagnostic_(c) printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
+    #define diagnostic_(c) _assert_trapped_triggered_ = 1, \
+        printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
 #endif // stdout
 #ifndef stdout
-    static int assert_trapped_ = 0;
-    #define diagnostic_(c) assert_trapped_ = 1
+    // No stdout, don't print anything
+    #define diagnostic_(c) _assert_trapped_triggered_ = 1
 #endif //not stdout
 
 #if defined(_MSC_VER)
@@ -428,26 +430,8 @@ _fun ULong long_hash(Long integer64) {
     ==================== HASH TABLE ====================
 */
 //
-#define _structhtable(key_type, value_type) { key_type##s keys;  value_type##s values; }
-
-// Creates a new HashTable type, typename is Keytype2Valtype, String String -> String2String
-#define _typedef_structhtable(key_type, value_type) \
-    typedef struct key_type##2##value_type _structhtable(key_type, value_type) key_type##2##value_type
-
-_typedef_structhtable(String, String);
-_typedef_structhtable(String, Long);
-_typedef_structhtable(Long, Long);
-_typedef_structhtable(Long, String);
-
-#define _new_htable(var_name, keytype, valtype, exponent) \
-    _new_array(var_name##keys, keytype, 1 << exponent); \
-    _new_array(var_name##values, valtype, 1 << exponent); \
-    keytype##2##valtype var_name = { var_name##keys, var_name##values }
-
-
 _fun Int array_cap_to_exp(Long cap) {
     switch (cap) {
-        case (1 << 3): return 3; // for testing, cap 8
         case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
         case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
@@ -474,7 +458,7 @@ _fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
     ULong h = long_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
-    assert(search_key != 0 && "this msi keys do not support a Zero Long Key");
+    assert(search_key != 0 && "Zero Long Key not supported");
 
     while (elements[pos] != 0 and search_key != elements[pos]) {
         pos = ht_lookup(h, pos, exp);
@@ -498,7 +482,7 @@ _fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
     ULong h = string_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
-    assert(search_key.len != 0 && "this msi keys do not support the Empty String Key");
+    assert(search_key.len != 0 && "Empty String Key not supported");
 
     while (elements[pos].len != 0 and string_cmp(search_key, elements[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);

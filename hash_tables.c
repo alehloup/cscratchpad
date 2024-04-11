@@ -11,14 +11,9 @@ _proc test_keys(void) {
     printf("cap: %lld %d\n", keys.cap, array_cap_to_exp(keys.cap));
 }
 
-_proc test_new_hashtable(void) {
-    _new_htable(ht, String, String, 8);
-    printf("%lld %lld %lld \n", ht.keys.cap, ht.values.cap, arraysizeof(htkeys_base));
-}
-
 _proc test_hashtable_insertions(void) {
     Int pos = 0;
-    _new_array(keys, String, 1 << 3);
+    _new_array(keys, String, 1 << 10);
 
     printf("Keys cap: %lld\n", keys.cap);
 
@@ -52,17 +47,13 @@ _proc test_hashtable_insertions(void) {
     pos = strings_msi_upsert(S("Alessandro Stam"), &keys);
     printf("[%d] %s \n", pos, keys.elements[pos].text);
 
-    printf("Len: %lld Cap: %lld -- Next insert will overflow \n", keys.len, keys.cap);
-
-    pos = strings_msi_upsert(S("Alessandr Stam"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    printf("Len: %lld Cap: %lld\n", keys.len, keys.cap);
 }
 
 
 int main(void) {
     test_get_exp();
     test_keys();
-    test_new_hashtable();
     test_hashtable_insertions();
 
     return 0;

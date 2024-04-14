@@ -5,6 +5,7 @@
     ==================== ASSERT ====================
 */ 
 //
+//#define _ASSERT_ON_
 static int assert_trapped_triggered__ = 0; //long name to not collide
 #ifdef stdout
     // Print Assert if stdio.h was included
@@ -16,11 +17,16 @@ static int assert_trapped_triggered__ = 0; //long name to not collide
     #define diagnostic_(c) assert_trapped_triggered__ = 1
 #endif //not stdout
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && defined(_ASSERT_ON_)
     #define assert(c) if(!(c)) (diagnostic_(c), __debugbreak())
-#else
-    #define assert(c) if(!(c)) (diagnostic_(c), __builtin_trap())
 #endif // _MSC_VER
+#if !defined(_MSC_VER) && defined(_ASSERT_ON_)
+    #define assert(c) if(!(c)) (diagnostic_(c), __builtin_trap())
+#endif // !_MSC_VER
+
+#ifndef _ASSERT_ON_
+    #define assert(c) if(!(c)) (diagnostic_(c), assert_trapped_triggered__ = 1)
+#endif 
 //  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
 
 

@@ -1,0 +1,25 @@
+Abéché: 0
+Bouaké: 0
+Chișinău: 0
+Gabès: 0
+Lomé: 0
+Malé: 0
+Ngaoundéré: 0
+Odienné: 0
+Reykjavík: 0
+San José: 0
+Suwałki: 0
+Ségou: 0
+Thiès: 0
+Tromsø: 0
+Wrocław: 0
+Yaoundé: 0
+Zürich: 0
+Ürümqi: 0
+İzmir: 0
+
+
+Executed in 0.000000 seconds 
+
+ gcc -std=gnu2x -Ofast -march=native -static-pie -flto -D_FORTIFY_SOURCE=3 -g3 -fcf-protection=full -fstack-protector-strong -ftrivial-auto-var-init=zero -Wall -Wextra -Wpedantic -Werror -fsanitize-trap -fsanitize=undefined -fanalyzer -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 1brc.c -o "./1brc.exe" && "./1brc.exe" && rm "./1brc.exe"
+

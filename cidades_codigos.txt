@@ -1,0 +1,419 @@
+Kandi : 5969
+Reggane : 4135
+Minsk : 697
+Vancouver : 4872
+Bilbao : 4985
+Sarajevo : 4900
+Bangui : 365
+Phoenix : 3164
+Odesa : 1368
+New Delhi : 2716
+Zagreb : 6116
+Mango : 173
+Sofia : 1981
+Iqaluit : 1636
+Rangpur : 4512
+Hat Yai : 2322
+Oulu : 321
+Ürümqi : 1482
+Bangkok : 2464
+Hobart : 1675
+Milwaukee : 4598
+Niigata : 2293
+Luanda : 1991
+Tallinn : 6191
+Brussels : 6418
+Changsha : 2935
+Tamale : 4286
+Naha : 3774
+Ashgabat : 6090
+Fresno : 5939
+Chihuahua : 2897
+Tokyo : 26
+Villaherm : 4841
+Suwałki : 2466
+Singapore : 6271
+Tbilisi : 3610
+Mek'ele : 6318
+Zanzibar  : 3909
+Antsirana : 331
+Rabat : 4000
+Banjul : 671
+Gaborone : 3660
+Pittsburg : 4636
+Kabul : 2542
+Veracruz : 476
+Tabora : 4213
+Amsterdam : 4832
+Malé : 3620
+Alice Spr : 4532
+Bissau : 4482
+Dunedin : 6280
+Willemsta : 191
+Panama Ci : 4976
+Auckland : 3748
+Yakutsk : 2033
+Fianarant : 1470
+Cairo : 2484
+St. Louis : 1509
+Riyadh : 1511
+Abéché : 4450
+Athens : 4320
+Bergen : 3062
+Toamasina : 4746
+Palm Spri : 4360
+Calgary : 1438
+Phnom Pen : 284
+Port-Gent : 658
+Douala : 595
+Lviv : 6172
+Tijuana : 6506
+San José : 5272
+Launcesto : 3569
+Toluca : 3173
+Harbin : 2038
+Surabaya : 1789
+Dublin : 2764
+Chongqing : 5606
+Vientiane : 630
+Canberra : 1481
+Guadalaja : 3149
+Manama : 4220
+Odienné : 2838
+Kuopio : 5605
+Tashkent : 2567
+Aden : 3322
+Dampier : 6250
+Port Suda : 706
+New Orlea : 5321
+Parakou : 5925
+Ankara : 1680
+Guatemala : 1391
+City of S : 4575
+Tehran : 6329
+Denpasar : 2745
+Marseille : 930
+Nouakchot : 693
+Zürich : 1556
+Ottawa : 2386
+Baku : 4562
+Boise : 4848
+Pontianak : 1221
+Cotonou : 4397
+Hanga Roa : 1659
+Arkhangel : 2815
+Da Nang : 5203
+Batumi : 4340
+Saint Pet : 5373
+Kingston : 5818
+Monaco : 531
+Cabo San  : 5923
+Frankfurt : 962
+Milan : 2460
+Heraklion : 5149
+Dar es Sa : 5890
+Sokoto : 734
+San Diego : 6346
+Garissa : 5193
+Nouadhibo : 2986
+Ngaoundé : 3352
+Budapest : 918
+Tamanrass : 6032
+Barcelona : 4282
+Palembang : 5597
+Jacksonvi : 3598
+Bordeaux : 6091
+Stockholm : 3782
+Anchorage : 2639
+Oslo : 113
+Dhaka : 4214
+Abha : 3875
+Khartoum : 3280
+Montreal : 1003
+Gangtok : 3373
+Mexicali : 3121
+Makurdi : 4559
+Salt Lake : 928
+Ahvaz : 3800
+Skopje : 1967
+Christchu : 6500
+New York  : 5666
+Wellingto : 103
+St. John' : 602
+Anadyr : 402
+Baghdad : 4963
+Honiara : 3399
+Dakar : 4907
+Niamey : 4111
+Reykjaví : 1960
+Saskatoon : 1688
+Pointe-No : 3785
+Philadelp : 551
+El Paso : 5906
+Yerevan : 4571
+Johannesb : 2932
+Helsinki : 5477
+Wrocław : 68
+Accra : 1228
+Birao : 3067
+Conakry : 460
+Indianapo : 4369
+Shanghai : 40
+Kansas Ci : 5414
+Alexandri : 739
+Chiang Ma : 6026
+Albuquerq : 651
+Busan : 5868
+Suva : 2861
+Gagnoa : 1754
+Tampa : 2362
+Jerusalem : 1808
+Rome : 6472
+Dikson : 4086
+Kuala Lum : 129
+Port Vila : 588
+Lhasa : 6262
+Jayapura : 1223
+Abidjan : 1652
+Napier : 2361
+Taipei : 5285
+Malabo : 2054
+Memphis : 3055
+Los Angel : 5366
+Bujumbura : 6183
+Algiers : 2594
+Baguio : 939
+Atlanta : 3477
+London : 3905
+San Anton : 3889
+Pretoria : 2256
+Baltimore : 5441
+Tegucigal : 4680
+Oranjesta : 4457
+Mahajanga : 6321
+Kuwait Ci : 4920
+Palermo : 2501
+Nassau : 1396
+Hong Kong : 5161
+Dallas : 2913
+Napoli : 4750
+Seoul : 2583
+Livingsto : 4029
+Juba : 4258
+Omaha : 1856
+Toliara : 2654
+Brisbane : 4724
+Bamako : 4040
+Kano : 5324
+Porto : 6023
+Vaduz : 2758
+Tripoli : 4227
+Paris : 1093
+Ifrane : 1865
+Yaoundé : 2709
+Cairns : 1284
+Fairbanks : 4353
+Havana : 1932
+Lisbon : 6342
+Beijing : 4789
+Da Lat : 4246
+Adelaide : 5667
+Las Palma : 4458
+Mogadishu : 2880
+Riga : 4326
+Vienna : 5220
+Damascus : 5130
+Kyoto : 2540
+Washingto : 5330
+Sacrament : 5111
+Tauranga : 3358
+Gjoa Have : 4375
+Maputo : 893
+Sydney : 2860
+Manila : 4772
+Mexico Ci : 5092
+Chittagon : 4783
+Lubumbash : 258
+Yellowkni : 4961
+Timbuktu : 6330
+Bridgetow : 3561
+Novosibir : 4548
+Tucson : 4689
+Denver : 5853
+Durban : 1188
+Kathmandu : 4052
+Bucharest : 5792
+Sochi : 1430
+Ouagadoug : 5184
+Dubai : 4146
+Moncton : 6471
+Vladivost : 4957
+Toronto : 4873
+Brazzavil : 3506
+Detroit : 2529
+Tromsø : 3693
+Entebbe : 2395
+Belize Ci : 4362
+Whitehors : 1650
+Managua : 5494
+Moscow : 2223
+Mzuzu : 4370
+Praia : 522
+La Paz : 4656
+Seattle : 5637
+Blantyre : 770
+Benghazi : 4892
+Antananar : 4692
+Bloemfont : 187
+San Juan : 202
+La Ceiba : 6490
+Rostov-on : 2220
+Lake Teka : 6424
+Mandalay : 5134
+Sapporo : 1523
+Hamburg : 2144
+Medan : 2924
+Valletta : 4880
+Thiès : 4328
+Hamilton : 4101
+George To : 5912
+Kinshasa : 6520
+Hanoi : 2215
+Mumbai : 2773
+Belgrade : 1394
+Astana : 2968
+Alexandra : 731
+Irkutsk : 5681
+Kyiv : 6475
+Asmara : 6218
+Ljubljana : 6539
+Nicosia : 2980
+Librevill : 855
+Lahore : 2309
+Virginia  : 3765
+Columbus : 3332
+Portland  : 5142
+Ho Chi Mi : 2264
+Ouahigouy : 1390
+Honolulu : 2125
+Madrid : 1579
+Assab : 6492
+Bosaso : 3037
+Podgorica : 6449
+Erbil : 634
+Almaty : 782
+Garoua : 6410
+Bata : 329
+Burnie : 4439
+İzmir : 185
+Oklahoma  : 1714
+Nashville : 593
+Tunis : 899
+Ghanzi : 5888
+San Jose : 4195
+Chișină : 3636
+Nakhon Ra : 701
+Melbourne : 305
+Fukuoka : 4943
+Ouarzazat : 2048
+Valencia : 4600
+Bratislav : 938
+Miami : 4416
+Kumasi : 710
+Charlotte : 1032
+Dodoma : 1154
+Tabriz : 2237
+Nairobi : 3900
+Bishkek : 3039
+Halifax : 3524
+Las Vegas : 1915
+Upington : 718
+Dili : 5614
+Colombo : 4393
+Lomé : 5786
+Palmersto : 5581
+Gabès : 582
+Dolisie : 2172
+Addis Aba : 6163
+Yangon : 5351
+Hargeisa : 1883
+Bulawayo : 4615
+Split : 2288
+Tirana : 6290
+Ulaanbaat : 2180
+Mombasa : 2250
+Luxembour : 5627
+Muscat : 977
+Edinburgh : 6508
+Erzurum : 1964
+Lagos : 1518
+Marrakesh : 5783
+Lodwar : 5424
+Lyon : 1486
+Sana'a : 5957
+Vilnius : 5578
+Andorra l : 2584
+Dushanbe : 4134
+Flores,   : 89
+Houston : 838
+Berlin : 4591
+Port More : 5596
+Guangzhou : 2470
+Cracow : 5859
+Winnipeg : 5482
+Cape Town : 5746
+Wau : 5292
+Santo Dom : 364
+Harare : 4232
+Darwin : 4159
+Kolkata : 2530
+Xi'an : 2008
+Maun : 598
+San Franc : 5658
+Minneapol : 3007
+Chicago : 6195
+N'Djamena : 1777
+Thessalon : 2232
+Prague : 1211
+Louisvill : 1858
+Karachi : 3313
+Hiroshima : 4350
+Lake Hava : 6135
+Ndola : 586
+Tel Aviv : 2821
+Djibouti : 3266
+Jos : 2357
+Seville : 69
+Istanbul : 5404
+Perth : 2626
+Kunming : 5514
+Kampala : 700
+Petropavl : 2906
+Edmonton : 1607
+Makassar : 426
+Nuuk : 2615
+Wichita : 495
+Warsaw : 1716
+San Salva : 2877
+Boston : 3931
+Austin : 4736
+Jakarta : 1920
+Monterrey : 2284
+Lusaka : 3316
+Roseau : 5409
+Bouaké : 685
+Copenhage : 1363
+Ségou : 6176
+Pyongyang : 4266
+Beirut : 4620
+Yinchuan : 4290
+Kankan : 2171
+Karonga : 6225
+Saint-Pie : 2248
+Murmansk : 6
+
+
+Executed in 0.001000 seconds 
+
+ gcc -std=gnu2x -Ofast -march=native -static-pie -flto -D_FORTIFY_SOURCE=3 -g3 -fcf-protection=full -fstack-protector-strong -ftrivial-auto-var-init=zero -Wall -Wextra -Wpedantic -Werror -fsanitize-trap -fsanitize=undefined -fanalyzer -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum 1brc.c -o "./1brc.exe" && "./1brc.exe" && rm "./1brc.exe"
+

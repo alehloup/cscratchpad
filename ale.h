@@ -589,8 +589,10 @@ _proc lines_to_file(String filename, Strings lines) {
 typedef struct mmap_file {
     Any *file; Any *map; String filename; Bytes contents;
 } Mmap;
+// stdio.h
+#endif
 
-#ifdef _WINDOWS_
+#if defined stdout && defined(_WINDOWS_)
 _fun Mmap mmap_open(String filename) {
     HANDLE hFile = CreateFile(filename.text,
         GENERIC_READ,                          // dwDesiredAccess
@@ -630,10 +632,7 @@ _proc mmap_close(Mmap mmap_info) {
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
 }
-#endif // __WINDOWS__
-
-// stdio.h
-#endif
+#endif // stdout && _WINDOWS_
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -645,7 +644,7 @@ _proc mmap_close(Mmap mmap_info) {
 // time.h
 
 // Creates the clock variable |start|, starting it
-#define START_CLOCK clock_t start = clock()
+#define START_WATCH clock_t start = clock()
 
 _fun double seconds_since(clock_t start)
 {
@@ -663,7 +662,7 @@ _proc print_clock(clock_t start) {
 }
 
 // Prints the current clock time, using the variable |start|
-#define STOP_CLOCK print_clock(start)
+#define STOP_WATCH print_clock(start)
 
 // time.h && stdio.h
 #endif 

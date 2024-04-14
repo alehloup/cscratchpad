@@ -21,9 +21,9 @@ _proc run(void) {
 }
 
 int main(void) {
-    START_CLOCK;
+    START_WATCH;
     run();
-    STOP_CLOCK;
+    STOP_WATCH;
 
     return 0;
 }

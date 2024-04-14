@@ -141,6 +141,7 @@ _typedef_structarray(Double);
 typedef Chars Bytes;
 // { const Long cap; Long len; Char *elements; }
 typedef Chars Buffer;
+// { Long len; Cstr text; }
 typedef struct String { Long len; Cstr text; } String;
 
 typedef struct Buffers { const Long cap; Long len; Buffer *elements; } Buffers;

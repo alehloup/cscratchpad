@@ -43,6 +43,7 @@ static int assert_trapped_triggered__ = 0; //long name to not collide
     ==================== TYPEDEFS ====================
 */
 //
+#define Any void
 typedef int Bool;
 typedef char Char;
 typedef char Byte;
@@ -109,8 +110,7 @@ _typedef_structarray(Double);
 //  creates local structarray using a base Array of type typename##s (like Char -> Chars)
 #define _new_array(varname, typename, capacity) \
     typename varname##_base[(capacity)+1] = ZERO_INIT; \
-    typename##s varname = { /*cap:*/ arraysizeof(varname##_base) - 1, /*len:*/ 0, /*elements:*/ 0 }; \
-    varname.elements = varname##_base
+    typename##s varname = { /*cap:*/ arraysizeof(varname##_base) - 1, /*len:*/ 0, /*elements:*/ varname##_base }
 
 #define _append(mut_array, new_element) \
     assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
@@ -137,7 +137,9 @@ _typedef_structarray(Double);
     STRINGS
 */
 //
+// { const Long cap; Long len; Byte *elements; }
 typedef Chars Bytes;
+// { const Long cap; Long len; Char *elements; }
 typedef Chars Buffer;
 typedef struct String { Long len; Cstr text; } String;
 
@@ -583,6 +585,53 @@ _proc lines_to_file(String filename, Strings lines) {
     fclose(f);
 }
 
+// Any *file; Any *map; String filename; Long filesize; Bytes contents;
+typedef struct mmap_file {
+    Any *file; Any *map; String filename; Bytes contents;
+} Mmap;
+
+#ifdef _WINDOWS_
+_fun Mmap mmap_open(String filename) {
+    HANDLE hFile = CreateFile(filename.text,
+        GENERIC_READ,                          // dwDesiredAccess
+        0,                                     // dwShareMode
+        NULL,                                  // lpSecurityAttributes
+        OPEN_EXISTING,                         // dwCreationDisposition
+        FILE_ATTRIBUTE_NORMAL,                 // dwFlagsAndAttributes
+        0);                                    // hTemplateFile
+
+    assert(hFile != INVALID_HANDLE_VALUE);
+    
+    LARGE_INTEGER liFileSize = ZERO_INIT;
+    assert(GetFileSizeEx(hFile, &liFileSize) && "File Size exception");
+    
+    assert(liFileSize.QuadPart && "File Empty!");
+
+    HANDLE hMap = CreateFileMapping(
+        hFile,
+        NULL,                          // Mapping attributes
+        PAGE_READONLY,                 // Protection flags
+        0,                             // MaximumSizeHigh
+        0,                             // MaximumSizeLow
+        NULL);                         // Name
+
+    assert(hMap && "Failed to create file mapping");
+
+    LPVOID lpBasePtr = MapViewOfFile(hMap,FILE_MAP_READ, 0, 0, 0);
+    assert(lpBasePtr && "MapView failed");
+
+    Mmap mmap_info = {hFile, hMap, filename, {(Long)liFileSize.QuadPart, (Long)liFileSize.QuadPart, (Byte*)lpBasePtr}};
+    
+    return mmap_info;    
+}
+
+_proc mmap_close(Mmap mmap_info) {
+    UnmapViewOfFile((LPVOID)mmap_info.contents.elements);
+    CloseHandle(mmap_info.map);
+    CloseHandle(mmap_info.file);
+}
+#endif // __WINDOWS__
+
 // stdio.h
 #endif
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
@@ -594,6 +643,9 @@ _proc lines_to_file(String filename, Strings lines) {
 //
 #ifdef CLOCKS_PER_SEC 
 // time.h
+
+// Creates the clock variable |start|, starting it
+#define START_CLOCK clock_t start = clock()
 
 _fun double seconds_since(clock_t start)
 {
@@ -609,6 +661,9 @@ _fun double seconds_since(clock_t start)
 _proc print_clock(clock_t start) {
     printf("\n\nExecuted in %f seconds \n", seconds_since(start));
 }
+
+// Prints the current clock time, using the variable |start|
+#define STOP_CLOCK print_clock(start)
 
 // time.h && stdio.h
 #endif 

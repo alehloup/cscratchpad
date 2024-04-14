@@ -76,9 +76,8 @@ _proc run(void) {
                 city->max = measure;
             }
         }
-    }
-    mmap_close(mmap_info);
-
+    } // mmap_close(mmap_info); just drop when program close
+    
     for (Int i = 0; i < ncity; ++i) {
         City *city = &cities[hash_order[i]];
         printf("%s  #%lld  $%.1f  @%.1f  [%.1f  %.1f]\n", city->name, city->count, 

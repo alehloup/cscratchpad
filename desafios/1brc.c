@@ -140,6 +140,7 @@ _proc print_results(void) {
             /*@avg*/ ((double)city->sum / ((double)city->count*10)),
             /*[min  max]*/ (double)city->min/10.0, (double)city->max/10.0
         );
+        break;
     }
 }
 

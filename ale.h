@@ -648,7 +648,7 @@ _proc mmap_close(Mmap mmap_info) {
 _typedef_structarray(Thread); // Threads
 
 typedef long unsigned int Thread_return_code;
-#define _thread_fun _fun __stdcall Thread_return_code
+#define _thread_fun _fun Thread_return_code
 
 _fun Thread go(Thread_return_code (*routine)(Any* arg), Any* arg) {
     Thread thread = CreateThread(0, 0, routine, arg, 0, 0);
@@ -658,7 +658,7 @@ _fun Thread go(Thread_return_code (*routine)(Any* arg), Any* arg) {
 }
 
 #define go_threads(varname, routine, times) \
-    _new_array(varname, Thread, 8); \
+    _new_array(varname, Thread, times); \
     Int varname##_ids[times] = ZERO_INIT; \
     for (int i = 0; i < times; ++i) { \
         varname##_ids[i] = i; \

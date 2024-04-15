@@ -13,7 +13,7 @@ _thread_fun sum(Any* args) {
 
 int main() {
     
-    go_threads(threads, sum, 8);
+    go_threads(threads, sum, NUM_THREADS);
     join_threads(threads);
 
     int totalSum = 0;

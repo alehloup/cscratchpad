@@ -150,6 +150,7 @@ typedef Chars Buffer;
 // { Long len; Cstr text; }
 typedef struct String { Long len; Cstr text; } String;
 
+// { const Long cap; Long len; Char *elements; }
 typedef struct Buffers { const Long cap; Long len; Buffer *elements; } Buffers;
 typedef struct Strings { const Long cap; Long len; String *elements; } Strings;
 
@@ -616,17 +617,11 @@ _fun Mmap mmap_open(String filename) {
     
     assert(liFileSize.QuadPart && "File Empty!");
 
-    HANDLE hMap = CreateFileMapping(
-        hFile,
-        NULL,                          // Mapping attributes
-        PAGE_READONLY,                 // Protection flags
-        0,                             // MaximumSizeHigh
-        0,                             // MaximumSizeLow
-        NULL);                         // Name
+    HANDLE hMap = CreateFileMapping(hFile, 0,PAGE_READONLY, 0, 0, 0);
 
     assert(hMap && "Failed to create file mapping");
 
-    LPVOID lpBasePtr = MapViewOfFile(hMap,FILE_MAP_READ, 0, 0, 0);
+    Any* lpBasePtr = MapViewOfFile(hMap,FILE_MAP_READ, 0, 0, 0);
     assert(lpBasePtr && "MapView failed");
 
     Mmap mmap_info = {hFile, hMap, filename, {(Long)liFileSize.QuadPart, (Long)liFileSize.QuadPart, (Byte*)lpBasePtr}};
@@ -635,13 +630,46 @@ _fun Mmap mmap_open(String filename) {
 }
 
 _proc mmap_close(Mmap mmap_info) {
-    UnmapViewOfFile((LPVOID)mmap_info.contents.elements);
+    UnmapViewOfFile((Any*)mmap_info.contents.elements);
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
 }
 #endif // stdout && _WINDOWS_
 //  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 
+
+/*
+    ==================== THREADS ====================
+*/
+//
+#if defined stdout && defined(_WINDOWS_)
+//
+#define Thread Any*
+_typedef_structarray(Thread); // Threads
+
+typedef long unsigned int Thread_return_code;
+#define _thread_fun _fun __stdcall Thread_return_code
+
+_fun Thread go(Thread_return_code (*routine)(Any* arg), Any* arg) {
+    Thread thread = CreateThread(0, 0, routine, arg, 0, 0);
+    assert(thread != 0 && "Error creating thread");
+
+    return thread;
+}
+
+#define go_threads(varname, routine, times) \
+    _new_array(varname, Thread, 8); \
+    Int varname##_ids[times] = ZERO_INIT; \
+    for (int i = 0; i < times; ++i) { \
+        varname##_ids[i] = i; \
+        _append(&varname, go(routine, (Any*)&varname##_ids[i]));} \
+    (void) varname.len
+
+_proc join_threads(Threads threads) {
+    WaitForMultipleObjects((long unsigned int) threads.len, threads.elements, TRUE, INFINITE);
+}
+#endif // stdout && _WINDOWS_
+//  ^^^^^^^^^^^^^^^^^^^^ THREADS ^^^^^^^^^^^^^^^^^^^^
 
 /*
     ==================== TIME BENCHMARK ====================

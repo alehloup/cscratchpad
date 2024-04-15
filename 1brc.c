@@ -1,9 +1,12 @@
 #include <stdio.h>
-#include <windows.h>
+#include <Windows.h>
 #include <time.h>
 #include "ale.h"
 
 #define nthreads 12
+static const Bool SINGLE_THREAD = (nthreads == 1);
+
+#define FILENAME S("C:/Users/Aleh/1brc_java/measurements1b.txt")
 
 /*
     I use a Perfect Hash of the 413 cities
@@ -22,9 +25,10 @@ static Ccstr city_names[] = {"Abha", "Abidjan", "Abéché", "Accra", "Addis Abab
 typedef struct City { Cstr name; Long count; Long sum; Long min; Long max; } City;
 static City thread_cities[nthreads][tabsize] = ZERO_INIT;
 
-Mmap* mmap_info = ZERO_INIT; // will store the mmaped file
+static Mmap* mmap_info = ZERO_INIT; // will store the mmaped file
 
-_thread_fun chunked_run(Any* args) {
+// Chunks the input by the thread_idx, runs in entire content if nthreads == 1
+_thread_fun chunked_run(Any* args /* thread_idx */) {
     Int thread_idx = *((Int*) args);
     
     City* cities = thread_cities[thread_idx];
@@ -39,11 +43,9 @@ _thread_fun chunked_run(Any* args) {
 
     /* Adjusts the start and end indexes based on thread_idx */
     Long i   = 0;
-    Long len = 0;
-    if (nthreads == 1) { //no threads beyond main
-        len = contents.len - 1;
-    } else {
-        const Long slice_size = (Long) contents.len / nthreads; //size per thread
+    Long len = contents.len - 1;
+    if (!SINGLE_THREAD) {
+        const Long slice_size = (Long) contents.len / nthreads; // size per thread
         i = slice_size * thread_idx;
         len = i + slice_size;
 
@@ -61,7 +63,7 @@ _thread_fun chunked_run(Any* args) {
 
     ULong city_hash = 0, sum_hash = 0;
 
-    for (; i < len; ++i /* SKIPS THE FIRST LETTER OF THE LINE*/) {
+    for (; i < len; ++i /* SKIPS THE FIRST LETTER OF THE LINE */) {
         // Each iteration we start at the second letter of a line
 
         // Advance the i'ndex, building the city name[1:9] hash at the same time
@@ -72,7 +74,7 @@ _thread_fun chunked_run(Any* args) {
         }
         city_hash = ((city_hash % 13087) % tabsize);
 
-        // Skipps all remaining city name letters
+        // Skips all remaining city name letters
         while(data[i] != ';') {
             ++i;
         }
@@ -109,7 +111,6 @@ _thread_fun chunked_run(Any* args) {
 }
 
 _proc aggregate_results(void) {
-
     City* thread0 = thread_cities[0];
 
     for (Int i_thread = 1; i_thread < nthreads; ++i_thread) {
@@ -143,10 +144,10 @@ _proc print_results(void) {
 }
 
 _proc run(void) {
-    Mmap mmap_info_local = mmap_open(S("C:/Users/Aleh/1brc_java/measurements1b.txt"));
+    Mmap mmap_info_local = mmap_open(FILENAME);
     mmap_info = &mmap_info_local;
     
-    if (nthreads == 1) {
+    if (SINGLE_THREAD) {
         Int just_main_thread = 0;
         Int error_code = (Int) chunked_run((Any*)&just_main_thread);
         assert(error_code == 0 && "returned with error");

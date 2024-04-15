@@ -3,7 +3,7 @@
 #include <time.h>
 #include "ale.h"
 
-#define nthreads 6
+#define nthreads 12
 
 /*
     I use a Perfect Hash of the 413 cities
@@ -148,7 +148,8 @@ _proc run(void) {
     
     if (nthreads == 1) {
         Int just_main_thread = 0;
-        chunked_run((Any*)&just_main_thread);
+        Int error_code = (Int) chunked_run((Any*)&just_main_thread);
+        assert(error_code == 0 && "returned with error");
     } else {
         go_threads(threads, chunked_run, nthreads);
         join_threads(threads);

@@ -1,39 +1,11 @@
 #pragma once
 
-
 /*
-    ==================== ASSERT ====================
-*/ 
-//
-//#define _ASSERT_ON_
-static int assert_trapped_triggered__ = 0; //long name to not collide
-#ifdef stdout
-    // Print Assert if stdio.h was included
-    #define diagnostic_(c) assert_trapped_triggered__ = 1, \
-        printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
-#endif // stdout
-#ifndef stdout
-    // No stdout, don't print anything
-    #define diagnostic_(c) assert_trapped_triggered__ = 1
-#endif //not stdout
-
-#if defined(_MSC_VER) && defined(_ASSERT_ON_)
-    #define assert(c) if(!(c)) (diagnostic_(c), __debugbreak())
-#endif // _MSC_VER
-#if !defined(_MSC_VER) && defined(_ASSERT_ON_)
-    #define assert(c) if(!(c)) (diagnostic_(c), __builtin_trap())
-#endif // !_MSC_VER
-
-#ifndef _ASSERT_ON_
-    #define assert(c) if(!(c)) (diagnostic_(c), assert_trapped_triggered__ = 1)
-#endif 
-//  ^^^^^^^^^^^^^^^^^^^^ ASSERT ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    ==================== ATTRIBUTES ====================
+    ==================== ASSERT & ATTRIBUTES ====================
 */
 //
+#define assert_(c) if(!(c)) printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
+
 #if defined(__GNUC__) || defined(__clang__)
     #define _gcc_attr(...) __attribute((__VA_ARGS__)) inline static
 #else
@@ -42,7 +14,7 @@ static int assert_trapped_triggered__ = 0; //long name to not collide
 
 #define _fun  _gcc_attr(nonnull, warn_unused_result)
 #define _proc _gcc_attr(nonnull) void
-//  ^^^^^^^^^^^^^^^^^^^^ ATTRIBUTTES ^^^^^^^^^^^^^^^^^^^^
+//  ^^^^^^^^^^^^^^^^^^^^ ASSERT & ATTRIBUTES ^^^^^^^^^^^^^^^^^^^^
 
 
 /*
@@ -119,11 +91,11 @@ _typedef_structarray(Double);
     typename##s varname = { /*cap:*/ arraysizeof(varname##_base) - 1, /*len:*/ 0, /*elements:*/ varname##_base }
 
 #define _append(mut_array, new_element) \
-    assert((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
+    assert_((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
     (mut_array)->elements[(mut_array)->len++] = (new_element)
 
 #define _delidx(mut_array, idx_to_del) \
-    assert((mut_array)->len > 0 && "Array Underflow"); \
+    assert_((mut_array)->len > 0 && "Array Underflow"); \
     (mut_array)->elements[idx_to_del] = (mut_array)->elements[--(mut_array)->len]
 
 #define _isempty(container_with_len) ((Bool) container_with_len.len == 0)
@@ -337,7 +309,7 @@ _proc buffer_set(Buffer *dst, const String src) {
     Ccstr ccsrc = src.text;
     Mstr databuffer = dst->elements;
 
-    assert(lensrc <= capdst and "stringcpy: Buffer would overflow!");
+    assert_(lensrc <= capdst and "stringcpy: Buffer would overflow!");
 
     for (Long x = 0; x < lendst; ++x) {
         databuffer[x] = 0;
@@ -356,7 +328,7 @@ _proc buffer_append(Buffer *dst, const String src) {
     Ccstr ccsrc = src.text;
     Mstr databuffer = dst->elements;
 
-    assert(lensrc <= capdst and "append_string_to_buffer: Buffer would overflow!");
+    assert_(lensrc <= capdst and "append_string_to_buffer: Buffer would overflow!");
 
     for (Long i = 0; i < lensrc; ++i, ++begin) {
         databuffer[begin] = ccsrc[i];
@@ -446,7 +418,7 @@ _fun Int array_cap_to_exp(Long cap) {
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
         case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
         case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
-        default: assert( cap == (10 & 21) and "Not a power-2 in range 10 <= exp <= 21"); return 0;
+        default: assert_( cap == (10 & 21) and "Not a power-2 in range 10 <= exp <= 21"); return 0;
     }
 }
 
@@ -468,7 +440,7 @@ _fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
     ULong h = long_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
-    assert(search_key != 0 && "Zero Long Key not supported");
+    assert_(search_key != 0 && "Zero Long Key not supported");
 
     while (elements[pos] != 0 and search_key != elements[pos]) {
         pos = ht_lookup(h, pos, exp);
@@ -478,7 +450,7 @@ _fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
 }
 
 _fun Int longs_msi_upsert(Long search_key, Longs *haystack_keys) {
-    assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
+    assert_(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
     Int pos = longs_msi_lookup(search_key, *haystack_keys);
     haystack_keys->len += (haystack_keys->elements[pos] == 0) ? 1 : 0;
     haystack_keys->elements[pos] = search_key;
@@ -492,7 +464,7 @@ _fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
     ULong h = string_hash(search_key);
     Int pos = ht_lookup(h, (Int) h, exp);
 
-    assert(search_key.len != 0 && "Empty String Key not supported");
+    assert_(search_key.len != 0 && "Empty String Key not supported");
 
     while (elements[pos].len != 0 and string_cmp(search_key, elements[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);
@@ -502,7 +474,7 @@ _fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
 }
 
 _fun Int strings_msi_upsert(String search_key, Strings *haystack_keys) {
-    assert(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
+    assert_(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
     Int pos = strings_msi_lookup(search_key, *haystack_keys);
     haystack_keys->len += (haystack_keys->elements[pos].len == 0) ? 1 : 0;
     haystack_keys->elements[pos] = search_key;
@@ -530,15 +502,15 @@ _proc file_to_buffer(String filename, Buffer *dest_buffer) {
         FILE *f =  
     fopen(filename.text, "rb");
     {
-        assert(f && "Could not open file for reading");
+        assert_(f && "Could not open file for reading");
     
         Long fsize = file_size(f);
 
-        assert(dest_buffer->cap >= fsize+2 && "buffer is not enough for file size");
+        assert_(dest_buffer->cap >= fsize+2 && "buffer is not enough for file size");
 
         {
             Long bytesread = (Long) fread(dest_buffer->elements, 1LL, (ULong)fsize, f);
-            assert(bytesread == fsize && "could not read fsize#bytes"); 
+            assert_(bytesread == fsize && "could not read fsize#bytes"); 
             
             dest_buffer->elements[fsize] = '\0';
             dest_buffer->len = fsize;
@@ -569,10 +541,10 @@ _proc string_to_file(String filename, String src_text) {
         FILE *f =  
     fopen(filename.text, "wb");
     {
-        assert(f && "Could not open file for writting");
+        assert_(f && "Could not open file for writting");
      
         Long bytes_written = (Long) fwrite(src_text.text, 1, (ULong)src_text.len, f);
-        assert(bytes_written == src_text.len && "could not write buffer_len#bytes");
+        assert_(bytes_written == src_text.len && "could not write buffer_len#bytes");
     }
     fclose(f);
 }
@@ -581,13 +553,13 @@ _proc lines_to_file(String filename, Strings lines) {
         FILE *f =  
     fopen(filename.text, "wb");
     {
-        assert(f && "Could not open file for writting");
+        assert_(f && "Could not open file for writting");
         
             for (int i = 0; i < lines.len; ++i) {
                 String line = lines.elements[i];
                 Long bytes_written = (Long) fwrite(line.text, 1, (ULong)line.len, f);
                 bytes_written += (Long) fwrite("\n", 1, 1, f);
-                assert(bytes_written == line.len + 1 && "could not write line_len#bytes");
+                assert_(bytes_written == line.len + 1 && "could not write line_len#bytes");
             }
     }
     fclose(f);
@@ -610,19 +582,19 @@ _fun Mmap mmap_open(String filename) {
         FILE_ATTRIBUTE_NORMAL,                 // dwFlagsAndAttributes
         0);                                    // hTemplateFile
 
-    assert(hFile != INVALID_HANDLE_VALUE);
+    assert_(hFile != INVALID_HANDLE_VALUE);
     
     LARGE_INTEGER liFileSize = ZERO_INIT;
-    assert(GetFileSizeEx(hFile, &liFileSize) && "File Size exception");
+    assert_(GetFileSizeEx(hFile, &liFileSize) && "File Size exception");
     
-    assert(liFileSize.QuadPart && "File Empty!");
+    assert_(liFileSize.QuadPart && "File Empty!");
 
     HANDLE hMap = CreateFileMapping(hFile, 0,PAGE_READONLY, 0, 0, 0);
 
-    assert(hMap && "Failed to create file mapping");
+    assert_(hMap && "Failed to create file mapping");
 
     Any* lpBasePtr = MapViewOfFile(hMap,FILE_MAP_READ, 0, 0, 0);
-    assert(lpBasePtr && "MapView failed");
+    assert_(lpBasePtr && "MapView failed");
 
     Mmap mmap_info = {hFile, hMap, filename, {(Long)liFileSize.QuadPart, (Long)liFileSize.QuadPart, (Byte*)lpBasePtr}};
     
@@ -652,7 +624,7 @@ typedef long unsigned int Thread_return_code;
 
 _fun Thread go(Thread_return_code (*routine)(Any* arg), Any* arg) {
     Thread thread = CreateThread(0, 0, routine, arg, 0, 0);
-    assert(thread != 0 && "Error creating thread");
+    assert_(thread != 0 && "Error creating thread");
 
     return thread;
 }

@@ -13,7 +13,7 @@ _proc test_keys(void) {
 
 _proc test_hashtable_insertions(void) {
     Int pos = 0;
-    _new_array(keys, static String, 1 << 10);
+    _new_array(keys, static String, 1 << 5);
 
     printf("Keys cap: %lld\n", keys.cap);
 

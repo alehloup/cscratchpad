@@ -79,9 +79,6 @@ __extension__ typedef unsigned __int128 uint128_t;
 
 #define _isempty(container_with_len) ((bool)((*array##_len) == 0))
 
-#define _sort(array, sort_function) qsort(&array, (*array##_len), sizeof(array[0]), sort_function)
-
-
 /*
     STRING SLICES
 */

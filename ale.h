@@ -523,7 +523,10 @@ int32_t shellrun(const char *const format, ...) {
     return system(buffer);
 }
 
-// Creates the clock variable |start|, starting it
-#define START_WATCH_ clock_t start = clock()
-// Prints the current clock time, using the variable |start|
-#define STOP_WATCH_ printf("\n\nExecuted in %f seconds \n", (double)(clock() - start) / CLOCKS_PER_SEC)
+static clock_t benchclock = 0;
+proc_ start_benchclock() {
+    benchclock = clock(); 
+} 
+proc_ stop_benchclock() {
+    printf("\n\nExecuted in %f seconds \n", (double)(clock() - benchclock) / CLOCKS_PER_SEC);
+}

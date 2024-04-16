@@ -6,7 +6,7 @@ int32_t main(void) {
     #define N 20
     int32_t counts[N] = {0};
 
-    _START_WATCH;
+    START_WATCH_;
     
     for(int32_t i = 0; i < 1000000000; ++i) {
         counts[rnd(&seed) % N] +=1;
@@ -16,7 +16,9 @@ int32_t main(void) {
         printf("%d: %d\n", i+1, counts[i]);
     }
     
-    _STOP_WATCH;
+    STOP_WATCH_;
+
+    printf("\nTested random functions.\n");
 
     return 0;
 }

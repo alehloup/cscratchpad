@@ -110,7 +110,7 @@ _thread_fun chunked_run(void* args /* thread_idx */) {
     return 0;
 }
 
-_proc aggregate_results(void) {
+proc_ aggregate_results(void) {
     City* thread0 = thread_cities[0];
 
     for (int32_t i_thread = 1; i_thread < nthreads; ++i_thread) {
@@ -132,7 +132,7 @@ _proc aggregate_results(void) {
     }
 }
 
-_proc print_results(void) {
+proc_ print_results(void) {
     for (int32_t i = 0; i < ncity; ++i) {
         City *city = &thread_cities[0][hash_order[i]];
         printf("%s  #%lld  $%.1f  @%.1f  [%.1f  %.1f]\n", city->name, city->count, 
@@ -144,7 +144,7 @@ _proc print_results(void) {
     }
 }
 
-_proc run(void) {
+proc_ run(void) {
     Mmap mmap_info_local = mmap_open(FILENAME);
     mmap_info = &mmap_info_local;
     

@@ -1,53 +1,52 @@
-#include <stdio.h>
 #include "ale.h"
 
-_proc test_get_exp(void) {
-    _new_array(hash_table, int64_t, 1 << 21);
-    printf("exp: %d\n", array_cap_to_exp(hash_table.cap));
+proc_ test_get_exp(void) {
+    array_new_(hash_table, int64_t, 1 << 21);
+    printf("exp: %d\n", array_cap_to_exp(hash_table_cap));
 }
 
-_proc test_keys(void) {
-    _new_array(keys, int64_t, 1 << 10);
-    printf("cap: %lld %d\n", keys.cap, array_cap_to_exp(keys.cap));
+proc_ test_keys(void) {
+    array_new_(keys, int64_t, 1 << 10);
+    printf("cap: %lld %d\n", keys_cap, array_cap_to_exp(keys_cap));
 }
 
-_proc test_hashtable_insertions(void) {
+proc_ test_hashtable_insertions(void) {
     int32_t pos = 0;
-    _new_array(keys, static String, 1 << 10);
+    array_new_(keys, struct sslice_t, 1 << 10);
 
-    printf("Keys cap: %lld\n", keys.cap);
+    printf("Keys cap: %lld\n", keys_cap);
 
-    pos = strings_msi_upsert(S("Alessandro Stamatto"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Alessandro Stamatto"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Sarah Sakamoto"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Sarah Sakamoto"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Adir Luiz"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Adir Luiz"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Ines Stamatto"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Ines Stamatto"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Luane Stamatto"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Luane Stamatto"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Alessandro Stamatto"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Alessandro Stamatto"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Luane Stam"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Luane Stam"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Sarah Sakamoto"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Sarah Sakamoto"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Alex Stam"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Alex Stam"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(S("Alessandro Stam"), &keys);
-    printf("[%d] %s \n", pos, keys.elements[pos].text);
+    pos = strings_msi_upsert(sslice_("Alessandro Stam"), arrarg_(keys));
+    printf("[%d] %s \n", pos, keys[pos].text);
 
-    printf("Len: %lld Cap: %lld\n", keys.len, keys.cap);
+    printf("Len: %lld Cap: %lld\n", (*keys_len), keys_cap);
 }
 
 
@@ -55,6 +54,8 @@ int32_t main(void) {
     test_get_exp();
     test_keys();
     test_hashtable_insertions();
+
+    printf("\nTested hashtable functions.\n");
 
     return 0;
 }

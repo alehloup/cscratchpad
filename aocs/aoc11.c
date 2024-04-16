@@ -7,10 +7,10 @@ static int32_t M = 0, N = 0;
 static char matrix[512][512] = {0};
 
 typedef struct coord{int32_t line; int32_t column;}coord;
-_proc coord_printf(coord c) {
+proc_ coord_printf(coord c) {
     printf("(%d,%d) ", c.line, c.column);
 }
-_fun int64_t distance(coord coord1, coord coord2) {
+fun_ int64_t distance(coord coord1, coord coord2) {
     int32_t lower_line    = min_(coord1.line, coord2.line);
     int32_t higher_line   = max_(coord1.line, coord2.line);
     int32_t lower_column  = min_(coord1.column, coord2.column);
@@ -32,7 +32,7 @@ _fun int64_t distance(coord coord1, coord coord2) {
 static coord galaxies[512] = {{0,0}};
 static int32_t galaxies_len = 0;
 
-_proc initialize_matrix(Mstr lines[2]) {
+proc_ initialize_matrix(Mstr lines[2]) {
     int32_t newM = M, newN = N;
     int32_t column_has_galaxy[256] = {0};
 
@@ -85,7 +85,7 @@ static void get_galaxies(void) {
 }
 
 //AoC 11
-_proc aoc(int32_t lines_len, Mstr lines[2]) {
+proc_ aoc(int32_t lines_len, Mstr lines[2]) {
     int64_t sum_dists = 0;
     M = lines_len;
     N = const char*int(lines[0]);

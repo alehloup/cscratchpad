@@ -1,84 +1,81 @@
-#include <stdio.h>
 #include "ale.h"
 
-_proc test_buffers(void) {
-    String string = S("Alessandro");
-    _new_array(buff, char, 256);
+proc_ test_buffers(void) {
+    struct sslice_t string = sslice_("Alessandro");
+    array_new_(buff, char, 256);
 
-    buffer_append(&buff, string);
-    buffer_append(&buff, S(" Luiz"));
-    buffer_append(&buff, S(" Stamatto"));
+    buffer_append(arrarg_(buff), string);
+    buffer_append(arrarg_(buff), sslice_(" Luiz"));
+    buffer_append(arrarg_(buff), sslice_(" Stamatto"));
 
-    buffer_set(&buff, S("Woa"));
+    buffer_set(arrarg_(buff), sslice_("Woa"));
 
-    printf("%s |%lld| \n", buff.elements, buff.len);
+    printf("%s |%lld| \n", buff, *buff_len);
 }
 
-_proc test_to_lines(void) {
-    String text = S("Alessandro \n Luiz\n Stamatto \n Ferreira");
-    _new_array(lines, String, 256);
+proc_ test_to_lines(void) {
+    struct sslice_t text = sslice_("Alessandro \n Luiz\n Stamatto \n Ferreira");
+    array_new_(lines, struct sslice_t, 256);
 
-    to_lines(&lines, text);
+    to_lines(text, arrarg_(lines));
 
-    string_print(trim(lines.elements[0])); printn;
-    string_print(trim(lines.elements[1])); printn;
-    string_print(trim(lines.elements[2])); printn;
-    string_print(trim(lines.elements[3])); printn;
+    sslice_print(trimmed(lines[0])); printn;
+    sslice_print(trimmed(lines[1])); printn;
+    sslice_print(trimmed(lines[2])); printn;
+    sslice_print(trimmed(lines[3])); printn;
 }
 
-_proc test_split(void) {
-    String text = S("Alessandro  Luiz Stamatto  Ferreira");
-    _new_array(words, String, 256);
+proc_ test_split(void) {
+    struct sslice_t text = sslice_("Alessandro  Luiz Stamatto  Ferreira");
+    array_new_(words, struct sslice_t, 256);
 
-    split(&words, text, ' ');
+    split(text, ' ', arrarg_(words));
 
-    string_print(trim(words.elements[0])); printn;
-    string_print(trim(words.elements[1])); printn;
-    string_print(trim(words.elements[2])); printn;
-    string_print(trim(words.elements[3])); printn;
+    sslice_print(trimmed(words[0])); printn;
+    sslice_print(trimmed(words[1])); printn;
+    sslice_print(trimmed(words[2])); printn;
+    sslice_print(trimmed(words[3])); printn;
 }
 
-_proc test_string_eq(void) {
-    String s1 = S("Alessandro"), s2 = S("Alessandr");
-
-    printf("string_cmp: %d\n", string_cmp(s1, s2));
-    
+proc_ print_sslice_cmp(struct sslice_t a, struct sslice_t b) {
+        printf("sslice_cmp, ");
+        
+        sslice_print(a);
+        printf(" cmp ");
+        sslice_print(b);
+        // ==
+        printf(" %d \n", sslice_cmp(a, b));
 }
 
-_proc test_memoset(void) {
-    int64_t x = 5;
-    String s = S("Alessandro");
-
-    printf("Antes: %lld %s|%lld \n", x, s.text, s.len);
-
-    x = ZERO_VAL(int64_t); //memozero(&x, sizeof(x));
-    s = ZERO_VAL(typeof(s)); //memozero(&s, sizeof(s));
-
-    printf("Depois: %lld %s|%lld \n", x, s.text, s.len);
+proc_ test_string_eq(void) {
+    print_sslice_cmp(sslice_("Alessandro"), sslice_("Alessandr"));
+    print_sslice_cmp(sslice_("Alessandro"), sslice_("Alessandro"));
+    print_sslice_cmp(sslice_("Sarah"), sslice_("Alexi"));
+    print_sslice_cmp(sslice_("Alex"), sslice_("Sara"));
 }
 
-_proc test_fileread(void) {
-    _new_array(b, Byte, 2048);
-    file_to_buffer(S("commands.txt"), &b);
+proc_ test_fileread(void) {
+    array_new_(b, char, 2048);
+    file_to_buffer("commands.txt", arrarg_(b));
 
-    printf("|%lld|\n%s\n", b.len, b.elements);
+    printf("|%lld|\n%s\n", *b_len, b);
 }
 
-_proc test_fileread_to_lines(void) {
-    _new_array(b, Byte, 2048);
-    _new_array(lines, String, 64);
+proc_ test_fileread_to_lines(void) {
+    array_new_(b, char, 2048);
+    array_new_(lines, struct sslice_t, 64);
 
-    file_to_lines(S("commands.txt"), &lines, &b);
+    file_to_lines("commands.txt", arrarg_(b), arrarg_(lines));
 
-    for (int64_t i = 0; i < lines.len; ++i) {
-        printf("%lld: ", i); string_print(lines.elements[i]); printn;
+    for (int64_t i = 0; i < (*lines_len); ++i) {
+        printf("%lld: ", i); sslice_print(lines[i]); printn;
     }
 
-    lines_to_file(S("linhas.txt"), lines);
+    lines_to_file(arrarg_(lines), "linhas.txt");
 }
 
-_proc test_filewrite(void) {
-    string_to_file(S("saida.txt"), S("Woa\nTestando arquivos!\n"));
+proc_ test_filewrite(void) {
+    sslice_to_file(sslice_("Woa\nTestando arquivos!\n"), "saida.txt");
 }
 
 int32_t main(void) {
@@ -86,10 +83,11 @@ int32_t main(void) {
     test_to_lines();
     test_split();
     test_string_eq();
-    test_memoset();
     test_fileread();
     test_fileread_to_lines();
     test_filewrite();
+
+    printf("\nTested string functions.\n");
 
     return 0;
 }

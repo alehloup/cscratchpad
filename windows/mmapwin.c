@@ -16,7 +16,7 @@ _proc run(void) {
     printf("\nDone\n");
 }
 
-int main(void)
+int32_t main(void)
 {
     START_WATCH;
     run();

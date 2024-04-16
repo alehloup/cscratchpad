@@ -3,21 +3,21 @@
 #include "ale.h"
 
 #define NUM_THREADS 8
-int results[NUM_THREADS];
+int32_t results[NUM_THREADS];
 
-_thread_fun sum(Any* args) {
-    int threadIdx = *(int *)args;
+_thread_fun sum(void* args) {
+    int32_t threadIdx = *(int32_t *)args;
     results[threadIdx] = threadIdx * 10;
     return 0;
 }
 
-int main() {
+int32_t main() {
     
     go_threads(threads, sum, NUM_THREADS);
     join_threads(threads);
 
-    int totalSum = 0;
-    for (int i = 0; i < NUM_THREADS; ++i) {
+    int32_t totalSum = 0;
+    for (int32_t i = 0; i < NUM_THREADS; ++i) {
         totalSum += results[i];
     }
 

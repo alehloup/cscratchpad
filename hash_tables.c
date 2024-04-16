@@ -2,17 +2,17 @@
 #include "ale.h"
 
 _proc test_get_exp(void) {
-    _new_array(hash_table, Long, 1 << 21);
+    _new_array(hash_table, int64_t, 1 << 21);
     printf("exp: %d\n", array_cap_to_exp(hash_table.cap));
 }
 
 _proc test_keys(void) {
-    _new_array(keys, Long, 1 << 10);
+    _new_array(keys, int64_t, 1 << 10);
     printf("cap: %lld %d\n", keys.cap, array_cap_to_exp(keys.cap));
 }
 
 _proc test_hashtable_insertions(void) {
-    Int pos = 0;
+    int32_t pos = 0;
     _new_array(keys, static String, 1 << 10);
 
     printf("Keys cap: %lld\n", keys.cap);
@@ -51,7 +51,7 @@ _proc test_hashtable_insertions(void) {
 }
 
 
-int main(void) {
+int32_t main(void) {
     test_get_exp();
     test_keys();
     test_hashtable_insertions();

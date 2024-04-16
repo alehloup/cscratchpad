@@ -3,7 +3,7 @@
 
 _proc test_buffers(void) {
     String string = S("Alessandro");
-    _new_array(buff, Char, 256);
+    _new_array(buff, char, 256);
 
     buffer_append(&buff, string);
     buffer_append(&buff, S(" Luiz"));
@@ -46,12 +46,12 @@ _proc test_string_eq(void) {
 }
 
 _proc test_memoset(void) {
-    Long x = 5;
+    int64_t x = 5;
     String s = S("Alessandro");
 
     printf("Antes: %lld %s|%lld \n", x, s.text, s.len);
 
-    x = ZERO_VAL(Long); //memozero(&x, sizeof(x));
+    x = ZERO_VAL(int64_t); //memozero(&x, sizeof(x));
     s = ZERO_VAL(typeof(s)); //memozero(&s, sizeof(s));
 
     printf("Depois: %lld %s|%lld \n", x, s.text, s.len);
@@ -70,7 +70,7 @@ _proc test_fileread_to_lines(void) {
 
     file_to_lines(S("commands.txt"), &lines, &b);
 
-    for (Long i = 0; i < lines.len; ++i) {
+    for (int64_t i = 0; i < lines.len; ++i) {
         printf("%lld: ", i); string_print(lines.elements[i]); printn;
     }
 
@@ -81,7 +81,7 @@ _proc test_filewrite(void) {
     string_to_file(S("saida.txt"), S("Woa\nTestando arquivos!\n"));
 }
 
-int main(void) {
+int32_t main(void) {
     test_buffers();
     test_to_lines();
     test_split();

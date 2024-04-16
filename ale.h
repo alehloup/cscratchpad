@@ -1,362 +1,216 @@
 #pragma once
 
-/*
-    ==================== ASSERT & ATTRIBUTES ====================
-*/
-//
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdarg.h>
+#include <memory.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+    #include <Windows.h>
+#endif
+
 #define assert_(c) if(!(c)) printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
 
 #if defined(__GNUC__) || defined(__clang__)
     #define _gcc_attr(...) __attribute((__VA_ARGS__)) inline static
 #else
     #define _gcc_attr(...) inline static
-#endif // defined(__GNUC__) || defined(__clang__)
+#endif
 
 #define _fun  _gcc_attr(nonnull, warn_unused_result)
 #define _proc _gcc_attr(nonnull) void
-//  ^^^^^^^^^^^^^^^^^^^^ ASSERT & ATTRIBUTES ^^^^^^^^^^^^^^^^^^^^
 
-
-/*
-    ==================== TYPEDEFS ====================
-*/
-//
-#define Any void
-typedef int Bool;
-typedef char Char;
-typedef char Byte;
-typedef int Int;
-typedef unsigned int UInt;
-typedef long long Long;
-typedef unsigned long long ULong;
 #ifdef __SIZEOF_INT128__
-__extension__ typedef __int128 Big;
-__extension__ typedef unsigned __int128 UBig;
+__extension__ typedef __int128 int128_t;
+__extension__ typedef unsigned __int128 uint128_t;
 #endif // __SIZEOF_INT128__
-typedef float Float;
-typedef double Double;
 
-typedef const char * const Ccstr; // const Cstr const pointer
-typedef const char * Cstr; // const Cstr
-typedef char * Mstr; // modifiable Cstr
-//  ^^^^^^^^^^^^^^^^^^^^ TYPEDEFS ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    Keyword Alternatives
-*/
-//
-#define True (Bool)1
-#define False (Bool)0
-#ifndef __cplusplus
+#ifndef __cplusplus 
     #define and &&
     #define or ||
     #define not !
 
     #define _struct(Type) (Type)
     #define ZERO_INIT {0}
-#endif // not __cplusplus
+
+    #ifdef __SIZEOF_INT128__
+        #define _static_n(N) static N
+    #endif
+    #ifndef __SIZEOF_INT128__
+        #define _static_n(N) /*static N*/
+    #endif
+#endif
 #ifdef __cplusplus
 
-    #define _struct(Type) //C++ does not accept compund literal
-    #define ZERO_INIT {} //C++ uses empty braces
+    #define _struct(Type)
+    #define ZERO_INIT {}
+    #define _static_n(N) N
 #endif // __cplusplus
-
-#define ZERO_VAL(Type) _struct(Type) ZERO_INIT
-//  ^^^^^^^^^^^^^^^^^^^^ Keyword Alternatives ^^^^^^^^^^^^^^^^^^^^
-
 
 /*
     ARRAYS
 */
-//
-#define isizeof(x_element_) ((Long)sizeof(x_element_))
+#define isizeof(x_element_) ((int64_t)sizeof(x_element_))
 #define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
 
-// { const Long cap; Long len; element_type *elements; }, typename is Element_type##s
-#define _typedef_structarray(element_type) \
-    typedef struct \
-    element_type##s \
-        { const Long cap; Long len; element_type *elements; } \
-    element_type##s
-_typedef_structarray(Char);
-_typedef_structarray(Int);
-_typedef_structarray(Long);
-_typedef_structarray(Float);
-_typedef_structarray(Double);
+// _new_cap_array_len(arrayname, typename, capacity)
+#define _new_cap_array_len(arrayname, typename, capacity) \
+    typename arrayname[(capacity)+1] = ZERO_INIT; \
+    const int64_t arrayname##_cap = arraysizeof(arrayname##_base) - 1; \
+    int64_t  arrayname##_len_val_ = 0; \
+    int64_t* arrayname##_len = &arrayname##_len_val_
 
-//  creates local structarray using a base Array of type typename##s (like Char -> Chars)
-#define _new_array(varname, typename, capacity) \
-    typename varname##_base[(capacity)+1] = ZERO_INIT; \
-    typename##s varname = { /*cap:*/ arraysizeof(varname##_base) - 1, /*len:*/ 0, /*elements:*/ varname##_base }
+#define array_param_(arrayname, typename) \
+    const int64_t arrayname##_cap, typename arrayname[_static_n(arrayname##_cap)], int64_t* arrayname##_len
 
-#define _append(mut_array, new_element) \
-    assert_((mut_array)->len < (mut_array)->cap && "Array Overflow"); \
-    (mut_array)->elements[(mut_array)->len++] = (new_element)
+#define array_arg_(arrayname) arrayname##_cap, arrayname, arrayname##_len
 
-#define _delidx(mut_array, idx_to_del) \
-    assert_((mut_array)->len > 0 && "Array Underflow"); \
-    (mut_array)->elements[idx_to_del] = (mut_array)->elements[--(mut_array)->len]
+#define _append(array, new_element) \
+    assert_((*array##_len) < array##_cap && "Array Overflow"); \
+    array[(*array##_len)++] = (new_element)
 
-#define _isempty(container_with_len) ((Bool) container_with_len.len == 0)
+#define _delidx(array, idx_to_del) \
+    assert_((*array##_len) > 0 && "Array Underflow"); \
+    array[idx_to_del] = array[--(*array##_len)]
 
-#ifdef RAND_MAX
-// stdlib.h
-//
-#define _sort(ptr_array_of_things, sort_function) \
-     qsort(ptr_array_of_things, ptr_array_of_things->len, sizeof(ptr_array_of_things->elements[0]), sort_function)
+#define _isempty(container_with_len) ((bool)((*array##_len) == 0))
 
-// stdlib.h
-#endif // RAND_MAX
-//  ^^^^^^^^^^^^^^^^^^^^ ARRAYS ^^^^^^^^^^^^^^^^^^^^
+#define _sort(array, sort_function) qsort(&array, (*array##_len), sizeof(array[0]), sort_function)
 
 
 /*
-    STRINGS
+    STRING SLICES
 */
-//
-// { const Long cap; Long len; Byte *elements; }
-typedef Chars Bytes;
-// { const Long cap; Long len; Char *elements; }
-typedef Chars Buffer;
-// { Long len; Cstr text; }
-typedef struct String { Long len; Cstr text; } String;
+// struct strslice_t { int64_t len; const char* text; }
+struct strslice_t { int64_t len; const char* text; }; // struct strslice_t { int64_t len; const char* text; }
+#define _to_strslice(string) _struct(strslice_t) {strlen(string), string}
 
-// { const Long cap; Long len; Char *elements; }
-typedef struct Buffers { const Long cap; Long len; Buffer *elements; } Buffers;
-typedef struct Strings { const Long cap; Long len; String *elements; } Strings;
-
-_fun Long Cstrlen(Ccstr Cstring) {
-    Long Cstring_len;
-    for (Cstring_len = 0; Cstring[Cstring_len] != 0; ++Cstring_len) {
-        /* Empty Body */
-    }
-    return Cstring_len;
+_proc strslice_print(struct strslice_t str) {
+    printf("%.*s", (int) str.len, str.text);
 }
-
-#define S(string) _struct(String) {Cstrlen(string), string}
-
-#ifdef stdout
-// stdio.h
-
-_proc string_print(String str) {
-    printf("%.*s", (Int) str.len, str.text);
-}
-
 #define printn printf("\n")
 
-// stdio.h
-#endif //stdout
+_fun int32_t strslice_cmp(const struct strslice_t a_text_slice, const struct strslice_t b_text_slice) {
+    const char* const a_text = a_text_slice.text;
+    const int64_t a_text_len = a_text_slice.len;
 
-_fun Int string_cmp(const String str1, const String str2) {
-    Long i = 0;
+    const char* const b_text = b_text_slice.text;
+    const int64_t b_text_len = b_text_slice.len;
 
-    Ccstr ccstr1 = str1.text, ccstr2 = str2.text;
-    Long len1 = str1.len, len2 = str2.len;
-
-    for (i = 0; i < len1 and i < len2 and ccstr1[i] == ccstr2[i]; ++i) {
-        /* Empty Body */
+    if (a_text_len != b_text_len) {
+        return a_text_len - b_text_len;
     }
 
-    return (Int)(ccstr1[i] - ccstr2[i]);
+    for (int64_t i = 0; i < a_text_len; ++i) {
+        if (a_text[i] != b_text[i]) {
+            return a_text[i] - b_text[i];
+        }
+    }
+
+    return 0;
 }
-_fun Int string_voidcmp(const void * a, const void * b) {
-    return string_cmp(*(const String*)a, *(const String*)b);
-}
-
-_fun Bool startswith(const String string, const String prefix) {
-    Long i = 0;
-
-    Ccstr Ccstring = string.text, ccprefix = prefix.text;
-    Long lenstring = string.len, lenprefix = prefix.len;
-
-    if (_isempty(prefix)) {
-        return True;
+_fun bool startswith(const struct strslice_t prefix_slice, const struct strslice_t text_slice) {
+    if (prefix_slice.len > text_slice.len) {
+        return false;
     }
-    if (_isempty(string) or lenprefix > lenstring) {
-        return False;
-    }
+    struct strslice_t only_begin = {prefix_slice.len, text_slice.text};
 
-    for (i = 0; i < lenprefix and i < lenstring and Ccstring[i] == ccprefix[i]; ++i) {
-        /* Empty Body */
-    }
-
-    if (i == lenprefix) {
-        return True;
-    } else {
-        return False;
-    }
+    return strslice_cmp(prefix_slice, only_begin) == 0;
 }
 
-_fun String trim(String str) {
-    Long i = 0;
+_fun struct strslice_t trimmed(const struct strslice_t text_slice) {
+    const char* const text = text_slice.text;
+    int64_t text_len = text_slice.len;
 
-    for (/* i = 0 */; i < str.len and str.text[i] <= ' '; ++i) {
-        --str.len;
+    int64_t start = 0;
+    for (start = 0; start < text_len and text[start] <= ' '; ++start) {
+        --text_len;
     }
 
-    str.text = &str.text[i];
-
-    for (i = str.len - 1; i >= 0 and str.text[i] <= ' '; --i) {
-        --str.len;
+    for (int64_t last = text_len - 1; last >= 0 and text[last] <= ' '; --last) {
+        --text_len;
     }
 
-    return str;
+    struct strslice_t trimmed_slice = {text_len, &text[start]};
+    return trimmed_slice;
 }
 
-_fun Bool is_digit(const Char character) {
+_fun bool is_digit(const char character) {
     return character >= '0' && character <= '9';
 }
 
-_fun Long char_pos(const Char letter, const String string) {
-    Long lenstring = string.len;
-    Ccstr Ccstring = string.text;
+_fun int64_t char_pos(const char letter, const struct strslice_t text_slice) {
+    const char* const text = text_slice.text;
+    const int64_t text_len = text_slice.len;
 
-    for (int letter_pos = 0; letter_pos < lenstring; ++letter_pos) {
-        if(Ccstring[letter_pos] == letter) {
+    for (int64_t letter_pos = 0; letter_pos < text_len; ++letter_pos) {
+        if(text[letter_pos] == letter) {
             return letter_pos;
         }
     }
 
     return -1;
 }
-_fun Bool char_in_(const Char letter, const String string) {
-    return (Bool) (char_pos(letter, string) != -1);
-}
 
-_fun Long char_pos_in_sub(const Char letter, const String string, const Int start, const Int count) {
-    Long lenstring = string.len;
-    Ccstr Ccstring = string.text;
+_proc split(const struct strslice_t text_slice, const char splitter, array_param_(parts, struct strslice_t)) {
+    const char* const text = text_slice.text;
+    const int64_t text_len = text_slice.len;
 
-    for (int letter_pos = start, i = 0; i < lenstring and i < count; ++letter_pos, ++i) {
-        if(Ccstring[letter_pos] == letter) {
-            return letter_pos;
-        }
-    }
+    int64_t current = 0;
+    for (int64_t i = 0; i < text_len; ++i) {
+        if (text[i] == splitter) {            
+            struct strslice_t part = {(i - current), (&text[current])};
+            _append(parts, part);
 
-    return -1;
-}
-_fun Bool char_in_sub_(const Char letter, const String string, int start, int count) {
-    return (Bool) (char_pos_in_sub(letter, string, start, count) != -1);
-}
-
-// Returns the lines in a String
-_proc to_lines_base(Strings *dest_lines, String src_text, Bool include_empty_lines) {
-    Bool not_empty = False;
-    Long current = 0;
-    
-    Ccstr text = src_text.text;
-    for (Long i = 0; i < src_text.len; ++i) {
-        not_empty = not_empty or text[i] > 32;
-
-        if (text[i] == '\n') {
-            
-            if (include_empty_lines || not_empty) {
-                String line = {(i - current), (&text[current])};
-                _append(dest_lines, line);
-            }
-
-            not_empty = False;
             current = i+1;
         }
     }
-    if (include_empty_lines || not_empty) {
-        String line = {(src_text.len - current), (&text[current])};
-        _append(dest_lines, line);
-    }
-}
-
-// Returns the non-empty lines in a String
-_proc to_lines(Strings *dest_lines, String src_text) {
-    to_lines_base(dest_lines, src_text, False);
-}
-
-// Returns the lines in a String, including empty ones
-_proc to_lines_including_empty(Strings *dest_lines, String src_text) {
-    to_lines_base(dest_lines, src_text, True);
-}
-
-// Returns the words of a line, the line is divided by the splitter
-_proc split(Strings *dest_words, String src_text, char splitter) {
-    Bool not_empty = False;
-    int i = 0, current = 0;
-    
-    Ccstr text = src_text.text;
-
-    for (i = 0; i < src_text.len; ++i) {
-        not_empty = not_empty or text[i] > 32;
-
-        if (text[i] == splitter) {
-            if (not_empty) {
-                String word = {(i - current), (&text[current])};
-                _append(dest_words, word);
-            }
-
-            not_empty = False;
-            current = i+1;
-        }
+    if (current < text_len) {
+        struct strslice_t part = {(text_len - current), (&text[current])};
+        _append(parts, part);
     }
 
-    if (not_empty) {
-        String word = {(src_text.len - current), (&text[current])};
-        _append(dest_words, word);
-    }
+    struct strslice_t part = ZERO_INIT;
+    parts[(*parts_len)] = part;
+}
+_proc to_lines(const struct strslice_t text_slice, array_param_(lines, struct strslice_t)) {
+    split(text_slice, '\n', lines_cap, lines, lines_len);
 }
 
-_proc buffer_set(Buffer *dst, const String src) {
-    Long i = 0;
-    Long capdst = dst->cap, lensrc = src.len, lendst = dst->len;
-    Ccstr ccsrc = src.text;
-    Mstr databuffer = dst->elements;
+_proc buffer_append(array_param_(dst_buffer, char), const struct strslice_t src_chars_slice) {
+    const char* const src_chars = src_chars_slice.text;
+    const int64_t src_chars_len = src_chars_slice.len;
 
-    assert_(lensrc <= capdst and "stringcpy: Buffer would overflow!");
+    assert_(src_chars_len <= dst_buffer_cap and "buffer_append: Buffer would overflow!");
 
-    for (Long x = 0; x < lendst; ++x) {
-        databuffer[x] = 0;
+    for (int64_t i = 0; i < src_chars_len; ++i) {
+        dst_buffer[(*dst_buffer_len)++] = src_chars[i]; 
     }
-
-    for (i = 0; i < lensrc; ++i) {
-        databuffer[i] = ccsrc[i];
-    }
-    databuffer[i] = 0;
-
-    dst->len = lensrc;
+    dst_buffer[(*dst_buffer_len)] = 0;
 }
-
-_proc buffer_append(Buffer *dst, const String src) {
-    Long begin = dst->len, lensrc = src.len, capdst = dst->cap;
-    Ccstr ccsrc = src.text;
-    Mstr databuffer = dst->elements;
-
-    assert_(lensrc <= capdst and "append_string_to_buffer: Buffer would overflow!");
-
-    for (Long i = 0; i < lensrc; ++i, ++begin) {
-        databuffer[begin] = ccsrc[i];
-    }
-    dst->len += lensrc;
+_proc buffer_set(array_param_(dst_buffer, char), const struct strslice_t src_chars_slice) {
+    *dst_buffer_len = 0;
+    buffer_append(dst_buffer_cap, dst_buffer, dst_buffer_len, src_chars_slice);
 }
-//  ^^^^^^^^^^^^^^^^^^^^ STRINGS ^^^^^^^^^^^^^^^^^^^^
-
 
 /*
     ==================== MATH ====================
 */
-//
-#define abs_(number_) ((number_) > -1 ? (number_) : -(number_))
-#define min_(number1_, number2_) ((number1_) < (number2_) ? (number1_) : (number2_))
-#define max_(number1_, number2_) ((number1_) > (number2_) ? (number1_) : (number2_))
-
 // bitmask for optimized Mod for power 2 numbers
-_fun Long mod_pwr2(Long number, Long modval) {
+_fun int64_t mod_pwr2(int64_t number, int64_t modval) {
     return (number) & (modval - 1);
 }
 
-_fun Long greatest_common_divisor(Long m, Long n) {
-    Long tmp;
+_fun int64_t greatest_common_divisor(int64_t m, int64_t n) {
+    int64_t tmp;
     while(m) { tmp = m; m = n % m; n = tmp; }       
     return n;
 }
-_fun Long least_common_multiple(Long m, Long n) {
+_fun int64_t least_common_multiple(int64_t m, int64_t n) {
      return m / greatest_common_divisor(m, n) * n;
 }
 
@@ -364,8 +218,8 @@ _fun Long least_common_multiple(Long m, Long n) {
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
 
-_fun int rnd(ULong seed[1]) {
-    int shift = 29;
+_fun int32_t rnd(uint64_t seed[_static_n(1)]) {
+    int32_t shift = 29;
     *seed = *seed * Rnd_mult_n + Rnd_sum_n;
     shift -= (int)(*seed >> 61);
     
@@ -377,14 +231,25 @@ _fun int rnd(ULong seed[1]) {
 #define Hash_start_n 0x7A5662DCDF
 #define Hash_mul_n 1111111111111111111 // 11 ones
 
-_fun ULong string_hash(String text) {
-    Ccstr str = text.text;
-    Long str_len = text.len;
-
-    ULong h = Hash_start_n;
+_fun uint64_t cstring_hash(const char* const cstring) {
+    uint64_t h = Hash_start_n;
     
-    for(Long i = 0; i < str_len; ++i) { 
-        h ^= str[i] & 255; h *= Hash_mul_n;
+    for(int64_t i = 0; cstring[i]; ++i) { 
+        h ^= cstring[i] & 255; h *= Hash_mul_n;
+    }
+    h = Hash_shift_mix(h);
+
+    return h >> 1;
+}
+
+_fun uint64_t strslice_hash(const struct strslice_t chars_slice) {
+    const char* const chars = chars_slice.text;
+    int64_t chars_len = chars_slice.len;
+
+    uint64_t h = Hash_start_n;
+    
+    for(int64_t i = 0; i < chars_len; ++i) { 
+        h ^= chars[i] & 255; h *= Hash_mul_n;
     }
     h = Hash_shift_mix(h);
 
@@ -394,8 +259,8 @@ _fun ULong string_hash(String text) {
 #define Hash_mul_n1 0x94d049bb133111eb
 #define Hash_mul_n2 0xbf58476d1ce4e5b9
 
-_fun ULong long_hash(Long integer64) {
-    ULong x = (ULong)integer64;
+_fun uint64_t long_hash(int64_t integer64) {
+    uint64_t x = (uint64_t)integer64;
     
     x *= Hash_mul_n1; 
     x = Hash_shift_mix(x);
@@ -405,14 +270,11 @@ _fun ULong long_hash(Long integer64) {
     return x >> 1;
 }
 
-//  ^^^^^^^^^^^^^^^^^^^^ MATH ^^^^^^^^^^^^^^^^^^^^
-
-
 /*
     ==================== HASH TABLE ====================
 */
 //
-_fun Int array_cap_to_exp(Long cap) {
+_fun int32_t array_cap_to_exp(int64_t cap) {
     switch (cap) {
         case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
         case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
@@ -423,158 +285,135 @@ _fun Int array_cap_to_exp(Long cap) {
 }
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
-_fun Int ht_lookup(
-    ULong hash, // 1st hash acts as base location
-    Int index, // 2nd "hash" steps over the "list of elements" from base-location
-    Int exp // power-2 exp used as the Hash Table capacity
+_fun int32_t ht_lookup(
+    uint64_t hash, // 1st hash acts as base location
+    int32_t index, // 2nd "hash" steps over the "list of elements" from base-location
+    int32_t exp // power-2 exp used as the Hash Table capacity
 ) {
-    UInt step = (UInt)(hash >> (64 - exp)) | 1;
-    Int idx = (Int) (((UInt)index + step) & ((UInt) ((1 << exp) - 1)));
+    uint32_t step = (uint32_t)(hash >> (64 - exp)) | 1;
+    int32_t idx = (int) (((uint32_t)index + step) & ((uint32_t) ((1 << exp) - 1)));
     return idx;
 }
 
-_fun Int longs_msi_lookup(Long search_key, Longs haystack_keys) {
-    Long *elements = haystack_keys.elements;
+_fun int32_t i64_msi_lookup(const int64_t search_key, array_param_(haystack_keys, int64_t)) {
+    const int32_t exp = array_cap_to_exp(haystack_keys_cap);    
+    uint64_t h = long_hash(search_key);
+    int32_t pos = ht_lookup(h, (int) h, exp);
 
-    Int exp = array_cap_to_exp(haystack_keys.cap);    
-    ULong h = long_hash(search_key);
-    Int pos = ht_lookup(h, (Int) h, exp);
+    assert_(search_key != 0 && "Zero int64_t Key not supported");
 
-    assert_(search_key != 0 && "Zero Long Key not supported");
-
-    while (elements[pos] != 0 and search_key != elements[pos]) {
+    while (haystack_keys[pos] != 0 and search_key != haystack_keys[pos]) {
         pos = ht_lookup(h, pos, exp);
     }
 
     return pos;
 }
 
-_fun Int longs_msi_upsert(Long search_key, Longs *haystack_keys) {
-    assert_(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
-    Int pos = longs_msi_lookup(search_key, *haystack_keys);
-    haystack_keys->len += (haystack_keys->elements[pos] == 0) ? 1 : 0;
-    haystack_keys->elements[pos] = search_key;
+_fun int32_t i64_msi_upsert(const int64_t search_key, array_param_(haystack_keys, int64_t)) {
+    assert_((*haystack_keys_len) < haystack_keys_cap && "msi keys overflow, can't insert");
+    
+    int32_t pos = longs_msi_lookup(search_key, *haystack_keys);
+    (*haystack_keys_len) += (haystack_keys[pos] == 0) ? 1 : 0;
+    haystack_keys[pos] = search_key;
     return pos;
 }
 
-_fun Int strings_msi_lookup(String search_key, Strings haystack_keys) {
-    String *elements = haystack_keys.elements;
-
-    Int exp = array_cap_to_exp(haystack_keys.cap);    
-    ULong h = string_hash(search_key);
-    Int pos = ht_lookup(h, (Int) h, exp);
+_fun int32_t strslice_msi_lookup(const struct strslice_t search_key, array_param_(haystack_keys, struct strslice_t)) {
+    int32_t exp = array_cap_to_exp(haystack_keys_cap);
+    uint64_t h = strslice_hash(search_key);
+    int32_t pos = ht_lookup(h, (int) h, exp);
 
     assert_(search_key.len != 0 && "Empty String Key not supported");
 
-    while (elements[pos].len != 0 and string_cmp(search_key, elements[pos]) != 0) {
+    while (haystack_keys[pos].len != 0 and strslice_cmp(search_key, haystack_keys[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);
     }
 
     return pos;
 }
 
-_fun Int strings_msi_upsert(String search_key, Strings *haystack_keys) {
-    assert_(haystack_keys->len < haystack_keys->cap && "msi keys overflow, can't insert");
-    Int pos = strings_msi_lookup(search_key, *haystack_keys);
-    haystack_keys->len += (haystack_keys->elements[pos].len == 0) ? 1 : 0;
-    haystack_keys->elements[pos] = search_key;
+_fun int32_t strings_msi_upsert(const struct strslice_t search_key, array_param_(haystack_keys, struct strslice_t)) {
+    assert_((*haystack_keys_len) < haystack_keys_cap && "msi keys overflow, can't insert");
+    int32_t pos = strslice_msi_lookup(search_key, haystack_keys_cap, haystack_keys, haystack_keys_len);
+    (*haystack_keys_len) += (haystack_keys[pos].len == 0) ? 1 : 0;
+    haystack_keys[pos] = search_key;
     return pos;
 }
-
-
-//  ^^^^^^^^^^^^^^^^^^^^ HASH TABLE ^^^^^^^^^^^^^^^^^^^^
-
 
 /*
     ==================== FILES ====================
 */
 //
-#ifdef stdout
-// stdio.h
-_fun Long file_size(FILE* f) {
+_fun int64_t file_size(FILE* f) {
     fseek(f, 0, SEEK_END);
-    Long fsize = ftell(f);
+    int64_t fsize = ftell(f);
     fseek(f, 0, SEEK_SET);
     return fsize;
 }
 
-_proc file_to_buffer(String filename, Buffer *dest_buffer) {
+_proc file_to_buffer(const char const*filename, array_param_(dst_buffer, char)) {
         FILE *f =  
-    fopen(filename.text, "rb");
+    fopen(filename, "rb");
     {
         assert_(f && "Could not open file for reading");
     
-        Long fsize = file_size(f);
+        int64_t fsize = file_size(f);
 
-        assert_(dest_buffer->cap >= fsize+2 && "buffer is not enough for file size");
-
-        {
-            Long bytesread = (Long) fread(dest_buffer->elements, 1LL, (ULong)fsize, f);
-            assert_(bytesread == fsize && "could not read fsize#bytes"); 
-            
-            dest_buffer->elements[fsize] = '\0';
-            dest_buffer->len = fsize;
-        }
+        assert_(dst_buffer_cap >= fsize+2 && "buffer is not enough for file size");
+        
+        int64_t bytesread = (int64_t) fread(dst_buffer, 1LL, (uint64_t)fsize, f);
+        assert_(bytesread == fsize && "could not read fsize#bytes"); 
+        
+        dst_buffer[fsize] = '\0';
+        *dst_buffer_len = fsize;
     }
     fclose(f);
 }
 
-_fun String file_to_string(String filename, Buffer *dest_buffer) {
-    String src_text;
-    
-    file_to_buffer(filename, dest_buffer);
-    src_text.len = dest_buffer->len; 
-    src_text.text = dest_buffer->elements;
-    
-    return src_text;
+_proc file_to_lines(const char const*filename, array_param_(buffer, char), array_param_(lines, struct strslice_t)) {
+    file_to_buffer(filename, buffer_cap, buffer, buffer_len);
+    struct strslice_t chars_slice = {(*buffer_len), buffer};
+    to_lines(chars_slice, lines_cap, lines, lines_len);
 }
 
-_proc file_to_lines(String filename, Strings *dest_lines, Buffer *dest_buffer) {
-    to_lines(dest_lines, file_to_string(filename, dest_buffer));
-}
-
-_proc file_to_lines_including_empty(String filename, Strings *dest_lines, Buffer *dest_buffer) {
-    to_lines_including_empty(dest_lines, file_to_string(filename, dest_buffer));
-}
-
-_proc string_to_file(String filename, String src_text) {
+_proc buffer_to_file(array_param_(buffer, char), const char const*filename) {
         FILE *f =  
-    fopen(filename.text, "wb");
+    fopen(filename, "wb");
     {
         assert_(f && "Could not open file for writting");
      
-        Long bytes_written = (Long) fwrite(src_text.text, 1, (ULong)src_text.len, f);
-        assert_(bytes_written == src_text.len && "could not write buffer_len#bytes");
+        int64_t bytes_written = (int64_t) fwrite(buffer, 1, (uint64_t)(*buffer_len), f);
+        assert_(bytes_written == (*buffer_len) && "could not write buffer_len#bytes");
     }
     fclose(f);
 }
 
-_proc lines_to_file(String filename, Strings lines) {
+_proc lines_to_file(array_param_(lines, struct strslice_t), const char const*filename) {
         FILE *f =  
-    fopen(filename.text, "wb");
+    fopen(filename, "wb");
     {
         assert_(f && "Could not open file for writting");
         
-            for (int i = 0; i < lines.len; ++i) {
-                String line = lines.elements[i];
-                Long bytes_written = (Long) fwrite(line.text, 1, (ULong)line.len, f);
-                bytes_written += (Long) fwrite("\n", 1, 1, f);
-                assert_(bytes_written == line.len + 1 && "could not write line_len#bytes");
+            for (int64_t i = 0; i < (*lines_len); ++i) {
+                int64_t bytes_written = (int64_t) fwrite(lines[i].text, 1, (uint64_t)lines[i].len, f);
+                bytes_written += (int64_t) fwrite("\n", 1, 1, f);
+                assert_(bytes_written == lines[i].len + 1 && "could not write line_len#bytes");
             }
     }
     fclose(f);
 }
 
-// Any *file; Any *map; String filename; Long filesize; Bytes contents;
-typedef struct mmap_file {
-    Any *file; Any *map; String filename; Bytes contents;
-} Mmap;
-// stdio.h
-#endif
 
-#if defined stdout && defined(_WINDOWS_)
-_fun Mmap mmap_open(String filename) {
-    HANDLE hFile = CreateFile(filename.text,
+/*
+    ==================== SYSTEM APIs ====================
+*/
+
+// { void *file; void *map; const char *const filename; char *contents; }
+typedef struct mmap_file { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; } Mmap;
+
+#if defined(_WINDOWS_)
+_fun Mmap mmap_open(const char const*filename) {
+    HANDLE hFile = CreateFile(filename,
         GENERIC_READ,                          // dwDesiredAccess
         0,                                     // dwShareMode
         NULL,                                  // lpSecurityAttributes
@@ -589,106 +428,55 @@ _fun Mmap mmap_open(String filename) {
     
     assert_(liFileSize.QuadPart && "File Empty!");
 
-    HANDLE hMap = CreateFileMapping(hFile, 0,PAGE_READONLY, 0, 0, 0);
+    HANDLE hMap = CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, 0, 0);
 
     assert_(hMap && "Failed to create file mapping");
 
-    Any* lpBasePtr = MapViewOfFile(hMap,FILE_MAP_READ, 0, 0, 0);
+    void* lpBasePtr = MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
     assert_(lpBasePtr && "MapView failed");
 
-    Mmap mmap_info = {hFile, hMap, filename, {(Long)liFileSize.QuadPart, (Long)liFileSize.QuadPart, (Byte*)lpBasePtr}};
+    Mmap mmap_info = {hFile, hMap, filename, (int64_t)liFileSize.QuadPart, (char*)lpBasePtr};
     
     return mmap_info;    
 }
 
 _proc mmap_close(Mmap mmap_info) {
-    UnmapViewOfFile((Any*)mmap_info.contents.elements);
+    UnmapViewOfFile((void*)mmap_info.contents);
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
 }
-#endif // stdout && _WINDOWS_
-//  ^^^^^^^^^^^^^^^^^^^^ FILES ^^^^^^^^^^^^^^^^^^^^
 
+typedef HANDLE thread_t;
+typedef long unsigned int return_code_t;
 
-/*
-    ==================== THREADS ====================
-*/
-//
-#if defined stdout && defined(_WINDOWS_)
-//
-#define Thread Any*
-_typedef_structarray(Thread); // Threads
+#define _thread_fun _fun return_code_t
 
-typedef long unsigned int Thread_return_code;
-#define _thread_fun _fun Thread_return_code
-
-_fun Thread go(Thread_return_code (*routine)(Any* arg), Any* arg) {
-    Thread thread = CreateThread(0, 0, routine, arg, 0, 0);
+_fun thread_t go(return_code_t (*routine)(void* arg), void* arg) {
+    thread_t thread = CreateThread(0, 0, routine, arg, 0, 0);
     assert_(thread != 0 && "Error creating thread");
 
     return thread;
 }
 
-#define go_threads(varname, routine, times) \
-    _new_array(varname, Thread, times); \
-    Int varname##_ids[times] = ZERO_INIT; \
-    for (int i = 0; i < times; ++i) { \
-        varname##_ids[i] = i; \
-        _append(&varname, go(routine, (Any*)&varname##_ids[i]));} \
-    (void) varname.len
+_proc go_threads(return_code_t (*routine)(void* arg), int8_t times, thread_t threads[_static_n(times)]) {
+    static const int8_t thread_ids[] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
+        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+    };
 
-_proc join_threads(Threads threads) {
-    WaitForMultipleObjects((long unsigned int) threads.len, threads.elements, TRUE, INFINITE);
-}
-#endif // stdout && _WINDOWS_
-//  ^^^^^^^^^^^^^^^^^^^^ THREADS ^^^^^^^^^^^^^^^^^^^^
-
-/*
-    ==================== TIME BENCHMARK ====================
-*/
-//
-#ifdef CLOCKS_PER_SEC 
-// time.h
-
-// Creates the clock variable |start|, starting it
-#define START_WATCH clock_t start = clock()
-
-_fun double seconds_since(clock_t start)
-{
-    return (double)(clock() - start) / CLOCKS_PER_SEC;
+    for (int8_t i = 0; i < times; ++i) {
+        threads[i] = go(routine, &thread_ids[i]);
+    }
 }
 
-// time.h
-#endif  
-
-#if defined CLOCKS_PER_SEC && defined stdout 
-// time.h && stdio.h
-
-_proc print_clock(clock_t start) {
-    printf("\n\nExecuted in %f seconds \n", seconds_since(start));
+_proc join_threads(array_param_(threads, thread_t)) {
+    WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
 }
-
-// Prints the current clock time, using the variable |start|
-#define STOP_WATCH print_clock(start)
-
-// time.h && stdio.h
-#endif 
-//  ^^^^^^^^^^^^^^^^^^^^ TIME BENCHMARK ^^^^^^^^^^^^^^^^^^^^
-
-
-/*
-    ==================== SHELL ====================
-*/
-//
-#if defined RAND_MAX && defined stdout
-// stdlib.h && stdio.h
-
-#include <stdarg.h>
+#endif //_WINDOWS_
 
 #define shellrun_buffer_cap 512
-
 _gcc_attr(format(printf, 1, 2), nonnull)
-Int shellrun(Ccstr format, ...) {
+int32_t shellrun(const char* const format, ...) {
     va_list args;
  
     char buffer [shellrun_buffer_cap] = {0};
@@ -702,6 +490,8 @@ Int shellrun(Ccstr format, ...) {
     return system(buffer);
 }
 
-// stdlib.h && stdio.h
-#endif 
-//  ^^^^^^^^^^^^^^^^^^^^ SHELL ^^^^^^^^^^^^^^^^^^^^
+// Creates the clock variable |start|, starting it
+#define START_WATCH clock_t start = clock()
+
+// Prints the current clock time, using the variable |start|
+#define STOP_WATCH printf("\n\nExecuted in %f seconds \n", (double)(clock() - start) / CLOCKS_PER_SEC);

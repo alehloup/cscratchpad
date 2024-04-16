@@ -99,12 +99,12 @@ _fun int32_t strslice_cmp(const struct strslice_t a_text_slice, const struct str
     const int64_t b_text_len = b_text_slice.len;
 
     if (a_text_len != b_text_len) {
-        return a_text_len - b_text_len;
+        return (int32_t) (a_text_len - b_text_len);
     }
 
     for (int64_t i = 0; i < a_text_len; ++i) {
         if (a_text[i] != b_text[i]) {
-            return a_text[i] - b_text[i];
+            return (int32_t) (a_text[i] - b_text[i]);
         }
     }
 
@@ -293,6 +293,7 @@ _fun int32_t ht_lookup(
 }
 
 _fun int32_t i64_msi_lookup(const int64_t search_key, array_param_(haystack_keys, int64_t)) {
+    (void) haystack_keys_len;
     const int32_t exp = array_cap_to_exp(haystack_keys_cap);    
     uint64_t h = long_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
@@ -309,13 +310,15 @@ _fun int32_t i64_msi_lookup(const int64_t search_key, array_param_(haystack_keys
 _fun int32_t i64_msi_upsert(const int64_t search_key, array_param_(haystack_keys, int64_t)) {
     assert_((*haystack_keys_len) < haystack_keys_cap && "msi keys overflow, can't insert");
     
-    int32_t pos = longs_msi_lookup(search_key, *haystack_keys);
+    int32_t pos = i64_msi_lookup(search_key, haystack_keys_cap, haystack_keys, haystack_keys_len);
     (*haystack_keys_len) += (haystack_keys[pos] == 0) ? 1 : 0;
     haystack_keys[pos] = search_key;
     return pos;
 }
 
 _fun int32_t strslice_msi_lookup(const struct strslice_t search_key, array_param_(haystack_keys, struct strslice_t)) {
+    (void) haystack_keys_len;
+
     int32_t exp = array_cap_to_exp(haystack_keys_cap);
     uint64_t h = strslice_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
@@ -348,7 +351,7 @@ _fun int64_t file_size(FILE* f) {
     return fsize;
 }
 
-_proc file_to_buffer(const char const*filename, array_param_(dst_buffer, char)) {
+_proc file_to_buffer(const char *const filename, array_param_(dst_buffer, char)) {
         FILE *f =  
     fopen(filename, "rb");
     {
@@ -367,13 +370,13 @@ _proc file_to_buffer(const char const*filename, array_param_(dst_buffer, char)) 
     fclose(f);
 }
 
-_proc file_to_lines(const char const*filename, array_param_(buffer, char), array_param_(lines, struct strslice_t)) {
+_proc file_to_lines(const char *const filename, array_param_(buffer, char), array_param_(lines, struct strslice_t)) {
     file_to_buffer(filename, buffer_cap, buffer, buffer_len);
     struct strslice_t chars_slice = {(*buffer_len), buffer};
     to_lines(chars_slice, lines_cap, lines, lines_len);
 }
 
-_proc buffer_to_file(array_param_(buffer, char), const char const*filename) {
+_proc buffer_to_file(array_param_(buffer, char), const char *const filename) {
         FILE *f =  
     fopen(filename, "wb");
     {
@@ -385,7 +388,7 @@ _proc buffer_to_file(array_param_(buffer, char), const char const*filename) {
     fclose(f);
 }
 
-_proc lines_to_file(array_param_(lines, struct strslice_t), const char const*filename) {
+_proc lines_to_file(array_param_(lines, struct strslice_t), const char *const filename) {
         FILE *f =  
     fopen(filename, "wb");
     {
@@ -405,11 +408,11 @@ _proc lines_to_file(array_param_(lines, struct strslice_t), const char const*fil
     ==================== SYSTEM APIs ====================
 */
 
-// { void *file; void *map; const char *const filename; char *contents; }
-typedef struct mmap_file { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; } Mmap;
+// struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; }
+struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
 
 #if defined(_WINDOWS_)
-_fun Mmap mmap_open(const char const*filename) {
+_fun struct mmap_file_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
         GENERIC_READ,                          // dwDesiredAccess
         0,                                     // dwShareMode
@@ -432,12 +435,12 @@ _fun Mmap mmap_open(const char const*filename) {
     void* lpBasePtr = MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
     assert_(lpBasePtr && "MapView failed");
 
-    Mmap mmap_info = {hFile, hMap, filename, (int64_t)liFileSize.QuadPart, (char*)lpBasePtr};
+    struct mmap_file_t mmap_info = {hFile, hMap, filename, (int64_t)liFileSize.QuadPart, (char*)lpBasePtr};
     
     return mmap_info;    
 }
 
-_proc mmap_close(Mmap mmap_info) {
+_proc mmap_close(struct mmap_file_t mmap_info) {
     UnmapViewOfFile((void*)mmap_info.contents);
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
@@ -448,8 +451,8 @@ typedef long unsigned int return_code_t;
 
 #define _thread_fun _fun return_code_t
 
-_fun thread_t go(return_code_t (*routine)(void* arg), void* arg) {
-    thread_t thread = CreateThread(0, 0, routine, arg, 0, 0);
+_fun thread_t go(return_code_t (*routine)(void* arg), const int8_t *const thread_id) {
+    thread_t thread = CreateThread(0, 0, routine, (void*)thread_id, 0, 0);
     assert_(thread != 0 && "Error creating thread");
 
     return thread;
@@ -467,7 +470,7 @@ _proc go_threads(return_code_t (*routine)(void* arg), int8_t times, thread_t thr
 }
 
 _proc join_threads(array_param_(threads, thread_t)) {
-    WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
+    WaitForMultipleObjects((long unsigned int) (*threads_len), threads, TRUE, INFINITE);
 }
 #endif //_WINDOWS_
 
@@ -488,7 +491,6 @@ int32_t shellrun(const char* const format, ...) {
 }
 
 // Creates the clock variable |start|, starting it
-#define START_WATCH clock_t start = clock()
-
+#define _START_WATCH clock_t start = clock()
 // Prints the current clock time, using the variable |start|
-#define STOP_WATCH printf("\n\nExecuted in %f seconds \n", (double)(clock() - start) / CLOCKS_PER_SEC);
+#define _STOP_WATCH printf("\n\nExecuted in %f seconds \n", (double)(clock() - start) / CLOCKS_PER_SEC)

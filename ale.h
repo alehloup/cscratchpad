@@ -477,11 +477,6 @@ typedef long unsigned int return_code_t;
 
 #define routine_ fun_ return_code_t
 
-static const int8_t thread_ids[] = {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
-    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-};
-
 fun_ thread_t go(return_code_t (*routine)(void *arg), const int8_t *const thread_id) {
     thread_t thread = CreateThread(0, 0, routine, (void *)(uintptr_t)(*(&thread_id)), 0, 0);
     assert_(thread != 0 && "Error creating thread");
@@ -489,6 +484,11 @@ fun_ thread_t go(return_code_t (*routine)(void *arg), const int8_t *const thread
     return thread;
 }
 proc_ go_threads(return_code_t (*routine)(void *arg), int8_t times, arrpar_(threads, thread_t)) {
+    static const int8_t thread_ids[] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
+        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+    };
+
     assert_(*threads_len < threads_cap and times < threads_cap && "go_threads: length must be lesser than capacity!");
     assert_(times < 32 && "go_threads only accepts at maximum 32 threads");
 

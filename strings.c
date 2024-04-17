@@ -2,7 +2,7 @@
 
 proc_ test_buffers(void) {
     struct sslice_t string = sslice_("Alessandro");
-    array_new_(buff, char, 256);
+    arrnew_(buff, char, 256);
 
     buffer_append(arrarg_(buff), string);
     buffer_append(arrarg_(buff), sslice_(" Luiz"));
@@ -15,7 +15,7 @@ proc_ test_buffers(void) {
 
 proc_ test_to_lines(void) {
     struct sslice_t text = sslice_("Alessandro \n Luiz\n Stamatto \n Ferreira");
-    array_new_(lines, struct sslice_t, 256);
+    arrnew_(lines, struct sslice_t, 256);
 
     to_lines(text, arrarg_(lines));
 
@@ -27,7 +27,7 @@ proc_ test_to_lines(void) {
 
 proc_ test_split(void) {
     struct sslice_t text = sslice_("Alessandro  Luiz Stamatto  Ferreira");
-    array_new_(words, struct sslice_t, 256);
+    arrnew_(words, struct sslice_t, 256);
 
     split(text, ' ', arrarg_(words));
 
@@ -55,15 +55,15 @@ proc_ test_string_eq(void) {
 }
 
 proc_ test_fileread(void) {
-    array_new_(b, char, 2048);
+    arrnew_(b, char, 2048);
     file_to_buffer("commands.txt", arrarg_(b));
 
     printf("|%lld|\n%s\n", *b_len, b);
 }
 
 proc_ test_fileread_to_lines(void) {
-    array_new_(b, char, 2048);
-    array_new_(lines, struct sslice_t, 64);
+    arrnew_(b, char, 2048);
+    arrnew_(lines, struct sslice_t, 64);
 
     file_to_lines("commands.txt", arrarg_(b), arrarg_(lines));
 

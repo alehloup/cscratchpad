@@ -1,18 +1,18 @@
 #include "ale.h"
 
 proc_ test_get_exp(void) {
-    array_new_(hash_table, int64_t, 1 << 21);
+    arrnew_(hash_table, int64_t, 1 << 21);
     printf("exp: %d\n", array_cap_to_exp(hash_table_cap));
 }
 
 proc_ test_keys(void) {
-    array_new_(keys, int64_t, 1 << 10);
+    arrnew_(keys, int64_t, 1 << 10);
     printf("cap: %lld %d\n", keys_cap, array_cap_to_exp(keys_cap));
 }
 
 proc_ test_hashtable_insertions(void) {
     int32_t pos = 0;
-    array_new_(keys, struct sslice_t, 1 << 10);
+    arrnew_(keys, struct sslice_t, 1 << 10);
 
     printf("Keys cap: %lld\n", keys_cap);
 

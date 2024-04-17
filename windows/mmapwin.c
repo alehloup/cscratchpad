@@ -2,7 +2,7 @@
 
 
 proc_ run(void) {
-    struct mmap_file_t mmap_info = mmap_open(S("C:/Users/Aleh/1brc_java/measurements1b.txt")); 
+    struct mmap_file_t mmap_info = mmap_open("C:/Users/Aleh/1brc_java/measurements1b.txt"); 
     {
         printf("\n%lld\n", mmap_info.filesize);
 
@@ -15,7 +15,7 @@ proc_ run(void) {
 
 int main(void)
 {
-    START_WATCH_;
+    start_benchclock();
     run();
-    STOP_WATCH_;
+    stop_benchclock();
 }

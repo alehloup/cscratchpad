@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
 #include <memory.h>
@@ -34,21 +34,25 @@ __extension__ typedef unsigned __int128 uint128_t;
     #define or ||
     #define not !
 
+    #ifndef true
+        #define true  1
+        #define false 0
+    #endif
+
+    #if defined(__GNUC__) || defined(__clang__)
+        #define min_capacity_ static
+    #endif
+    #if !defined(__GNUC__) && !defined(__clang__)
+        #define min_capacity_
+    #endif
+
     #define struct_(Type) (struct Type)
     #define ZERO_INIT {0}
-
-    #ifdef __SIZEOF_INT128__
-        #define _static_n(N) static N
-    #endif
-    #ifndef __SIZEOF_INT128__
-        #define _static_n(N) /*static N*/
-    #endif
 #endif
 #ifdef __cplusplus
-
+    #define min_capacity_
     #define struct_(Type)
     #define ZERO_INIT {}
-    #define _static_n(N) /*static N*/
 #endif // __cplusplus
 
 /*
@@ -57,8 +61,8 @@ __extension__ typedef unsigned __int128 uint128_t;
 #define isizeof(x_element_) ((int64_t)sizeof(x_element_))
 #define arraysizeof(static_array_) (isizeof(static_array_) / isizeof(*static_array_))
 
-// array_new_(arrayname, typename, capacity)
-#define array_new_(arrayname, typename, capacity) \
+// arrnew_(arrayname, typename, capacity)
+#define arrnew_(arrayname, typename, capacity) \
     typename arrayname[(capacity)+1] = ZERO_INIT; \
     const int64_t arrayname##_cap = arraysizeof(arrayname) - 1; \
     int64_t  arrayname##_len_stackval_ = 0; \
@@ -66,7 +70,7 @@ __extension__ typedef unsigned __int128 uint128_t;
     (void) arrayname##_len; (void) arrayname##_cap
 
 #define arrpar_(arrayname, typename) \
-    const int64_t arrayname##_cap, typename arrayname[_static_n(arrayname##_cap)], int64_t *arrayname##_len
+    const int64_t arrayname##_cap, typename arrayname[min_capacity_ 8], int64_t *arrayname##_len
 
 #define arrarg_(arrayname) arrayname##_cap, arrayname, arrayname##_len
 
@@ -225,7 +229,7 @@ fun_ int64_t least_common_multiple(int64_t m, int64_t n) {
 #define Rnd_mult_n 0x9b60933458e17d7dULL
 #define Rnd_sum_n 0xd737232eeccdf7edULL
 
-fun_ int32_t rnd(uint64_t seed[_static_n(1)]) {
+fun_ int32_t rnd(uint64_t seed[min_capacity_ 1]) {
     int32_t shift = 29;
     *seed = *seed * Rnd_mult_n + Rnd_sum_n;
     shift -= (int)(*seed >> 61);
@@ -441,12 +445,7 @@ struct mmap_file_t { void *file; void *map; const char *const filename; const in
 #if defined(_WINDOWS_)
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
-        GENERIC_READ,                          // dwDesiredAccess
-        0,                                     // dwShareMode
-        NULL,                                  // lpSecurityAttributes
-        OPEN_EXISTING,                         // dwCreationDisposition
-        FILE_ATTRIBUTE_NORMAL,                 // dwFlagsAndAttributes
-        0);                                    // hTemplateFile
+        GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
     assert_(hFile != INVALID_HANDLE_VALUE);
     
@@ -455,16 +454,16 @@ fun_ struct mmap_file_t mmap_open(const char *const filename) {
     
     assert_(liFileSize.QuadPart && "File Empty!");
 
-    HANDLE hMap = CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, 0, 0);
+    HANDLE hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0);
 
     assert_(hMap && "Failed to create file mapping");
 
-    void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
+    void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
     assert_(lpBasePtr && "MapView failed");
 
     struct mmap_file_t mmap_info = {hFile, hMap, filename, (int64_t)liFileSize.QuadPart, (char*)lpBasePtr};
     
-    return mmap_info;    
+    return mmap_info;
 }
 
 proc_ mmap_close(struct mmap_file_t mmap_info) {
@@ -478,19 +477,18 @@ typedef long unsigned int return_code_t;
 
 #define routine_ fun_ return_code_t
 
+static const int8_t thread_ids[] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
+    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+};
+
 fun_ thread_t go(return_code_t (*routine)(void *arg), const int8_t *const thread_id) {
-    thread_t thread = CreateThread(0, 0, routine, (void*)thread_id, 0, 0);
+    thread_t thread = CreateThread(0, 0, routine, (void *)(uintptr_t)(*(&thread_id)), 0, 0);
     assert_(thread != 0 && "Error creating thread");
 
     return thread;
 }
-
 proc_ go_threads(return_code_t (*routine)(void *arg), int8_t times, arrpar_(threads, thread_t)) {
-    static const int8_t thread_ids[] = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
-        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-    };
-
     assert_(*threads_len < threads_cap and times < threads_cap && "go_threads: length must be lesser than capacity!");
     assert_(times < 32 && "go_threads only accepts at maximum 32 threads");
 

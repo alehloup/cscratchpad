@@ -1,7 +1,7 @@
 #include "../ale.h"
 
 #define NUM_THREADS_TO_CREATE 8
-int8_t results[NUM_THREADS_TO_CREATE];
+static int8_t results[NUM_THREADS_TO_CREATE];
 
 routine_ sum(void* args) {
     int8_t threadIdx = *(int8_t *)args;
@@ -10,7 +10,7 @@ routine_ sum(void* args) {
 }
 
 int32_t main() {
-    array_new_(threads, thread_t, 16);
+    arrnew_(threads, thread_t, 16);
     go_threads(sum, NUM_THREADS_TO_CREATE, arrarg_(threads));
     join_threads(arrarg_(threads));
 

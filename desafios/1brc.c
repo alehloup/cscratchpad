@@ -1,12 +1,9 @@
-#include <stdio.h>
-#include <Windows.h>
-#include <time.h>
-#include "ale.h"
+#include "../ale.h"
 
-#define nthreads 12
-static const Bool SINGLE_THREAD = (nthreads == 1);
+#define NUM_THREADS 12
+static const bool SINGLE_THREAD = (NUM_THREADS == 1);
 
-#define FILENAME S("C:/Users/Aleh/1brc_java/measurements1b.txt")
+#define FILENAME "C:/Users/Aleh/1brc_java/measurements1b.txt"
 
 /*
     I use a Perfect Hash of the 413 cities
@@ -23,13 +20,13 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 #define tabsize 6570
 
 typedef struct City { const char* name; int64_t count; int64_t sum; int64_t min; int64_t max; } City;
-static City thread_cities[nthreads][tabsize] = ZERO_INIT;
+static City thread_cities[NUM_THREADS][tabsize] = ZERO_INIT;
 
-static Mmap* mmap_info = ZERO_INIT; // will store the mmaped file
+static struct mmap_file_t *mmap_info = ZERO_INIT; // will store the mmaped file
 
-// Chunks the input by the thread_idx, runs in entire content if nthreads == 1
-_thread_fun chunked_run(void* args /* thread_idx */) {
-    int32_t thread_idx = *((int*) args);
+// Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
+routine_ chunked_run(void* args /* thread_idx */) {
+    int8_t thread_idx = *((int8_t*) args);
     
     City* cities = thread_cities[thread_idx];
     for (int32_t i = 0; i < ncity; ++i) {
@@ -38,15 +35,14 @@ _thread_fun chunked_run(void* args /* thread_idx */) {
         city->min = 1000;
     }
 
-    Buffer contents = mmap_info->contents;
-    Byte *data = contents.elements;
+    char *data = mmap_info->contents;
 
     /* Adjusts the start and end indexes based on thread_idx */
     int64_t i   = 0;
-    int64_t len = contents.len - 1;
+    int64_t len = mmap_info->filesize - 1;
     if (!SINGLE_THREAD) {
-        const int64_t slice_size = (int64_t) contents.len / nthreads; // size per thread
-        i = slice_size * thread_idx;
+        const int64_t slice_size = (int64_t) mmap_info->filesize / NUM_THREADS; // size per thread
+        i = slice_size * ((int64_t) thread_idx);
         len = i + slice_size;
 
         while (data[len] != '\n') ++len;
@@ -113,7 +109,7 @@ _thread_fun chunked_run(void* args /* thread_idx */) {
 proc_ aggregate_results(void) {
     City* thread0 = thread_cities[0];
 
-    for (int32_t i_thread = 1; i_thread < nthreads; ++i_thread) {
+    for (int8_t i_thread = 1; i_thread < NUM_THREADS; ++i_thread) {
         City* thread_cur = thread_cities[i_thread];
         for (int32_t i = 0; i < ncity; ++i) {
             City *dst_city = &thread0[hash_order[i]];
@@ -140,21 +136,22 @@ proc_ print_results(void) {
             /*@avg*/ ((double)city->sum / ((double)city->count*10)),
             /*[min  max]*/ (double)city->min/10.0, (double)city->max/10.0
         );
-        break;
     }
 }
 
 proc_ run(void) {
-    Mmap mmap_info_local = mmap_open(FILENAME);
+    struct mmap_file_t mmap_info_local = mmap_open(FILENAME);
     mmap_info = &mmap_info_local;
     
     if (SINGLE_THREAD) {
-        int32_t just_main_thread = 0;
-        int32_t error_code = (int) chunked_run((void*)&just_main_thread);
-        assert(error_code == 0 && "returned with error");
+        int8_t just_main_thread = 0;
+        int32_t error_code = (int32_t) chunked_run((void*)&just_main_thread);
+        assert_(error_code == 0 && "returned with error");
     } else {
-        go_threads(threads, chunked_run, nthreads);
-        join_threads(threads);
+        arrnew_(threads, thread_t, 16);
+
+        go_threads( chunked_run, NUM_THREADS, arrarg_(threads));
+        join_threads(arrarg_(threads));
         aggregate_results();
     }
 
@@ -163,9 +160,11 @@ proc_ run(void) {
 
 int32_t main(void) {
 
-    START_WATCH;
+    start_benchclock();
     run();
-    STOP_WATCH;
+    stop_benchclock();
+
+    mmap_close(*mmap_info);
 
     return 0;
 }

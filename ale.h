@@ -477,25 +477,27 @@ typedef long unsigned int return_code_t;
 
 #define routine_ fun_ return_code_t
 
-fun_ thread_t go(return_code_t (*routine)(void *arg), const int8_t *const thread_id) {
-    thread_t thread = CreateThread(0, 0, routine, (void *)(uintptr_t)(*(&thread_id)), 0, 0);
+#define any_as_int32_(void_asterisk) (int32_t)(uintptr_t)void_asterisk
+
+fun_ thread_t go(return_code_t (*routine)(void *thread_idx)) {
+    static int32_t incrementing_idx = 0;
+
+    thread_t thread = CreateThread(0, 0, routine, (void *)(uintptr_t)(incrementing_idx++), 0, 0);
     assert_(thread != 0 && "Error creating thread");
 
     return thread;
 }
-proc_ go_threads(return_code_t (*routine)(void *arg), int8_t times, arrpar_(threads, thread_t)) {
-    static const int8_t thread_ids[] = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
-        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-    };
+proc_ go_threads(
+    return_code_t (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
+    arrpar_(threads, thread_t)) 
+{
+        assert_(*threads_len < threads_cap and number_of_threads_to_spawn < threads_cap && "go_threads: length must be lesser than capacity!");
+        assert_(number_of_threads_to_spawn < 16000 && "go_threads only accepts at maximum 16000 threads");
 
-    assert_(*threads_len < threads_cap and times < threads_cap && "go_threads: length must be lesser than capacity!");
-    assert_(times < 32 && "go_threads only accepts at maximum 32 threads");
-
-    for (int8_t i = 0; i < times; ++i) {
-        threads[i] = go(routine, &thread_ids[i]);
-    }
-    *threads_len = times;
+        for (int32_t i = 0; i < number_of_threads_to_spawn; ++i) {
+            threads[i] = go(routine);
+        }
+        *threads_len = number_of_threads_to_spawn;
 }
 
 proc_ join_threads(arrpar_(threads, thread_t)) {

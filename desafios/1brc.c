@@ -25,8 +25,8 @@ static City thread_cities[NUM_THREADS][tabsize] = ZERO_INIT;
 static struct mmap_file_t *mmap_info = ZERO_INIT; // will store the mmaped file
 
 // Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
-routine_ chunked_run(void* args /* thread_idx */) {
-    int8_t thread_idx = *((int8_t*) args);
+routine_ chunked_run(void* threadidx /* thread_idx */) {
+    int32_t thread_idx = any_as_int32_(threadidx);
     
     City* cities = thread_cities[thread_idx];
     for (int32_t i = 0; i < ncity; ++i) {

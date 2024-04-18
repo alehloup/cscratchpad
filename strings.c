@@ -19,10 +19,10 @@ proc_ test_to_lines(void) {
 
     to_lines(text, arrarg_(lines));
 
-    sslice_print(trimmed(lines[0])); printn;
-    sslice_print(trimmed(lines[1])); printn;
-    sslice_print(trimmed(lines[2])); printn;
-    sslice_print(trimmed(lines[3])); printn;
+    sslice_print(trimmed(lines[0])); printf("\n");
+    sslice_print(trimmed(lines[1])); printf("\n");
+    sslice_print(trimmed(lines[2])); printf("\n");
+    sslice_print(trimmed(lines[3])); printf("\n");
 }
 
 proc_ test_split(void) {
@@ -31,10 +31,10 @@ proc_ test_split(void) {
 
     split(text, ' ', arrarg_(words));
 
-    sslice_print(trimmed(words[0])); printn;
-    sslice_print(trimmed(words[1])); printn;
-    sslice_print(trimmed(words[2])); printn;
-    sslice_print(trimmed(words[3])); printn;
+    sslice_print(trimmed(words[0])); printf("\n");
+    sslice_print(trimmed(words[1])); printf("\n");
+    sslice_print(trimmed(words[2])); printf("\n");
+    sslice_print(trimmed(words[3])); printf("\n");
 }
 
 proc_ print_sslice_cmp(struct sslice_t a, struct sslice_t b) {
@@ -68,7 +68,7 @@ proc_ test_fileread_to_lines(void) {
     file_to_lines("commands.txt", arrarg_(b), arrarg_(lines));
 
     for (int64_t i = 0; i < (*lines_len); ++i) {
-        printf("%lld: ", i); sslice_print(lines[i]); printn;
+        printf("%lld: ", i); sslice_print(lines[i]); printf("\n");
     }
 
     lines_to_file(arrarg_(lines), "linhas.txt");

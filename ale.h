@@ -13,6 +13,10 @@
     #include <Windows.h>
 #endif
 
+// #if defined(POSIX?)
+//     #include <linux.h>
+// #endif
+
 #define assert_(c) if(!(c)) printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -29,6 +33,7 @@ __extension__ typedef __int128 int128_t;
 __extension__ typedef unsigned __int128 uint128_t;
 #endif
 
+/* C/C++ COMPATIBILITY */
 #ifndef __cplusplus 
     #define and &&
     #define or ||
@@ -39,6 +44,7 @@ __extension__ typedef unsigned __int128 uint128_t;
         #define false 0
     #endif
 
+    // in GCC/Clang C, use static for more safety in array passing
     #if defined(__GNUC__) || defined(__clang__)
         #define min_capacity_ static
     #endif
@@ -46,11 +52,14 @@ __extension__ typedef unsigned __int128 uint128_t;
         #define min_capacity_
     #endif
 
+    // C allows creating structs anywhere
     #define struct_(Type) (struct Type)
     #define ZERO_INIT {0}
 #endif
 #ifdef __cplusplus
     #define min_capacity_
+
+    // C++ forbids creating struct in most places
     #define struct_(Type)
     #define ZERO_INIT {}
 #endif // __cplusplus
@@ -94,7 +103,6 @@ struct sslice_t { int64_t len; const char *text; }; // struct sslice_t { int64_t
 proc_ sslice_print(struct sslice_t str) {
     printf("%.*s", (int) str.len, str.text);
 }
-#define printn printf("\n")
 
 fun_ int32_t sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
     const char *const a_text = a_text_slice.text;

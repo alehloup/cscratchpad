@@ -27,7 +27,7 @@
 #ifdef __SIZEOF_INT128__
 __extension__ typedef __int128 int128_t;
 __extension__ typedef unsigned __int128 uint128_t;
-#endif // __SIZEOF_INT128__
+#endif
 
 #ifndef __cplusplus 
     #define and &&
@@ -473,11 +473,9 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
 }
 
 typedef HANDLE thread_t;
-typedef long unsigned int return_code_t;
+#define routine_ inline static long unsigned int
 
-#define routine_ inline static return_code_t
-
-fun_ thread_t go(return_code_t (*routine)(void *thread_idx)) {
+fun_ thread_t go(long unsigned int (*routine)(void *thread_idx)) {
     static uintptr_t incrementing_idx = 0;
 
     thread_t thread = CreateThread(0, 0, routine, (void *)(incrementing_idx++), 0, 0);
@@ -486,7 +484,7 @@ fun_ thread_t go(return_code_t (*routine)(void *thread_idx)) {
     return thread;
 }
 proc_ go_threads(
-    return_code_t (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
+    long unsigned int (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
     arrpar_(threads, thread_t)) 
 {
         assert_(*threads_len < threads_cap and number_of_threads_to_spawn < threads_cap && "go_threads: length must be lesser than capacity!");
@@ -505,16 +503,21 @@ proc_ join_threads(arrpar_(threads, thread_t)) {
 }
 #endif //_WINDOWS_
 
-#define shellrun_buffer_cap 512
 gcc_attr_(format(printf, 1, 2), nonnull)
 int32_t shellrun(const char *const format, ...) {
     va_list args;
  
-    char buffer [shellrun_buffer_cap] = {0};
+    char buffer [512] = {0};
+    int32_t buffer_cap = 511;
 
     va_start(args, format);
 
-    vsprintf(buffer, format, args);
+    int32_t len = vsnprintf(buffer, arraysizeof(buffer) - 1, format, args);
+    if (len >= buffer_cap) {
+        assert_(len < buffer_cap && "command greater than acceptable. Overflow");
+        return 1;
+    }
+    
     printf("\n");
     vprintf(format, args);
     printf("\n");

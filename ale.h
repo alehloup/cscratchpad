@@ -507,12 +507,12 @@ gcc_attr_(format(printf, 1, 2), nonnull)
 int32_t shellrun(const char *const format, ...) {
     va_list args;
  
-    char buffer [512] = {0};
-    int32_t buffer_cap = 511;
+    char buffer [1024] = {0};
+    int64_t buffer_cap = arraysizeof(buffer) - 1;
 
     va_start(args, format);
 
-    int32_t len = vsnprintf(buffer, arraysizeof(buffer) - 1, format, args);
+    int32_t len = vsnprintf(buffer, (size_t)buffer_cap, format, args);
     if (len >= buffer_cap) {
         assert_(len < buffer_cap && "command greater than acceptable. Overflow");
         return 1;

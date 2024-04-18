@@ -1,10 +1,10 @@
 #include "../ale.h"
 
 #define NUM_THREADS_TO_CREATE 8
-static int32_t results[NUM_THREADS_TO_CREATE];
+static int32_t results[NUM_THREADS_TO_CREATE] = ZERO_INIT;
 
 routine_ sum(void* thread_idx) {
-    int32_t threadIdx = any_as_int32_(thread_idx);
+    int32_t threadIdx = (int32_t)(uintptr_t)(thread_idx);
     results[threadIdx] = threadIdx * 10;
     return 0;
 }

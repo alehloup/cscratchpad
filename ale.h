@@ -475,14 +475,12 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
 typedef HANDLE thread_t;
 typedef long unsigned int return_code_t;
 
-#define routine_ fun_ return_code_t
-
-#define any_as_int32_(void_asterisk) (int32_t)(uintptr_t)void_asterisk
+#define routine_ inline static return_code_t
 
 fun_ thread_t go(return_code_t (*routine)(void *thread_idx)) {
-    static int32_t incrementing_idx = 0;
+    static uintptr_t incrementing_idx = 0;
 
-    thread_t thread = CreateThread(0, 0, routine, (void *)(uintptr_t)(incrementing_idx++), 0, 0);
+    thread_t thread = CreateThread(0, 0, routine, (void *)(incrementing_idx++), 0, 0);
     assert_(thread != 0 && "Error creating thread");
 
     return thread;

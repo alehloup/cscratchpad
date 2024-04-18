@@ -26,7 +26,7 @@ static struct mmap_file_t *mmap_info = ZERO_INIT; // will store the mmaped file
 
 // Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
 routine_ chunked_run(void* threadidx /* thread_idx */) {
-    int32_t thread_idx = any_as_int32_(threadidx);
+    int32_t thread_idx = (int32_t)(uintptr_t) threadidx;
     
     City* cities = thread_cities[thread_idx];
     for (int32_t i = 0; i < ncity; ++i) {
@@ -144,8 +144,7 @@ proc_ run(void) {
     mmap_info = &mmap_info_local;
     
     if (SINGLE_THREAD) {
-        int8_t just_main_thread = 0;
-        int32_t error_code = (int32_t) chunked_run((void*)&just_main_thread);
+        int32_t error_code = (int32_t) chunked_run(0);
         assert_(error_code == 0 && "returned with error");
     } else {
         arrnew_(threads, thread_t, 16);

@@ -16,34 +16,34 @@ proc_ test_hashtable_insertions(void) {
 
     printf("Keys cap: %lld\n", keys_cap);
 
-    pos = strings_msi_upsert(sslice_("Alessandro Stamatto"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Alessandro Stamatto"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Sarah Sakamoto"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Sarah Sakamoto"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Adir Luiz"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Adir Luiz"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Ines Stamatto"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Ines Stamatto"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Luane Stamatto"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Luane Stamatto"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Alessandro Stamatto"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Alessandro Stamatto"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Luane Stam"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Luane Stam"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Sarah Sakamoto"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Sarah Sakamoto"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Alex Stam"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Alex Stam"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = strings_msi_upsert(sslice_("Alessandro Stam"), arrarg_(keys));
+    pos = sslice_msi_upsert(sslice_("Alessandro Stam"), arrarg_(keys));
     printf("[%d] %s \n", pos, keys[pos].text);
 
     printf("Len: %lld Cap: %lld\n", (*keys_len), keys_cap);

@@ -432,9 +432,9 @@ fun_ int32_t compile_c(const char *const flags, const char *const c_file) {
 }
 
 static clock_t BENCHCLOCK_ = 0;
-proc_ start_benchclock() {
+proc_ start_benchclock(void) {
     BENCHCLOCK_ = clock(); 
 } 
-proc_ stop_benchclock() {
+proc_ stop_benchclock(void) {
     printf("\n\nExecuted in %f seconds \n", (double)(clock() - BENCHCLOCK_) / CLOCKS_PER_SEC);
 }

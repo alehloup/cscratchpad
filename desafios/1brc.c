@@ -147,7 +147,7 @@ proc_ run(void) {
         int32_t error_code = (int32_t) chunked_run(0);
         assert_(error_code == 0 && "returned with error");
     } else {
-        arrnew_(threads, thread_t, 16);
+        arrnew_(threads, THREAD_, 16);
 
         go_threads( chunked_run, NUM_THREADS, arrarg_(threads));
         join_threads(arrarg_(threads));

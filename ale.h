@@ -29,8 +29,10 @@
 
 #if defined(_WINDOWS_)
     #define routine_ inline static long unsigned int
+    #define THREAD_ HANDLE
 #else 
     #define routine_ inline static void * 
+    #define THREAD_ HANDLE
 #endif 
 
 #define arraysizeof(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))
@@ -43,6 +45,7 @@
     assert_((*array##_len) > 0); \
     array[idx_to_del] = array[--(*array##_len)]
 
+struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
 
 struct sslice_t { int64_t len; const char *text; };
 
@@ -344,8 +347,6 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
 }
 
 
-struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
-
 #if defined(_WINDOWS_)
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
@@ -376,19 +377,17 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
     CloseHandle(mmap_info.file);
 }
 
-typedef HANDLE thread_t;
-
-fun_ thread_t go(long unsigned int (*routine)(void *thread_idx)) {
+fun_ THREAD_ go(long unsigned int (*routine)(void *thread_idx)) {
     static uintptr_t incrementing_idx = 0;
 
-    thread_t thread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
+    THREAD_ thread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
     assert_(thread != 0);
 
     return thread;
 }
 proc_ go_threads(
     long unsigned int (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
-    int64_t threads_cap, thread_t threads[], int64_t *threads_len)
+    int64_t threads_cap, THREAD_ threads[], int64_t *threads_len)
 {
         assert_(*threads_len < threads_cap && number_of_threads_to_spawn < threads_cap);
         assert_(number_of_threads_to_spawn < 16000);
@@ -399,7 +398,7 @@ proc_ go_threads(
         *threads_len = number_of_threads_to_spawn;
 }
 
-proc_ join_threads(int64_t threads_cap, thread_t threads[], int64_t *threads_len) {
+proc_ join_threads(int64_t threads_cap, THREAD_ threads[], int64_t *threads_len) {
     assert_(*threads_len < threads_cap);
     
     WaitForMultipleObjects((long unsigned int) (*threads_len), threads, TRUE, INFINITE);

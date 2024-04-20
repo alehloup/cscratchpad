@@ -398,10 +398,10 @@ proc_ go_threads(
         *threads_len = number_of_threads_to_spawn;
 }
 
-proc_ join_threads(int64_t threads_cap, THREAD_ threads[], int64_t *threads_len) {
-    assert_(*threads_len < threads_cap);
+proc_ join_threads(THREAD_ threads[], const int64_t threads_len) {
+    assert_(threads_len < 16000);
     
-    WaitForMultipleObjects((long unsigned int) (*threads_len), threads, TRUE, INFINITE);
+    WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
 }
 #endif //_WINDOWS_
 

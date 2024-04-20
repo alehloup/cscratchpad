@@ -14,7 +14,7 @@ int32_t main() {
     int64_t threads_len = 0;
     
     go_threads(sum, NUM_THREADS_TO_CREATE, arraysizeof(threads), threads, &threads_len);
-    join_threads(arraysizeof(threads), threads, &threads_len);
+    join_threads(threads, threads_len);
 
     int32_t totalSum = 0;
     for (int32_t i = 0; i < NUM_THREADS_TO_CREATE; ++i) {

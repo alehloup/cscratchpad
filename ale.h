@@ -414,18 +414,15 @@ fun_ int32_t compile_c(const char *const flags, const char *const c_file) {
     
     memcpy(buffer, flags, flags_len); idx += flags_len;
 
-    buffer[idx++] = ' '; buffer[idx++] = '.'; buffer[idx++] = '/';
-
+    memcpy(&buffer[idx], " ./", 3); idx += 3;
     memcpy(&buffer[idx], c_file, c_file_len); idx += c_file_len;
 
-    buffer[idx++] = ' '; buffer[idx++] = '-'; buffer[idx++] = 'o'; buffer[idx++] = ' ';
-    buffer[idx++] = '.'; buffer[idx++] = '/';
+    memcpy(&buffer[idx], " -o ", 4); idx += 4;
 
+    memcpy(&buffer[idx], "./", 2); idx += 2;
     memcpy(&buffer[idx], c_file, c_file_len - 2); idx += (c_file_len - 2);
+    memcpy(&buffer[idx], ".exe\0", 5); idx += 5;
 
-    buffer[idx++] = '.'; buffer[idx++] = 'e'; buffer[idx++] = 'x'; buffer[idx++] = 'e';
-    
-    buffer[idx] = 0;
     printf("\n%.*s\n", 2000, buffer);
     return system(buffer);
 }

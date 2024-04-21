@@ -41,7 +41,7 @@
     #define STRUCT_(struct_name, ...) (struct struct_name) { __VA_ARGS__ }
 #endif 
 
-#define arrsizeof(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))
+#define ARRCAP_(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))
 
 #define APPEND_(array, new_element) \
     assert_((*array##_len) < array##_cap); \
@@ -99,8 +99,7 @@ fun_ int64_t char_pos_slice(const char letter, const struct sslice_t text_slice)
         return -1;
     }
 
-    const char *const ptr = //(void *)(*((char **)(uintptr_t)(&text_slice.text)))
-        (const char *) memchr((void const *)text_slice.text, letter, (size_t)text_slice.len);
+    const char *const ptr = (const char *) memchr((void const *)text_slice.text, letter, (size_t)text_slice.len);
     if (ptr != NULL) {
         return (int64_t)(ptr - text_slice.text);
     } else {
@@ -379,7 +378,7 @@ fun_ int32_t compile_c(const char *const flags, const char *const c_file_c) {
     const char *const parts[] = {
         flags, " ./", c_file, ".c -o ./", c_file, ".exe"
     };
-    buffer_appendcstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
+    buffer_appendcstrs(ARRCAP_(buffer), buffer, &buffer_len, parts, ARRCAP_(parts));
 
     printf("\n%.*s\n", (int32_t)buffer_len, buffer);
     return system(buffer);

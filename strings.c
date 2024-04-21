@@ -4,9 +4,9 @@ proc_ test_buffers(void) {
     struct sslice_t string = sslice_("Alessandro");
     arrnew_(buff, char, 256);
 
-    buffer_append(arrarg_(buff), string);
-    buffer_append(arrarg_(buff), sslice_(" Luiz"));
-    buffer_append(arrarg_(buff), sslice_(" Stamatto"));
+    buffer_appendslice(arrarg_(buff), string);
+    buffer_appendslice(arrarg_(buff), sslice_(" Luiz"));
+    buffer_appendslice(arrarg_(buff), sslice_(" Stamatto"));
 
     buffer_set(arrarg_(buff), sslice_("Woa"));
 

@@ -1,13 +1,12 @@
 #pragma once
 
+#include <memory.h>
+#include <time.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdarg.h>
-#include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #if defined(_WIN32) || defined(_WIN64)
     #include <Windows.h>
@@ -17,7 +16,8 @@
 //     #include <linux.h>
 // #endif
 
-#define assert_(c) if(!(c)) printf("\n\n  |ASSERT FAILED %s:%s:%d %s|\n\n", __FILE__, __func__, __LINE__, #c)
+#define assert_(c) if(!(c)) \
+    (fprintf(stderr, "\n\n  ASSERT FAILED %s:%s:%d | %s |\n\n", __FILE__, __func__, __LINE__, #c), exit(52))
 
 #if defined(__GNUC__) || defined(__clang__)
     #define fun_   __attribute((nonnull, warn_unused_result)) inline static
@@ -35,7 +35,7 @@
     #define THREAD_ HANDLE
 #endif 
 
-#define arraysizeof(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))
+#define arrsizeof(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))
 
 #define APPEND_(array, new_element) \
     assert_((*array##_len) < array##_cap); \
@@ -55,20 +55,12 @@ fun_ struct sslice_t cstring_to_sslice(const char *const cstring) {
 }
 
 fun_ int32_t sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
-    if (a_text_slice.len != b_text_slice.len) {
+    if (a_text_slice.len == 0 || b_text_slice.len == 0 || a_text_slice.len != b_text_slice.len)
         return (int32_t) (a_text_slice.len - b_text_slice.len);
-    }
-
-    for (int64_t i = 0; i < a_text_slice.len; ++i) {
-        if (a_text_slice.text[i] != b_text_slice.text[i]) {
-            return (int32_t) (a_text_slice.text[i] - b_text_slice.text[i]);
-        }
-    }
-    return 0;
+    return memcmp(a_text_slice.text, b_text_slice.text, (size_t)a_text_slice.len);
 }
 fun_ bool startswith(const struct sslice_t prefix_slice, const struct sslice_t text_slice) {
     struct sslice_t only_begin = {prefix_slice.len, text_slice.text};
-
     return sslice_cmp(prefix_slice, only_begin) == 0;
 }
 
@@ -89,17 +81,22 @@ fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
     return trimmed_slice;
 }
 
-fun_ int64_t char_pos(const char letter, const struct sslice_t text_slice) {
-    const char *const text = text_slice.text;
-    const int64_t text_len = text_slice.len;
-
-    for (int64_t letter_pos = 0; letter_pos < text_len; ++letter_pos) {
-        if(text[letter_pos] == letter) {
-            return letter_pos;
-        }
+fun_ int64_t char_pos(const char letter, const char *const cstring) {
+    const char *ptr = strchr(cstring, letter);
+    if (ptr != NULL) {
+        return (int64_t)(ptr - cstring);
+    } else {
+        return -1;
     }
+}
 
-    return -1;
+fun_ int64_t char_pos_slice(const char letter, const struct sslice_t text_slice) {
+    const char *const ptr = (const char *)memchr((void *)text_slice.text, letter, (size_t)text_slice.len);
+    if (ptr != NULL) {
+        return (int64_t)(ptr - text_slice.text);
+    } else {
+        return -1;
+    }
 }
 
 proc_ split(const struct sslice_t text_slice, const char splitter, int64_t parts_cap, struct sslice_t parts[], int64_t *parts_len) {
@@ -120,24 +117,39 @@ proc_ split(const struct sslice_t text_slice, const char splitter, int64_t parts
         APPEND_(parts, part);
     }
 }
+
 proc_ to_lines(const struct sslice_t text_slice, int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) {
     split(text_slice, '\n', lines_cap, lines, lines_len);
 }
 
-proc_ buffer_append(int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, const struct sslice_t src_chars_slice) {
-    const char *const src_chars = src_chars_slice.text;
-    const int64_t src_chars_len = src_chars_slice.len;
+proc_ buffer_appendslice(const int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, 
+    const struct sslice_t src_chars_slice) 
+{
+    assert_(src_chars_slice.len <= dst_buffer_cap);
 
-    assert_(src_chars_len <= dst_buffer_cap);
+    memcpy(dst_buffer, src_chars_slice.text, (size_t)src_chars_slice.len);
 
-    for (int64_t i = 0; i < src_chars_len; ++i) {
-        dst_buffer[(*dst_buffer_len)++] = src_chars[i]; 
-    }
+    *dst_buffer_len += src_chars_slice.len;
     dst_buffer[(*dst_buffer_len)] = 0;
 }
-proc_ buffer_set(int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, const struct sslice_t src_chars_slice) {
-    *dst_buffer_len = 0;
-    buffer_append(dst_buffer_cap, dst_buffer, dst_buffer_len, src_chars_slice);
+proc_ buffer_appendcstr(const int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, 
+const char *const cstr) 
+{
+    const int64_t cstr_len = (int64_t)strlen(cstr);
+
+    assert_(cstr_len <= dst_buffer_cap);
+
+    memcpy(&dst_buffer[*dst_buffer_len], cstr, (size_t)cstr_len);
+
+    *dst_buffer_len += cstr_len;
+    dst_buffer[(*dst_buffer_len)] = 0;
+}
+proc_ buffer_appendcstrs(const int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, 
+    const char *const cstrs[], const int64_t cstrs_len) 
+{ 
+    for (int64_t i = 0; i < cstrs_len; ++i) {
+        buffer_appendcstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
+    }
 }
 
 
@@ -346,6 +358,33 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
     fclose(f);
 }
 
+fun_ int32_t compile_c(const char *const flags, const char *const c_file_c) {
+    char buffer[2048] = {0}; 
+    int64_t buffer_len = 0; 
+
+    char c_file[256] = {0};
+    const int32_t c_file_len = (int32_t)strlen(c_file_c) - 2;
+    assert_(c_file_len < 255);
+
+    memcpy(c_file, c_file_c, (size_t)c_file_len); // remove .c
+
+    const char *const parts[] = {
+        flags, " ./", c_file, ".c -o ./", c_file, ".exe"
+    };
+    buffer_appendcstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
+
+    printf("\n%.*s\n", (int32_t)buffer_len, buffer);
+    return system(buffer);
+}
+
+static clock_t BENCHCLOCK_ = 0;
+proc_ start_benchclock(void) {
+    BENCHCLOCK_ = clock(); 
+} 
+proc_ stop_benchclock(void) {
+    printf("\n\nExecuted in %f seconds \n", (double)(clock() - BENCHCLOCK_) / CLOCKS_PER_SEC);
+}
+
 
 #if defined(_WINDOWS_)
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
@@ -404,33 +443,3 @@ proc_ join_threads(THREAD_ threads[], const int64_t threads_len) {
     WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
 }
 #endif //_WINDOWS_
-
-fun_ int32_t compile_c(const char *const flags, const char *const c_file) {
-    const size_t flags_len = strlen(flags);
-    const size_t c_file_len = strlen(c_file);
-    assert_(flags_len < 1024 && c_file_len < 512);
-
-    char buffer [2048] = {0}; size_t idx = 0; 
-    
-    memcpy(buffer, flags, flags_len); idx += flags_len;
-
-    memcpy(&buffer[idx], " ./", 3); idx += 3;
-    memcpy(&buffer[idx], c_file, c_file_len); idx += c_file_len;
-
-    memcpy(&buffer[idx], " -o ", 4); idx += 4;
-
-    memcpy(&buffer[idx], "./", 2); idx += 2;
-    memcpy(&buffer[idx], c_file, c_file_len - 2); idx += (c_file_len - 2);
-    memcpy(&buffer[idx], ".exe\0", 5); idx += 5;
-
-    printf("\n%.*s\n", 2000, buffer);
-    return system(buffer);
-}
-
-static clock_t BENCHCLOCK_ = 0;
-proc_ start_benchclock(void) {
-    BENCHCLOCK_ = clock(); 
-} 
-proc_ stop_benchclock(void) {
-    printf("\n\nExecuted in %f seconds \n", (double)(clock() - BENCHCLOCK_) / CLOCKS_PER_SEC);
-}

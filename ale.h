@@ -33,13 +33,19 @@
 #else 
     #define routine_ inline static void * 
     #define THREAD_ HANDLE
+#endif
+
+#if defined(__cplusplus)
+    #define STRUCT_(struct_name, ...) /*(struct struct_name)*/ { __VA_ARGS__ }
+#else
+    #define STRUCT_(struct_name, ...) (struct struct_name) { __VA_ARGS__ }
 #endif 
 
 #define arrsizeof(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))
 
 #define APPEND_(array, new_element) \
     assert_((*array##_len) < array##_cap); \
-    array[(*array##_len)++] = (new_element)
+    array[(*array##_len)++] = new_element
 
 #define DELIDX_(array, idx_to_del) \
     assert_((*array##_len) > 0); \
@@ -50,8 +56,7 @@ struct mmap_file_t { void *file; void *map; const char *const filename; const in
 struct sslice_t { int64_t len; const char *text; };
 
 fun_ struct sslice_t cstring_to_sslice(const char *const cstring) {
-    struct sslice_t sslice = {(int64_t) strlen(cstring), cstring};
-    return sslice;
+    return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring);
 }
 
 fun_ int32_t sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
@@ -77,8 +82,7 @@ fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
         --text_len;
     }
 
-    struct sslice_t trimmed_slice = {text_len, &text[start]};
-    return trimmed_slice;
+    return STRUCT_(sslice_t, text_len, &text[start]);
 }
 
 fun_ int64_t char_pos(const char letter, const char *const cstring) {
@@ -91,7 +95,12 @@ fun_ int64_t char_pos(const char letter, const char *const cstring) {
 }
 
 fun_ int64_t char_pos_slice(const char letter, const struct sslice_t text_slice) {
-    const char *const ptr = (const char *)memchr((void *)text_slice.text, letter, (size_t)text_slice.len);
+    if (text_slice.len < 1) {
+        return -1;
+    }
+
+    const char *const ptr = //(void *)(*((char **)(uintptr_t)(&text_slice.text)))
+        (const char *) memchr((void const *)text_slice.text, letter, (size_t)text_slice.len);
     if (ptr != NULL) {
         return (int64_t)(ptr - text_slice.text);
     } else {
@@ -99,22 +108,21 @@ fun_ int64_t char_pos_slice(const char letter, const struct sslice_t text_slice)
     }
 }
 
-proc_ split(const struct sslice_t text_slice, const char splitter, int64_t parts_cap, struct sslice_t parts[], int64_t *parts_len) {
-    const char *const text = text_slice.text;
-    const int64_t text_len = text_slice.len;
-
-    int64_t current = 0;
-    for (int64_t i = 0; i < text_len; ++i) {
-        if (text[i] == splitter) {            
-            struct sslice_t part = {(i - current), (&text[current])};
-            APPEND_(parts, part);
-
-            current = i+1;
-        }
+proc_ split(const struct sslice_t text_slice, const char splitter, 
+    const int64_t parts_cap, struct sslice_t parts[], int64_t *parts_len) 
+{
+    struct sslice_t cur = text_slice;
+    int64_t pos = 0;
+    
+    for (pos = char_pos_slice(splitter, cur); pos != -1; pos = char_pos_slice(splitter, cur)) {
+        APPEND_(parts, STRUCT_(sslice_t, pos, &cur.text[pos]));
+        ++pos;
+        cur.len -= pos; 
+        cur.text = &cur.text[pos];
     }
-    if (current < text_len) {
-        struct sslice_t part = {(text_len - current), (&text[current])};
-        APPEND_(parts, part);
+
+    if (cur.len > 0) {
+        APPEND_(parts, STRUCT_(sslice_t, pos, cur.text));
     }
 }
 
@@ -160,7 +168,7 @@ fun_ int64_t mod_pwr2(int64_t number, int64_t modval) {
 
 fun_ int64_t greatest_common_divisor(int64_t m, int64_t n) {
     int64_t tmp;
-    while(m) { tmp = m; m = n % m; n = tmp; }       
+    while (m) { tmp = m; m = n % m; n = tmp; }       
     return n;
 }
 fun_ int64_t least_common_multiple(int64_t m, int64_t n) {
@@ -315,8 +323,8 @@ proc_ file_to_lines(
     int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 
 {
     file_to_buffer(filename, buffer_cap, buffer, buffer_len);
-    struct sslice_t chars_slice = {(*buffer_len), buffer};
-    to_lines(chars_slice, lines_cap, lines, lines_len);
+    
+    to_lines(STRUCT_(sslice_t, *buffer_len, buffer), lines_cap, lines, lines_len);
 }
 
 proc_ buffer_to_file(int64_t buffer_cap, char buffer[], int64_t *buffer_len, const char *const filename) {  
@@ -405,9 +413,7 @@ fun_ struct mmap_file_t mmap_open(const char *const filename) {
     void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
     assert_(lpBasePtr);
 
-    struct mmap_file_t mmap_info = {hFile, hMap, filename, (int64_t)liFileSize.QuadPart, (char*)lpBasePtr};
-    
-    return mmap_info;
+    return STRUCT_(mmap_file_t, hFile, hMap, filename, (int64_t)liFileSize.QuadPart, (char*)lpBasePtr);
 }
 
 proc_ mmap_close(struct mmap_file_t mmap_info) {

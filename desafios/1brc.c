@@ -24,16 +24,22 @@ static City thread_cities[NUM_THREADS][tabsize];
 
 static struct mmap_file_t *mmap_info = 0; // will store the mmaped file
 
-// Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
-routine_ chunked_run(void* threadidx /* thread_idx */) {
-    int32_t thread_idx = (int32_t)(uintptr_t) threadidx;
-    
+fun_ City * my_cities(int32_t thread_idx) {
     City* cities = thread_cities[thread_idx];
     for (int32_t i = 0; i < ncity; ++i) {
         City *city = &cities[hash_order[i]];
         city->name = city_names[i];
         city->min = 1000;
     }
+
+    return cities;
+}
+
+// Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
+routine_ chunked_run(void* threadidx /* thread_idx */) {
+    int32_t thread_idx = (int32_t)(uintptr_t) threadidx;
+    
+    City *cities = my_cities(thread_idx);
 
     char *data = mmap_info->contents;
 
@@ -64,10 +70,19 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
 
         // Advance the i'ndex, building the city name[1:9] hash at the same time
         sum_hash = 0; city_hash = 0;
-        for (int32_t si = 0; si < 8 && data[i] != ';'; ++si, ++i) {
+
+        city_hash = sum_hash + (uint64_t)data[i++];
+        sum_hash = city_hash << 8;
+        city_hash = sum_hash + (uint64_t)data[i++];
+        sum_hash = city_hash << 8;
+        city_hash = sum_hash + (uint64_t)data[i++];
+        sum_hash = city_hash << 8;
+
+        for (int32_t si = 0; si < 5 && data[i] != ';'; ++si, ++i) {
             city_hash = sum_hash + (uint64_t)data[i];
             sum_hash = city_hash << 8;
         }
+        
         city_hash = ((city_hash % 13087) % tabsize);
 
         // Skips all remaining city name letters

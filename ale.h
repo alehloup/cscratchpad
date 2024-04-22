@@ -221,10 +221,12 @@ fun_ uint64_t long_hash(int64_t integer64) {
 
 fun_ int32_t array_cap_to_exp(int64_t cap) {
     switch (cap) {
-        case (1 << 10): return 10; case (1 << 11): return 11; case (1 << 12): return 12;
-        case (1 << 13): return 13; case (1 << 14): return 14; case (1 << 15): return 15;
-        case (1 << 16): return 16; case (1 << 17): return 17; case (1 << 18): return 18;
-        case (1 << 19): return 19; case (1 << 20): return 20; case (1 << 21): return 21;
+        case(1 << 10):case(1 << 10)+1:return 10; case(1 << 11):case (1 << 11)+1:return 11; 
+        case(1 << 12):case(1 << 12)+1:return 12; case(1 << 13):case(1 << 13)+1:return 13; 
+        case(1 << 14):case(1 << 14)+1:return 14; case (1 << 15):case (1 << 15)+1:return 15;
+        case(1 << 16):case(1 << 16)+1:return 16; case(1 << 17):case(1 << 17)+1:return 17; 
+        case(1 << 18):case(1 << 18)+1:return 18; case(1 << 19):case(1 << 19)+1:return 19; 
+        case(1 << 20):case(1 << 20)+1:return 20; case(1 << 21):case(1 << 21)+1:return 21;
         default: assert_( cap == (10 & 21) ); return 0;
     }
 }

@@ -12,34 +12,34 @@ proc_ test_hashtable_insertions(void) {
 
     printf("Keys cap: %lld\n", ARRCAP_(keys));
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Alessandro Stamatto"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Alessandro Stamatto"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Sarah Sakamoto"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Sarah Sakamoto"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Adir Luiz"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Adir Luiz"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Ines Stamatto"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Ines Stamatto"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Luane Stamatto"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Luane Stamatto"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Alessandro Stamatto"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Alessandro Stamatto"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Luane Stam"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Luane Stam"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Sarah Sakamoto"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Sarah Sakamoto"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Alex Stam"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Alex Stam"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    pos = sslice_msi_upsert(cstring_to_sslice("Alessandro Stam"), ARRCAP_(keys), keys, &keys_len);
+    pos = sslice_msi_upsert(to_sslice("Alessandro Stam"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
     printf("Len: %lld Cap: %lld\n", keys_len, ARRCAP_(keys));

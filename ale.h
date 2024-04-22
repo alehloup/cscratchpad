@@ -57,22 +57,17 @@ struct mmap_file_t { void *file; void *map; const char *const filename; const in
 //int64_t len; const char *text;
 struct sslice_t { int64_t len; const char *text; };
 
-fun_ struct sslice_t cstring_to_sslice(const char *const cstring) {
-    return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring);
-}
+fun_ struct sslice_t to_sslice(const char *const cstring) { return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring); }
 
-proc_ sslice_print(const struct sslice_t slice) {
-    printf("%.*s", (int32_t)slice.len, slice.text);
-}
+proc_ sslice_print(const struct sslice_t slice) { printf("%.*s", (int32_t)slice.len, slice.text); }
 
 fun_ int32_t sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
     if (a_text_slice.len == 0 || b_text_slice.len == 0 || a_text_slice.len != b_text_slice.len)
         return (int32_t) (a_text_slice.len - b_text_slice.len);
     return memcmp(a_text_slice.text, b_text_slice.text, (size_t)a_text_slice.len);
 }
-fun_ bool startswith(const struct sslice_t prefix_slice, const struct sslice_t text_slice) {
-    struct sslice_t only_begin = {prefix_slice.len, text_slice.text};
-    return sslice_cmp(prefix_slice, only_begin) == 0;
+fun_ bool startswith(const struct sslice_t prefix, const struct sslice_t text) {
+    return sslice_cmp(prefix, STRUCT_(sslice_t, .len=prefix.len, .text=text.text)) == 0;
 }
 
 fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
@@ -131,7 +126,7 @@ proc_ split(const struct sslice_t text_slice, const char splitter,
     }
 }
 
-proc_ to_lines(const struct sslice_t text_slice, int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) {
+proc_ to_lines(const struct sslice_t text_slice, const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) {
     split(text_slice, '\n', lines_cap, lines, lines_len);
 }
 
@@ -167,18 +162,14 @@ proc_ buffer_appendcstrs(const int64_t dst_buffer_cap, char dst_buffer[], int64_
 
 
 // bitmask for optimized Mod for power 2 numbers
-fun_ int64_t mod_pwr2(int64_t number, int64_t modval) {
-    return (number) & (modval - 1);
-}
+fun_ int64_t mod_pwr2(int64_t number, int64_t modval) { return (number) & (modval - 1); }
 
 fun_ int64_t greatest_common_divisor(int64_t m, int64_t n) {
     int64_t tmp;
     while (m) { tmp = m; m = n % m; n = tmp; }       
     return n;
 }
-fun_ int64_t least_common_multiple(int64_t m, int64_t n) {
-     return m / greatest_common_divisor(m, n) * n;
-}
+fun_ int64_t least_common_multiple(int64_t m, int64_t n) { return m / greatest_common_divisor(m, n) * n; }
 
 fun_ int32_t rnd(uint64_t seed[1]) {
     *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
@@ -219,7 +210,7 @@ fun_ uint64_t long_hash(int64_t integer64) {
 }
 
 
-fun_ int32_t array_cap_to_exp(int64_t cap) {
+fun_ int32_t array_cap_to_exp(const int64_t cap) {
     switch (cap) {
         case(1 << 10):case(1 << 10)+1:return 10; case(1 << 11):case (1 << 11)+1:return 11; 
         case(1 << 12):case(1 << 12)+1:return 12; case(1 << 13):case(1 << 13)+1:return 13; 
@@ -242,7 +233,7 @@ fun_ int32_t ht_lookup(
     return idx;
 }
 
-fun_ int32_t i64_msi_lookup(const int64_t search_key, int64_t haystack_keys_cap, int64_t haystack_keys[]) {
+fun_ int32_t i64_msi_lookup(const int64_t search_key, const int64_t haystack_keys_cap, int64_t haystack_keys[]) {
     const int32_t exp = array_cap_to_exp(haystack_keys_cap);    
     uint64_t h = long_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
@@ -258,7 +249,7 @@ fun_ int32_t i64_msi_lookup(const int64_t search_key, int64_t haystack_keys_cap,
 
 fun_ int32_t i64_msi_upsert(
         const int64_t search_key, 
-        int64_t haystack_keys_cap, int64_t haystack_keys[], int64_t *haystack_keys_len) 
+        const int64_t haystack_keys_cap, int64_t haystack_keys[], int64_t *haystack_keys_len) 
 {
     assert_((*haystack_keys_len) < haystack_keys_cap);
     
@@ -270,7 +261,7 @@ fun_ int32_t i64_msi_upsert(
 
 fun_ int32_t sslice_msi_lookup(
         const struct sslice_t search_key, 
-        int64_t haystack_keys_cap, struct sslice_t haystack_keys[]) 
+        const int64_t haystack_keys_cap, struct sslice_t haystack_keys[]) 
 {
     int32_t exp = array_cap_to_exp(haystack_keys_cap);
     uint64_t h = sslice_hash(search_key);
@@ -287,7 +278,7 @@ fun_ int32_t sslice_msi_lookup(
 
 fun_ int32_t sslice_msi_upsert(
         const struct sslice_t search_key, 
-        int64_t haystack_keys_cap, struct sslice_t haystack_keys[], int64_t *haystack_keys_len) 
+        const int64_t haystack_keys_cap, struct sslice_t haystack_keys[], int64_t *haystack_keys_len) 
 {
     assert_((*haystack_keys_len) < haystack_keys_cap);
     int32_t pos = sslice_msi_lookup(search_key, haystack_keys_cap, haystack_keys);
@@ -305,7 +296,7 @@ fun_ int64_t file_size(FILE *f) {
 
 proc_ file_to_buffer(
     const char *const filename, 
-    int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len) 
+    const int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len) 
 {
     FILE *f = fopen(filename, "rb");
     {
@@ -324,17 +315,24 @@ proc_ file_to_buffer(
     fclose(f);
 }
 
+proc_ buffer_to_lines(
+    char buffer[], int64_t *buffer_len, 
+    const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 
+{   
+    to_lines(STRUCT_(sslice_t, .len=*buffer_len, .text=buffer), lines_cap, lines, lines_len);
+}
+
 proc_ file_to_lines(
     const char *const filename, 
-    int64_t buffer_cap, char buffer[], int64_t *buffer_len, 
-    int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 
+    const int64_t buffer_cap, char buffer[], int64_t *buffer_len, 
+    const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 
 {
     file_to_buffer(filename, buffer_cap, buffer, buffer_len);
     
     to_lines(STRUCT_(sslice_t, .len=*buffer_len, .text=buffer), lines_cap, lines, lines_len);
 }
 
-proc_ buffer_to_file(int64_t buffer_cap, char buffer[], int64_t *buffer_len, const char *const filename) {  
+proc_ buffer_to_file(const int64_t buffer_cap, char buffer[], int64_t *buffer_len, const char *const filename) {  
     FILE *f = fopen(filename, "wb");
     {
         assert_(f);
@@ -346,7 +344,7 @@ proc_ buffer_to_file(int64_t buffer_cap, char buffer[], int64_t *buffer_len, con
     fclose(f);
 }
 
-proc_ lines_to_file(int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len, const char *const filename) {
+proc_ lines_to_file(const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len, const char *const filename) {
     FILE *f = fopen(filename, "wb");
     {
         assert_(f);
@@ -442,7 +440,7 @@ fun_ THREAD_T go(long unsigned int (*routine)(void *thread_idx)) {
 }
 proc_ go_threads(
     long unsigned int (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
-    int64_t threads_cap, THREAD_T threads[], int64_t *threads_len)
+    const int64_t threads_cap, THREAD_T threads[], int64_t *threads_len)
 {
         assert_(*threads_len < threads_cap && number_of_threads_to_spawn < threads_cap);
         assert_(number_of_threads_to_spawn < 16000);

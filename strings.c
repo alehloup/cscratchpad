@@ -1,19 +1,19 @@
 #include "ale.h"
 
 proc_ test_buffers(void) {
-    struct sslice_t string = cstring_to_sslice("Alessandro");
+    struct sslice_t string = to_sslice("Alessandro");
     char buff[256];
     int64_t buff_len = 0;
 
     buffer_appendslice(ARRCAP_(buff), buff, &buff_len, string);
-    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, cstring_to_sslice(" Luiz"));
-    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, cstring_to_sslice(" Stamatto"));
+    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, to_sslice(" Luiz"));
+    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, to_sslice(" Stamatto"));
 
     printf("%s |%lld| \n", buff, buff_len);
 }
 
 proc_ test_to_lines(void) {
-    struct sslice_t text = cstring_to_sslice("Alessandro \n Luiz\n Stamatto \n Ferreira");
+    struct sslice_t text = to_sslice("Alessandro \n Luiz\n Stamatto \n Ferreira");
     
     struct sslice_t lines[256];
     int64_t lines_len = 0;
@@ -27,7 +27,7 @@ proc_ test_to_lines(void) {
 }
 
 proc_ test_split(void) {
-    struct sslice_t text = cstring_to_sslice("Alessandro  Luiz Stamatto  Ferreira");
+    struct sslice_t text = to_sslice("Alessandro  Luiz Stamatto  Ferreira");
 
     struct sslice_t words[256];
     int64_t words_len = 0;
@@ -41,7 +41,7 @@ proc_ test_split(void) {
 }
 
 proc_ print_sslicecmp(struct sslice_t a, struct sslice_t b) {
-        printf("cstring_to_sslicecmp, ");
+        printf("sslicecmp, ");
         
         sslice_print(a);
         printf(" cmp ");
@@ -51,10 +51,10 @@ proc_ print_sslicecmp(struct sslice_t a, struct sslice_t b) {
 }
 
 proc_ test_string_eq(void) {
-    print_sslicecmp(cstring_to_sslice("Alessandro"), cstring_to_sslice("Alessandr"));
-    print_sslicecmp(cstring_to_sslice("Alessandro"), cstring_to_sslice("Alessandro"));
-    print_sslicecmp(cstring_to_sslice("Sarah"), cstring_to_sslice("Alexi"));
-    print_sslicecmp(cstring_to_sslice("Alex"), cstring_to_sslice("Sara"));
+    print_sslicecmp(to_sslice("Alessandro"), to_sslice("Alessandr"));
+    print_sslicecmp(to_sslice("Alessandro"), to_sslice("Alessandro"));
+    print_sslicecmp(to_sslice("Sarah"), to_sslice("Alexi"));
+    print_sslicecmp(to_sslice("Alex"), to_sslice("Sara"));
 }
 
 proc_ test_fileread(void) {
@@ -82,7 +82,7 @@ proc_ test_fileread_to_lines(void) {
 }
 
 proc_ test_filewrite(void) {
-    sslice_to_file(cstring_to_sslice("Woa\nTestando arquivos!\n"), "saida.txt");
+    sslice_to_file(to_sslice("Woa\nTestando arquivos!\n"), "saida.txt");
 }
 
 int32_t main(void) {

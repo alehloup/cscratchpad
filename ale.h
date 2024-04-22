@@ -367,7 +367,7 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
     fclose(f);
 }
 
-fun_ int32_t compile_c(const char *const flags, const char *const c_file_c) {
+fun_ int32_t compile_run_c(const char *const flags, const char *const c_file_c) {
     char buffer[2048] = {0}; 
     int64_t buffer_len = 0; 
 
@@ -378,7 +378,7 @@ fun_ int32_t compile_c(const char *const flags, const char *const c_file_c) {
     memcpy(c_file, c_file_c, (size_t)c_file_len); // remove .c
 
     const char *const parts[] = {
-        flags, " ./", c_file, ".c -o ./", c_file, ".exe"
+        flags, " ./", c_file, ".c -o ./", c_file, ".exe && ", c_file, ".exe"
     };
     buffer_appendcstrs(ARRCAP_(buffer), buffer, &buffer_len, parts, ARRCAP_(parts));
 

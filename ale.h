@@ -51,8 +51,10 @@
     assert_((*array##_len) > 0); \
     array[idx_to_del] = array[--(*array##_len)]
 
+// void *file; void *map; const char *const filename; const int64_t filesize; char *contents;
 struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
 
+//int64_t len; const char *text;
 struct sslice_t { int64_t len; const char *text; };
 
 fun_ struct sslice_t cstring_to_sslice(const char *const cstring) {
@@ -114,14 +116,14 @@ proc_ split(const struct sslice_t text_slice, const char splitter,
     int64_t pos = 0;
     
     for (pos = char_pos_slice(splitter, cur); pos != -1; pos = char_pos_slice(splitter, cur)) {
-        APPEND_(parts, STRUCT_(sslice_t, pos, &cur.text[pos]));
+        APPEND_(parts, STRUCT_(sslice_t, .len=pos, .text=&cur.text[pos]));
         ++pos;
         cur.len -= pos; 
         cur.text = &cur.text[pos];
     }
 
     if (cur.len > 0) {
-        APPEND_(parts, STRUCT_(sslice_t, pos, cur.text));
+        APPEND_(parts, STRUCT_(sslice_t, .len=pos, .text=cur.text));
     }
 }
 
@@ -323,7 +325,7 @@ proc_ file_to_lines(
 {
     file_to_buffer(filename, buffer_cap, buffer, buffer_len);
     
-    to_lines(STRUCT_(sslice_t, *buffer_len, buffer), lines_cap, lines, lines_len);
+    to_lines(STRUCT_(sslice_t, .len=*buffer_len, .text=buffer), lines_cap, lines, lines_len);
 }
 
 proc_ buffer_to_file(int64_t buffer_cap, char buffer[], int64_t *buffer_len, const char *const filename) {  
@@ -412,7 +414,8 @@ fun_ struct mmap_file_t mmap_open(const char *const filename) {
     void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
     assert_(lpBasePtr);
 
-    return STRUCT_(mmap_file_t, hFile, hMap, filename, (int64_t)liFileSize.QuadPart, (char*)lpBasePtr);
+    //void *file; void *map; const char *const filename; const int64_t filesize; char *contents;
+    return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=(int64_t)liFileSize.QuadPart, .contents=(char*)lpBasePtr);
 }
 
 proc_ mmap_close(struct mmap_file_t mmap_info) {

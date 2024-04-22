@@ -120,7 +120,7 @@ proc_ split(const struct sslice_t text_slice, const char splitter,
     int64_t pos = 0;
     
     for (pos = char_pos_slice(splitter, cur); pos != -1; pos = char_pos_slice(splitter, cur)) {
-        APPEND_(parts, STRUCT_(sslice_t, .len=pos, .text=&cur.text[pos]));
+        APPEND_(parts, STRUCT_(sslice_t, .len=pos, .text=cur.text));
         ++pos;
         cur.len -= pos; 
         cur.text = &cur.text[pos];

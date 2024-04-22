@@ -3,6 +3,8 @@
 #include "../ale.h"
 
 int32_t main(int32_t argc, const char *const *argv) {
+    if (argc < 1) return 0;
+
     int32_t success =
         compile_run_c(
              " g++" 
@@ -13,7 +15,7 @@ int32_t main(int32_t argc, const char *const *argv) {
         " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
         " -fno-exceptions",
         
-            argc > 1 ? argv[1] : "\0"
+            argv[1]
         );
 
     return success;

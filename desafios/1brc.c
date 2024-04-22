@@ -20,9 +20,9 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 #define tabsize 6570
 
 typedef struct City { const char* name; int64_t count; int64_t sum; int64_t min; int64_t max; } City;
-static City thread_cities[NUM_THREADS][tabsize] = ZERO_INIT;
+static City thread_cities[NUM_THREADS][tabsize];
 
-static struct mmap_file_t *mmap_info = ZERO_INIT; // will store the mmaped file
+static struct mmap_file_t *mmap_info = 0; // will store the mmaped file
 
 // Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
 routine_ chunked_run(void* threadidx /* thread_idx */) {
@@ -64,7 +64,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
 
         // Advance the i'ndex, building the city name[1:9] hash at the same time
         sum_hash = 0; city_hash = 0;
-        for (int32_t si = 0; si < 8 and data[i] != ';'; ++si, ++i) {
+        for (int32_t si = 0; si < 8 && data[i] != ';'; ++si, ++i) {
             city_hash = sum_hash + (uint64_t)data[i];
             sum_hash = city_hash << 8;
         }
@@ -147,10 +147,11 @@ proc_ run(void) {
         int32_t error_code = (int32_t) chunked_run(0);
         assert_(error_code == 0 && "returned with error");
     } else {
-        arrnew_(threads, THREAD_, 16);
+        THREAD_T threads[16];
+        int64_t threads_len = 0;
 
-        go_threads( chunked_run, NUM_THREADS, arrarg_(threads));
-        join_threads(arrarg_(threads));
+        go_threads( chunked_run, NUM_THREADS, ARRCAP_(threads), threads, &threads_len);
+        join_threads(threads, threads_len);
         aggregate_results();
     }
 

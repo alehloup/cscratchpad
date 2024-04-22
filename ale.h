@@ -29,10 +29,10 @@
 
 #if defined(_WINDOWS_)
     #define routine_ inline static long unsigned int
-    #define THREAD_ HANDLE
+    #define THREAD_T HANDLE
 #else 
     #define routine_ inline static void * 
-    #define THREAD_ HANDLE
+    #define THREAD_T HANDLE
 #endif
 
 #if defined(__cplusplus)
@@ -379,12 +379,14 @@ fun_ int32_t compile_run_c(const char *const flags, const char *const c_file_c) 
 
     char c_file[256] = {0};
     const int32_t c_file_len = (int32_t)strlen(c_file_c) - 2;
-    assert_(c_file_len < 255);
+    assert_(c_file_len < 255 && c_file_len > 0);
 
     memcpy(c_file, c_file_c, (size_t)c_file_len); // remove .c
 
     const char *const parts[] = {
-        flags, " ./", c_file, ".c -o ./", c_file, ".exe && ", c_file, ".exe"
+        flags, // pass the compiler and flags
+        " ./", c_file, ".c -o ./", c_file, ".exe && ",  // compile .c to .exe
+        c_file, ".exe" // execute
     };
     buffer_appendcstrs(ARRCAP_(buffer), buffer, &buffer_len, parts, ARRCAP_(parts));
 
@@ -430,17 +432,17 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
     CloseHandle(mmap_info.file);
 }
 
-fun_ THREAD_ go(long unsigned int (*routine)(void *thread_idx)) {
+fun_ THREAD_T go(long unsigned int (*routine)(void *thread_idx)) {
     static uintptr_t incrementing_idx = 0;
 
-    THREAD_ thread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
+    THREAD_T thread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
     assert_(thread != 0);
 
     return thread;
 }
 proc_ go_threads(
     long unsigned int (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
-    int64_t threads_cap, THREAD_ threads[], int64_t *threads_len)
+    int64_t threads_cap, THREAD_T threads[], int64_t *threads_len)
 {
         assert_(*threads_len < threads_cap && number_of_threads_to_spawn < threads_cap);
         assert_(number_of_threads_to_spawn < 16000);
@@ -451,7 +453,7 @@ proc_ go_threads(
         *threads_len = number_of_threads_to_spawn;
 }
 
-proc_ join_threads(THREAD_ threads[], const int64_t threads_len) {
+proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
     assert_(threads_len < 16000);
     
     WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);

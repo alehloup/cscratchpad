@@ -10,7 +10,7 @@ routine_ sum(void* thread_idx) {
 }
 
 int32_t main() {
-    THREAD_ threads[16];
+    THREAD_T threads[16];
     int64_t threads_len = 0;
     
     go_threads(sum, NUM_THREADS_TO_CREATE, ARRCAP_(threads), threads, &threads_len);

@@ -61,6 +61,10 @@ fun_ struct sslice_t cstring_to_sslice(const char *const cstring) {
     return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring);
 }
 
+proc_ sslice_print(const struct sslice_t slice) {
+    printf("%.*s", (int32_t)slice.len, slice.text);
+}
+
 fun_ int32_t sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
     if (a_text_slice.len == 0 || b_text_slice.len == 0 || a_text_slice.len != b_text_slice.len)
         return (int32_t) (a_text_slice.len - b_text_slice.len);

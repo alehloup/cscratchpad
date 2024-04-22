@@ -1,23 +1,24 @@
 #include "ale.h"
 
 proc_ test_buffers(void) {
-    struct sslice_t string = sslice_("Alessandro");
-    arrnew_(buff, char, 256);
+    struct sslice_t string = cstring_to_sslice("Alessandro");
+    char buff[256];
+    int64_t buff_len = 0;
 
-    buffer_appendslice(arrarg_(buff), string);
-    buffer_appendslice(arrarg_(buff), sslice_(" Luiz"));
-    buffer_appendslice(arrarg_(buff), sslice_(" Stamatto"));
+    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, string);
+    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, cstring_to_sslice(" Luiz"));
+    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, cstring_to_sslice(" Stamatto"));
 
-    buffer_set(arrarg_(buff), sslice_("Woa"));
-
-    printf("%s |%lld| \n", buff, *buff_len);
+    printf("%s |%lld| \n", buff, buff_len);
 }
 
 proc_ test_to_lines(void) {
-    struct sslice_t text = sslice_("Alessandro \n Luiz\n Stamatto \n Ferreira");
-    arrnew_(lines, struct sslice_t, 256);
+    struct sslice_t text = cstring_to_sslice("Alessandro \n Luiz\n Stamatto \n Ferreira");
+    
+    struct sslice_t lines[256];
+    int64_t lines_len = 0;
 
-    to_lines(text, arrarg_(lines));
+    to_lines(text, ARRCAP_(lines), lines, &lines_len);
 
     sslice_print(trimmed(lines[0])); printf("\n");
     sslice_print(trimmed(lines[1])); printf("\n");
@@ -26,10 +27,12 @@ proc_ test_to_lines(void) {
 }
 
 proc_ test_split(void) {
-    struct sslice_t text = sslice_("Alessandro  Luiz Stamatto  Ferreira");
-    arrnew_(words, struct sslice_t, 256);
+    struct sslice_t text = cstring_to_sslice("Alessandro  Luiz Stamatto  Ferreira");
 
-    split(text, ' ', arrarg_(words));
+    struct sslice_t words[256];
+    int64_t words_len = 0;
+
+    split(text, ' ', ARRCAP_(words), words, &words_len);
 
     sslice_print(trimmed(words[0])); printf("\n");
     sslice_print(trimmed(words[1])); printf("\n");
@@ -37,8 +40,8 @@ proc_ test_split(void) {
     sslice_print(trimmed(words[3])); printf("\n");
 }
 
-proc_ print_sslice_cmp(struct sslice_t a, struct sslice_t b) {
-        printf("sslice_cmp, ");
+proc_ print_sslicecmp(struct sslice_t a, struct sslice_t b) {
+        printf("cstring_to_sslicecmp, ");
         
         sslice_print(a);
         printf(" cmp ");
@@ -48,34 +51,38 @@ proc_ print_sslice_cmp(struct sslice_t a, struct sslice_t b) {
 }
 
 proc_ test_string_eq(void) {
-    print_sslice_cmp(sslice_("Alessandro"), sslice_("Alessandr"));
-    print_sslice_cmp(sslice_("Alessandro"), sslice_("Alessandro"));
-    print_sslice_cmp(sslice_("Sarah"), sslice_("Alexi"));
-    print_sslice_cmp(sslice_("Alex"), sslice_("Sara"));
+    print_sslicecmp(cstring_to_sslice("Alessandro"), cstring_to_sslice("Alessandr"));
+    print_sslicecmp(cstring_to_sslice("Alessandro"), cstring_to_sslice("Alessandro"));
+    print_sslicecmp(cstring_to_sslice("Sarah"), cstring_to_sslice("Alexi"));
+    print_sslicecmp(cstring_to_sslice("Alex"), cstring_to_sslice("Sara"));
 }
 
 proc_ test_fileread(void) {
-    arrnew_(b, char, 2048);
-    file_to_buffer("commands.txt", arrarg_(b));
+    char b[2048];
+    int64_t b_len = 0;
+    file_to_buffer("commands.txt", ARRCAP_(b), b, &b_len);
 
-    printf("|%lld|\n%s\n", *b_len, b);
+    printf("|%lld|\n%s\n", b_len, b);
 }
 
 proc_ test_fileread_to_lines(void) {
-    arrnew_(b, char, 2048);
-    arrnew_(lines, struct sslice_t, 64);
+    char b[2048];
+    int64_t b_len = 0;
 
-    file_to_lines("commands.txt", arrarg_(b), arrarg_(lines));
+    struct sslice_t lines[256];
+    int64_t lines_len = 0;
 
-    for (int64_t i = 0; i < (*lines_len); ++i) {
+    file_to_lines("commands.txt", ARRCAP_(b), b, &b_len, ARRCAP_(lines), lines, &lines_len);
+
+    for (int64_t i = 0; i < lines_len; ++i) {
         printf("%lld: ", i); sslice_print(lines[i]); printf("\n");
     }
 
-    lines_to_file(arrarg_(lines), "linhas.txt");
+    lines_to_file(ARRCAP_(lines), lines, &lines_len, "linhas.txt");
 }
 
 proc_ test_filewrite(void) {
-    sslice_to_file(sslice_("Woa\nTestando arquivos!\n"), "saida.txt");
+    sslice_to_file(cstring_to_sslice("Woa\nTestando arquivos!\n"), "saida.txt");
 }
 
 int32_t main(void) {

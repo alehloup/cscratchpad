@@ -60,7 +60,6 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         ++i; // skips to next line
     }
     i += 1; // skip to second letter of next line
-
     /* -----------------------------------------  */
 
     uint64_t city_hash = 0, sum_hash = 0;
@@ -84,12 +83,12 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         }
         
         city_hash = ((city_hash % 13087) % tabsize);
-
-        // Skips all remaining city name letters
+        
+        // Increment to move past the ';'
         while(data[i] != ';') {
             ++i;
         }
-        ++i;
+        i++; 
 
         //parse number
         int64_t measure = 1;

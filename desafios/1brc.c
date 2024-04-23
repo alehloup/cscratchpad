@@ -60,15 +60,14 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         ++i; // skips to next line
     }
     i += 1; // skip to second letter of next line
-    /* -----------------------------------------  */
 
-    uint64_t city_hash = 0, sum_hash = 0;
+    /* -----------------------------------------  */
 
     for (; i < len; ++i /* SKIPS THE FIRST LETTER OF THE LINE */) {
         // Each iteration we start at the second letter of a line
 
         // Advance the i'ndex, building the city name[1:9] hash at the same time
-        sum_hash = 0; city_hash = 0;
+        uint64_t sum_hash = 0, city_hash = 0;
 
         city_hash = sum_hash + (uint64_t)data[i++];
         sum_hash = city_hash << 8;

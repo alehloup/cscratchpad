@@ -63,7 +63,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
 
     /* -----------------------------------------  */
 
-    for (; i < len; ++i /* SKIPS THE FIRST LETTER OF THE LINE */) {
+    while(i < len) {
         // Each iteration we start at the second letter of a line
 
         // Advance the i'ndex, building the city name[1:9] hash at the same time
@@ -97,10 +97,10 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         }
         if (data[i+1] == '.') {
             measure *= (data[i] - '0')*10 + (data[i+2] - '0');
-            i += 4; // skips to next line
+            i += 5; // skips to second char of next line
         } else {
             measure *= (data[i] - '0')*100 + (data[i+1] - '0')*10 + (data[i+3] - '0');
-            i += 5; // skips to next line
+            i += 6; // skips to second char of next line
         }
 
         //update city measurements

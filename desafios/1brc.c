@@ -163,7 +163,7 @@ proc_ run(void) {
         int32_t error_code = (int32_t) chunked_run(0);
         assert_(error_code == 0 && "returned with error");
     } else {
-        THREAD_T threads[16];
+        THREAD_T threads[NUM_THREADS];
         int64_t threads_len = 0;
 
         go_threads( chunked_run, NUM_THREADS, ARRCAP_(threads), threads, &threads_len);

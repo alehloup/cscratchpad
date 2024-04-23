@@ -63,44 +63,47 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
 
     /* -----------------------------------------  */
 
-    while(i < len) {
+    const char *cur = &data[i], *end = &data[len];
+
+    while(cur < end) {
         // Each iteration we start at the second letter of a line
 
         // Advance the i'ndex, building the city name[1:9] hash at the same time
         uint64_t sum_hash = 0, city_hash = 0;
 
-        city_hash = sum_hash + (uint64_t)data[i++];
+        city_hash = sum_hash + (uint64_t)*(cur++);
         sum_hash = city_hash << 8;
-        city_hash = sum_hash + (uint64_t)data[i++];
+        city_hash = sum_hash + (uint64_t)*(cur++);
         sum_hash = city_hash << 8;
-        city_hash = sum_hash + (uint64_t)data[i++];
+        city_hash = sum_hash + (uint64_t)*(cur++);
         sum_hash = city_hash << 8;
 
-        for (int32_t si = 0; si < 5 && data[i] != ';'; ++si, ++i) {
-            city_hash = sum_hash + (uint64_t)data[i];
+        for (int32_t si = 0; si < 5 && *cur != ';'; ++si, ++cur) {
+            city_hash = sum_hash + (uint64_t)*cur;
             sum_hash = city_hash << 8;
         }
         
         city_hash = ((city_hash % 13087) % tabsize);
-        
+
         // Increment to move past the ';'
-        while(data[i] != ';') {
-            ++i;
+        while(*cur != ';') {
+            ++cur;
         }
-        i++; 
+        
+        ++cur; 
 
         //parse number
         int64_t measure = 1;
-        if (data[i] == '-') {
+        if (cur[0] == '-') {
             measure = -1;
-            ++i;
+            ++cur;
         }
-        if (data[i+1] == '.') {
-            measure *= (data[i] - '0')*10 + (data[i+2] - '0');
-            i += 5; // skips to second char of next line
+        if (cur[1] == '.') {
+            measure *= (cur[0] - '0')*10 + (cur[2] - '0');
+            cur += 5; // skips to second char of next line
         } else {
-            measure *= (data[i] - '0')*100 + (data[i+1] - '0')*10 + (data[i+3] - '0');
-            i += 6; // skips to second char of next line
+            measure *= (cur[0] - '0')*100 + (cur[1] - '0')*10 + (cur[3] - '0');
+            cur += 6; // skips to second char of next line
         }
 
         //update city measurements

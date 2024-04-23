@@ -61,9 +61,8 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
     }
     i += 1; // skip to second letter of next line
 
-    /* -----------------------------------------  */
-
     const char *cur = &data[i], *end = &data[len];
+    /* -----------------------------------------  */
 
     while(cur < end) {
         // Each iteration we start at the second letter of a line
@@ -81,15 +80,15 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         for (int32_t si = 0; si < 5 && *cur != ';'; ++si, ++cur) {
             city_hash = sum_hash + (uint64_t)*cur;
             sum_hash = city_hash << 8;
-        }
-        
+        } 
         city_hash = ((city_hash % 13087) % tabsize);
+        /* -----------------------------------------  */
+
 
         // Increment to move past the ';'
         while(*cur != ';') {
             ++cur;
         }
-        
         ++cur; 
 
         //parse number

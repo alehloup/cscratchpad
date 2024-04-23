@@ -442,7 +442,7 @@ proc_ go_threads(
     long unsigned int (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
     const int64_t threads_cap, THREAD_T threads[], int64_t *threads_len)
 {
-        assert_(*threads_len < threads_cap && number_of_threads_to_spawn < threads_cap);
+        assert_(*threads_len <= threads_cap && number_of_threads_to_spawn <= threads_cap);
         assert_(number_of_threads_to_spawn < 16000);
 
         for (int32_t i = 0; i < number_of_threads_to_spawn; ++i) {

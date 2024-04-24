@@ -433,7 +433,7 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
 fun_ THREAD_T go(long unsigned int (*routine)(void *thread_idx)) {
     static uintptr_t incrementing_idx = 0;
 
-    THREAD_T thread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
+    THREAD_T thread = CreateThread(0, 64 * 1024, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
     assert_(thread != 0);
 
     return thread;

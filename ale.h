@@ -1,5 +1,6 @@
 #pragma once
 
+#pragma region Includes
 #include <memory.h>
 #include <time.h>
 #include <stdbool.h>
@@ -7,15 +8,16 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #if defined(_WIN32) || defined(_WIN64)
     #include <Windows.h>
+#else
+    #include <unistd.h>
+    #include <pthread.h>
+    #include <sys/mman.h>
 #endif
+#pragma endregion Includes
 
-// #if defined(POSIX?)
-//     #include <linux.h>
-// #endif
-
+#pragma region Defines
 #define assert_(c) if(!(c)) \
     (fprintf(stderr, "\n\n  ASSERT FAILED %s:%s:%d | %s |\n\n", __FILE__, __func__, __LINE__, #c), exit(52))
 
@@ -34,7 +36,9 @@
     #define routine_ inline static void * 
     #define THREAD_T HANDLE
 #endif
+#pragma endregion Defines
 
+#pragma region Macros
 #if defined(__cplusplus)
     #define STRUCT_(struct_name, ...) /*(struct struct_name)*/ { __VA_ARGS__ }
 #else
@@ -50,13 +54,17 @@
 #define DELIDX_(array, idx_to_del) \
     assert_((*array##_len) > 0); \
     array[idx_to_del] = array[--(*array##_len)]
+#pragma endregion Macros
 
+#pragma region Structs
 // void *file; void *map; const char *const filename; const int64_t filesize; char *contents;
 struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
 
 //int64_t len; const char *text;
 struct sslice_t { int64_t len; const char *text; };
+#pragma endregion Structs
 
+#pragma region Strings
 fun_ struct sslice_t to_sslice(const char *const cstring) { return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring); }
 
 proc_ sslice_print(const struct sslice_t slice) { printf("%.*s", (int32_t)slice.len, slice.text); }
@@ -130,6 +138,13 @@ proc_ to_lines(const struct sslice_t text_slice, const int64_t lines_cap, struct
     split(text_slice, '\n', lines_cap, lines, lines_len);
 }
 
+proc_ buffer_to_lines(
+    char buffer[], int64_t *buffer_len, 
+    const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 
+{   
+    to_lines(STRUCT_(sslice_t, .len=*buffer_len, .text=buffer), lines_cap, lines, lines_len);
+}
+
 proc_ buffer_appendslice(const int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, 
     const struct sslice_t src_chars_slice) 
 {
@@ -159,10 +174,10 @@ proc_ buffer_appendcstrs(const int64_t dst_buffer_cap, char dst_buffer[], int64_
         buffer_appendcstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
     }
 }
+#pragma endregion Strings
 
-
-// bitmask for optimized Mod for power 2 numbers
-fun_ int64_t mod_pwr2(int64_t number, int64_t modval) { return (number) & (modval - 1); }
+#pragma region Math
+fun_ int64_t power2_number_mod(int64_t power2_number, int64_t modval) { return (power2_number) & (modval - 1); }
 
 fun_ int64_t greatest_common_divisor(int64_t m, int64_t n) {
     int64_t tmp;
@@ -232,7 +247,9 @@ fun_ int32_t ht_lookup(
     int32_t idx = (int) (((uint32_t)index + step) & ((uint32_t) ((1 << exp) - 1)));
     return idx;
 }
+#pragma endregion Math
 
+#pragma region Hashtable
 fun_ int32_t i64_msi_lookup(const int64_t search_key, const int64_t haystack_keys_cap, int64_t haystack_keys[]) {
     const int32_t exp = array_cap_to_exp(haystack_keys_cap);    
     uint64_t h = long_hash(search_key);
@@ -286,7 +303,9 @@ fun_ int32_t sslice_msi_upsert(
     haystack_keys[pos] = search_key;
     return pos;
 }
+#pragma endregion Hashtable
 
+#pragma region Files
 fun_ int64_t file_size(FILE *f) {
     fseek(f, 0, SEEK_END);
     int64_t fsize = ftell(f);
@@ -313,13 +332,6 @@ proc_ file_to_buffer(
         *dst_buffer_len = fsize;
     }
     fclose(f);
-}
-
-proc_ buffer_to_lines(
-    char buffer[], int64_t *buffer_len, 
-    const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 
-{   
-    to_lines(STRUCT_(sslice_t, .len=*buffer_len, .text=buffer), lines_cap, lines, lines_len);
 }
 
 proc_ file_to_lines(
@@ -370,7 +382,9 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
     }
     fclose(f);
 }
+#pragma endregion Files
 
+#pragma region Tools
 fun_ int32_t compile_run_c(const char *const flags, const char *const c_file_c) {
     char buffer[2048] = {0}; 
     int64_t buffer_len = 0; 
@@ -399,8 +413,9 @@ proc_ start_benchclock(void) {
 proc_ stop_benchclock(void) {
     printf("\n\nExecuted in %f seconds \n", (double)(clock() - BENCHCLOCK_) / CLOCKS_PER_SEC);
 }
+#pragma endregion Tools
 
-
+#pragma region Mmap
 #if defined(_WINDOWS_)
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
@@ -429,7 +444,9 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
 }
+#pragma endregion Mmap
 
+#pragma region Threads
 fun_ THREAD_T go(long unsigned int (*routine)(void *thread_idx)) {
     static uintptr_t incrementing_idx = 0;
 
@@ -457,3 +474,4 @@ proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
     WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
 }
 #endif //_WINDOWS_
+#pragma endregion Threads

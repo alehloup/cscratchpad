@@ -4,7 +4,7 @@
 proc_ run(void) {
     struct mmap_file_t mmap_info = mmap_open("C:/Users/Aleh/1brc_java/measurements1b.txt"); 
     {
-        printf("\n%lld\n", mmap_info.filesize);
+        printf("\n%" PRId64 "\n", mmap_info.filesize);
 
         printf("%s\n", &mmap_info.contents[13795387400]);
     }

@@ -98,11 +98,11 @@ proc_ aoc(int32_t lines_len, Mstr lines[2]) {
             int64_t dist = distance(galaxies[i], galaxies[j]);
             printf("Coord1: "); coord_printf(galaxies[i]); 
             printf("Coord2: "); coord_printf(galaxies[j]);
-            printf(" distance: %lld\n", dist);
+            printf(" distance: %" PRId64 "\n", dist);
             sum_dists += dist;
         }
     }
-    printf("Sum dists: %lld\n", sum_dists);
+    printf("Sum dists: %" PRId64 "\n", sum_dists);
 } 
 
 

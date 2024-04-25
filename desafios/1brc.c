@@ -146,7 +146,7 @@ proc_ aggregate_results(void) {
 proc_ print_results(void) {
     for (int32_t i = 0; i < ncity; ++i) {
         City *city = &thread_cities[0][hash_order[i]];
-        printf("%s  #%lld  $%.1f  @%.1f  [%.1f  %.1f]\n", city->name, city->count, 
+        printf("%s  #%" PRId64 "  $%.1f  @%.1f  [%.1f  %.1f]\n", city->name, city->count, 
             /*$sum*/ (double)city->sum / 10.0,
             /*@avg*/ ((double)city->sum / ((double)city->count*10)),
             /*[min  max]*/ (double)city->min/10.0, (double)city->max/10.0

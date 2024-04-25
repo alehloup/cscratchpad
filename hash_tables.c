@@ -10,7 +10,7 @@ proc_ test_hashtable_insertions(void) {
     struct sslice_t keys[1 << 10];
     int64_t keys_len = 0;
 
-    printf("Keys cap: %lld\n", ARRCAP_(keys));
+    printf("Keys cap: %" PRId64 "\n", ARRCAP_(keys));
 
     pos = sslice_msi_upsert(to_sslice("Alessandro Stamatto"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
@@ -42,7 +42,7 @@ proc_ test_hashtable_insertions(void) {
     pos = sslice_msi_upsert(to_sslice("Alessandro Stam"), ARRCAP_(keys), keys, &keys_len);
     printf("[%d] %s \n", pos, keys[pos].text);
 
-    printf("Len: %lld Cap: %lld\n", keys_len, ARRCAP_(keys));
+    printf("Len: %" PRId64 " Cap: %" PRId64 "\n", keys_len, ARRCAP_(keys));
 }
 
 

@@ -21,6 +21,7 @@
         "random": "c",
         "crtdefs.h": "c",
         "corecrt.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "inttypes.h": "c"
     }
 }

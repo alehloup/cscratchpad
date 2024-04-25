@@ -9,7 +9,7 @@ proc_ test_buffers(void) {
     buffer_appendslice(ARRCAP_(buff), buff, &buff_len, to_sslice(" Luiz"));
     buffer_appendslice(ARRCAP_(buff), buff, &buff_len, to_sslice(" Stamatto"));
 
-    printf("%s |%lld| \n", buff, buff_len);
+    printf("%s |%" PRId64 "| \n", buff, buff_len);
 }
 
 proc_ test_to_lines(void) {
@@ -62,7 +62,7 @@ proc_ test_fileread(void) {
     int64_t b_len = 0;
     file_to_buffer("commands.txt", ARRCAP_(b), b, &b_len);
 
-    printf("|%lld|\n%s\n", b_len, b);
+    printf("|%" PRId64 "|\n%s\n", b_len, b);
 }
 
 proc_ test_fileread_to_lines(void) {
@@ -75,7 +75,7 @@ proc_ test_fileread_to_lines(void) {
     file_to_lines("commands.txt", ARRCAP_(b), b, &b_len, ARRCAP_(lines), lines, &lines_len);
 
     for (int64_t i = 0; i < lines_len; ++i) {
-        printf("%lld: ", i); sslice_print(lines[i]); printf("\n");
+        printf("%" PRId64 ": ", i); sslice_print(lines[i]); printf("\n");
     }
 
     lines_to_file(ARRCAP_(lines), lines, &lines_len, "linhas.txt");

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #if defined(_WIN32) || defined(_WIN64)
@@ -34,7 +35,7 @@
     #define THREAD_T HANDLE
 #else 
     #define routine_ inline static void * 
-    #define THREAD_T HANDLE
+    #define THREAD_T void *
 #endif
 #pragma endregion Defines
 

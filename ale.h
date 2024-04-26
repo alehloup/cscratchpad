@@ -1,7 +1,6 @@
 #pragma once
 
 #pragma region Includes
-#include <iso646.h>
 #include <memory.h>
 #include <time.h>
 #include <stdbool.h>
@@ -46,6 +45,10 @@
     #define STRUCT_(struct_name, ...) /*(struct struct_name)*/ { __VA_ARGS__ }
 #else
     #define STRUCT_(struct_name, ...) (struct struct_name) { __VA_ARGS__ }
+
+    #define not !
+    #define and &&
+    #define or ||
 #endif 
 
 #define ARRCAP_(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))

@@ -1,6 +1,7 @@
 #pragma once
 
 #pragma region Includes
+#include <iso646.h>
 #include <memory.h>
 #include <time.h>
 #include <stdbool.h>
@@ -31,12 +32,13 @@
 #endif
 
 #if defined(_WINDOWS_)
-    #define routine_ inline static long unsigned int
+    #define ROURET_T long unsigned int
     #define THREAD_T HANDLE
 #else 
-    #define routine_ inline static void * 
+    #define ROURET_T void *
     #define THREAD_T void *
 #endif
+#define routine_ inline static ROURET_T
 #pragma endregion Defines
 
 #pragma region Macros
@@ -398,7 +400,7 @@ fun_ int32_t compile_run_c(const char *const flags, const char *const c_file_c) 
 
     const char *const parts[] = {
         flags, // pass the compiler and flags
-        " ./", c_file, ".c -o ./", c_file, ".exe && ",  // compile .c to .exe
+        c_file, ".c -o ", c_file, ".exe && ",  // compile .c to .exe
         c_file, ".exe" // execute
     };
     buffer_appendcstrs(ARRCAP_(buffer), buffer, &buffer_len, parts, ARRCAP_(parts));

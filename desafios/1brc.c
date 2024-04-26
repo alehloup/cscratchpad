@@ -46,7 +46,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
     /* Adjusts the start and end indexes based on thread_idx */
     int64_t i   = 0;
     int64_t len = mmap_info->filesize - 1;
-    if (!SINGLE_THREAD) {
+    if (not SINGLE_THREAD) {
         const int64_t slice_size = (int64_t) mmap_info->filesize / NUM_THREADS; // size per thread
         i = slice_size * ((int64_t) thread_idx);
         len = i + slice_size;
@@ -77,7 +77,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         city_hash = sum_hash + (uint64_t)*(cur++);
         sum_hash = city_hash << 8;
 
-        for (int32_t si = 0; si < 5 && *cur != ';'; ++si, ++cur) {
+        for (int32_t si = 0; si < 5 and *cur != ';'; ++si, ++cur) {
             city_hash = sum_hash + (uint64_t)*cur;
             sum_hash = city_hash << 8;
         } 
@@ -159,8 +159,7 @@ proc_ run(void) {
     mmap_info = &mmap_info_local;
     
     if (SINGLE_THREAD) {
-        int32_t error_code = (int32_t) chunked_run(0);
-        assert_(error_code == 0 && "returned with error");
+        chunked_run(0);
     } else {
         THREAD_T threads[NUM_THREADS];
         int64_t threads_len = 0;

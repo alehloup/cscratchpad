@@ -1,7 +1,4 @@
-#include <stdint.h>
-
-#define routine_ inline static void * 
-#define THREAD_T void *
+#include "ale.h"
 
 #define NUM_THREADS_TO_CREATE 8
 static int32_t results[NUM_THREADS_TO_CREATE];

@@ -35,9 +35,10 @@
     #define THREAD_T HANDLE
 #else 
     #define ROURET_T void *
-    #define THREAD_T void *
+    #define THREAD_T pthread_t
 #endif
 #define routine_ inline static ROURET_T
+#define THREAD_STACK_SIZE_ 64 * 1024
 #pragma endregion Defines
 
 #pragma region Macros
@@ -102,7 +103,7 @@ fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
 
 fun_ int64_t char_pos(const char letter, const char *const cstring) {
     const char *ptr = strchr(cstring, letter);
-    if (ptr != NULL) {
+    if (ptr != 0) {
         return (int64_t)(ptr - cstring);
     } else {
         return -1;
@@ -115,7 +116,7 @@ fun_ int64_t char_pos_slice(const char letter, const struct sslice_t text_slice)
     }
 
     const char *const ptr = (const char *) memchr((void const *)text_slice.text, letter, (size_t)text_slice.len);
-    if (ptr != NULL) {
+    if (ptr != 0) {
         return (int64_t)(ptr - text_slice.text);
     } else {
         return -1;
@@ -422,7 +423,7 @@ proc_ stop_benchclock(void) {
 #pragma endregion Tools
 
 #pragma region Mmap
-#if defined(_WINDOWS_)
+#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
 int64_t handle_to_filesize(HANDLE hFile) {
     DWORD dwFileSizeHigh = 0; 
     DWORD dwFileSizeLow = GetFileSize(hFile, &dwFileSizeHigh);
@@ -431,7 +432,6 @@ int64_t handle_to_filesize(HANDLE hFile) {
 
     return ((int64_t)dwFileSizeHigh << 32) | dwFileSizeLow;
 }
-
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
         GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -448,25 +448,57 @@ fun_ struct mmap_file_t mmap_open(const char *const filename) {
 
     return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
 }
-
 proc_ mmap_close(struct mmap_file_t mmap_info) {
     UnmapViewOfFile((void*)mmap_info.contents);
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
 }
+#else // Unix
+// MMAP LINUX
+#endif // endif _WINDOWS_ else Unix
 #pragma endregion Mmap
 
 #pragma region Threads
-fun_ THREAD_T go(long unsigned int (*routine)(void *thread_idx)) {
+#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
+fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx)) {
     static uintptr_t incrementing_idx = 0;
 
-    THREAD_T thread = CreateThread(0, 64 * 1024, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
+    THREAD_T thread = CreateThread(0, THREAD_STACK_SIZE_, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
     assert_(thread != 0);
 
     return thread;
 }
+proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
+    assert_(threads_len < 16000);
+    
+    WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
+}
+#else // Unix
+fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx)) {
+    static uintptr_t incrementing_idx = 0;
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE_);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    THREAD_T thread;
+    int32_t err = pthread_create(&thread, &attr, routine, (void*)(incrementing_idx++));
+    assert_(err == 0);
+
+    return thread;
+}
+proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
+    assert_(threads_len < 16000);
+    
+    for (int32_t i = 0; i < threads_len; ++i) {
+        pthread_join(threads[i], 0);
+    }
+}
+#endif // endif _WINDOWS_ else Unix
+
 proc_ go_threads(
-    long unsigned int (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
+    ROURET_T (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
     const int64_t threads_cap, THREAD_T threads[], int64_t *threads_len)
 {
         assert_(*threads_len <= threads_cap && number_of_threads_to_spawn <= threads_cap);
@@ -477,11 +509,4 @@ proc_ go_threads(
         }
         *threads_len = number_of_threads_to_spawn;
 }
-
-proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
-    assert_(threads_len < 16000);
-    
-    WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
-}
-#endif //_WINDOWS_
 #pragma endregion Threads

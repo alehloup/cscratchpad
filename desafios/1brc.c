@@ -1,6 +1,6 @@
 #include "../ale.h"
 
-#define NUM_THREADS 64
+#define NUM_THREADS 12
 static const bool SINGLE_THREAD = (NUM_THREADS == 1);
 
 #define FILENAME "C:/Users/Aleh/1brc_java/measurements1b.txt"

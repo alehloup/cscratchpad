@@ -2,6 +2,7 @@
 
 #pragma region Includes
 #include <memory.h>
+#include <math.h>
 #include <time.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -187,11 +188,31 @@ proc_ buffer_appendcstrs(const int64_t dst_buffer_cap, char dst_buffer[], int64_
 fun_ int64_t power2_number_mod(int64_t power2_number, int64_t modval) { return (power2_number) & (modval - 1); }
 
 fun_ int64_t greatest_common_divisor(int64_t m, int64_t n) {
-    int64_t tmp;
+    int64_t tmp = 0;
     while (m) { tmp = m; m = n % m; n = tmp; }       
     return n;
 }
 fun_ int64_t least_common_multiple(int64_t m, int64_t n) { return m / greatest_common_divisor(m, n) * n; }
+
+fun_ float sqrtapproximate_newton(float n) {
+    float x = 1;
+    while (fabsf(x * x - n) > 1e-8f)
+        x = (x + n / x) / 2;
+    return x;
+}
+fun_ float inversesqrtapproximate_newton(float number) {
+    union FloatIntUnion { float f; uint32_t i; };
+
+    float y = 0;
+
+    union FloatIntUnion u; u.f = number;
+    u.i = 0x5f3759df - (u.i >> 1);
+    
+    y = u.f;
+    y = y * (1.5f - ((number * 0.5f) * y * y));
+
+    return y;
+}
 
 fun_ int32_t rnd(uint64_t seed[1]) {
     *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;

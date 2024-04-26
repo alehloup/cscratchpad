@@ -460,40 +460,30 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
 
 #pragma region Threads
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
-fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx)) {
-    static uintptr_t incrementing_idx = 0;
-
-    THREAD_T thread = CreateThread(0, THREAD_STACK_SIZE_, (LPTHREAD_START_ROUTINE)routine, (void *)(incrementing_idx++), 0, 0);
+fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), uintptr_t thread_id) {
+    THREAD_T thread = CreateThread(0, THREAD_STACK_SIZE_, (LPTHREAD_START_ROUTINE)routine, (void *)(thread_id), 0, 0);
     assert_(thread != 0);
 
     return thread;
 }
-proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
-    assert_(threads_len < 16000);
-    
-    WaitForMultipleObjects((long unsigned int) threads_len, threads, TRUE, INFINITE);
+proc_ join_thread(THREAD_T thread) {
+    WaitForSingleObject(thread, INFINITE);
 }
 #else // Unix
-fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx)) {
-    static uintptr_t incrementing_idx = 0;
-
+fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), uintptr_t thread_id) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE_);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     THREAD_T thread;
-    int32_t err = pthread_create(&thread, &attr, routine, (void*)(incrementing_idx++));
+    int32_t err = pthread_create(&thread, &attr, routine, (void*)(thread_id));
     assert_(err == 0);
 
     return thread;
 }
-proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
-    assert_(threads_len < 16000);
-    
-    for (int32_t i = 0; i < threads_len; ++i) {
-        pthread_join(threads[i], 0);
-    }
+proc_ join_thread(THREAD_T thread) {
+    pthread_join(thread, 0);
 }
 #endif // endif _WINDOWS_ else Unix
 
@@ -504,9 +494,17 @@ proc_ go_threads(
         assert_(*threads_len <= threads_cap && number_of_threads_to_spawn <= threads_cap);
         assert_(number_of_threads_to_spawn < 16000);
 
-        for (int32_t i = 0; i < number_of_threads_to_spawn; ++i) {
-            threads[i] = go(routine);
+        int32_t i = 0;
+        for (i = 0; i < number_of_threads_to_spawn; ++i) {
+            threads[i] = go(routine, (uintptr_t)i);
         }
-        *threads_len = number_of_threads_to_spawn;
+        *threads_len = i;
+}
+proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
+    assert_(threads_len <= 16384);
+    
+    for (int32_t i = 0; i < threads_len; ++i) {
+        join_thread(threads[i]);
+    }
 }
 #pragma endregion Threads

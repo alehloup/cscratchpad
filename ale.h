@@ -423,26 +423,30 @@ proc_ stop_benchclock(void) {
 
 #pragma region Mmap
 #if defined(_WINDOWS_)
+int64_t handle_to_filesize(HANDLE hFile) {
+    DWORD dwFileSizeHigh = 0; 
+    DWORD dwFileSizeLow = GetFileSize(hFile, &dwFileSizeHigh);
+
+    assert_(dwFileSizeLow != INVALID_FILE_SIZE || GetLastError() == NO_ERROR);
+
+    return ((int64_t)dwFileSizeHigh << 32) | dwFileSizeLow;
+}
+
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
         GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-
     assert_(hFile != INVALID_HANDLE_VALUE);
     
-    LARGE_INTEGER liFileSize;
-    assert_(GetFileSizeEx(hFile, &liFileSize));
-    
-    assert_(liFileSize.QuadPart);
+    int64_t fileSize = handle_to_filesize(hFile);
+    assert_(fileSize > 0);
 
     HANDLE hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0);
-
     assert_(hMap);
 
     void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
     assert_(lpBasePtr);
 
-    //void *file; void *map; const char *const filename; const int64_t filesize; char *contents;
-    return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=(int64_t)liFileSize.QuadPart, .contents=(char*)lpBasePtr);
+    return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
 }
 
 proc_ mmap_close(struct mmap_file_t mmap_info) {

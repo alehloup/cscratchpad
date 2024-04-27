@@ -63,6 +63,13 @@
     array[idx_to_del] = array[--(*array##_len)]
 #pragma endregion Macros
 
+#define NEWCMPF_(fun_name, type, ...) \
+    fun_ int32_t fun_name(const void *avoid, const void *bvoid) { \
+        const type a = *((const type *)avoid); \
+        const type b = *((const type *)bvoid); \
+        __VA_ARGS__; \
+    }
+
 #pragma region Structs
 // void *file; void *map; const char *const filename; const int64_t filesize; char *contents;
 struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
@@ -74,12 +81,17 @@ struct sslice_t { int64_t len; const char *text; };
 #pragma region Strings
 fun_ struct sslice_t to_sslice(const char *const cstring) { return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring); }
 
-proc_ sslice_print(const struct sslice_t slice) { printf("%.*s", (int32_t)slice.len, slice.text); }
+proc_ sslice_print(const struct sslice_t slice) { printf("%.*s\n", (int32_t)slice.len, slice.text); }
+proc_ sslice_printend(const struct sslice_t slice, const char *const end) { printf("%.*s%s", (int32_t)slice.len, slice.text, end); }
 
 fun_ int32_t sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
-    if (a_text_slice.len == 0 || b_text_slice.len == 0 || a_text_slice.len != b_text_slice.len)
-        return (int32_t) (a_text_slice.len - b_text_slice.len);
-    return memcmp(a_text_slice.text, b_text_slice.text, (size_t)a_text_slice.len);
+    int64_t min_len = a_text_slice.len <= b_text_slice.len ? a_text_slice.len : b_text_slice.len;
+    for (int32_t i = 0; i < min_len; ++i) {
+        if (a_text_slice.text[i] != b_text_slice.text[i]) {
+            return a_text_slice.text[i] - b_text_slice.text[i];
+        }
+    }
+    return (int32_t)(a_text_slice.len - b_text_slice.len);
 }
 fun_ bool startswith(const struct sslice_t prefix, const struct sslice_t text) {
     return sslice_cmp(prefix, STRUCT_(sslice_t, .len=prefix.len, .text=text.text)) == 0;
@@ -146,10 +158,10 @@ proc_ to_lines(const struct sslice_t text_slice, const int64_t lines_cap, struct
 }
 
 proc_ buffer_to_lines(
-    char buffer[], int64_t *buffer_len, 
+    char buffer[], const int64_t buffer_len, 
     const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 
 {   
-    to_lines(STRUCT_(sslice_t, .len=*buffer_len, .text=buffer), lines_cap, lines, lines_len);
+    to_lines(STRUCT_(sslice_t, .len=buffer_len, .text=buffer), lines_cap, lines, lines_len);
 }
 
 proc_ buffer_appendslice(const int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, 
@@ -303,6 +315,15 @@ fun_ int32_t i64_msi_upsert(
     return pos;
 }
 
+proc_ i64_msi_print(const int64_t haystack_keys_cap, int64_t haystack_keys[], const int64_t haystack_keys_len) {
+    printf("#%" PRId64 "/%" PRId64 "\n", haystack_keys_len, haystack_keys_cap);
+    for (int64_t i = 0; i < haystack_keys_cap; ++i) {
+        if (not haystack_keys[0]) continue;
+        printf("%" PRId64 ", ", haystack_keys[i]);
+    }
+    printf("\n");
+}
+
 fun_ int32_t sslice_msi_lookup(
         const struct sslice_t search_key, 
         const int64_t haystack_keys_cap, struct sslice_t haystack_keys[]) 
@@ -329,6 +350,16 @@ fun_ int32_t sslice_msi_upsert(
     (*haystack_keys_len) += (haystack_keys[pos].len == 0) ? 1 : 0;
     haystack_keys[pos] = search_key;
     return pos;
+}
+
+proc_ sslice_msi_print(const int64_t haystack_keys_cap, struct sslice_t haystack_keys[], const int64_t haystack_keys_len) {
+    printf("#%" PRId64 "/%" PRId64 "\n", haystack_keys_len, haystack_keys_cap);
+    for (int64_t i = 0; i < haystack_keys_cap; ++i) {
+        if (haystack_keys[i].len == 0) 
+            continue;
+        sslice_printend(haystack_keys[i], ", ");
+    }
+    printf("\n");
 }
 #pragma endregion Hashtable
 

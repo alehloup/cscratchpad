@@ -20,10 +20,10 @@ proc_ test_to_lines(void) {
 
     to_lines(text, ARRCAP_(lines), lines, &lines_len);
 
-    sslice_print(trimmed(lines[0])); printf("\n");
-    sslice_print(trimmed(lines[1])); printf("\n");
-    sslice_print(trimmed(lines[2])); printf("\n");
-    sslice_print(trimmed(lines[3])); printf("\n");
+    sslice_print(trimmed(lines[0]));
+    sslice_print(trimmed(lines[1]));
+    sslice_print(trimmed(lines[2]));
+    sslice_print(trimmed(lines[3]));
 }
 
 proc_ test_split(void) {
@@ -34,18 +34,18 @@ proc_ test_split(void) {
 
     split(text, ' ', ARRCAP_(words), words, &words_len);
 
-    sslice_print(trimmed(words[0])); printf("\n");
-    sslice_print(trimmed(words[1])); printf("\n");
-    sslice_print(trimmed(words[2])); printf("\n");
-    sslice_print(trimmed(words[3])); printf("\n");
+    sslice_print(trimmed(words[0]));
+    sslice_print(trimmed(words[1]));
+    sslice_print(trimmed(words[2]));
+    sslice_print(trimmed(words[3]));
 }
 
 proc_ print_sslicecmp(struct sslice_t a, struct sslice_t b) {
         printf("sslicecmp, ");
         
-        sslice_print(a);
-        printf(" cmp ");
-        sslice_print(b);
+        sslice_printend(a, " ");
+        printf("cmp ");
+        sslice_printend(b, "");
         // ==
         printf(" %d \n", sslice_cmp(a, b));
 }
@@ -75,7 +75,7 @@ proc_ test_fileread_to_lines(void) {
     file_to_lines("commands.txt", ARRCAP_(b), b, &b_len, ARRCAP_(lines), lines, &lines_len);
 
     for (int64_t i = 0; i < lines_len; ++i) {
-        printf("%" PRId64 ": ", i); sslice_print(lines[i]); printf("\n");
+        printf("%" PRId64 ": ", i); sslice_print(lines[i]);
     }
 
     lines_to_file(ARRCAP_(lines), lines, &lines_len, "linhas.txt");

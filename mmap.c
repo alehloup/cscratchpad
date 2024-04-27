@@ -1,8 +1,14 @@
-#include "../ale.h"
-
+#include "ale.h"
 
 proc_ run(void) {
-    struct mmap_file_t mmap_info = mmap_open("C:/Users/Aleh/1brc_java/measurements1b.txt"); 
+
+    #ifdef _WINDOWS_
+        #define HOME "C:/Users/Aleh"
+    #else
+        #define HOME "/mnt/c/Users/Aleh"
+    #endif
+
+    struct mmap_file_t mmap_info = mmap_open(HOME "/1brc_java/measurements1b.txt"); 
     {
         printf("\n%" PRId64 "\n", mmap_info.filesize);
 
@@ -15,7 +21,5 @@ proc_ run(void) {
 
 int main(void)
 {
-    start_benchclock();
     run();
-    stop_benchclock();
 }

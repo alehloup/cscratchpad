@@ -22,6 +22,7 @@
         "crtdefs.h": "c",
         "corecrt.h": "c",
         "stdarg.h": "c",
-        "inttypes.h": "c"
+        "inttypes.h": "c",
+        "math.h": "c"
     }
 }

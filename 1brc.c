@@ -1,9 +1,9 @@
-#include "../ale.h"
+#include "ale.h"
 
-#define NUM_THREADS 12
+#define NUM_THREADS 12 // Also works for 4096 threads > : )
 static const bool SINGLE_THREAD = (NUM_THREADS == 1);
 
-#define FILENAME "C:/Users/Aleh/1brc_java/measurements1b.txt"
+#define FILENAME "measurements1b.txt"
 
 /*
     I use a Perfect Hash of the 413 cities
@@ -134,7 +134,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
 proc_ aggregate_results(void) {
     City* thread0 = thread_cities[0];
 
-    for (int8_t i_thread = 1; i_thread < NUM_THREADS; ++i_thread) {
+    for (int32_t i_thread = 1; i_thread < NUM_THREADS; ++i_thread) {
         City* thread_cur = thread_cities[i_thread];
         for (int32_t i = 0; i < ncity; ++i) {
             City *dst_city = &thread0[hash_order[i]];
@@ -164,8 +164,15 @@ proc_ print_results(void) {
     }
 }
 
+#ifdef _WINDOWS_
+    #define HOME "C:/Users/Aleh"
+#else
+    #define HOME "/mnt/c/Users/Aleh"
+#endif
+
 proc_ run(void) {
-    struct mmap_file_t mmap_info_local = mmap_open(FILENAME);
+    printf("\n Running 1BRC on file: %s\n", HOME "/1brc_java/" FILENAME);
+    struct mmap_file_t mmap_info_local = mmap_open(HOME "/1brc_java/" FILENAME);
     mmap_info = &mmap_info_local;
     
     if (SINGLE_THREAD) {

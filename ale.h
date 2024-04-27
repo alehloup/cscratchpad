@@ -13,7 +13,6 @@
 #if defined(_WIN32) || defined(_WIN64)
     #include <Windows.h>
 #else
-    #include <unistd.h>
     #include <pthread.h>
     #include <sys/mman.h>
 #endif
@@ -445,7 +444,7 @@ proc_ stop_benchclock(void) {
 
 #pragma region Mmap
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
-int64_t handle_to_filesize(HANDLE hFile) {
+fun_ int64_t handle_to_filesize(HANDLE hFile) {
     DWORD dwFileSizeHigh = 0; 
     DWORD dwFileSizeLow = GetFileSize(hFile, &dwFileSizeHigh);
 
@@ -475,7 +474,21 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
     CloseHandle(mmap_info.file);
 }
 #else // Unix
-// MMAP LINUX
+fun_ struct mmap_file_t mmap_open(const char *const filename) {
+    FILE *hFile = fopen(filename, "r");
+    assert_(hFile != 0);
+    
+    int64_t fileSize = file_size(hFile);
+    assert_(fileSize > 0);
+
+    char *mapped = mmap(0, fileSize, PROT_READ, MAP_SHARED, fileno(hFile), 0);
+    assert_(mapped);
+
+    return STRUCT_(mmap_file_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
+}
+proc_ mmap_close(struct mmap_file_t mmap_info) {
+    munmap(mmap_info.map, mmap_info.filesize);
+}
 #endif // endif _WINDOWS_ else Unix
 #pragma endregion Mmap
 

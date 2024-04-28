@@ -55,12 +55,12 @@ int32_t main(int32_t argc, const char *const *argv) {
 
         case 'm':case 'M':
             flags =
-                "cl /std:clatest /W4 /Ox /analyze /GS /sdl -D_CRT_SECURE_NO_WARNINGS";
+                "cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl -D_CRT_SECURE_NO_WARNINGS";
         break;
 
         case 't':case 'T':
             flags =
-                "tcc";
+                "tcc -Wall -Werror";
         break;
     } 
     

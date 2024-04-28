@@ -2,7 +2,7 @@
 
 static struct sslice_t cities[1<<15];
 
-NEWCMPF_(ss_cmp, struct sslice_t, return sslice_cmp(a, b))
+NEWCMPF_(ss_cmp, struct sslice_t, return sslice_cmp_locale(a, b))
 
 proc_ run(void) {
     struct mmap_file_t map = mmap_open("./measurements10k.txt");
@@ -15,18 +15,17 @@ proc_ run(void) {
 
     for (int64_t i = 0; i < lines_len; ++i) {
         struct sslice_t ss = {char_pos_slice(';', lines[i]), lines[i].text };
-        int32_t pos = sslice_msi_upsert(ss, ARRCAP_(cities), cities, &cities_len);
+        int32_t pos = ht_sslice_upsert(ss, ARRCAP_(cities), cities, &cities_len);
         (void) pos;
     }
 
     struct sslice_t cities_arr[1024];
     int64_t cities_arr_len = 0;
 
-    for (int i = 0; i < ARRCAP_(cities); ++i) {
-        if (cities[i].len) {
-            cities_arr[cities_arr_len++] = cities[i];
-        }
-    }
+    ht_sslice_to_arr(
+        ARRCAP_(cities), cities,
+        ARRCAP_(cities_arr), cities_arr, &cities_arr_len
+    );
 
     qsort(cities_arr, (size_t)cities_arr_len, sizeof(cities_arr[0]), ss_cmp);
 
@@ -36,6 +35,7 @@ proc_ run(void) {
 }
 
 int main(void) {
+    set_locale_to_utf8();
     start_benchclock();
     run();
     stop_benchclock();

@@ -6,6 +6,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <locale.h>
 #include <string.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -44,8 +45,10 @@
 #pragma region Macros
 #if defined(__cplusplus)
     #define STRUCT_(struct_name, ...) /*(struct struct_name)*/ { __VA_ARGS__ }
+    #define ZERO_INIT_ {}
 #else
     #define STRUCT_(struct_name, ...) (struct struct_name) { __VA_ARGS__ }
+    #define ZERO_INIT_ {0}
 
     #define not !
     #define and &&
@@ -93,6 +96,23 @@ fun_ int32_t sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_
     }
     return (int32_t)(a_text_slice.len - b_text_slice.len);
 }
+
+proc_ set_locale_to_utf8(void) {
+    setlocale(LC_CTYPE, "en_US.UTF-8");
+}
+// You need to have set a locale, default locale is C locale. Best to call set_locale_to_utf8
+fun_ int32_t sslice_cmp_locale(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
+    char a[512], b[512];
+    assert_(a_text_slice.len < 512 && b_text_slice.len < 512);
+
+    memcpy(a, a_text_slice.text, (size_t)a_text_slice.len);
+    memcpy(b, b_text_slice.text, (size_t)b_text_slice.len);
+    a[a_text_slice.len] = 0;
+    b[b_text_slice.len] = 0;
+
+    return strcoll(a, b);
+}
+
 fun_ bool startswith(const struct sslice_t prefix, const struct sslice_t text) {
     return sslice_cmp(prefix, STRUCT_(sslice_t, .len=prefix.len, .text=text.text)) == 0;
 }
@@ -266,13 +286,15 @@ fun_ uint64_t long_hash(int64_t integer64) {
 
 fun_ int32_t array_cap_to_exp(const int64_t cap) {
     switch (cap) {
+        case(1 << 6):case(1 << 6)+1:return 6; case(1 << 7):case (1 << 7)+1:return 7;
+        case(1 << 8):case(1 << 8)+1:return 8; case(1 << 9):case (1 << 9)+1:return 9;
         case(1 << 10):case(1 << 10)+1:return 10; case(1 << 11):case (1 << 11)+1:return 11; 
         case(1 << 12):case(1 << 12)+1:return 12; case(1 << 13):case(1 << 13)+1:return 13; 
         case(1 << 14):case(1 << 14)+1:return 14; case (1 << 15):case (1 << 15)+1:return 15;
         case(1 << 16):case(1 << 16)+1:return 16; case(1 << 17):case(1 << 17)+1:return 17; 
         case(1 << 18):case(1 << 18)+1:return 18; case(1 << 19):case(1 << 19)+1:return 19; 
         case(1 << 20):case(1 << 20)+1:return 20; case(1 << 21):case(1 << 21)+1:return 21;
-        default: assert_( cap == (10 & 21) ); return 0;
+        default: assert_( cap == (6 >> 21) ); return 0;
     }
 }
 
@@ -289,75 +311,107 @@ fun_ int32_t ht_lookup(
 #pragma endregion Math
 
 #pragma region Hashtable
-fun_ int32_t i64_msi_lookup(const int64_t search_key, const int64_t haystack_keys_cap, int64_t haystack_keys[]) {
-    const int32_t exp = array_cap_to_exp(haystack_keys_cap);    
+fun_ int32_t ht_i64_lookup(const int64_t search_key, const int64_t hashtable_cap, int64_t hashtable[]) {
+    const int32_t exp = array_cap_to_exp(hashtable_cap);    
     uint64_t h = long_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
 
     assert_(search_key != 0);
 
-    while (haystack_keys[pos] != 0 && search_key != haystack_keys[pos]) {
+    while (hashtable[pos] != 0 && search_key != hashtable[pos]) {
         pos = ht_lookup(h, pos, exp);
     }
 
     return pos;
 }
 
-fun_ int32_t i64_msi_upsert(
+fun_ int32_t ht_i64_upsert(
         const int64_t search_key, 
-        const int64_t haystack_keys_cap, int64_t haystack_keys[], int64_t *haystack_keys_len) 
+        const int64_t hashtable_cap, int64_t hashtable[], int64_t *hashtable_len) 
 {
-    assert_((*haystack_keys_len) < haystack_keys_cap);
+    assert_((*hashtable_len) < hashtable_cap);
     
-    int32_t pos = i64_msi_lookup(search_key, haystack_keys_cap, haystack_keys);
-    (*haystack_keys_len) += (haystack_keys[pos] == 0) ? 1 : 0;
-    haystack_keys[pos] = search_key;
+    int32_t pos = ht_i64_lookup(search_key, hashtable_cap, hashtable);
+    (*hashtable_len) += (hashtable[pos] == 0) ? 1 : 0;
+    hashtable[pos] = search_key;
     return pos;
 }
 
-proc_ i64_msi_print(const int64_t haystack_keys_cap, int64_t haystack_keys[], const int64_t haystack_keys_len) {
-    printf("#%" PRId64 "/%" PRId64 "\n", haystack_keys_len, haystack_keys_cap);
-    for (int64_t i = 0; i < haystack_keys_cap; ++i) {
-        if (not haystack_keys[0]) continue;
-        printf("%" PRId64 ", ", haystack_keys[i]);
+proc_ ht_i64_print(const int64_t hashtable_cap, int64_t hashtable[], const int64_t hashtable_len) {
+    printf("#%" PRId64 "/%" PRId64 "\n", hashtable_len, hashtable_cap);
+    for (int64_t i = 0; i < hashtable_cap; ++i) {
+        if (not hashtable[0]) {
+            continue;
+        }
+        printf("%" PRId64 ", ", hashtable[i]);
     }
     printf("\n");
 }
 
-fun_ int32_t sslice_msi_lookup(
-        const struct sslice_t search_key, 
-        const int64_t haystack_keys_cap, struct sslice_t haystack_keys[]) 
+proc_ ht_i64_to_arr(
+    const int64_t hashtable_cap, int64_t hashtable[],
+    const int64_t array_cap, int64_t array[], int64_t *array_len)
 {
-    int32_t exp = array_cap_to_exp(haystack_keys_cap);
+    for (int64_t i = 0; i < hashtable_cap; ++i) {
+        if (not hashtable[0]) {
+            continue;
+        }
+        APPEND_(array, hashtable[i]);
+    }
+}
+
+fun_ int32_t ht_sslice_lookup(
+        const struct sslice_t search_key, 
+        const int64_t hashtable_cap, struct sslice_t hashtable[]) 
+{
+    int32_t exp = array_cap_to_exp(hashtable_cap);
     uint64_t h = sslice_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
 
+    sslice_printend(search_key, ": ");
+
     assert_(search_key.len != 0);
 
-    while (haystack_keys[pos].len != 0 && sslice_cmp(search_key, haystack_keys[pos]) != 0) {
+    while (hashtable[pos].len != 0 && sslice_cmp(search_key, hashtable[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);
     }
 
     return pos;
 }
 
-fun_ int32_t sslice_msi_upsert(
+fun_ int32_t ht_sslice_upsert(
         const struct sslice_t search_key, 
-        const int64_t haystack_keys_cap, struct sslice_t haystack_keys[], int64_t *haystack_keys_len) 
+        const int64_t hashtable_cap, struct sslice_t hashtable[], int64_t *hashtable_len) 
 {
-    assert_((*haystack_keys_len) < haystack_keys_cap);
-    int32_t pos = sslice_msi_lookup(search_key, haystack_keys_cap, haystack_keys);
-    (*haystack_keys_len) += (haystack_keys[pos].len == 0) ? 1 : 0;
-    haystack_keys[pos] = search_key;
+    assert_((*hashtable_len) < hashtable_cap);
+    int32_t pos = ht_sslice_lookup(search_key, hashtable_cap, hashtable);
+
+
+    (*hashtable_len) += (hashtable[pos].len == 0) ? 1 : 0;
+    hashtable[pos] = search_key;
     return pos;
 }
 
-proc_ sslice_msi_print(const int64_t haystack_keys_cap, struct sslice_t haystack_keys[], const int64_t haystack_keys_len) {
-    printf("#%" PRId64 "/%" PRId64 "\n", haystack_keys_len, haystack_keys_cap);
-    for (int64_t i = 0; i < haystack_keys_cap; ++i) {
-        if (haystack_keys[i].len == 0) 
+proc_ ht_sslice_print(const int64_t hashtable_cap, struct sslice_t hashtable[], const int64_t hashtable_len) {
+    printf("#%" PRId64 "/%" PRId64 "\n", hashtable_len, hashtable_cap);
+    for (int64_t i = 0; i < hashtable_cap; ++i) {
+        if (hashtable[i].len == 0) {
             continue;
-        sslice_printend(haystack_keys[i], ", ");
+        }
+        sslice_printend(hashtable[i], ", ");
+    }
+    printf("\n");
+}
+
+proc_ ht_sslice_to_arr(
+    const int64_t hashtable_cap, struct sslice_t hashtable[],
+    const int64_t array_cap, struct sslice_t array[], int64_t *array_len)
+{
+    for (int64_t i = 0; i < hashtable_cap; ++i) {
+        if (hashtable[i].len == 0) {
+            continue;
+        }
+        APPEND_(array, hashtable[i]);
     }
     printf("\n");
 }
@@ -443,7 +497,7 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
 #pragma endregion Files
 
 #pragma region Tools
-fun_ int32_t compile_run_c(const char *const flags, const char *const c_file_c) {
+fun_ int32_t compile_run_c(const char *const c_file_c, const char *const flags) {
     char buffer[2048] = {0}; 
     int64_t buffer_len = 0; 
 
@@ -454,7 +508,7 @@ fun_ int32_t compile_run_c(const char *const flags, const char *const c_file_c) 
     memcpy(c_file, c_file_c, (size_t)c_file_len); // remove .c
 
     const char *const parts[] = {
-        flags, // pass the compiler and flags
+        flags, " ", // pass the compiler and flags
         c_file, ".c -o ", c_file, ".exe && ",  // compile .c to .exe
         c_file, ".exe" // execute
     };

@@ -195,7 +195,5 @@ int32_t main(void) {
     run();
     stop_benchclock();
 
-    mmap_close(*mmap_info);
-
     return 0;
 }

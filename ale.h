@@ -155,6 +155,22 @@ fun_ int64_t char_pos_slice(const char letter, const struct sslice_t text_slice)
     }
 }
 
+fun_ struct sslice_t subss(struct sslice_t text_slice, const int64_t start, const int64_t end) {
+    int64_t true_start = start < 0 ? text_slice.len + start : start;
+    int64_t true_end = end < 0 ? text_slice.len + end : end;
+
+    true_end = true_end > text_slice.len ? text_slice.len : true_end;
+
+    int64_t len = true_end - true_start;
+    len = len < 0 ? 0 : len;
+
+    if (len == 0) {
+        true_start = 0;
+    }
+
+    return STRUCT_(sslice_t, len, &text_slice.text[true_start]);
+}
+
 proc_ split(const struct sslice_t text_slice, const char splitter, 
     const int64_t parts_cap, struct sslice_t parts[], int64_t *parts_len) 
 {

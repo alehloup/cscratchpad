@@ -1,6 +1,6 @@
 #include "ale.h"
 
-static struct sslice_t cities[1<<15];
+static struct sslice_t cities[1<<15] = ZERO_INIT_;
 
 NEWCMPF_(ss_cmp, struct sslice_t, return sslice_cmp_locale(a, b))
 

@@ -85,6 +85,17 @@ proc_ test_filewrite(void) {
     sslice_to_file(to_sslice("Woa\nTestando arquivos!\n"), "saida.txt");
 }
 
+proc_ test_subss(void) {
+    int64_t end = ARRCAP_("Alessandro");
+    struct sslice_t nome = {end - 1, "Alessandro"};
+
+    printf("\n");
+    sslice_print(nome);
+    sslice_print(subss(nome, 2, end));
+    
+    sslice_print(subss(nome, -2, end));
+}
+
 int32_t main(void) {
     test_buffers();
     test_to_lines();
@@ -93,6 +104,7 @@ int32_t main(void) {
     test_fileread();
     test_fileread_to_lines();
     test_filewrite();
+    test_subss();
 
     printf("\nTested string functions.\n");
 

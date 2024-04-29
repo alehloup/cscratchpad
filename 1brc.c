@@ -3,7 +3,10 @@
 #define NUM_THREADS 12 // Also works for 4096 threads > : )
 static const bool SINGLE_THREAD = (NUM_THREADS == 1);
 
-#define FILENAME "measurements1b.txt"
+// #define FILENAME "measurements1b.txt"
+// #define FILEPATH HOME "/1brc_java/" FILENAME
+#define FILEPATH "./measurements10k.txt"
+
 
 /*
     I use a Perfect Hash of the 413 cities
@@ -171,8 +174,8 @@ proc_ print_results(void) {
 #endif
 
 proc_ run(void) {
-    printf("\n Running 1BRC on file: %s\n", HOME "/1brc_java/" FILENAME);
-    struct mmap_file_t mmap_info_local = mmap_open(HOME "/1brc_java/" FILENAME);
+    printf("\n Running 1BRC on file: %s\n", FILEPATH);
+    struct mmap_file_t mmap_info_local = mmap_open(FILEPATH);
     mmap_info = &mmap_info_local;
     
     if (SINGLE_THREAD) {

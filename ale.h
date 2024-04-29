@@ -64,7 +64,6 @@
 #define DELIDX_(array, idx_to_del) \
     assert_((*array##_len) > 0); \
     array[idx_to_del] = array[--(*array##_len)]
-#pragma endregion Macros
 
 #define NEWCMPF_(fun_name, type, ...) \
     fun_ int32_t fun_name(const void *avoid, const void *bvoid) { \
@@ -72,6 +71,7 @@
         const type b = *((const type *)bvoid); \
         __VA_ARGS__; \
     }
+#pragma endregion Macros
 
 #pragma region Structs
 // void *file; void *map; const char *const filename; const int64_t filesize; char *contents;
@@ -384,8 +384,6 @@ fun_ int32_t ht_sslice_lookup(
     uint64_t h = sslice_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
 
-    sslice_printend(search_key, ": ");
-
     assert_(search_key.len != 0);
 
     while (hashtable[pos].len != 0 && sslice_cmp(search_key, hashtable[pos]) != 0) {
@@ -429,7 +427,6 @@ proc_ ht_sslice_to_arr(
         }
         APPEND_(array, hashtable[i]);
     }
-    printf("\n");
 }
 #pragma endregion Hashtable
 

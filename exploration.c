@@ -4,6 +4,21 @@ static struct sslice_t cities[1<<15] = ZERO_INIT_;
 
 NEWCMPF_(ss_cmp, struct sslice_t, return sslice_cmp_locale(a, b))
 
+fun_ uint64_t hashit(struct sslice_t text_slice) {
+    struct sslice_t one2nine = subss(text_slice, 1, 9);
+
+    uint64_t h = 0, sum = 0;
+    for (int64_t i = 0; i < one2nine.len; ++i) {
+        sum += (uint64_t) one2nine.text[i];
+        h = sum;
+        sum = sum << 8;
+    }
+
+    h = (h % 13087) % 6570;
+
+    return h;
+}
+
 proc_ run(void) {
     struct mmap_file_t map = mmap_open("./measurements10k.txt");
     struct sslice_t lines[32000];
@@ -30,7 +45,9 @@ proc_ run(void) {
     qsort(cities_arr, (size_t)cities_arr_len, sizeof(cities_arr[0]), ss_cmp);
 
     for (int i = 0; i < cities_arr_len; ++i) {
-        sslice_print(cities_arr[i]);
+        printf("[");
+        sslice_printend(cities_arr[i], " : ");
+        printf("%llu]\n", hashit(cities_arr[i]));
     }
 }
 

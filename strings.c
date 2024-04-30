@@ -5,9 +5,9 @@ proc_ test_buffers(void) {
     char buff[256];
     int64_t buff_len = 0;
 
-    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, string);
-    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, to_sslice(" Luiz"));
-    buffer_appendslice(ARRCAP_(buff), buff, &buff_len, to_sslice(" Stamatto"));
+    buffer_appendslice(CAP_(buff), buff, &buff_len, string);
+    buffer_appendslice(CAP_(buff), buff, &buff_len, to_sslice(" Luiz"));
+    buffer_appendslice(CAP_(buff), buff, &buff_len, to_sslice(" Stamatto"));
 
     printf("%s |%" PRId64 "| \n", buff, buff_len);
 }
@@ -18,7 +18,7 @@ proc_ test_to_lines(void) {
     struct sslice_t lines[256];
     int64_t lines_len = 0;
 
-    to_lines(text, ARRCAP_(lines), lines, &lines_len);
+    to_lines(text, CAP_(lines), lines, &lines_len);
 
     sslice_print(trimmed(lines[0]));
     sslice_print(trimmed(lines[1]));
@@ -32,7 +32,7 @@ proc_ test_split(void) {
     struct sslice_t words[256];
     int64_t words_len = 0;
 
-    split(text, ' ', ARRCAP_(words), words, &words_len);
+    split(text, ' ', CAP_(words), words, &words_len);
 
     sslice_print(trimmed(words[0]));
     sslice_print(trimmed(words[1]));
@@ -60,7 +60,7 @@ proc_ test_string_eq(void) {
 proc_ test_fileread(void) {
     char b[2048];
     int64_t b_len = 0;
-    file_to_buffer("commands.txt", ARRCAP_(b), b, &b_len);
+    file_to_buffer("commands.txt", CAP_(b), b, &b_len);
 
     printf("|%" PRId64 "|\n%s\n", b_len, b);
 }
@@ -72,13 +72,13 @@ proc_ test_fileread_to_lines(void) {
     struct sslice_t lines[256];
     int64_t lines_len = 0;
 
-    file_to_lines("commands.txt", ARRCAP_(b), b, &b_len, ARRCAP_(lines), lines, &lines_len);
+    file_to_lines("commands.txt", CAP_(b), b, &b_len, CAP_(lines), lines, &lines_len);
 
     for (int64_t i = 0; i < lines_len; ++i) {
         printf("%" PRId64 ": ", i); sslice_print(lines[i]);
     }
 
-    lines_to_file(ARRCAP_(lines), lines, &lines_len, "linhas.txt");
+    lines_to_file(CAP_(lines), lines, &lines_len, "linhas.txt");
 }
 
 proc_ test_filewrite(void) {
@@ -86,7 +86,7 @@ proc_ test_filewrite(void) {
 }
 
 proc_ test_subss(void) {
-    int64_t end = ARRCAP_("Alessandro");
+    int64_t end = CAP_("Alessandro");
     struct sslice_t nome = {end - 1, "Alessandro"};
 
     printf("\n");

@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.embeddedhtml": "html",
         "c_defs.h": "c",
         "stdint.h": "c",
         "typeinfo": "cpp",
@@ -23,6 +24,7 @@
         "corecrt.h": "c",
         "stdarg.h": "c",
         "inttypes.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "memory.h": "c"
     }
 }

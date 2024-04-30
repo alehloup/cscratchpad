@@ -71,8 +71,8 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
     }
     i += 1; // skip to second letter of next line
 
-    assert_(i < len);
-    assert_(len < mmap_info->filesize);
+    assert(i < len);
+    assert(len < mmap_info->filesize);
 
     const char *cur = &data[i], *end = &data[len];
     /* -----------------------------------------  */
@@ -184,7 +184,7 @@ proc_ run(void) {
         THREAD_T threads[NUM_THREADS];
         int64_t threads_len = 0;
 
-        go_threads( chunked_run, NUM_THREADS, ARRCAP_(threads), threads, &threads_len);
+        go_threads( chunked_run, NUM_THREADS, CAP_(threads), threads, &threads_len);
         join_threads(threads, threads_len);
         aggregate_results();
     }

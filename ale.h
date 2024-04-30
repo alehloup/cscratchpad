@@ -1,6 +1,7 @@
 #pragma once
 
 #pragma region Includes
+#include <assert.h>
 #include <memory.h>
 #include <math.h>
 #include <time.h>
@@ -13,16 +14,14 @@
 #include <stdlib.h>
 #if defined(_WIN32) || defined(_WIN64)
     #include <Windows.h>
-#else
+#else // assume Unix:
+    #include <unistd.h>
     #include <pthread.h>
     #include <sys/mman.h>
 #endif
 #pragma endregion Includes
 
 #pragma region Defines
-#define assert_(c) if(!(c)) \
-    (fprintf(stderr, "\n\n  ASSERT FAILED %s:%s:%d | %s |\n\n", __FILE__, __func__, __LINE__, #c), exit(52))
-
 #if defined(__GNUC__) || defined(__clang__)
     #define fun_   __attribute((nonnull, warn_unused_result)) inline static
     #define proc_  __attribute((nonnull)) inline static void
@@ -55,14 +54,17 @@
     #define or ||
 #endif 
 
-#define ARRCAP_(static_array_) ((int64_t)(sizeof(static_array_) / sizeof(*static_array_)))
+#define CAP_(static_array_) (\
+    assert(sizeof(static_array_) != sizeof(&static_array_)), \
+    (int64_t)(sizeof(static_array_) / sizeof(*(static_array_))) \
+)
 
 #define APPEND_(array, new_element) \
-    assert_((*array##_len) < array##_cap); \
+    assert((*array##_len) < array##_cap); \
     array[(*array##_len)++] = new_element
 
 #define DELIDX_(array, idx_to_del) \
-    assert_((*array##_len) > 0); \
+    assert((*array##_len) > 0); \
     array[idx_to_del] = array[--(*array##_len)]
 
 #define NEWCMPF_(fun_name, type, ...) \
@@ -103,7 +105,7 @@ proc_ set_locale_to_utf8(void) {
 // You need to have set a locale, default locale is C locale. Best to call set_locale_to_utf8
 fun_ int32_t sslice_cmp_locale(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
     char a[512], b[512];
-    assert_(a_text_slice.len < 512 && b_text_slice.len < 512);
+    assert(a_text_slice.len < 512 && b_text_slice.len < 512);
 
     memcpy(a, a_text_slice.text, (size_t)a_text_slice.len);
     memcpy(b, b_text_slice.text, (size_t)b_text_slice.len);
@@ -203,7 +205,7 @@ proc_ buffer_to_lines(
 proc_ buffer_appendslice(const int64_t dst_buffer_cap, char dst_buffer[], int64_t *dst_buffer_len, 
     const struct sslice_t src_chars_slice) 
 {
-    assert_(src_chars_slice.len <= dst_buffer_cap);
+    assert(src_chars_slice.len <= dst_buffer_cap);
 
     memcpy(dst_buffer, src_chars_slice.text, (size_t)src_chars_slice.len);
 
@@ -215,7 +217,7 @@ const char *const cstr)
 {
     const int64_t cstr_len = (int64_t)strlen(cstr);
 
-    assert_(cstr_len <= dst_buffer_cap);
+    assert(cstr_len <= dst_buffer_cap);
 
     memcpy(&dst_buffer[*dst_buffer_len], cstr, (size_t)cstr_len);
 
@@ -310,7 +312,7 @@ fun_ int32_t array_cap_to_exp(const int64_t cap) {
         case(1 << 16):case(1 << 16)+1:return 16; case(1 << 17):case(1 << 17)+1:return 17; 
         case(1 << 18):case(1 << 18)+1:return 18; case(1 << 19):case(1 << 19)+1:return 19; 
         case(1 << 20):case(1 << 20)+1:return 20; case(1 << 21):case(1 << 21)+1:return 21;
-        default: assert_( cap == (6 >> 21) ); return 0;
+        default: assert( cap == (6 >> 21) ); return 0;
     }
 }
 
@@ -332,7 +334,7 @@ fun_ int32_t ht_i64_lookup(const int64_t search_key, const int64_t hashtable_cap
     uint64_t h = long_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
 
-    assert_(search_key != 0);
+    assert(search_key != 0);
 
     while (hashtable[pos] != 0 && search_key != hashtable[pos]) {
         pos = ht_lookup(h, pos, exp);
@@ -345,7 +347,7 @@ fun_ int32_t ht_i64_upsert(
         const int64_t search_key, 
         const int64_t hashtable_cap, int64_t hashtable[], int64_t *hashtable_len) 
 {
-    assert_((*hashtable_len) < hashtable_cap);
+    assert((*hashtable_len) < hashtable_cap);
     
     int32_t pos = ht_i64_lookup(search_key, hashtable_cap, hashtable);
     (*hashtable_len) += (hashtable[pos] == 0) ? 1 : 0;
@@ -384,7 +386,7 @@ fun_ int32_t ht_sslice_lookup(
     uint64_t h = sslice_hash(search_key);
     int32_t pos = ht_lookup(h, (int) h, exp);
 
-    assert_(search_key.len != 0);
+    assert(search_key.len != 0);
 
     while (hashtable[pos].len != 0 && sslice_cmp(search_key, hashtable[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);
@@ -397,7 +399,7 @@ fun_ int32_t ht_sslice_upsert(
         const struct sslice_t search_key, 
         const int64_t hashtable_cap, struct sslice_t hashtable[], int64_t *hashtable_len) 
 {
-    assert_((*hashtable_len) < hashtable_cap);
+    assert((*hashtable_len) < hashtable_cap);
     int32_t pos = ht_sslice_lookup(search_key, hashtable_cap, hashtable);
 
 
@@ -444,14 +446,14 @@ proc_ file_to_buffer(
 {
     FILE *f = fopen(filename, "rb");
     {
-        assert_(f);
+        assert(f);
     
         int64_t fsize = file_size(f);
 
-        assert_(dst_buffer_cap >= fsize+2);
+        assert(dst_buffer_cap >= fsize+2);
         
         int64_t bytesread = (int64_t) fread(dst_buffer, 1LL, (uint64_t)fsize, f);
-        assert_(bytesread == fsize); 
+        assert(bytesread == fsize); 
         
         dst_buffer[fsize] = '\0';
         *dst_buffer_len = fsize;
@@ -472,11 +474,11 @@ proc_ file_to_lines(
 proc_ buffer_to_file(const int64_t buffer_cap, char buffer[], int64_t *buffer_len, const char *const filename) {  
     FILE *f = fopen(filename, "wb");
     {
-        assert_(f);
-        assert_(*buffer_len < buffer_cap);
+        assert(f);
+        assert(*buffer_len < buffer_cap);
      
         int64_t bytes_written = (int64_t) fwrite(buffer, 1, (uint64_t)(*buffer_len), f);
-        assert_(bytes_written == (*buffer_len));
+        assert(bytes_written == (*buffer_len));
     }
     fclose(f);
 }
@@ -484,13 +486,13 @@ proc_ buffer_to_file(const int64_t buffer_cap, char buffer[], int64_t *buffer_le
 proc_ lines_to_file(const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len, const char *const filename) {
     FILE *f = fopen(filename, "wb");
     {
-        assert_(f);
-        assert_(*lines_len < lines_cap);
+        assert(f);
+        assert(*lines_len < lines_cap);
         
         for (int64_t i = 0; i < (*lines_len); ++i) {
             int64_t bytes_written = (int64_t) fwrite(lines[i].text, 1, (uint64_t)lines[i].len, f);
             bytes_written += (int64_t) fwrite("\n", 1, 1, f);
-            assert_(bytes_written == lines[i].len + 1);
+            assert(bytes_written == lines[i].len + 1);
         }
     }
     fclose(f);
@@ -499,11 +501,11 @@ proc_ lines_to_file(const int64_t lines_cap, struct sslice_t lines[], int64_t *l
 proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
     FILE *f = fopen(filename, "wb");
     {
-        assert_(f);
+        assert(f);
         
         int64_t bytes_written = (int64_t) fwrite(text_slice.text, 1, (uint64_t)text_slice.len, f);
         bytes_written += (int64_t) fwrite("\n", 1, 1, f);
-        assert_(bytes_written == text_slice.len + 1);
+        assert(bytes_written == text_slice.len + 1);
     }
     fclose(f);
 }
@@ -516,7 +518,7 @@ fun_ int32_t compile_run_c(const char *const c_file_c, const char *const flags) 
 
     char c_file[256] = {0};
     const int32_t c_file_len = (int32_t)strlen(c_file_c) - 2;
-    assert_(c_file_len < 255 && c_file_len > 0);
+    assert(c_file_len < 255 && c_file_len > 0);
 
     memcpy(c_file, c_file_c, (size_t)c_file_len); // remove .c
 
@@ -525,7 +527,7 @@ fun_ int32_t compile_run_c(const char *const c_file_c, const char *const flags) 
         c_file, ".c -o ", c_file, ".exe && ",  // compile .c to .exe
         c_file, ".exe" // execute
     };
-    buffer_appendcstrs(ARRCAP_(buffer), buffer, &buffer_len, parts, ARRCAP_(parts));
+    buffer_appendcstrs(CAP_(buffer), buffer, &buffer_len, parts, CAP_(parts));
 
     printf("\n%.*s\n", (int32_t)buffer_len, buffer);
     return system(buffer);
@@ -546,23 +548,23 @@ fun_ int64_t handle_to_filesize(HANDLE hFile) {
     DWORD dwFileSizeHigh = 0; 
     DWORD dwFileSizeLow = GetFileSize(hFile, &dwFileSizeHigh);
 
-    assert_(dwFileSizeLow != INVALID_FILE_SIZE || GetLastError() == NO_ERROR);
+    assert(dwFileSizeLow != INVALID_FILE_SIZE || GetLastError() == NO_ERROR);
 
     return ((int64_t)dwFileSizeHigh << 32) | dwFileSizeLow;
 }
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
         GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-    assert_(hFile != INVALID_HANDLE_VALUE);
+    assert(hFile != INVALID_HANDLE_VALUE);
     
     int64_t fileSize = handle_to_filesize(hFile);
-    assert_(fileSize > 0);
+    assert(fileSize > 0);
 
     HANDLE hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0);
-    assert_(hMap);
+    assert(hMap);
 
     void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
-    assert_(lpBasePtr);
+    assert(lpBasePtr);
 
     return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
 }
@@ -574,13 +576,13 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
 #else // Unix
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     FILE *hFile = fopen(filename, "r");
-    assert_(hFile != 0);
+    assert(hFile != 0);
     
     int64_t fileSize = file_size(hFile);
-    assert_(fileSize > 0);
+    assert(fileSize > 0);
 
     char *mapped = mmap(0, fileSize, PROT_READ, MAP_SHARED, fileno(hFile), 0);
-    assert_(mapped);
+    assert(mapped);
 
     return STRUCT_(mmap_file_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
 }
@@ -594,7 +596,7 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
 fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), uintptr_t thread_id) {
     THREAD_T thread = CreateThread(0, THREAD_STACK_SIZE_, (LPTHREAD_START_ROUTINE)routine, (void *)(thread_id), 0, 0);
-    assert_(thread != 0);
+    assert(thread != 0);
 
     return thread;
 }
@@ -610,7 +612,7 @@ fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), uintptr_t thread_id) {
 
     THREAD_T thread;
     int32_t err = pthread_create(&thread, &attr, routine, (void*)(thread_id));
-    assert_(err == 0);
+    assert(err == 0);
 
     return thread;
 }
@@ -623,8 +625,8 @@ proc_ go_threads(
     ROURET_T (*routine)(void *thread_idx), int32_t number_of_threads_to_spawn, 
     const int64_t threads_cap, THREAD_T threads[], int64_t *threads_len)
 {
-        assert_(*threads_len <= threads_cap && number_of_threads_to_spawn <= threads_cap);
-        assert_(number_of_threads_to_spawn < 16000);
+        assert(*threads_len <= threads_cap && number_of_threads_to_spawn <= threads_cap);
+        assert(number_of_threads_to_spawn < 16000);
 
         int32_t i = 0;
         for (i = 0; i < number_of_threads_to_spawn; ++i) {
@@ -633,10 +635,24 @@ proc_ go_threads(
         *threads_len = i;
 }
 proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
-    assert_(threads_len <= 16384);
+    assert(threads_len <= 16384);
     
     for (int32_t i = 0; i < threads_len; ++i) {
         join_thread(threads[i]);
     }
 }
 #pragma endregion Threads
+
+#pragma region Os
+#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
+    proc_ sleep_(int32_t seconds) {
+        assert(seconds > 0);
+        Sleep((uint32_t)(seconds) * 1000);
+    }
+#else // Unix
+    proc_ sleep_(int32_t seconds) {
+        assert(seconds > 0);
+        sleep((uint32_t) seconds);
+    }
+#endif 
+#pragma endregion Os

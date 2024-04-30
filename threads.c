@@ -13,7 +13,7 @@ int32_t main() {
     THREAD_T threads[NUM_THREADS_TO_CREATE];
     int64_t threads_len = 0;
     
-    go_threads(sum, NUM_THREADS_TO_CREATE, ARRCAP_(threads), threads, &threads_len);
+    go_threads(sum, NUM_THREADS_TO_CREATE, CAP_(threads), threads, &threads_len);
     join_threads(threads, threads_len);
 
     int64_t totalSum = 0;

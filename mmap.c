@@ -8,7 +8,7 @@ proc_ run(void) {
         #define HOME "/mnt/c/Users/Aleh"
     #endif
 
-    struct mmap_file_t mmap_info = mmap_open(HOME "/1brc_java/measurements1b.txt"); 
+    struct mmap_t mmap_info = mmap_open(HOME "/1brc_java/measurements1b.txt"); 
     {
         printf("\n%" PRId64 "\n", mmap_info.filesize);
 

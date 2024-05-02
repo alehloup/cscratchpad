@@ -1,7 +1,7 @@
 #include "ale.h"
 
-#define N_LINES 1000000000ll
-#define N_LINES_STR "1b"
+#define N_LINES 100000ll
+#define N_LINES_STR "100k"
 
 proc_ read_cidades(const int64_t cap, struct sslice_t cidades[], int64_t *len) {
     struct mmap_t m = mmap_open("cidades.txt");
@@ -23,7 +23,7 @@ proc_ run(void) {
     for (int i = 0; i < N_LINES; ++i) {
         int printit = i % 10000000 == 0;
 
-        struct sslice_t cidade = cidades[rnd(&seed) % ((int32_t)cidades_len)];
+        struct sslice_t cidade = cidades[rnd(&seed) % cidades_len];
         buffer_appendslice(m.filesize, buffer, &idx, cidade);
         buffer_appendcstr(m.filesize, buffer, &idx, ";");
 
@@ -34,14 +34,14 @@ proc_ run(void) {
 
         int64_t start_idx = idx;
 
-        int32_t measurement = rnd(&seed) % 1001;
+        int64_t measurement = rnd(&seed) % 1001;
 
         if (rnd(&seed) % 2 == 1) {
             buffer[idx++] = '-';
         }
 
-        int32_t tenths = measurement / 100;
-        int32_t unities = measurement;
+        int64_t tenths = measurement / 100;
+        int64_t unities = measurement;
         if (tenths > 0) {
             buffer[idx++] = '0' + (char)tenths;
             unities = unities % 100;

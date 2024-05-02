@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #if defined(_WIN32) || defined(_WIN64)
     #include <Windows.h>
+    #include <io.h>
 #else // assume Unix:
     #include <unistd.h>
     #include <pthread.h>
@@ -77,37 +78,11 @@
 
 #pragma region Structs
 // void *file; void *map; const char *const filename; const int64_t filesize; char *contents;
-struct mmap_file_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
+struct mmap_t { void *file; void *map; const char *const filename; const int64_t filesize; char *contents; };
 
 //int64_t len; const char *text;
 struct sslice_t { int64_t len; const char *text; };
 #pragma endregion Structs
-
-#pragma region Os
-#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
-    proc_ sleep_(int32_t seconds) {
-        assert(seconds > 0);
-        Sleep((uint32_t)(seconds) * 1000);
-    }
-    fun_ int fseek_(FILE *stream, int64_t offset, int32_t whence) {
-        return _fseeki64(stream, offset, whence);
-    }
-    fun_ int64_t ftello_(FILE *stream) {
-        return _ftelli64(stream);
-    }
-#else // Unix
-    proc_ sleep_(int32_t seconds) {
-        assert(seconds > 0);
-        sleep((uint32_t) seconds);
-    }
-    fun_ int fseek_(FILE *stream, int64_t offset, int32_t whence) {
-        return fseeko(stream, (off_t)offset, whence);
-    }
-    fun_ int64_t ftello_(FILE *stream) {
-        return (int64_t)ftello(stream);
-    }
-#endif 
-#pragma endregion Os
 
 #pragma region Strings
 fun_ struct sslice_t to_sslice(const char *const cstring) { return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring); }
@@ -233,7 +208,7 @@ proc_ buffer_appendslice(const int64_t dst_buffer_cap, char dst_buffer[], int64_
 {
     assert(src_chars_slice.len <= dst_buffer_cap);
 
-    memcpy(dst_buffer, src_chars_slice.text, (size_t)src_chars_slice.len);
+    memcpy(&dst_buffer[*dst_buffer_len], src_chars_slice.text, (size_t)src_chars_slice.len);
 
     *dst_buffer_len += src_chars_slice.len;
     dst_buffer[(*dst_buffer_len)] = 0;
@@ -289,11 +264,11 @@ fun_ float inversesqrtapproximate_newton(float number) {
     return y;
 }
 
-fun_ int32_t rnd(uint64_t seed[1]) {
+fun_ int64_t rnd(uint64_t seed[1]) {
     *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
     int32_t shift = 29 - (int32_t)(*seed >> 61);
     
-    return (int32_t)((*seed >> shift) & 2147483647);
+    return (int64_t)((*seed ^ (*seed >> shift)) >> 1);
 }
 
 fun_ uint64_t cstring_hash(const char *const cstring) {
@@ -459,6 +434,47 @@ proc_ ht_sslice_to_arr(
 #pragma endregion Hashtable
 
 #pragma region Files
+// Windows vs Unix file operations
+#if defined(_WINDOWS_) // _WINDOWS_
+    fun_ int fseek_(FILE *stream, int64_t offset, int32_t whence) {
+        return _fseeki64(stream, offset, whence);
+    }
+    fun_ int64_t ftello_(FILE *stream) {
+        return _ftelli64(stream);
+    }
+    fun_ int32_t fileno_(FILE *stream) {
+        return _fileno(stream);
+    }
+    fun_ int32_t ftruncate_(int32_t fd, int64_t size) {
+        return _chsize_s(fd, size);
+    }
+#else // Unix
+    fun_ int fseek_(FILE *stream, int64_t offset, int32_t whence) {
+        return fseeko(stream, (off_t)offset, whence);
+    }
+    fun_ int64_t ftello_(FILE *stream) {
+        return (int64_t)ftello(stream);
+    }
+    fun_ int32_t fileno_(FILE *stream) {
+        return fileno(stream);
+    }
+    fun_ int32_t ftruncate_(int32_t fd, int64_t size) {
+        return ftruncate(fd, (off_t)size);
+    }
+#endif
+
+proc_ file_truncate(const char *const filename, int64_t size) {
+    FILE *file;
+
+    file = fopen(filename, "rb+");
+    assert(file != NULL);
+
+    int32_t res_ftruncate = ftruncate_(fileno_(file), size);
+    assert(res_ftruncate == 0);
+
+    fclose(file);
+}
+
 fun_ int64_t file_size(FILE *f) {
     int32_t failed = fseek_(f, 0, SEEK_END);
     assert(not failed);
@@ -602,7 +618,7 @@ fun_ int64_t handle_to_filesize(HANDLE hFile) {
 
     return ((int64_t)dwFileSizeHigh << 32) | dwFileSizeLow;
 }
-fun_ struct mmap_file_t mmap_open(const char *const filename) {
+fun_ struct mmap_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
         GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     assert(hFile != INVALID_HANDLE_VALUE);
@@ -616,14 +632,14 @@ fun_ struct mmap_file_t mmap_open(const char *const filename) {
     void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
     assert(lpBasePtr);
 
-    return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
+    return STRUCT_(mmap_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
 }
-proc_ mmap_close(struct mmap_file_t mmap_info) {
+proc_ mmap_close(struct mmap_t mmap_info) {
     UnmapViewOfFile((void*)mmap_info.contents);
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
 }
-fun_ struct mmap_file_t mmap_open_for_write(const char *const filename) {
+fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
         GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     assert(hFile != INVALID_HANDLE_VALUE);
@@ -637,10 +653,10 @@ fun_ struct mmap_file_t mmap_open_for_write(const char *const filename) {
     void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
     assert(lpBasePtr);
 
-    return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
+    return STRUCT_(mmap_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
 }
 #else // Unix
-fun_ struct mmap_file_t mmap_open(const char *const filename) {
+fun_ struct mmap_t mmap_open(const char *const filename) {
     FILE *hFile = fopen(filename, "r");
     assert(hFile != 0);
     
@@ -650,12 +666,12 @@ fun_ struct mmap_file_t mmap_open(const char *const filename) {
     char *mapped = mmap(0, fileSize, PROT_READ, MAP_SHARED, fileno(hFile), 0);
     assert(mapped);
 
-    return STRUCT_(mmap_file_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
+    return STRUCT_(mmap_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
 }
-proc_ mmap_close(struct mmap_file_t mmap_info) {
+proc_ mmap_close(struct mmap_t mmap_info) {
     munmap(mmap_info.map, mmap_info.filesize);
 }
-fun_ struct mmap_file_t mmap_open_for_write(const char *const filename) {
+fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     FILE *hFile = fopen(filename, "r+");
     assert(hFile != 0);
     
@@ -665,7 +681,7 @@ fun_ struct mmap_file_t mmap_open_for_write(const char *const filename) {
     char *mapped = mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(hFile), 0);
     assert(mapped != MAP_FAILED);
 
-    return STRUCT_(mmap_file_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
+    return STRUCT_(mmap_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
 }
 #endif // endif _WINDOWS_ else Unix
 #pragma endregion Mmap
@@ -720,3 +736,17 @@ proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
     }
 }
 #pragma endregion Threads
+
+#pragma region Os
+#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
+    proc_ sleep_(int32_t seconds) {
+        assert(seconds > 0);
+        Sleep((uint32_t)(seconds) * 1000);
+    }
+#else // Unix
+    proc_ sleep_(int32_t seconds) {
+        assert(seconds > 0);
+        sleep((uint32_t) seconds);
+    }
+#endif 
+#pragma endregion Os

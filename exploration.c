@@ -23,7 +23,7 @@ fun_ uint64_t hashss(struct sslice_t text_slice) {
 }
 
 proc_ run(void) {
-    struct mmap_file_t map = mmap_open("./measurements10k.txt");
+    struct mmap_t map = mmap_open("./measurements10k.txt");
     
     struct sslice_t lines[32000];
     int64_t lines_len = 0;
@@ -51,9 +51,10 @@ proc_ run(void) {
     qsort(cities_arr, (size_t)cities_arr_len, sizeof(cities_arr[0]), ss_cmp);
 
     for (int i = 0; i < cities_arr_len; ++i) {
-        printf("[");
-        sslice_printend(cities_arr[i], " : ");
-        printf("%llu]\n", hashss(cities_arr[i]));
+        // printf("[");
+        // sslice_printend(cities_arr[i], " : ");
+        // printf("%llu]\n", hashss(cities_arr[i]));
+        sslice_printend(cities_arr[i], "\n");
     }
 
     struct len_count_t counts[64] = ZERO_INIT_;

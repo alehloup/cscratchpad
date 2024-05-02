@@ -5,7 +5,7 @@ static const bool SINGLE_THREAD = (NUM_THREADS == 1);
 
 // #define FILENAME "measurements1b.txt"
 // #define FILEPATH HOME "/1brc_java/" FILENAME
-#define FILEPATH "./measurements10k.txt"
+#define FILEPATH "./measurements100k.txt"
 
 // #ifdef _WINDOWS_
 //     #define HOME "C:/Users/Aleh"
@@ -30,7 +30,7 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 typedef struct City { const char* name; int64_t count; int64_t sum; int64_t min; int64_t max; } City;
 static City thread_cities[NUM_THREADS][TABLE_SIZE];
 
-static struct mmap_file_t *mmap_info = 0; // will store the mmaped file
+static struct mmap_t *mmap_info = 0; // will store the mmaped file
 
 fun_ City * my_cities(int32_t thread_idx) {
     City* cities = thread_cities[thread_idx];
@@ -38,7 +38,10 @@ fun_ City * my_cities(int32_t thread_idx) {
     for (int32_t i = 0; i < ncity; ++i) {
         City *city = &cities[hash_order[i]];
         city->name = city_names[i];
-        city->min = 1000;
+        city->min = 10000;
+        city->max = -10000;
+        city->count = 0;
+        city->sum = 0;
     }
 
     return cities;
@@ -81,6 +84,9 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
 
     const char *cur = &data[i], *end = &data[len];
     /* -----------------------------------------  */
+
+    int line_num = 0;
+    (void) line_num;
 
     while(cur < end) {
         // Each iteration we start at the second letter of a line
@@ -130,10 +136,22 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         
         if (measure < city->min) {
             city->min = measure;
+
         }
         if (measure > city->max) {
             city->max = measure;
         }
+
+//         if (line_num % 10000 == 0) {
+//             printf("%s m%.1f #%" PRId64 "  $%.1f  @%.1f  [%.1f  %.1f]\n", 
+//                 city->name, (double) measure / 10.0, city->count, 
+//                 /*$sum*/ (double)city->sum / 10.0,
+//                 /*@avg*/ ((double)city->sum / ((double)city->count*10)),
+//                 /*[min  max]*/ (double)city->min/10.0, (double)city->max/10.0
+//             );
+//         }
+// 
+        ++line_num;
     }
 
     return 0;
@@ -174,7 +192,7 @@ proc_ print_results(void) {
 
 proc_ run(void) {
     printf("\n Running 1BRC on file: %s\n", FILEPATH);
-    struct mmap_file_t mmap_info_local = mmap_open(FILEPATH);
+    struct mmap_t mmap_info_local = mmap_open(FILEPATH);
     mmap_info = &mmap_info_local;
     
     if (SINGLE_THREAD) {

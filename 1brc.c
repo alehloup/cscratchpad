@@ -7,6 +7,11 @@ static const bool SINGLE_THREAD = (NUM_THREADS == 1);
 // #define FILEPATH HOME "/1brc_java/" FILENAME
 #define FILEPATH "./measurements10k.txt"
 
+// #ifdef _WINDOWS_
+//     #define HOME "C:/Users/Aleh"
+// #else
+//     #define HOME "/mnt/c/Users/Aleh"
+// #endif
 
 /*
     I use a Perfect Hash of the 413 cities
@@ -166,12 +171,6 @@ proc_ print_results(void) {
         );
     }
 }
-
-#ifdef _WINDOWS_
-    #define HOME "C:/Users/Aleh"
-#else
-    #define HOME "/mnt/c/Users/Aleh"
-#endif
 
 proc_ run(void) {
     printf("\n Running 1BRC on file: %s\n", FILEPATH);

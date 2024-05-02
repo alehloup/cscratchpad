@@ -83,6 +83,32 @@ struct mmap_file_t { void *file; void *map; const char *const filename; const in
 struct sslice_t { int64_t len; const char *text; };
 #pragma endregion Structs
 
+#pragma region Os
+#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
+    proc_ sleep_(int32_t seconds) {
+        assert(seconds > 0);
+        Sleep((uint32_t)(seconds) * 1000);
+    }
+    fun_ int fseek_(FILE *stream, int64_t offset, int32_t whence) {
+        return _fseeki64(stream, offset, whence);
+    }
+    fun_ int64_t ftello_(FILE *stream) {
+        return _ftelli64(stream);
+    }
+#else // Unix
+    proc_ sleep_(int32_t seconds) {
+        assert(seconds > 0);
+        sleep((uint32_t) seconds);
+    }
+    fun_ int fseek_(FILE *stream, int64_t offset, int32_t whence) {
+        return fseeko(stream, (off_t)offset, whence);
+    }
+    fun_ int64_t ftello_(FILE *stream) {
+        return (int64_t)ftello(stream);
+    }
+#endif 
+#pragma endregion Os
+
 #pragma region Strings
 fun_ struct sslice_t to_sslice(const char *const cstring) { return STRUCT_(sslice_t, (int64_t)strlen(cstring), cstring); }
 
@@ -434,10 +460,34 @@ proc_ ht_sslice_to_arr(
 
 #pragma region Files
 fun_ int64_t file_size(FILE *f) {
-    fseek(f, 0, SEEK_END);
-    int64_t fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
+    int32_t failed = fseek_(f, 0, SEEK_END);
+    assert(not failed);
+    
+    int64_t fsize = ftello_(f);
+    
+    failed = fseek_(f, 0, SEEK_SET);
+    assert(not failed);
     return fsize;
+}
+fun_ int64_t filename_size(const char *const filename) {
+    FILE *f = fopen(filename, "rb");
+        int64_t fsize = file_size(f);
+    fclose(f);
+    return fsize;
+}
+
+proc_ file_create(const char *const filename, int64_t initial_size) {
+    FILE *file = fopen(filename, "wb");
+        assert(file);
+        
+        if (initial_size > 0) {
+            int32_t failed = fseek_(file, initial_size - 1, SEEK_SET);
+            assert(not failed);
+        }
+
+        size_t written = fwrite("", 1, 1, file);
+        assert(written == 1);
+    fclose(file);
 }
 
 proc_ file_to_buffer(
@@ -573,6 +623,22 @@ proc_ mmap_close(struct mmap_file_t mmap_info) {
     CloseHandle(mmap_info.map);
     CloseHandle(mmap_info.file);
 }
+fun_ struct mmap_file_t mmap_open_for_write(const char *const filename) {
+    HANDLE hFile = CreateFile(filename,
+        GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    assert(hFile != INVALID_HANDLE_VALUE);
+    
+    int64_t fileSize = handle_to_filesize(hFile);
+    assert(fileSize > 0);
+
+    HANDLE hMap = CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, 0, 0);
+    assert(hMap);
+
+    void *lpBasePtr = MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
+    assert(lpBasePtr);
+
+    return STRUCT_(mmap_file_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
+}
 #else // Unix
 fun_ struct mmap_file_t mmap_open(const char *const filename) {
     FILE *hFile = fopen(filename, "r");
@@ -588,6 +654,18 @@ fun_ struct mmap_file_t mmap_open(const char *const filename) {
 }
 proc_ mmap_close(struct mmap_file_t mmap_info) {
     munmap(mmap_info.map, mmap_info.filesize);
+}
+fun_ struct mmap_file_t mmap_open_for_write(const char *const filename) {
+    FILE *hFile = fopen(filename, "r+");
+    assert(hFile != 0);
+    
+    int64_t fileSize = file_size(hFile);
+    assert(fileSize > 0);
+
+    char *mapped = mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(hFile), 0);
+    assert(mapped != MAP_FAILED);
+
+    return STRUCT_(mmap_file_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
 }
 #endif // endif _WINDOWS_ else Unix
 #pragma endregion Mmap
@@ -642,17 +720,3 @@ proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
     }
 }
 #pragma endregion Threads
-
-#pragma region Os
-#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
-    proc_ sleep_(int32_t seconds) {
-        assert(seconds > 0);
-        Sleep((uint32_t)(seconds) * 1000);
-    }
-#else // Unix
-    proc_ sleep_(int32_t seconds) {
-        assert(seconds > 0);
-        sleep((uint32_t) seconds);
-    }
-#endif 
-#pragma endregion Os

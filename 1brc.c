@@ -5,7 +5,7 @@ static const bool SINGLE_THREAD = (NUM_THREADS == 1);
 
 // #define FILENAME "measurements1b.txt"
 // #define FILEPATH HOME "/1brc_java/" FILENAME
-#define FILEPATH "./measurements100k.txt"
+#define FILEPATH "./measurements1B.txt"
 
 // #ifdef _WINDOWS_
 //     #define HOME "C:/Users/Aleh"

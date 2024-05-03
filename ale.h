@@ -684,6 +684,23 @@ fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     return STRUCT_(mmap_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
 }
 #endif // endif _WINDOWS_ else Unix
+
+fun_ struct mmap_t mmap_create_for_write(const char *const filename, int64_t size_to_create) {
+    file_create(filename, size_to_create);
+    return mmap_open_for_write(filename);
+}
+proc_ mmap_write_close_and_truncate(struct mmap_t mmap_info) {
+    int64_t filesize = mmap_info.filesize;
+    char *contents = mmap_info.contents;
+    while (filesize > 0 && contents[--filesize] == '\0') {
+        /* Empty Body */
+    }
+    ++filesize;
+
+    mmap_close(mmap_info);
+    file_truncate(mmap_info.filename, filesize);
+}
+
 #pragma endregion Mmap
 
 #pragma region Threads

@@ -196,6 +196,29 @@ proc_ to_lines(const struct sslice_t text_slice, const int64_t lines_cap, struct
     split(text_slice, '\n', lines_cap, lines, lines_len);
 }
 
+fun_ struct sslice_t next_line(struct sslice_t *text) {
+    struct sslice_t line = *text;
+
+    if (text->len <= 0)
+        return line;
+
+    int64_t slashnpos = char_pos_slice('\n', *text);
+
+    if (slashnpos == -1) {
+        text->len = 0;
+        text->text = "";
+
+        return line;
+    }
+
+    line.len = slashnpos;
+    
+    text->text = &text->text[(slashnpos+1)];
+    text->len -= (slashnpos+1);
+
+    return line;
+}
+
 proc_ buffer_to_lines(
     char buffer[], const int64_t buffer_len, 
     const int64_t lines_cap, struct sslice_t lines[], int64_t *lines_len) 

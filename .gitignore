@@ -51,3 +51,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# to exclude the big files for 1brc
+measurements*.txt

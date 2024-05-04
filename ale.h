@@ -790,3 +790,7 @@ proc_ join_threads(THREAD_T threads[], const int64_t threads_len) {
     }
 #endif 
 #pragma endregion Os
+
+#pragma region Mains
+#define BENCH_MAIN_ int main(void) {start_benchclock(); run(); stop_benchclock(); return 0;}
+#pragma endregion Mains

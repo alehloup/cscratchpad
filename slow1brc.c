@@ -18,8 +18,4 @@ proc_ run(void) {
     printf("%lld\n", j);
 }
 
-int main(void) {
-    start_benchclock();
-    run();
-    stop_benchclock();
-}
+BENCH_MAIN_

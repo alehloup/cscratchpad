@@ -1,8 +1,9 @@
 #include "ale.h"
 
-int32_t main(int32_t argc, const char *const *argv) {
+int main(int argc, const char *const *argv) {
     const char * compiler = "";
     const char * filename_c = "";
+    const char * flags = "";
     
     switch (argc) {
         case 0:case 1: 
@@ -20,7 +21,6 @@ int32_t main(int32_t argc, const char *const *argv) {
         break;
     }
 
-    const char * flags = "";
     switch (compiler[0]) {
 
         default:
@@ -49,8 +49,7 @@ int32_t main(int32_t argc, const char *const *argv) {
                 "clang" 
                 " -std=gnu2x -Ofast -march=native -flto -fuse-ld=lld -ftrivial-auto-var-init=zero"
                 " -Weverything -Werror -fsanitize-trap -fsanitize=undefined" 
-                " -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage -Wno-unused-function -Wno-declaration-after-statement"
-                " -D_CRT_SECURE_NO_WARNINGS";
+                " -Wno-unsafe-buffer-usage -D_CRT_SECURE_NO_WARNINGS";
         break;
 
         case 'm':case 'M':

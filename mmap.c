@@ -10,6 +10,8 @@ proc_ run(void) {
     }
     mmap_close(mmap_info);
 
+    printf("len: %zu\n", filename_size("measurements1b.txt"));
+
     printf("\nDone\n");
 }
 

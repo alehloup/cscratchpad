@@ -113,6 +113,12 @@ proc_ test_subss(void) {
     (void) printed;
 }
 
+proc_ test_literal_sslice(void) {
+    sslice_print(SS_("Alex"));
+    sslice_print(SS_("Sara"));
+    sslice_print(SS_("1234567"));
+}
+
 int main(void) {
     test_buffers();
     test_to_lines();
@@ -122,6 +128,7 @@ int main(void) {
     test_fileread_to_lines();
     test_filewrite();
     test_subss();
+    test_literal_sslice();
 
     printf("\nTested string functions.\n");
 

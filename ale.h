@@ -75,6 +75,14 @@
         const type b = *((const type *)bvoid); \
         __VA_ARGS__; \
     }
+
+// Optimization to use sizeof when its known at compile time
+#define SS_(literal) \
+    STRUCT_(sslice_t, \
+        .len=(sizeof(literal)==sizeof(char*) \
+            ? strlen(literal) : sizeof(literal) - 1), \
+        .text = literal \
+    )
 #pragma endregion Macros
 
 #pragma region Structs
@@ -285,9 +293,14 @@ fun_ size_t least_common_multiple(size_t m, size_t n) { return m / greatest_comm
 
 #pragma region Random
 fun_ size_t rnd(size_t seed[1]) {
-    size_t sd = *seed = *seed * 0x9b60933458e17d7dULL + 0xd737232eeccdf7edULL;
+    size_t sd = *seed = 
+        (*seed 
+            * ((size_t)0x9b60933458e17d7dULL) 
+            + ((size_t)0xd737232eeccdf7edULL)
+        ) 
+        * (size_t)11111111111;
 
-    unsigned int shift = (unsigned int)((sizeof(size_t)*4 - 3) - (sd >> (sizeof(size_t)*8 - 3)));
+    unsigned int shift = (unsigned int)(sizeof(size_t)*4 - (sd >> (sizeof(size_t)*8 - 2)));
     
     return (size_t)((sd ^ (sd >> shift)) >> 1u);
 }
@@ -298,10 +311,10 @@ fun_ size_t sslice_hash(const struct sslice_t chars_slice) {
     const char *const chars = chars_slice.text;
     size_t chars_len = chars_slice.len;
 
-    size_t h = 0x7A5662DCDF;
+    size_t h = ((size_t)0x7A5662DCDFULL);
     
     for(size_t i = 0; i < chars_len; ++i) { 
-        h ^= chars[i] & 255; h *= 1111111111111111111;
+        h ^= chars[i] & 255; h *= ((size_t)1111111111111111111ULL);
     }
     return (h ^ (h >> 31)) >> 1;
 }
@@ -309,9 +322,9 @@ fun_ size_t sslice_hash(const struct sslice_t chars_slice) {
 fun_ size_t number_hash(size_t number) {
     size_t x = number;
     
-    x *= 0x94d049bb133111eb; 
+    x *= ((size_t)0x94d049bb133111ebULL); 
     x = (x ^ (x >> 31));
-    x *= 0xbf58476d1ce4e5b9; 
+    x *= ((size_t)0xbf58476d1ce4e5b9ULL); 
     
     return (x ^ (x >> 31)) >> 1;
 }
@@ -454,36 +467,47 @@ proc_ ht_sslice_to_arr(
     fun_ int fileno_(FILE *stream) {
         return _fileno(stream);
     }
-    fun_ FILE * fopen_(const char *pathname, const char *mode) {
-        FILE *f = 0;
-        errno_t err = fopen_s(&f, pathname, mode);
-        
-        return (assert_(err == 0), f);
+    fun_ size_t filelen_(FILE *stream) {
+        return (size_t)_filelengthi64(fileno_(stream));
     }
     fun_ int fseek_(FILE *stream, size_t offset, int whence) {
         return _fseeki64(stream, (long long)offset, whence);
     }
-    fun_ size_t ftello_(FILE *stream) {
-        return (size_t)_ftelli64(stream);
-    }
     fun_ int ftruncate_(int fd, size_t size) {
         return _chsize_s(fd, (long long)size);
     }
+
+    #if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
+        fun_ FILE * fopen_(const char *pathname, const char *mode) {
+            FILE *f = 0;
+            errno_t err = fopen_s(&f, pathname, mode);
+            
+            return (assert_(err == 0), f);
+        }
+    #else 
+        fun_ FILE * fopen_(const char *pathname, const char *mode) {
+            return fopen(pathname, mode);
+        }
+    #endif
 #else // Unix
     fun_ int fileno_(FILE *stream) {
         return fileno(stream);
     }
-    fun_ FILE * fopen_(const char *pathname, const char *mode) {
-        return fopen(pathname, mode);
-    }
     fun_ int fseek_(FILE *stream, size_t offset, int whence) {
         return fseeko(stream, (off_t)offset, whence);
     }
-    fun_ size_t ftello_(FILE *stream) {
-        return (size_t)ftello(stream);
+    fun_ size_t filelen_(FILE *stream) {
+        struct stat file_stat = ZERO_INIT_;
+        int fstat_success = fstat(fileno(stream), &file_stat) != -1;
+        assert(fstat_success);
+        return (size_t)file_stat.st_size;
     }
     fun_ int ftruncate_(int fd, size_t size) {
         return ftruncate(fd, (off_t)size);
+    }
+
+    fun_ FILE * fopen_(const char *pathname, const char *mode) {
+        return fopen(pathname, mode);
     }
 #endif
 
@@ -494,32 +518,22 @@ proc_ file_truncate(const char *const filename, size_t size) {
     fclose(file);
 }
 
-fun_ size_t file_size(FILE *f) {
-    int success = fseek_(f, 0, SEEK_END) == 0;
-    
-    size_t fsize = (assert_(success), ftello_(f));
-    
-    success = fseek_(f, 0, SEEK_SET) == 0;
-    assert_(success);
-
-    return fsize;
-}
 fun_ size_t filename_size(const char *const filename) {
     FILE *f = fopen_(filename, "rb");
-        size_t fsize = file_size(f);
+        size_t fsize = filelen_(f);
     fclose(f);
     return fsize;
 }
 
 proc_ file_create(const char *const filename, size_t initial_size) {
     FILE *file = fopen_(filename, "wb");
-        int success = (
+        int fopen_success = (
             assert_(file && initial_size > 0),
             fseek_(file, initial_size - 1, SEEK_SET) == 0
         );
 
         size_t written = (
-            assert_(success),
+            assert_(fopen_success),
             fwrite("", 1, 1, file)
         );
         assert_(written == 1);
@@ -531,7 +545,7 @@ proc_ file_to_buffer(
     const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len) 
 {
     FILE *f = fopen_(filename, "rb");
-        size_t fsize = (assert_(f), file_size(f));
+        size_t fsize = (assert_(f), filelen_(f));
         
         size_t bytesread = (
             assert_(dst_buffer_cap >= fsize+2),
@@ -637,7 +651,7 @@ fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
 fun_ struct mmap_t mmap_open(const char *const filename) {
     FILE *hFile = fopen_(filename, "r");
     
-    size_t fileSize = (assert_(hFile != 0), file_size(hFile));
+    size_t fileSize = (assert_(hFile != 0), filelen_(hFile));
 
     char *mapped = (
         assert_(fileSize > 0), 
@@ -653,7 +667,7 @@ proc_ mmap_close(struct mmap_t mmap_info) {
 fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     FILE *hFile = fopen_(filename, "r+");
     
-    size_t fileSize = (assert_(hFile != 0), file_size(hFile));
+    size_t fileSize = (assert_(hFile != 0), filelen_(hFile));
 
     char *mapped = (
         assert_(fileSize > 0), 
@@ -696,7 +710,7 @@ proc_ join_thread(THREAD_T thread) {
 }
 #else // Unix
 fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_id) {
-    int success = 0;
+    int create_thread_success = 0;
     THREAD_T thread = ZERO_INIT_;
 
     pthread_attr_t attr = ZERO_INIT_;
@@ -704,8 +718,8 @@ fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_id) {
     pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE_);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    success = pthread_create(&thread, &attr, routine, (void*)(thread_id)) == 0;
-    assert_(success);
+    create_thread_success = pthread_create(&thread, &attr, routine, (void*)(thread_id)) == 0;
+    assert_(create_thread_success);
 
     return thread;
 }
@@ -761,10 +775,10 @@ fun_ int compile_run_c(const char *const c_file_c, const char *const flags) {
     ); // remove .c
 
     const char *const parts[] = {
-        flags, " ", // pass the compiler and flags
-        c_file, ".c -o ", c_file, ".exe && ",  // compile .c to .exe
-        "echo _ Running ", c_file, ".exe... &&", // print that execution will begin
-        "\"./", c_file, ".exe", "\"" // execute
+        flags, // pass the compiler and flags
+        " ", c_file, ".c -o ", c_file, ".exe ",  // compile .c to .exe
+        "&& echo _ Running ", c_file, ".exe... ", // print that execution will begin
+        "&& \"./", c_file, ".exe", "\" " // execute
     };
     buffer_appendcstrs(CAP_(buffer), buffer, &buffer_len, parts, CAP_(parts));
 
@@ -781,7 +795,11 @@ proc_ start_benchclock(void) {
     BENCHCLOCK_ = clock(); 
 } 
 proc_ stop_benchclock(void) {
-    printf("\n\nExecuted in %f seconds \n", (double)(clock() - BENCHCLOCK_) / CLOCKS_PER_SEC);
+    clock_t end_time = clock();
+    size_t total_time = (size_t)(end_time - BENCHCLOCK_);
+    size_t seconds = (size_t)(total_time / CLOCKS_PER_SEC);
+    size_t milliseconds = (size_t)(total_time % CLOCKS_PER_SEC) * 1000 / CLOCKS_PER_SEC;
+    printf("\n\nExecuted in %zu seconds and %03zu milliseconds \n", seconds, milliseconds);
 }
 
 #define BENCH_MAIN_ int main(void) {start_benchclock(); run(); stop_benchclock(); return 0;}

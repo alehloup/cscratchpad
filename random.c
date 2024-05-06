@@ -14,7 +14,7 @@ int main(void) {
     }
     
     for(unsigned int i = 0; i < N; ++i) {
-        printf("%d: %d\n", i+1, counts[i]);
+        printf("%u: %d\n", i+1, counts[i]);
     }
     
     stop_benchclock();

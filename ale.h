@@ -15,6 +15,7 @@
 #else // assume Unix:
     #include <unistd.h>
     #include <pthread.h>
+    #include <sys/stat.h>
     #include <sys/mman.h>
 #endif
 #pragma endregion Includes
@@ -497,7 +498,7 @@ proc_ ht_sslice_to_arr(
         return fseeko(stream, (off_t)offset, whence);
     }
     fun_ size_t filelen_(FILE *stream) {
-        struct stat file_stat = ZERO_INIT_;
+        struct stat file_stat;
         int fstat_success = fstat(fileno(stream), &file_stat) != -1;
         assert(fstat_success);
         return (size_t)file_stat.st_size;

@@ -5,37 +5,33 @@
 #define N_LINES 10000ll
 #define N_LINES_STR "10k"
 
-fun_ size_t read_cidades(const size_t cap, struct sslice_t cidades[], size_t *len) {
+fun_ struct mmap_t read_cidades(const size_t cap, struct sslice_t cidades[], size_t *len) {
     struct mmap_t m = mmap_open("cidades.txt");
     buffer_to_lines(m.contents, m.filesize, cap, cidades, len);
-    return *len;
+    return m;
 } 
 
 proc_ run(void) {
     struct sslice_t cidades[512] = ZERO_INIT_; 
     size_t cidades_len = 0;
-    size_t nlines = read_cidades(CAP_(cidades), cidades, &cidades_len);
     
-    struct mmap_t m = mmap_create_for_write("measurements" N_LINES_STR ".txt", 16ll * N_LINES);
-    char *buffer = m.contents;
+    struct mmap_t mcidades = read_cidades(CAP_(cidades), cidades, &cidades_len);
+    
+    struct mmap_t mmeasurements = mmap_create_for_write("measurements" N_LINES_STR ".txt", 16ll * N_LINES);
+    char *buffer = mmeasurements.contents;
     size_t idx = 0;
 
     size_t seed = 41635984;
     for (size_t i = 0; i < N_LINES; ++i) {
-        int printit = i % 100000 == 0;
+        int printit = i % 100 == 0;
         size_t start_idx = idx;
         size_t range = 1001;
 
         struct sslice_t cidade = cidades[rnd(&seed) % cidades_len];
         size_t measurement = rnd(&seed) % range;
         
-        buffer_appendslice(m.filesize, buffer, &idx, cidade);
-        buffer_appendcstr(m.filesize, buffer, &idx, ";");
-
-        if (printit) {
-            printf("[%zu] ", i);
-            sslice_printend(cidade, ";");
-        }
+        buffer_appendslice(mmeasurements.filesize, buffer, &idx, cidade);
+        buffer_appendcstr(mmeasurements.filesize, buffer, &idx, ";");
 
         if (cidade.len % 2 == 0) {
             range = 552;
@@ -72,9 +68,8 @@ proc_ run(void) {
     }
     printf("size: %zu\n", idx);
 
-    mmap_write_close_and_truncate(m);
-
-    (void) nlines;
+    mmap_close(mcidades);
+    mmap_write_close_and_truncate(mmeasurements);
 }
 
 int main(void) {

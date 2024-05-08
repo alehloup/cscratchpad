@@ -95,8 +95,6 @@ struct sslice_t { size_t len; const char *text; };
 #pragma endregion Structs
 
 #pragma region Strings
-fun_ struct sslice_t to_sslice(const char *const cstring) { return STRUCT_(sslice_t, strlen(cstring), cstring); }
-
 proc_ sslice_print(const struct sslice_t slice) { printf("%.*s\n", (int)slice.len, slice.text); }
 proc_ sslice_printend(const struct sslice_t slice, const char *const end) { printf("%.*s%s", (int)slice.len, slice.text, end); }
 
@@ -232,7 +230,7 @@ proc_ buffer_to_lines(
 proc_ buffer_appendslice(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
     const struct sslice_t src_chars_slice) 
 {
-    assert_(src_chars_slice.len <= dst_buffer_cap);
+    assert_((*dst_buffer_len) + src_chars_slice.len < dst_buffer_cap);
 
     memcpy(&dst_buffer[*dst_buffer_len], src_chars_slice.text, src_chars_slice.len);
 
@@ -244,7 +242,7 @@ const char *const cstr)
 {
     const size_t cstr_len = strlen(cstr);
 
-    assert_(cstr_len <= dst_buffer_cap);
+    assert_((*dst_buffer_len) + cstr_len < dst_buffer_cap);
 
     memcpy(&dst_buffer[*dst_buffer_len], cstr, cstr_len);
 

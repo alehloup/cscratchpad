@@ -761,6 +761,31 @@ proc_ join_threads(THREAD_T threads[], const size_t threads_len) {
     }
 #endif 
 
+fun_ int compile_c(const char *const c_file_c, const char *const flags) {
+    char buffer[2048] = {0}; 
+    size_t buffer_len = 0; 
+
+    char c_file[256] = {0};
+    const size_t c_file_len = strlen(c_file_c) - 2;
+
+    void *ptr = (
+        assert_(c_file_len < 255),
+        memcpy(c_file, c_file_c, c_file_len)
+    ); // remove .c
+
+    const char *const parts[] = {
+        flags, // pass the compiler and flags
+        " ", c_file, ".c -o ", c_file, ".exe ",  // compile .c to .exe
+        "&& echo _ Compiled ", c_file, ".exe! \n", // print that it was compiled
+    };
+    buffer_appendcstrs(CAP_(buffer), buffer, &buffer_len, parts, CAP_(parts));
+
+    (void) ptr;
+
+    printf("\n%.*s\n", (int)buffer_len, buffer);
+    return system(buffer);
+}
+
 fun_ int compile_run_c(const char *const c_file_c, const char *const flags) {
     char buffer[2048] = {0}; 
     size_t buffer_len = 0; 

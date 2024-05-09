@@ -11,10 +11,54 @@
     #define GCC_ACCEPT_PRAGMA_REGION_PLS " -Wno-unknown-pragmas"
 #endif
 
+const char *const flags_gcc  = 
+    "gcc"
+    " -std=gnu2x -Ofast -march=native -static-pie -flto -g3"
+    FORTIFY " -fcf-protection=full -fstack-protector-strong"
+    " -Wall -Wextra -Wpedantic -Wuninitialized -Werror"
+    " -fanalyzer"
+    " -fsanitize-undefined-trap-on-error" 
+    " -fsanitize=undefined -fsanitize=bounds-strict"
+    " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
+    " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
+    GCC_ACCEPT_PRAGMA_REGION_PLS
+;
+
+const char *const flags_gpp = 
+    "g++" 
+    " -std=gnu++23 -Ofast -march=native -static-pie -flto -g3"
+    FORTIFY " -fcf-protection=full -fstack-protector-strong"
+    " -Wall -Wextra -Wpedantic -Wuninitialized -Werror" 
+    " -fanalyzer"
+    " -fsanitize-undefined-trap-on-error" 
+    " -fsanitize=undefined -fsanitize=bounds-strict"
+    " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
+    " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
+    " -fno-exceptions"
+    GCC_ACCEPT_PRAGMA_REGION_PLS
+;
+
+const char *const flags_tinyc = 
+    "tcc -Wall -Werror"
+;
+
+const char *const flags_msvc =
+    "cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl"
+;
+
+const char *const flags_clang = 
+    "clang" 
+    " -std=gnu2x -Ofast -march=native -Weverything -Werror" 
+    " -fsanitize-undefined-trap-on-error" 
+    " -fsanitize=undefined -fsanitize=bounds"
+    CLANG_ACCEPT_C_ARRAY_PLS
+;
+
 int main(int argc, const char *const *argv) {
     const char * compiler = "";
     const char * filename_c = "";
     const char * flags = "";
+    int printed = 0, success = 1;
     
     switch (argc) {
         case 0:case 1: 
@@ -35,53 +79,84 @@ int main(int argc, const char *const *argv) {
     switch (compiler[0]) {
 
         default:
-            flags = 
-                "gcc"
-                " -std=gnu2x -Ofast -march=native -static-pie -flto -g3"
-                FORTIFY " -fcf-protection=full -fstack-protector-strong"
-                " -Wall -Wextra -Wpedantic -Wuninitialized -Werror" 
-                " -fsanitize-undefined-trap-on-error -fsanitize=undefined -fanalyzer"
-                " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
-                " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
-                GCC_ACCEPT_PRAGMA_REGION_PLS
-            ;
+            flags = flags_gcc;
         break;
 
         case 'p':case 'P':
-            flags = 
-                "g++" 
-                " -std=gnu++23 -Ofast -march=native -static-pie -flto -g3"
-                FORTIFY " -fcf-protection=full -fstack-protector-strong"
-                " -Wall -Wextra -Wpedantic -Wuninitialized -Werror" 
-                " -fsanitize-undefined-trap-on-error -fsanitize=undefined -fanalyzer"
-                " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
-                " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
-                " -fno-exceptions"
-                GCC_ACCEPT_PRAGMA_REGION_PLS
-            ;
-        break;
-
-        case 'c':case 'C':
-            flags =
-                "clang" 
-                " -std=gnu2x -Ofast -march=native -Weverything -Werror" 
-                " -fsanitize-undefined-trap-on-error -fsanitize=undefined"
-                CLANG_ACCEPT_C_ARRAY_PLS
-            ;
-        break;
-
-        case 'm':case 'M':
-            flags =
-                "cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl"
-            ;
+            flags = flags_gpp;
         break;
 
         case 't':case 'T':
-            flags =
-                "tcc -Wall -Werror"
-            ;
+            flags = flags_tinyc;
         break;
+
+        case 'm':case 'M':
+            flags = flags_msvc;
+        break;
+
+        case 'c':case 'C':
+            flags = flags_clang;
+        break;
+
+        case 'v':case 'V':
+            flags = "verify";
+        break;
+
+        case 'a':case 'A':
+            flags = "all";
+        break;
+
     } 
-    
-    return compile_run_c(filename_c, flags);
+
+    switch (flags[0]) {
+        default: 
+            return compile_run_c(filename_c, flags)
+        ;
+
+        case 'v':
+            printed = printf("\n ===== GCC =====");
+            success = compile_c(filename_c, flags_gcc);
+            printed = printf("\n ===== G++ =====");
+            success = compile_c(filename_c, flags_gpp);
+            printed = printf("\n ===== TCC =====");
+            success = compile_c(filename_c, flags_tinyc);
+            printed = printf("\n ===== MSVC =====");
+            success = compile_c(filename_c, flags_msvc);
+            // printed = printf("\n ===== Clang =====");
+            // success = compile_c(filename_c, flags_clang);
+
+            (void) printed;
+
+            if (success == 0) {
+                printf("\n\nDone, SUCCESS\n\n");
+            } else {
+                printf("\n\nDone, ERROR!\n\n");
+            }
+        
+            return success
+        ;
+
+        case 'a':
+            printed = printf("\n ===== GCC =====");
+            success = compile_run_c(filename_c, flags_gcc);
+            printed = printf("\n ===== G++ =====");
+            success = compile_run_c(filename_c, flags_gpp);
+            printed = printf("\n ===== TCC =====");
+            success = compile_run_c(filename_c, flags_tinyc);
+            printed = printf("\n ===== MSVC =====");
+            success = compile_run_c(filename_c, flags_msvc);
+            // printed = printf("\n ===== Clang =====");
+            // success = compile_run_c(filename_c, flags_clang);
+
+            (void) printed;
+
+            if (success == 0) {
+                printf("\n\nDone, SUCCESS\n\n");
+            } else {
+                printf("\n\nDone, ERROR!\n\n");
+            }
+        
+            return success
+        ;
+    }
 }

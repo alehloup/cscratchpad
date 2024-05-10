@@ -12,7 +12,7 @@
 #endif
 
 const char *const flags_gcc  = 
-    "gcc"
+    "  gcc"
     " -std=gnu2x -Ofast -march=native -static-pie -flto -g3"
     FORTIFY " -fcf-protection=full -fstack-protector-strong"
     " -Wall -Wextra -Wpedantic -Wuninitialized -Werror"
@@ -25,7 +25,7 @@ const char *const flags_gcc  =
 ;
 
 const char *const flags_gpp = 
-    "g++" 
+    "  g++" 
     " -std=gnu++23 -Ofast -march=native -static-pie -flto -g3"
     FORTIFY " -fcf-protection=full -fstack-protector-strong"
     " -Wall -Wextra -Wpedantic -Wuninitialized -Werror" 
@@ -39,26 +39,34 @@ const char *const flags_gpp =
 ;
 
 const char *const flags_tinyc = 
-    "tcc -Wall -Werror"
+    "  tcc -Wall -Werror"
 ;
 
 const char *const flags_msvc =
-    "cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl"
+    "  cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl"
 ;
 
 const char *const flags_clang = 
-    "clang" 
+    "  clang" 
     " -std=gnu2x -Ofast -march=native -Weverything -Werror" 
     " -fsanitize-undefined-trap-on-error" 
     " -fsanitize=undefined -fsanitize=bounds"
     CLANG_ACCEPT_C_ARRAY_PLS
 ;
 
+proc_ delete_artifacts(void) {
+    printf("\n===== Delete Artifacts =====\n");
+    printf("rm *.exe *.out *.obj *.nativecodeanalysis.xml\n");
+    system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
+}
+
 int main(int argc, const char *const *argv) {
     const char * compiler = "";
     const char * filename_c = "";
     const char * flags = "";
     int printed = 0, success = 1;
+
+    printf("\n");
     
     switch (argc) {
         case 0:case 1: 
@@ -68,6 +76,11 @@ int main(int argc, const char *const *argv) {
         case 2: 
             compiler = "gcc";
             filename_c=argv[1]; 
+
+            if (filename_c[0] == 'd' && filename_c[1] == '\0') {
+                delete_artifacts();
+                return 0;
+            }
         break;
 
         default: 
@@ -106,6 +119,10 @@ int main(int argc, const char *const *argv) {
             flags = "all";
         break;
 
+        case 'd':case 'D':
+            return system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
+        break;
+
     } 
 
     switch (flags[0]) {
@@ -114,18 +131,20 @@ int main(int argc, const char *const *argv) {
         ;
 
         case 'v':
-            printed = printf("\n ===== GCC =====");
+            printed = printf("\n===== GCC =====");
             success = compile_c(filename_c, flags_gcc);
-            printed = printf("\n ===== G++ =====");
+            printed = printf("\n===== G++ =====");
             success = compile_c(filename_c, flags_gpp);
-            printed = printf("\n ===== TCC =====");
+            printed = printf("\n===== TCC =====");
             success = compile_c(filename_c, flags_tinyc);
-            printed = printf("\n ===== MSVC =====");
+            printed = printf("\n===== MSVC =====");
             success = compile_c(filename_c, flags_msvc);
-            // printed = printf("\n ===== Clang =====");
-            // success = compile_c(filename_c, flags_clang);
+            printed = printf("\n===== Clang =====");
+            success = compile_c(filename_c, flags_clang);
 
-            (void) printed;
+            delete_artifacts();
+
+            (void) printed;            
 
             if (success == 0) {
                 printf("\n\nDone, SUCCESS\n\n");
@@ -137,16 +156,18 @@ int main(int argc, const char *const *argv) {
         ;
 
         case 'a':
-            printed = printf("\n ===== GCC =====");
+            printed = printf("\n===== GCC =====");
             success = compile_run_c(filename_c, flags_gcc);
-            printed = printf("\n ===== G++ =====");
+            printed = printf("\n===== G++ =====");
             success = compile_run_c(filename_c, flags_gpp);
-            printed = printf("\n ===== TCC =====");
+            printed = printf("\n===== TCC =====");
             success = compile_run_c(filename_c, flags_tinyc);
-            printed = printf("\n ===== MSVC =====");
+            printed = printf("\n===== MSVC =====");
             success = compile_run_c(filename_c, flags_msvc);
-            // printed = printf("\n ===== Clang =====");
-            // success = compile_run_c(filename_c, flags_clang);
+            printed = printf("\n===== Clang =====");
+            success = compile_run_c(filename_c, flags_clang);
+
+            delete_artifacts();
 
             (void) printed;
 

@@ -11,7 +11,7 @@
     #define GCC_ACCEPT_PRAGMA_REGION_PLS " -Wno-unknown-pragmas"
 #endif
 
-const char *const flags_gcc  = 
+static const char *const flags_gcc  = 
     "  gcc"
     " -std=gnu2x -Ofast -march=native -static-pie -flto -g3"
     FORTIFY " -fcf-protection=full -fstack-protector-strong"
@@ -24,7 +24,7 @@ const char *const flags_gcc  =
     GCC_ACCEPT_PRAGMA_REGION_PLS
 ;
 
-const char *const flags_gpp = 
+static const char *const flags_gpp = 
     "  g++" 
     " -std=gnu++23 -Ofast -march=native -static-pie -flto -g3"
     FORTIFY " -fcf-protection=full -fstack-protector-strong"
@@ -38,15 +38,15 @@ const char *const flags_gpp =
     GCC_ACCEPT_PRAGMA_REGION_PLS
 ;
 
-const char *const flags_tinyc = 
+static const char *const flags_tinyc = 
     "  tcc -Wall -Werror"
 ;
 
-const char *const flags_msvc =
+static const char *const flags_msvc =
     "  cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl"
 ;
 
-const char *const flags_clang = 
+static const char *const flags_clang = 
     "  clang" 
     " -std=gnu2x -Ofast -march=native -Weverything -Werror" 
     " -fsanitize-undefined-trap-on-error" 
@@ -55,9 +55,10 @@ const char *const flags_clang =
 ;
 
 proc_ delete_artifacts(void) {
-    printf("\n===== Delete Artifacts =====\n");
-    printf("rm *.exe *.out *.obj *.nativecodeanalysis.xml\n");
-    system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
+    int discard = printf("\n===== Delete Artifacts =====\n");
+    discard = printf("rm *.exe *.out *.obj *.nativecodeanalysis.xml\n");
+    discard = system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
+    (void) discard;
 }
 
 int main(int argc, const char *const *argv) {
@@ -121,8 +122,7 @@ int main(int argc, const char *const *argv) {
 
         case 'd':case 'D':
             return system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
-        break;
-
+        //break;
     } 
 
     switch (flags[0]) {

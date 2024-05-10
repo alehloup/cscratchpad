@@ -766,7 +766,7 @@ fun_ int compile_c(const char *const c_file_c, const char *const flags) {
     size_t buffer_len = 0; 
 
     char c_file[256] = {0};
-    const size_t c_file_len = strlen(c_file_c) - 2;
+    const size_t c_file_len = char_pos('.', c_file_c) == SZ_NOT_FOUND_ ? strlen(c_file_c) : strlen(c_file_c) - 2;
 
     void *ptr = (
         assert_(c_file_len < 255),
@@ -791,7 +791,7 @@ fun_ int compile_run_c(const char *const c_file_c, const char *const flags) {
     size_t buffer_len = 0; 
 
     char c_file[256] = {0};
-    const size_t c_file_len = strlen(c_file_c) - 2;
+    const size_t c_file_len = char_pos('.', c_file_c) == SZ_NOT_FOUND_ ? strlen(c_file_c) : strlen(c_file_c) - 2;
 
     void *ptr = (
         assert_(c_file_len < 255),

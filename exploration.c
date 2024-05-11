@@ -72,6 +72,8 @@ proc_ run(void) {
         }
         printf("\n");
     }
+
+    mmap_close(map);
 }
 
 int main(void) {

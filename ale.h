@@ -660,6 +660,7 @@ fun_ struct mmap_t mmap_open(const char *const filename) {
 }
 proc_ mmap_close(struct mmap_t mmap_info) {
     munmap(mmap_info.map, mmap_info.filesize);
+    fclose((FILE *) mmap_info.file);
 }
 fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     FILE *hFile = fopen_(filename, "r+");

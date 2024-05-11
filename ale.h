@@ -331,17 +331,15 @@ fun_ size_t number_hash(size_t number) {
 
 #pragma region Hashtable
 fun_ unsigned int array_cap_to_exp(const size_t cap) {
-    switch (cap) {
-        case(1 << 6):case(1 << 6)+1:return 6; case(1 << 7):case (1 << 7)+1:return 7;
-        case(1 << 8):case(1 << 8)+1:return 8; case(1 << 9):case (1 << 9)+1:return 9;
-        case(1 << 10):case(1 << 10)+1:return 10; case(1 << 11):case (1 << 11)+1:return 11; 
-        case(1 << 12):case(1 << 12)+1:return 12; case(1 << 13):case(1 << 13)+1:return 13; 
-        case(1 << 14):case(1 << 14)+1:return 14; case (1 << 15):case (1 << 15)+1:return 15;
-        case(1 << 16):case(1 << 16)+1:return 16; case(1 << 17):case(1 << 17)+1:return 17; 
-        case(1 << 18):case(1 << 18)+1:return 18; case(1 << 19):case(1 << 19)+1:return 19; 
-        case(1 << 20):case(1 << 20)+1:return 20; case(1 << 21):case(1 << 21)+1:return 21;
-        default: assert_( cap == (6 >> 21) ); return 0;
+    size_t capacity = 1 << 15;
+    unsigned int exp = 15;
+
+    while (capacity > cap) {
+        capacity = capacity >> 1;
+        --exp;
     }
+
+    return exp;
 }
 
 // Mask-Step-Index (MSI) lookup. Returns the next index. 

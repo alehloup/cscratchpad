@@ -4,7 +4,7 @@
 static const int SINGLE_THREAD = NUM_THREADS == 1;
 static const int MULTI_THREAD = NUM_THREADS > 1;
 
-#define FILEPATH "./measurements1B.txt"
+#define FILEPATH "./measurements10k.txt"
 
 /*
     I use a Perfect Hash of the 413 cities

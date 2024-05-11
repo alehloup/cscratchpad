@@ -2,7 +2,7 @@
 
 proc_ run(void) {
 
-    struct mmap_t mmap_info = mmap_open("measurements1b.txt");
+    struct mmap_t mmap_info = mmap_open("measurements10k.txt");
     {
         printf("\n%zu\n", mmap_info.filesize);
 
@@ -10,7 +10,7 @@ proc_ run(void) {
     }
     mmap_close(mmap_info);
 
-    printf("len: %zu\n", filename_size("measurements1b.txt"));
+    printf("len: %zu\n", filename_size("measurements10k.txt"));
 
     printf("\nDone\n");
 }

@@ -200,22 +200,22 @@ proc_ to_lines(const struct sslice_t text_slice, const size_t lines_cap, struct 
     split(text_slice, '\n', lines_cap, lines, lines_len);
 }
 
-fun_ struct sslice_t next_line(struct sslice_t *text) {
-    struct sslice_t line = *text;
+fun_ struct sslice_t next_line(struct sslice_t *text_iterator) {
+    struct sslice_t line = *text_iterator;
 
-    size_t slashnpos = char_pos_slice('\n', *text);
+    size_t slashnpos = char_pos_slice('\n', *text_iterator);
 
     if (slashnpos == SZ_NOT_FOUND_) {
-        text->len = 0;
-        text->text = "";
+        text_iterator->len = 0;
+        text_iterator->text = "";
 
         return line;
     } 
 
     line.len = slashnpos;
     
-    text->text = &text->text[(slashnpos+1)];
-    text->len -= (slashnpos+1);
+    text_iterator->text = &text_iterator->text[(slashnpos+1)];
+    text_iterator->len -= (slashnpos+1);
 
     return line;
 }

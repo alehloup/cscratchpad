@@ -496,7 +496,7 @@ proc_ ht_sslice_to_arr(
     fun_ size_t filelen_(FILE *stream) {
         struct stat file_stat;
         int fstat_success = fstat(fileno(stream), &file_stat) != -1;
-        assert(fstat_success);
+        assert_(fstat_success);
         return (size_t)file_stat.st_size;
     }
     fun_ int ftruncate_(int fd, size_t size) {

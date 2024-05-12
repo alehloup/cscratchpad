@@ -2,31 +2,16 @@
 
 struct len_count_t { size_t len; size_t count; };
 
-NEWCMPF_(ss_cmp, struct sslice_t, return sslice_cmp_locale(a, b))
-NEWCMPF_(lens_cmp, struct len_count_t, return (int)(b.count - a.count))
+NEWCMPF_(ss_cmp, struct sslice_t, sslice_cmp_locale(a, b))
+NEWCMPF_(lens_cmp, struct len_count_t, b.count - a.count)
 
-static struct sslice_t cities[1<<15] = ZERO_INIT_;
-
-// fun_ size_t hashss(struct sslice_t text_slice) {
-//     struct sslice_t one2nine = subss(text_slice, 1, 9);
-
-//     size_t h = 0, sum = 0;
-//     for (size_t i = 0; i < one2nine.len; ++i) {
-//         sum += (size_t) one2nine.text[i];
-//         h = sum;
-//         sum = sum << 8;
-//     }
-
-//     h = (h % 13087) % 6570;
-
-//     return h;
-// }
+static struct sslice_t cities[1<<15] = {{0,0}};
 
 proc_ run(void) {
     struct mmap_t map = mmap_open("./measurements10k.txt");
     
     struct sslice_t lines[32000];
-    size_t lines_len = 0, cities_len = 0, lens_count[128] = ZERO_INIT_;
+    size_t lines_len = 0, cities_len = 0, lens_count[128] = {0};
     
     buffer_to_lines(map.contents, map.filesize, CAP_(lines), lines, &lines_len);
 
@@ -56,12 +41,13 @@ proc_ run(void) {
     }
 
     { // Show Counts of len of cities names
-        struct len_count_t counts[64] = ZERO_INIT_;
+        struct len_count_t counts[64] = {{0, 0}};
         size_t counts_len = 0;
 
         for (size_t i = 0; i < CAP_(lens_count); ++i) {
             if (lens_count[i]) {
-                counts[counts_len++] = STRUCT_(len_count_t, i, lens_count[i]);
+                struct len_count_t cnts = {i, lens_count[i]};
+                counts[counts_len++] = cnts;
             }
         }
 

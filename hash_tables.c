@@ -1,13 +1,13 @@
 #include "ale.h"
 
 proc_ test_get_exp(void) {
-    int hash_table[1 << 6] = ZERO_INIT_;
+    int hash_table[1 << 6] = {0};
     printf("exp: %u\n", array_cap_to_exp(CAP_(hash_table)));
 }
 
 proc_ test_hashtable_insertions(void) {
     unsigned int pos = 0;
-    struct sslice_t keys[1 << 6] = ZERO_INIT_;
+    struct sslice_t keys[1 << 6] = {{0, 0}};
     size_t keys_len = 0;
 
     printf("Keys cap: %zu\n", CAP_(keys));

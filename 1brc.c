@@ -21,7 +21,7 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 #define TABLE_SIZE 6570
 
 typedef struct City { const char* name; size_t count; long long int sum; long long int min; long long int max; } City;
-static City thread_cities[NUM_THREADS][TABLE_SIZE] = ZERO_INIT_;
+static City thread_cities[NUM_THREADS][TABLE_SIZE];
 
 static struct mmap_t *mmap_info = 0; // will store the mmaped file
 
@@ -99,7 +99,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         city_hash = sum_hash + (size_t)*(cur++);
         sum_hash = city_hash << 8;
 
-        for (unsigned int si = 0; si < 5 and *cur != ';'; ++si, ++cur) {
+        for (unsigned int si = 0; si < 5 && *cur != ';'; ++si, ++cur) {
             city_hash = sum_hash + (size_t)*cur;
             sum_hash = city_hash << 8;
         } 

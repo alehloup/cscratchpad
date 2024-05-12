@@ -12,7 +12,7 @@ fun_ struct mmap_t read_cidades(const size_t cap, struct sslice_t cidades[], siz
 } 
 
 proc_ run(void) {
-    struct sslice_t cidades[512] = ZERO_INIT_; 
+    struct sslice_t cidades[512] = {{.len=0, .text=0}};
     size_t cidades_len = 0;
     
     struct mmap_t mcidades = read_cidades(CAP_(cidades), cidades, &cidades_len);

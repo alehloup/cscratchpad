@@ -1,5 +1,9 @@
 #pragma once
 
+#pragma region Configure
+    #define THREAD_STACK_SIZE_ 64 * 1024
+#pragma endregion Configure
+
 #pragma region Includes
 #include <assert.h>
 #include <math.h>
@@ -22,6 +26,8 @@
 #pragma endregion Includes
 
 #pragma region Defines
+#define SZ_NOT_FOUND_ (size_t)-1 // constant for using as in-band error
+
 #if defined(__GNUC__) || defined(__clang__)
     #define fun_   __attribute((nonnull, warn_unused_result)) inline static
     #define proc_  __attribute((nonnull)) inline static void
@@ -29,20 +35,7 @@
     #define fun_   inline static
     #define proc_  inline static void
 #endif
-
-#if defined(__cplusplus)
-    #define STRUCT_(struct_name, ...) /*(struct struct_name)*/ { __VA_ARGS__ }
-    #define ZERO_INIT_ {}
-#else
-    #define STRUCT_(struct_name, ...) (struct struct_name) { __VA_ARGS__ }
-    #define ZERO_INIT_ {0}
-
-    #define not !
-    #define and &&
-    #define or ||
-#endif
-
-#define SZ_NOT_FOUND_ (size_t)-1 // constant for using as in-band error
+    #define routine_ inline static ROURET_T
 
 #if defined(_WINDOWS_)
     #define ROURET_T long unsigned int
@@ -51,8 +44,6 @@
     #define ROURET_T void *
     #define THREAD_T pthread_t
 #endif
-#define routine_ inline static ROURET_T
-#define THREAD_STACK_SIZE_ 64 * 1024
 #pragma endregion Defines
 
 #pragma region Macros
@@ -63,27 +54,18 @@
     sizeof(static_array_) / sizeof(*(static_array_)) \
 )
 
-#define APPEND_(array, new_element) \
-    assert_((*array##_len) < array##_cap); \
-    array[(*array##_len)++] = new_element
-
-#define DELIDX_(array, idx_to_del) \
-    assert_((*array##_len) > 0); \
-    array[idx_to_del] = array[--(*array##_len)]
-
 #define NEWCMPF_(fun_name, type, ...) \
     fun_ int fun_name(const void *avoid, const void *bvoid) { \
         const type a = *((const type *)avoid); \
         const type b = *((const type *)bvoid); \
-        __VA_ARGS__; \
+        return (int) (__VA_ARGS__); \
     }
 
 // Optimization to use sizeof when its known at compile time
 #define SS_(literal) \
-    STRUCT_(sslice_t, \
-        .len=(sizeof(literal)==sizeof(char*) \
-            ? strlen(literal) : sizeof(literal) - 1), \
-        .text = literal \
+    string_to_sslice( \
+        sizeof(literal)==sizeof(char*) ? strlen(literal) : sizeof(literal) - 1, \
+        literal \
     )
 #pragma endregion Macros
 
@@ -96,6 +78,11 @@ struct sslice_t { size_t len; const char *text; };
 #pragma endregion Structs
 
 #pragma region Strings
+fun_ struct sslice_t string_to_sslice(size_t len, const char *const string) {  
+    struct sslice_t sslice = {.len=len, .text=string};
+    return sslice;
+}
+
 proc_ sslice_print(const struct sslice_t slice) { printf("%.*s\n", (int)slice.len, slice.text); }
 proc_ sslice_printend(const struct sslice_t slice, const char *const end) { printf("%.*s%s", (int)slice.len, slice.text, end); }
 
@@ -126,10 +113,12 @@ fun_ int sslice_cmp_locale(const struct sslice_t a_text_slice, const struct ssli
 }
 
 fun_ int startswith(const struct sslice_t prefix, const struct sslice_t text) {
-    return sslice_cmp(prefix, STRUCT_(sslice_t, .len=prefix.len, .text=text.text)) == 0;
+    struct sslice_t text_start = {.len=prefix.len, .text=text.text};
+    return sslice_cmp(prefix, text_start) == 0;
 }
 
 fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
+    struct sslice_t text_trimmed;
     const char *const text = text_slice.text;
     size_t text_len = text_slice.len;
 
@@ -144,7 +133,9 @@ fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
         }
     }
 
-    return STRUCT_(sslice_t, text_len, &text[start]);
+    text_trimmed.len = text_len;
+    text_trimmed.text = &text[start];
+    return text_trimmed;
 }
 
 fun_ size_t char_pos(const char letter, const char *const cstring) {
@@ -176,7 +167,8 @@ fun_ struct sslice_t subss(struct sslice_t text_slice, const int start, const in
 
     size_t len = true_start < true_end ? true_end - true_start : 0;
 
-    return STRUCT_(sslice_t, len, &text_slice.text[true_start]);
+    struct sslice_t sub = {.len=len, .text=&text_slice.text[true_start]};
+    return sub;
 }
 
 proc_ split(const struct sslice_t text_slice, const char splitter, 
@@ -186,14 +178,19 @@ proc_ split(const struct sslice_t text_slice, const char splitter,
     size_t pos = 0;
     
     for (pos = char_pos_slice(splitter, cur); pos != SZ_NOT_FOUND_; pos = char_pos_slice(splitter, cur)) {
-        APPEND_(parts, STRUCT_(sslice_t, .len=pos, .text=cur.text));
+        struct sslice_t part = {.len=pos, .text=cur.text};
+
+        assert_(*parts_len < parts_cap);
+        parts[(*parts_len)++] = part;
         ++pos;
         cur.len -= pos; 
         cur.text = &cur.text[pos];
     }
 
     if (cur.len > 0) {
-        APPEND_(parts, STRUCT_(sslice_t, .len=cur.len, .text=cur.text));
+        struct sslice_t part = {.len=cur.len, .text=cur.text};
+        assert_(*parts_len < parts_cap);
+        parts[(*parts_len)++] = part;
     }
 }
 
@@ -225,7 +222,8 @@ proc_ buffer_to_lines(
     char buffer[], const size_t buffer_len, 
     const size_t lines_cap, struct sslice_t lines[], size_t *lines_len) 
 {   
-    to_lines(STRUCT_(sslice_t, .len=buffer_len, .text=buffer), lines_cap, lines, lines_len);
+    struct sslice_t text = {.len=buffer_len, .text=buffer};
+    to_lines(text, lines_cap, lines, lines_len);
 }
 
 proc_ buffer_appendslice(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
@@ -383,7 +381,7 @@ fun_ unsigned int ht_number_upsert(
 proc_ ht_number_print(const size_t hashtable_cap, size_t hashtable[], const size_t hashtable_len) {
     printf("#%zu %zu\n", hashtable_len, hashtable_cap);
     for (size_t i = 0; i < hashtable_cap; ++i) {
-        if (not hashtable[0]) {
+        if (!hashtable[0]) {
             continue;
         }
         printf("%zu, ", hashtable[i]);
@@ -396,10 +394,11 @@ proc_ ht_number_to_arr(
     const size_t array_cap, size_t array[], size_t *array_len)
 {
     for (size_t i = 0; i < hashtable_cap; ++i) {
-        if (not hashtable[0]) {
+        if (!hashtable[0]) {
             continue;
         }
-        APPEND_(array, hashtable[i]);
+        assert_(*array_len < array_cap);
+        array[(*array_len)++] = hashtable[i];
     }
 }
 
@@ -454,7 +453,8 @@ proc_ ht_sslice_to_arr(
         if (hashtable[i].len == 0) {
             continue;
         }
-        APPEND_(array, hashtable[i]);
+        assert_(*array_len < array_cap);
+        array[(*array_len)++] = hashtable[i];
     }
 }
 #pragma endregion Hashtable
@@ -563,7 +563,10 @@ proc_ file_to_lines(
 {
     file_to_buffer(filename, buffer_cap, buffer, buffer_len);
     
-    to_lines(STRUCT_(sslice_t, .len=*buffer_len, .text=buffer), lines_cap, lines, lines_len);
+    {
+        struct sslice_t text = {.len=*buffer_len, .text=buffer};
+        to_lines(text, lines_cap, lines, lines_len);
+    }
 }
 
 proc_ buffer_to_file(const size_t buffer_cap, char buffer[], size_t *buffer_len, const char *const filename) {  
@@ -622,7 +625,10 @@ fun_ struct mmap_t mmap_open(const char *const filename) {
     void *lpBasePtr = (assert_(hMap), MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0));
     assert_(lpBasePtr);
 
-    return STRUCT_(mmap_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
+    {
+       struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
+       return map;
+    }
 }
 proc_ mmap_close(struct mmap_t mmap_info) {
     UnmapViewOfFile((void*)mmap_info.contents);
@@ -643,7 +649,10 @@ fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     void *lpBasePtr = (assert_(hMap), MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0));
     assert_(lpBasePtr);
 
-    return STRUCT_(mmap_t, .file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr);
+    {
+        struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
+        return map;
+    }
 }
 #else // Unix
 fun_ struct mmap_t mmap_open(const char *const filename) {
@@ -657,7 +666,10 @@ fun_ struct mmap_t mmap_open(const char *const filename) {
     );
     assert_(mapped);
 
-    return STRUCT_(mmap_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
+    {
+        struct mmap_t map = {.file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped};
+        return map;
+    }
 }
 proc_ mmap_close(struct mmap_t mmap_info) {
     munmap(mmap_info.map, mmap_info.filesize);
@@ -674,7 +686,10 @@ fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     );
     assert_(mapped != MAP_FAILED);
 
-    return STRUCT_(mmap_t, .file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped);
+    {
+        struct mmap_t map = {.file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped};
+        return map;
+    }
 }
 #endif // endif _WINDOWS_ else Unix
 
@@ -710,9 +725,9 @@ proc_ join_thread(THREAD_T thread) {
 #else // Unix
 fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_id) {
     int create_thread_success = 0;
-    THREAD_T thread = ZERO_INIT_;
+    THREAD_T thread;
 
-    pthread_attr_t attr = ZERO_INIT_;
+    pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE_);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);

@@ -193,7 +193,7 @@ proc_ run(void) {
         THREAD_T threads[NUM_THREADS];
         size_t threads_len = 0;
 
-        go_threads( chunked_run, NUM_THREADS, CAP_(threads), threads, &threads_len);
+        go_threads( chunked_run, NUM_THREADS, arrsizeof(threads), threads, &threads_len);
         join_threads(threads, threads_len);
         aggregate_results();
     }

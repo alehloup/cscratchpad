@@ -15,7 +15,7 @@ proc_ run(void) {
     struct sslice_t cidades[512] = {{.len=0, .text=0}};
     size_t cidades_len = 0;
     
-    struct mmap_t mcidades = read_cidades(CAP_(cidades), cidades, &cidades_len);
+    struct mmap_t mcidades = read_cidades(arrsizeof(cidades), cidades, &cidades_len);
     
     struct mmap_t mmeasurements = mmap_create_for_write("measurements" N_LINES_STR ".txt", 16ll * N_LINES);
     char *buffer = mmeasurements.contents;

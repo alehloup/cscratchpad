@@ -20,12 +20,12 @@ proc_ run(void) {
     struct mmap_t map = mmap_open("./measurements10k.txt");
     size_t lines_len = 0, cities_len = 0, lens_count[128] = {0};
     
-    buffer_to_lines(map.contents, map.filesize, CAP_(lines), lines, &lines_len);
+    buffer_to_lines(map.contents, map.filesize, arrsizeof(lines), lines, &lines_len);
 
     // Process measurements%SZ.txt putting each city name in the hash table, and each line len in lens_count
     for (size_t i = 0; i < lines_len; ++i) {
         struct sslice_t ss = {char_pos_slice(';', lines[i]), lines[i].text };
-        unsigned int pos = ht_sslice_upsert(ss, CAP_(cities), cities, &cities_len);
+        unsigned int pos = ht_sslice_upsert(ss, arrsizeof(cities), cities, &cities_len);
         (void) pos;
 
         ++lens_count[lines[i].len];
@@ -35,8 +35,8 @@ proc_ run(void) {
         size_t cities_arr_len = 0;
 
         ht_sslice_to_arr(
-            CAP_(cities), cities,
-            CAP_(cities_arr), cities_arr, &cities_arr_len
+            arrsizeof(cities), cities,
+            arrsizeof(cities_arr), cities_arr, &cities_arr_len
         );
 
         qsort(cities_arr, cities_arr_len, sizeof(cities_arr[0]), (cmp_fun_t)ss_cmp);
@@ -50,7 +50,7 @@ proc_ run(void) {
         struct len_count_t counts[64] = {{0, 0}};
         size_t counts_len = 0;
 
-        for (size_t i = 0; i < CAP_(lens_count); ++i) {
+        for (size_t i = 0; i < arrsizeof(lens_count); ++i) {
             if (lens_count[i]) {
                 struct len_count_t cnts = {i, lens_count[i]};
                 counts[counts_len++] = cnts;

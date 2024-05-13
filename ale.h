@@ -33,7 +33,7 @@
 #define SZ_NOT_FOUND_ (size_t)-1 // constant for using as in-band error
 
 // really useful macro for array size at compile time
-#define CAP_(static_array_) (sizeof(static_array_) / sizeof(*(static_array_)))
+#define arrsizeof(static_array_) (sizeof(static_array_) / sizeof(*(static_array_)))
 
 #if defined(__GNUC__) || defined(__clang__)
     #define fun_   __attribute((nonnull, warn_unused_result)) inline static
@@ -794,7 +794,7 @@ fun_ int compile_c(const char *const c_file_c, const char *const flags) {
         " ", c_file, ".c -o ", c_file, ".exe ",  // compile .c to .exe
         "&& echo _ Compiled ", c_file, ".exe! \n", // print that it was compiled
     };
-    buffer_appendcstrs(CAP_(buffer), buffer, &buffer_len, parts, CAP_(parts));
+    buffer_appendcstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
     (void) ptr;
 
@@ -820,7 +820,7 @@ fun_ int compile_run_c(const char *const c_file_c, const char *const flags) {
         "&& echo _ Running ", c_file, ".exe... ", // print that execution will begin
         "&& \"./", c_file, ".exe", "\" " // execute
     };
-    buffer_appendcstrs(CAP_(buffer), buffer, &buffer_len, parts, CAP_(parts));
+    buffer_appendcstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
     (void) ptr;
 

@@ -16,6 +16,7 @@
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
     #include <io.h>
+    #include <intrin.h>
 #else // assume Unix:
     #include <unistd.h>
     #include <pthread.h>
@@ -288,6 +289,28 @@ fun_ size_t least_common_multiple(size_t m, size_t n) { return m / greatest_comm
 // }
 #pragma endregion Math
 
+#pragma region Bits
+fun_ unsigned char highbit(unsigned int uint_) {
+    #if defined(_MSC_VER)
+        unsigned long index;
+        _BitScanReverse(&index, uint_);
+        return (unsigned char) index;
+    #elif defined(__GNUC__) || defined(__clang__)
+        return (unsigned char)((char)(sizeof(int) * 8 - 1) - (char)__builtin_clz(uint_));
+    #else 
+        unsigned int capacity = 1 << 15;
+        unsigned char exp = 15;
+
+        while (capacity > uint_) {
+            capacity = capacity >> 1;
+            --exp;
+        }
+
+        return exp;
+    #endif     
+}
+#pragma endregion Bits
+
 #pragma region Random
 fun_ size_t rnd(size_t seed[1]) {
     size_t sd = *seed = 
@@ -328,32 +351,20 @@ fun_ size_t number_hash(size_t number) {
 #pragma endregion Hashfuns
 
 #pragma region Hashtable
-fun_ unsigned int array_cap_to_exp(const size_t cap) {
-    size_t capacity = 1 << 15;
-    unsigned int exp = 15;
-
-    while (capacity > cap) {
-        capacity = capacity >> 1;
-        --exp;
-    }
-
-    return exp;
-}
-
 // Mask-Step-Index (MSI) lookup. Returns the next index. 
 fun_ unsigned int ht_lookup(
     size_t hash, // 1st hash acts as base location
     unsigned int index, // 2nd "hash" steps over the "list of elements" from base-location
-    unsigned int exp // power-2 exp used as the Hash Table capacity
+    unsigned char exp // power-2 exp used as the Hash Table capacity
 ) {
     unsigned int step = (unsigned int)(hash >> (sizeof(size_t)*8 - exp)) | 1;
     return (((unsigned int)index + step) & ((unsigned int) ((1 << exp) - 1)));
 }
 
 fun_ unsigned int ht_number_lookup(const size_t search_key, const size_t hashtable_cap, size_t hashtable[]) {
-    const unsigned int exp = array_cap_to_exp(hashtable_cap);
+    const unsigned char exp = highbit((unsigned int)hashtable_cap);
     size_t h = number_hash(search_key);
-    unsigned int pos = ht_lookup(h, (unsigned int) h, exp);
+    unsigned int pos = ht_lookup(h, (unsigned int)h, exp);
 
     assert_(search_key != 0);
 
@@ -405,9 +416,9 @@ fun_ unsigned int ht_sslice_lookup(
         const struct sslice_t search_key, 
         const size_t hashtable_cap, struct sslice_t hashtable[]) 
 {
-    unsigned int exp = array_cap_to_exp(hashtable_cap);
+    unsigned char exp = highbit((unsigned int)hashtable_cap);
     size_t h = sslice_hash(search_key);
-    unsigned int pos = ht_lookup(h, (unsigned int) h, exp);
+    unsigned int pos = ht_lookup(h, (unsigned int)h, exp);
 
     assert_(search_key.len != 0);
 

@@ -2,7 +2,7 @@
 
 proc_ test_get_exp(void) {
     int hash_table[1 << 6] = {0};
-    printf("exp: %u\n", array_cap_to_exp(CAP_(hash_table)));
+    printf("exp: %u\n", highbit((unsigned int)CAP_(hash_table)));
 }
 
 proc_ test_hashtable_insertions(void) {

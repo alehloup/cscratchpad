@@ -13,10 +13,14 @@
 #include <time.h>
 #include <locale.h>
 #if defined(_WIN32) || defined(_WIN64)
+    #if defined(_MSC_VER)
+        #pragma warning(disable: 28301) 
+        #pragma warning(disable: 28251)
+    #endif
+    #include <intrin.h>
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
     #include <io.h>
-    #include <intrin.h>
 #else // assume Unix:
     #include <unistd.h>
     #include <pthread.h>
@@ -27,6 +31,9 @@
 
 #pragma region Defines
 #define SZ_NOT_FOUND_ (size_t)-1 // constant for using as in-band error
+
+// really useful macro for array size at compile time
+#define CAP_(static_array_) (sizeof(static_array_) / sizeof(*(static_array_)))
 
 #if defined(__GNUC__) || defined(__clang__)
     #define fun_   __attribute((nonnull, warn_unused_result)) inline static
@@ -46,28 +53,10 @@
 #endif
 #pragma endregion Defines
 
-#pragma region Macros
-#define assert_(cond) (void)(assert(cond))
-
-#define CAP_(static_array_) (\
-    assert_(sizeof(static_array_) != sizeof(&static_array_)), \
-    sizeof(static_array_) / sizeof(*(static_array_)) \
-)
-
-#define NEWCMPF_(fun_name, type, ...) \
-    fun_ int fun_name(const void *avoid, const void *bvoid) { \
-        const type a = *((const type *)avoid); \
-        const type b = *((const type *)bvoid); \
-        return (int) (__VA_ARGS__); \
-    }
-
-// Optimization to use sizeof when its known at compile time
-#define SS_(literal) \
-    string_to_sslice( \
-        sizeof(literal)==sizeof(char*) ? strlen(literal) : sizeof(literal) - 1, \
-        literal \
-    )
-#pragma endregion Macros
+#pragma region Typedefs
+// for casting to void cmp fun
+typedef int (*cmp_fun_t)(const void *, const void *);
+#pragma endregion Typedefs
 
 #pragma region Structs
 // void *file; void *map; const char *const filename; const size_t filesize; char *contents;
@@ -78,8 +67,8 @@ struct sslice_t { size_t len; const char *text; };
 #pragma endregion Structs
 
 #pragma region Strings
-fun_ struct sslice_t string_to_sslice(size_t len, const char *const string) {  
-    struct sslice_t sslice = {.len=len, .text=string};
+fun_ struct sslice_t to_sslice(const char *const cstring) {  
+    struct sslice_t sslice = {.len=strlen(cstring), .text=cstring};
     return sslice;
 }
 
@@ -102,7 +91,7 @@ proc_ set_locale_to_utf8(void) {
 // You need to have set a locale, default locale is C locale. Best to call set_locale_to_utf8
 fun_ int sslice_cmp_locale(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
     char a[512], b[512];
-    assert_(a_text_slice.len < 512 && b_text_slice.len < 512);
+    assert(a_text_slice.len < 512 && b_text_slice.len < 512);
 
     memcpy(a, a_text_slice.text, a_text_slice.len);
     memcpy(b, b_text_slice.text, b_text_slice.len);
@@ -180,7 +169,7 @@ proc_ split(const struct sslice_t text_slice, const char splitter,
     for (pos = char_pos_slice(splitter, cur); pos != SZ_NOT_FOUND_; pos = char_pos_slice(splitter, cur)) {
         struct sslice_t part = {.len=pos, .text=cur.text};
 
-        assert_(*parts_len < parts_cap);
+        assert(*parts_len < parts_cap);
         parts[(*parts_len)++] = part;
         ++pos;
         cur.len -= pos; 
@@ -189,7 +178,7 @@ proc_ split(const struct sslice_t text_slice, const char splitter,
 
     if (cur.len > 0) {
         struct sslice_t part = {.len=cur.len, .text=cur.text};
-        assert_(*parts_len < parts_cap);
+        assert(*parts_len < parts_cap);
         parts[(*parts_len)++] = part;
     }
 }
@@ -229,7 +218,7 @@ proc_ buffer_to_lines(
 proc_ buffer_appendslice(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
     const struct sslice_t src_chars_slice) 
 {
-    assert_((*dst_buffer_len) + src_chars_slice.len < dst_buffer_cap);
+    assert((*dst_buffer_len) + src_chars_slice.len < dst_buffer_cap);
 
     memcpy(&dst_buffer[*dst_buffer_len], src_chars_slice.text, src_chars_slice.len);
 
@@ -241,7 +230,7 @@ const char *const cstr)
 {
     const size_t cstr_len = strlen(cstr);
 
-    assert_((*dst_buffer_len) + cstr_len < dst_buffer_cap);
+    assert((*dst_buffer_len) + cstr_len < dst_buffer_cap);
 
     memcpy(&dst_buffer[*dst_buffer_len], cstr, cstr_len);
 
@@ -291,12 +280,12 @@ fun_ size_t least_common_multiple(size_t m, size_t n) { return m / greatest_comm
 
 #pragma region Bits
 fun_ unsigned char highbit(unsigned int uint_) {
-    #if defined(_MSC_VER)
+    #if defined(__GNUC__) || defined(__clang__)
+        return (unsigned char)((char)(sizeof(int) * 8 - 1) - (char)__builtin_clz(uint_));
+    #elif defined(_MSC_VER)
         unsigned long index;
         _BitScanReverse(&index, uint_);
         return (unsigned char) index;
-    #elif defined(__GNUC__) || defined(__clang__)
-        return (unsigned char)((char)(sizeof(int) * 8 - 1) - (char)__builtin_clz(uint_));
     #else 
         unsigned int capacity = 1 << 15;
         unsigned char exp = 15;
@@ -366,7 +355,7 @@ fun_ unsigned int ht_number_lookup(const size_t search_key, const size_t hashtab
     size_t h = number_hash(search_key);
     unsigned int pos = ht_lookup(h, (unsigned int)h, exp);
 
-    assert_(search_key != 0);
+    assert(search_key != 0);
 
     while (hashtable[pos] != 0 && search_key != hashtable[pos]) {
         pos = ht_lookup(h, pos, exp);
@@ -380,7 +369,7 @@ fun_ unsigned int ht_number_upsert(
         const size_t hashtable_cap, size_t hashtable[], size_t *hashtable_len) 
 {   
     unsigned int pos = (
-        assert_((*hashtable_len) < hashtable_cap),
+        (void)assert((*hashtable_len) < hashtable_cap),
         ht_number_lookup(search_key, hashtable_cap, hashtable)
     );
     (*hashtable_len) += (hashtable[pos] == 0) ? 1 : 0;
@@ -407,7 +396,7 @@ proc_ ht_number_to_arr(
         if (!hashtable[0]) {
             continue;
         }
-        assert_(*array_len < array_cap);
+        assert(*array_len < array_cap);
         array[(*array_len)++] = hashtable[i];
     }
 }
@@ -420,7 +409,7 @@ fun_ unsigned int ht_sslice_lookup(
     size_t h = sslice_hash(search_key);
     unsigned int pos = ht_lookup(h, (unsigned int)h, exp);
 
-    assert_(search_key.len != 0);
+    assert(search_key.len != 0);
 
     while (hashtable[pos].len != 0 && sslice_cmp(search_key, hashtable[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);
@@ -434,7 +423,7 @@ fun_ unsigned int ht_sslice_upsert(
         const size_t hashtable_cap, struct sslice_t hashtable[], size_t *hashtable_len) 
 {
     unsigned int pos = (
-        assert_((*hashtable_len) < hashtable_cap),
+        (void)assert((*hashtable_len) < hashtable_cap),
         ht_sslice_lookup(search_key, hashtable_cap, hashtable)
     );
 
@@ -463,7 +452,7 @@ proc_ ht_sslice_to_arr(
         if (hashtable[i].len == 0) {
             continue;
         }
-        assert_(*array_len < array_cap);
+        assert(*array_len < array_cap);
         array[(*array_len)++] = hashtable[i];
     }
 }
@@ -490,7 +479,8 @@ proc_ ht_sslice_to_arr(
             FILE *f = 0;
             errno_t err = fopen_s(&f, pathname, mode);
             
-            return (assert_(err == 0), f);
+            assert(err == 0);
+            return f;
         }
     #else 
         fun_ FILE * fopen_(const char *pathname, const char *mode) {
@@ -507,7 +497,8 @@ proc_ ht_sslice_to_arr(
     fun_ size_t filelen_(FILE *stream) {
         struct stat file_stat;
         int fstat_success = fstat(fileno(stream), &file_stat) != -1;
-        assert_(fstat_success);
+        
+        assert(fstat_success);
         return (size_t)file_stat.st_size;
     }
     fun_ int ftruncate_(int fd, size_t size) {
@@ -521,8 +512,8 @@ proc_ ht_sslice_to_arr(
 
 proc_ file_truncate(const char *const filename, size_t size) {
     FILE *file = fopen_(filename, "rb+");
-        int res_ftruncate = (assert_(file != NULL), ftruncate_(fileno_(file), size));
-        assert_(res_ftruncate == 0);
+        int res_ftruncate = ((void)assert(file != NULL), ftruncate_(fileno_(file), size));
+        assert(res_ftruncate == 0);
     fclose(file);
 }
 
@@ -536,15 +527,15 @@ fun_ size_t filename_size(const char *const filename) {
 proc_ file_create(const char *const filename, size_t initial_size) {
     FILE *file = fopen_(filename, "wb");
         int fopen_success = (
-            assert_(file && initial_size > 0),
+            (void)assert(file && initial_size > 0),
             fseek_(file, initial_size - 1, SEEK_SET) == 0
         );
 
         size_t written = (
-            assert_(fopen_success),
+            (void)assert(fopen_success),
             fwrite("", 1, 1, file)
         );
-        assert_(written == 1);
+        assert(written == 1);
     fclose(file);
 }
 
@@ -553,13 +544,13 @@ proc_ file_to_buffer(
     const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len) 
 {
     FILE *f = fopen_(filename, "rb");
-        size_t fsize = (assert_(f), filelen_(f));
+        size_t fsize = ((void)assert(f), filelen_(f));
         
         size_t bytesread = (
-            assert_(dst_buffer_cap >= fsize+2),
+            (void)assert(dst_buffer_cap >= fsize+2),
             fread(dst_buffer, 1LL, fsize, f)
         );
-        assert_(bytesread == fsize); 
+        assert(bytesread == fsize); 
         
         dst_buffer[fsize] = '\0';
         *dst_buffer_len = fsize;
@@ -582,22 +573,22 @@ proc_ file_to_lines(
 proc_ buffer_to_file(const size_t buffer_cap, char buffer[], size_t *buffer_len, const char *const filename) {  
     FILE *f = fopen_(filename, "wb");
         size_t bytes_written = (
-            assert_(f && *buffer_len < buffer_cap),
+            (void)assert(f && *buffer_len < buffer_cap),
             fwrite(buffer, 1, *buffer_len, f)
         );
-        assert_(bytes_written == *buffer_len);
+        assert(bytes_written == *buffer_len);
     fclose(f);
 }
 
 proc_ lines_to_file(const size_t lines_cap, struct sslice_t lines[], size_t *lines_len, const char *const filename) {
     FILE *f = fopen_(filename, "wb");
-        assert_(f);
-        assert_(*lines_len < lines_cap);
+        assert(f);
+        assert(*lines_len < lines_cap);
         
         for (size_t i = 0; i < (*lines_len); ++i) {
             size_t bytes_written = fwrite(lines[i].text, 1, lines[i].len, f);
             bytes_written += fwrite("\n", 1, 1, f);
-            assert_(bytes_written == lines[i].len + 1);
+            assert(bytes_written == lines[i].len + 1);
         }
     fclose(f);
 }
@@ -605,11 +596,11 @@ proc_ lines_to_file(const size_t lines_cap, struct sslice_t lines[], size_t *lin
 proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
     FILE *f = fopen_(filename, "wb");
         size_t bytes_written = (
-            assert_(f),
+            (void)assert(f),
             fwrite(text_slice.text, 1, text_slice.len, f)
         );
         bytes_written += fwrite("\n", 1, 1, f);
-        assert_(bytes_written == text_slice.len + 1);
+        assert(bytes_written == text_slice.len + 1);
     fclose(f);
 }
 #pragma endregion Files
@@ -620,7 +611,7 @@ fun_ size_t handle_to_filesize(HANDLE hFile) {
     DWORD dwFileSizeHigh = 0; 
     DWORD dwFileSizeLow = GetFileSize(hFile, &dwFileSizeHigh);
 
-    assert_(dwFileSizeLow != INVALID_FILE_SIZE || GetLastError() == NO_ERROR);
+    assert(dwFileSizeLow != INVALID_FILE_SIZE || GetLastError() == NO_ERROR);
 
     return ((size_t)dwFileSizeHigh << 32) | (size_t)dwFileSizeLow;
 }
@@ -628,12 +619,12 @@ fun_ struct mmap_t mmap_open(const char *const filename) {
     HANDLE hFile = CreateFile(filename,
         GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     
-    size_t fileSize = (assert_(hFile != INVALID_HANDLE_VALUE), handle_to_filesize(hFile));
+    size_t fileSize = ((void)assert(hFile != INVALID_HANDLE_VALUE), handle_to_filesize(hFile));
 
-    HANDLE hMap = (assert_(fileSize > 0), CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0));
+    HANDLE hMap = ((void)assert(fileSize > 0), CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0));
 
-    void *lpBasePtr = (assert_(hMap), MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0));
-    assert_(lpBasePtr);
+    void *lpBasePtr = ((void)assert(hMap), MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0));
+    assert(lpBasePtr);
 
     {
        struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
@@ -650,14 +641,14 @@ fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
         GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     
     size_t fileSize = (
-        assert_(hFile != INVALID_HANDLE_VALUE),
+        (void)assert(hFile != INVALID_HANDLE_VALUE),
         handle_to_filesize(hFile)
     );
 
-    HANDLE hMap = (assert_(fileSize > 0), CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, 0, 0));
+    HANDLE hMap = ((void)assert(fileSize > 0), CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, 0, 0));
 
-    void *lpBasePtr = (assert_(hMap), MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0));
-    assert_(lpBasePtr);
+    void *lpBasePtr = ((void)assert(hMap), MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0));
+    assert(lpBasePtr);
 
     {
         struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
@@ -668,13 +659,13 @@ fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
 fun_ struct mmap_t mmap_open(const char *const filename) {
     FILE *hFile = fopen_(filename, "r");
     
-    size_t fileSize = (assert_(hFile != 0), filelen_(hFile));
+    size_t fileSize = ((void)assert(hFile != 0), filelen_(hFile));
 
     char *mapped = (
-        assert_(fileSize > 0), 
+        (void)assert(fileSize > 0), 
         (char *)mmap(0, fileSize, PROT_READ, MAP_SHARED, fileno(hFile), 0)
     );
-    assert_(mapped);
+    assert(mapped);
 
     {
         struct mmap_t map = {.file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped};
@@ -688,13 +679,13 @@ proc_ mmap_close(struct mmap_t mmap_info) {
 fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
     FILE *hFile = fopen_(filename, "r+");
     
-    size_t fileSize = (assert_(hFile != 0), filelen_(hFile));
+    size_t fileSize = ((void)assert(hFile != 0), filelen_(hFile));
 
     char *mapped = (
-        assert_(fileSize > 0), 
+        (void)assert(fileSize > 0), 
         (char *)mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(hFile), 0)
     );
-    assert_(mapped != MAP_FAILED);
+    assert(mapped != MAP_FAILED);
 
     {
         struct mmap_t map = {.file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped};
@@ -725,7 +716,7 @@ proc_ mmap_write_close_and_truncate(struct mmap_t mmap_info) {
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
 fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_id) {
     THREAD_T thread = CreateThread(0, THREAD_STACK_SIZE_, (LPTHREAD_START_ROUTINE)routine, (void *)(thread_id), 0, 0);
-    assert_(thread != 0);
+    assert(thread != 0);
 
     return thread;
 }
@@ -743,7 +734,7 @@ fun_ THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_id) {
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     create_thread_success = pthread_create(&thread, &attr, routine, (void*)(thread_id)) == 0;
-    assert_(create_thread_success);
+    assert(create_thread_success);
 
     return thread;
 }
@@ -757,7 +748,7 @@ proc_ go_threads(
     const size_t threads_cap, THREAD_T threads[], size_t *threads_len)
 {
     size_t total_after_spawn = *threads_len + number_of_threads_to_spawn;    
-    assert_(total_after_spawn <= threads_cap && total_after_spawn < 8192);
+    assert(total_after_spawn <= threads_cap && total_after_spawn < 8192);
 
     for (size_t i = *threads_len; i < total_after_spawn; ++i) {
         threads[i] = go(routine, (size_t)i);
@@ -765,7 +756,7 @@ proc_ go_threads(
     *threads_len += number_of_threads_to_spawn;
 }
 proc_ join_threads(THREAD_T threads[], const size_t threads_len) {
-    assert_(threads_len <= 8192);
+    assert(threads_len <= 8192);
     
     for (size_t i = 0; i < threads_len; ++i) {
         join_thread(threads[i]);
@@ -776,12 +767,12 @@ proc_ join_threads(THREAD_T threads[], const size_t threads_len) {
 #pragma region System
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
     proc_ sleep_(unsigned int seconds) {
-        assert_(seconds < 60 * 60 * 24 + 1);
+        assert(seconds < 60 * 60 * 24 + 1);
         Sleep(seconds * 1000);
     }
 #else // Unix
     proc_ sleep_(unsigned int seconds) {
-        assert_(seconds < 60 * 60 * 24 + 1);
+        assert(seconds < 60 * 60 * 24 + 1);
         sleep(seconds);
     }
 #endif 
@@ -794,7 +785,7 @@ fun_ int compile_c(const char *const c_file_c, const char *const flags) {
     const size_t c_file_len = char_pos('.', c_file_c) == SZ_NOT_FOUND_ ? strlen(c_file_c) : strlen(c_file_c) - 2;
 
     void *ptr = (
-        assert_(c_file_len < 255),
+        (void)assert(c_file_len < 255),
         memcpy(c_file, c_file_c, c_file_len)
     ); // remove .c
 
@@ -819,7 +810,7 @@ fun_ int compile_run_c(const char *const c_file_c, const char *const flags) {
     const size_t c_file_len = char_pos('.', c_file_c) == SZ_NOT_FOUND_ ? strlen(c_file_c) : strlen(c_file_c) - 2;
 
     void *ptr = (
-        assert_(c_file_len < 255),
+        (void)assert(c_file_len < 255),
         memcpy(c_file, c_file_c, c_file_len)
     ); // remove .c
 

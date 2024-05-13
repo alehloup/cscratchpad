@@ -25,6 +25,7 @@
         "stdarg.h": "c",
         "inttypes.h": "c",
         "math.h": "c",
-        "memory.h": "c"
+        "memory.h": "c",
+        "intrin.h": "c"
     }
 }

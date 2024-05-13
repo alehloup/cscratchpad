@@ -2,13 +2,13 @@
 
 proc_ test_buffers(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    struct sslice_t string = SS_("Alessandro");
+    struct sslice_t string = to_sslice("Alessandro");
     char buff[256];
     size_t buff_len = 0;
 
     buffer_appendslice(CAP_(buff), buff, &buff_len, string);
-    buffer_appendslice(CAP_(buff), buff, &buff_len, SS_(" Luiz"));
-    buffer_appendslice(CAP_(buff), buff, &buff_len, SS_(" Stamatto"));
+    buffer_appendslice(CAP_(buff), buff, &buff_len, to_sslice(" Luiz"));
+    buffer_appendslice(CAP_(buff), buff, &buff_len, to_sslice(" Stamatto"));
 
     printf("%s |%zu| \n", buff, buff_len);
     (void) printed;
@@ -16,7 +16,7 @@ proc_ test_buffers(void) {
 
 proc_ test_to_lines(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    struct sslice_t text = SS_("Alessandro \n Luiz\n Stamatto \n Ferreira");
+    struct sslice_t text = to_sslice("Alessandro \n Luiz\n Stamatto \n Ferreira");
     
     struct sslice_t lines[256];
     size_t lines_len = 0;
@@ -32,7 +32,7 @@ proc_ test_to_lines(void) {
 
 proc_ test_split(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    struct sslice_t text = SS_("Alessandro  Luiz Stamatto  Ferreira");
+    struct sslice_t text = to_sslice("Alessandro  Luiz Stamatto  Ferreira");
 
     struct sslice_t words[256];
     size_t words_len = 0;
@@ -60,10 +60,10 @@ proc_ print_sslicecmp(struct sslice_t a, struct sslice_t b) {
 
 proc_ test_string_eq(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    print_sslicecmp(SS_("Alessandro"), SS_("Alessandr"));
-    print_sslicecmp(SS_("Alessandro"), SS_("Alessandro"));
-    print_sslicecmp(SS_("Sarah"), SS_("Alexi"));
-    print_sslicecmp(SS_("Alex"), SS_("Sara"));
+    print_sslicecmp(to_sslice("Alessandro"), to_sslice("Alessandr"));
+    print_sslicecmp(to_sslice("Alessandro"), to_sslice("Alessandro"));
+    print_sslicecmp(to_sslice("Sarah"), to_sslice("Alexi"));
+    print_sslicecmp(to_sslice("Alex"), to_sslice("Sara"));
     (void) printed;
 }
 
@@ -97,7 +97,7 @@ proc_ test_fileread_to_lines(void) {
 
 proc_ test_filewrite(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    sslice_to_file(SS_("Woa\nTestando arquivos!\n"), "saida.txt");
+    sslice_to_file(to_sslice("Woa\nTestando arquivos!\n"), "saida.txt");
     (void) printed;
 }
 
@@ -114,9 +114,9 @@ proc_ test_subss(void) {
 }
 
 proc_ test_literal_sslice(void) {
-    sslice_print(SS_("Alex"));
-    sslice_print(SS_("Sara"));
-    sslice_print(SS_("1234567"));
+    sslice_print(to_sslice("Alex"));
+    sslice_print(to_sslice("Sara"));
+    sslice_print(to_sslice("1234567"));
 }
 
 int main(void) {

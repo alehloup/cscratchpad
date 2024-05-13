@@ -2,15 +2,22 @@
 
 struct len_count_t { size_t len; size_t count; };
 
-NEWCMPF_(ss_cmp, struct sslice_t, sslice_cmp_locale(a, b))
-NEWCMPF_(lens_cmp, struct len_count_t, b.count - a.count)
+fun_ int ss_cmp(const struct sslice_t *a, const struct sslice_t *b) {
+    return sslice_cmp_locale(*a, *b);
+}
+
+fun_ int lens_cmp(const struct len_count_t *a, const struct len_count_t *b) {
+    return (int)(b->count - a->count); // reverse
+}
 
 static struct sslice_t cities[1<<15] = {{0,0}};
 
+static struct sslice_t lines[32000];
+
+static struct sslice_t cities_arr[1024];
+
 proc_ run(void) {
     struct mmap_t map = mmap_open("./measurements10k.txt");
-    
-    struct sslice_t lines[32000];
     size_t lines_len = 0, cities_len = 0, lens_count[128] = {0};
     
     buffer_to_lines(map.contents, map.filesize, CAP_(lines), lines, &lines_len);
@@ -25,7 +32,6 @@ proc_ run(void) {
     }
 
     { // Print Cities Names sorted 
-        struct sslice_t cities_arr[1024];
         size_t cities_arr_len = 0;
 
         ht_sslice_to_arr(
@@ -33,7 +39,7 @@ proc_ run(void) {
             CAP_(cities_arr), cities_arr, &cities_arr_len
         );
 
-        qsort(cities_arr, cities_arr_len, sizeof(cities_arr[0]), ss_cmp);
+        qsort(cities_arr, cities_arr_len, sizeof(cities_arr[0]), (cmp_fun_t)ss_cmp);
 
         for (size_t i = 0; i < cities_arr_len; ++i) {
             sslice_printend(cities_arr[i], "\n");
@@ -51,7 +57,7 @@ proc_ run(void) {
             }
         }
 
-        qsort(counts, counts_len, sizeof(counts[0]), lens_cmp);
+        qsort(counts, counts_len, sizeof(counts[0]), (cmp_fun_t)lens_cmp);
 
         for (size_t i = 0; i < counts_len; ++i) {
             printf("%zu: %zu, ", counts[i].len, counts[i].count);

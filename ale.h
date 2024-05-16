@@ -1,5 +1,10 @@
 #pragma once
 
+// Cancels Name Mangling when compiled as C++
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma region Configure
     #define THREAD_STACK_SIZE_ 64 * 1024
 #pragma endregion Configure
@@ -844,3 +849,7 @@ proc_ stop_benchclock(void) {
 
 #define BENCH_MAIN_ int main(void) {start_benchclock(); run(); stop_benchclock(); return 0;}
 #pragma endregion Benchmark
+
+#ifdef __cplusplus
+} // closes extern C, Cancels Name Mangling when compiled as C++
+#endif

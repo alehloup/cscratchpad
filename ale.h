@@ -632,8 +632,8 @@ fun_ struct mmap_t mmap_open(const char *const filename) {
     assert(lpBasePtr);
 
     {
-       struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
-       return map;
+        struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
+        return map;
     }
 }
 proc_ mmap_close(struct mmap_t mmap_info) {

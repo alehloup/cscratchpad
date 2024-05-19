@@ -23,7 +23,8 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 typedef struct City { const char* name; size_t count; long long int sum; long long int min; long long int max; } City;
 static City thread_cities[NUM_THREADS][TABLE_SIZE];
 
-static struct mmap_t *mmap_info = 0; // will store the mmaped file
+static char * contents = 0; // will be the mmap buffer
+static size_t contents_len = 0; // will be the mmap buffer len
 
 fun_ City * my_cities(unsigned int thread_idx) {
     City* cities = thread_cities[thread_idx];
@@ -45,14 +46,14 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
     
     City *cities = my_cities(thread_idx);
 
-    char *data = mmap_info->contents;
+    char *data = contents;
 
     /* Adjusts the start and end indexes based on thread_idx */
-    size_t i = 0, len = mmap_info->filesize - 1;
+    size_t i = 0, len = contents_len - 1;
     const char *cur = 0, *end = 0;
 
     if (MULTI_THREAD) {
-        const size_t slice_size = (size_t) mmap_info->filesize / NUM_THREADS; // size per thread
+        const size_t slice_size = (size_t) contents_len / NUM_THREADS; // size per thread
         
         i = (slice_size * ((size_t) thread_idx));
         i = i > 0 ? i - 1 : 0;
@@ -62,7 +63,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
         while (data[len] != '\n') ++len;
 
         if (thread_idx == NUM_THREADS - 1) {
-            len = mmap_info->filesize - 1; // last thread gets the excedent
+            len = contents_len - 1; // last thread gets the excedent
         }
     }
 
@@ -76,7 +77,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
     i += 1; // skip to second letter of next line
 
     assert(i < len);
-    assert(len < mmap_info->filesize);
+    assert(len < contents_len);
 
     cur = &data[i]; 
     end = &data[len];
@@ -181,11 +182,8 @@ proc_ print_results(void) {
 }
 
 proc_ run(void) {
-    int printed = printf("\n Running 1BRC on file: %s\n", FILEPATH);
-    struct mmap_t mmap_info_local = mmap_open(FILEPATH);
-    mmap_info = &mmap_info_local;
-
-    (void) printed;
+    printf("\n Running 1BRC on file: %s\n", FILEPATH);
+    contents = mmap_open(FILEPATH, "r", &contents_len);
     
     if (SINGLE_THREAD) {
         chunked_run(0);

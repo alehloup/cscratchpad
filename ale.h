@@ -479,8 +479,9 @@ proc_ ht_sslice_to_arr(
     fun_ int fseek_(FILE *stream, size_t offset, int whence) {
         return _fseeki64(stream, (long long)offset, whence);
     }
-    fun_ int ftruncate_(FILE *stream, size_t size) {
-        return _chsize_s(fileno_(stream), (long long)size);
+    proc_ ftruncate_(FILE *stream, size_t size) {
+        int success = _chsize_s(fileno_(stream), (long long int)size) == 0;
+        assert(success);
     }
 
     #if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
@@ -510,8 +511,9 @@ proc_ ht_sslice_to_arr(
         assert(fstat_success);
         return (size_t)file_stat.st_size;
     }
-    fun_ int ftruncate_(FILE *stream, size_t size) {
-        return ftruncate(fileno_(stream), (off_t)size);
+    proc_ ftruncate_(FILE *stream, size_t size) {
+        int success = ftruncate(fileno_(stream), (off_t)size) == 0;
+        assert(success);
     }
 
     fun_ FILE * fopen_(const char *pathname, const char *mode) {
@@ -609,7 +611,7 @@ fun_ char * mmap_open(const char *const filename, const char *const mode, size_t
     int readit = mode[0] == 'r' && mode[1] != '+';
 
     FILE *file = fopen_(filename, mode);
-    {
+    { // File opened
         size_t fileSize = filelen_(file);
         assert(fileSize > 0);
 
@@ -619,17 +621,20 @@ fun_ char * mmap_open(const char *const filename, const char *const mode, size_t
             readit ? PAGE_READONLY : PAGE_READWRITE, 
             0, 0, 0
         );
-        assert(mmap_handle);
+        { // FileMapping handle opened
+            assert(mmap_handle);
 
-        out_mmap_buffer = (char *)MapViewOfFile(
-            mmap_handle, 
-            FILE_MAP_READ | (readit ? 0 : FILE_MAP_WRITE),
-            0, 0, 0
-        );
-        assert(out_mmap_buffer);
+            out_mmap_buffer = (char *)MapViewOfFile(
+                mmap_handle, 
+                FILE_MAP_READ | (readit ? 0 : FILE_MAP_WRITE),
+                0, 0, 0
+            );
+            assert(out_mmap_buffer);
+        } // Closing FileMapping handle:
+        CloseHandle(mmap_handle);
 
         *out_buffer_len = fileSize;
-    }
+    } // Closing file:
     fclose(file);
 
     return out_mmap_buffer;
@@ -645,7 +650,7 @@ fun_ char * mmap_open(const char *const filename, const char *const mode, size_t
     int readit = mode[0] == 'r' && mode[1] != '+';
     
     FILE *file = fopen_(filename, mode);
-    {
+    { // File opened
         size_t fileSize = filelen_(file);
         assert(fileSize);
         *out_buffer_len = fileSize;
@@ -659,7 +664,7 @@ fun_ char * mmap_open(const char *const filename, const char *const mode, size_t
             0
         );
         assert(out_mmap_buffer);
-    }
+    } // Closing file:
     fclose(file);
 
     return out_mmap_buffer;

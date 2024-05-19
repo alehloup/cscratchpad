@@ -1,13 +1,12 @@
 #pragma once
 
+//configure
+#define THREAD_STACK_SIZE_ 64 * 1024
+
 // Cancels Name Mangling when compiled as C++
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#pragma region Configure
-    #define THREAD_STACK_SIZE_ 64 * 1024
-#pragma endregion Configure
 
 #pragma region Includes
 #include <assert.h>
@@ -59,19 +58,16 @@ extern "C" {
 #pragma endregion Defines
 
 #pragma region Typedefs
+typedef void * HANDLE_;
+
 // for casting to void cmp fun
 typedef int (*cmp_fun_t)(const void *, const void *);
 #pragma endregion Typedefs
 
-#pragma region Structs
-// void *file; void *map; const char *const filename; const size_t filesize; char *contents;
-struct mmap_t { void *file; void *map; const char *const filename; const size_t filesize; char *contents; };
-
+#pragma region Strings
 // size_t len; const char *text;
 struct sslice_t { size_t len; const char *text; };
-#pragma endregion Structs
 
-#pragma region Strings
 fun_ struct sslice_t to_sslice(const char *const cstring) {  
     struct sslice_t sslice = {.len=strlen(cstring), .text=cstring};
     return sslice;
@@ -248,6 +244,14 @@ proc_ buffer_appendcstrs(const size_t dst_buffer_cap, char dst_buffer[], size_t 
     for (size_t i = 0; i < cstrs_len; ++i) {
         buffer_appendcstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
     }
+}
+
+fun_ size_t size_without_nullbytes(const char *const buffer, size_t current_size) {
+    while (current_size > 0 && buffer[--current_size] == '\0') {
+        /* Empty Body */
+    }
+    
+    return ++current_size;
 }
 #pragma endregion Strings
 
@@ -475,8 +479,8 @@ proc_ ht_sslice_to_arr(
     fun_ int fseek_(FILE *stream, size_t offset, int whence) {
         return _fseeki64(stream, (long long)offset, whence);
     }
-    fun_ int ftruncate_(int fd, size_t size) {
-        return _chsize_s(fd, (long long)size);
+    fun_ int ftruncate_(FILE *stream, size_t size) {
+        return _chsize_s(fileno_(stream), (long long)size);
     }
 
     #if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
@@ -506,28 +510,14 @@ proc_ ht_sslice_to_arr(
         assert(fstat_success);
         return (size_t)file_stat.st_size;
     }
-    fun_ int ftruncate_(int fd, size_t size) {
-        return ftruncate(fd, (off_t)size);
+    fun_ int ftruncate_(FILE *stream, size_t size) {
+        return ftruncate(fileno_(stream), (off_t)size);
     }
 
     fun_ FILE * fopen_(const char *pathname, const char *mode) {
         return fopen(pathname, mode);
     }
 #endif
-
-proc_ file_truncate(const char *const filename, size_t size) {
-    FILE *file = fopen_(filename, "rb+");
-        int res_ftruncate = ((void)assert(file != NULL), ftruncate_(fileno_(file), size));
-        assert(res_ftruncate == 0);
-    fclose(file);
-}
-
-fun_ size_t filename_size(const char *const filename) {
-    FILE *f = fopen_(filename, "rb");
-        size_t fsize = filelen_(f);
-    fclose(f);
-    return fsize;
-}
 
 proc_ file_create(const char *const filename, size_t initial_size) {
     FILE *file = fopen_(filename, "wb");
@@ -612,109 +602,53 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
 
 #pragma region Mmap
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
-fun_ size_t handle_to_filesize(HANDLE hFile) {
-    DWORD dwFileSizeHigh = 0; 
-    DWORD dwFileSizeLow = GetFileSize(hFile, &dwFileSizeHigh);
+fun_ char * mmap_open(FILE *file, const char *const mode, size_t *out_buffer_len) {
+    HANDLE_ mmap_handle;
+    char * out_mmap_buffer;
 
-    assert(dwFileSizeLow != INVALID_FILE_SIZE || GetLastError() == NO_ERROR);
+    int readit = mode[0] == 'r' && mode[1] != '+';
 
-    return ((size_t)dwFileSizeHigh << 32) | (size_t)dwFileSizeLow;
-}
-fun_ struct mmap_t mmap_open(const char *const filename) {
-    HANDLE hFile = CreateFile(filename,
-        GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-    
-    size_t fileSize = ((void)assert(hFile != INVALID_HANDLE_VALUE), handle_to_filesize(hFile));
+    size_t fileSize = filelen_(file);
+    assert(fileSize > 0);
 
-    HANDLE hMap = ((void)assert(fileSize > 0), CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0));
-
-    void *lpBasePtr = ((void)assert(hMap), MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0));
-    assert(lpBasePtr);
-
-    {
-        struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
-        return map;
-    }
-}
-proc_ mmap_close(struct mmap_t mmap_info) {
-    UnmapViewOfFile((void*)mmap_info.contents);
-    CloseHandle(mmap_info.map);
-    CloseHandle(mmap_info.file);
-}
-fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
-    HANDLE hFile = CreateFile(filename,
-        GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-    
-    size_t fileSize = (
-        (void)assert(hFile != INVALID_HANDLE_VALUE),
-        handle_to_filesize(hFile)
+    mmap_handle = CreateFileMapping(
+        (HANDLE_)(size_t)_get_osfhandle(fileno_(file)),
+        0, 
+        readit ? PAGE_READONLY : PAGE_READWRITE, 
+        0, 0, 0
     );
+    assert(mmap_handle);
 
-    HANDLE hMap = ((void)assert(fileSize > 0), CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, 0, 0));
+    out_mmap_buffer = (char *)MapViewOfFile(mmap_handle, FILE_MAP_READ | (readit ? 0 : FILE_MAP_WRITE), 0, 0, 0);
+    assert(out_mmap_buffer);
 
-    void *lpBasePtr = ((void)assert(hMap), MapViewOfFile(hMap, FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0));
-    assert(lpBasePtr);
+    *out_buffer_len = fileSize;
 
-    {
-        struct mmap_t map = {.file=hFile, .map=hMap, .filename=filename, .filesize=fileSize, .contents=(char*)lpBasePtr};
-        return map;
-    }
+    return out_mmap_buffer;
+}
+proc_ mmap_close(char *mmap_buffer, size_t mmap_buffer_size) {
+    assert(mmap_buffer_size);
+    UnmapViewOfFile((void *)mmap_buffer);
 }
 #else // Unix
-fun_ struct mmap_t mmap_open(const char *const filename) {
-    FILE *hFile = fopen_(filename, "r");
+fun_ char * mmap_open(FILE *file, const char *const mode, size_t *out_buffer_len) {
+    char * out_mmap_buffer;
+
+    int readit = mode[0] == 'r' && mode[1] != '+';
     
-    size_t fileSize = ((void)assert(hFile != 0), filelen_(hFile));
+    size_t fileSize = filelen_(file);
+    assert(fileSize);
+    *out_buffer_len = fileSize;
 
-    char *mapped = (
-        (void)assert(fileSize > 0), 
-        (char *)mmap(0, fileSize, PROT_READ, MAP_SHARED, fileno(hFile), 0)
-    );
-    assert(mapped);
+    out_mmap_buffer = (char *)mmap(0, fileSize, PROT_READ | (readit ? 0 : PROT_WRITE), MAP_SHARED, fileno_(file), 0);
+    assert(out_mmap_buffer);
 
-    {
-        struct mmap_t map = {.file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped};
-        return map;
-    }
+    return out_mmap_buffer;
 }
-proc_ mmap_close(struct mmap_t mmap_info) {
-    munmap(mmap_info.map, mmap_info.filesize);
-    fclose((FILE *) mmap_info.file);
-}
-fun_ struct mmap_t mmap_open_for_write(const char *const filename) {
-    FILE *hFile = fopen_(filename, "r+");
-    
-    size_t fileSize = ((void)assert(hFile != 0), filelen_(hFile));
-
-    char *mapped = (
-        (void)assert(fileSize > 0), 
-        (char *)mmap(0, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(hFile), 0)
-    );
-    assert(mapped != MAP_FAILED);
-
-    {
-        struct mmap_t map = {.file=hFile, .map=mapped, .filename=filename, .filesize=fileSize, .contents=mapped};
-        return map;
-    }
+proc_ mmap_close(char *mmap_buffer, size_t mmap_buffer_size) {
+    munmap(mmap_buffer, mmap_buffer_size);
 }
 #endif // endif _WINDOWS_ else Unix
-
-fun_ struct mmap_t mmap_create_for_write(const char *const filename, size_t size_to_create) {
-    file_create(filename, size_to_create);
-    return mmap_open_for_write(filename);
-}
-proc_ mmap_write_close_and_truncate(struct mmap_t mmap_info) {
-    size_t filesize = mmap_info.filesize;
-    char *contents = mmap_info.contents;
-    while (filesize > 0 && contents[--filesize] == '\0') {
-        /* Empty Body */
-    }
-    ++filesize;
-
-    mmap_close(mmap_info);
-    file_truncate(mmap_info.filename, filesize);
-}
-
 #pragma endregion Mmap
 
 #pragma region Threads

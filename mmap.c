@@ -1,16 +1,19 @@
 #include "ale.h"
 
 proc_ run(void) {
+    size_t contents_len = 0;
 
-    struct mmap_t mmap_info = mmap_open("measurements10k.txt");
+    FILE *f = fopen_("measurements10k.txt", "r");
+    char *contents = mmap_open(f, "r", &contents_len);
     {
-        printf("\n%zu\n", mmap_info.filesize);
+        printf("\n%zu\n", contents_len);
 
-        printf("%s\n", &mmap_info.contents[mmap_info.filesize - 255]);
+        printf("%s\n", &contents[contents_len - 255]);
+
+        printf("len: %zu\n", filelen_(f));
     }
-    mmap_close(mmap_info);
-
-    printf("len: %zu\n", filename_size("measurements10k.txt"));
+    mmap_close(contents, contents_len);
+    fclose(f);
 
     printf("\nDone\n");
 }

@@ -3,17 +3,15 @@
 proc_ run(void) {
     size_t contents_len = 0;
 
-    FILE *f = fopen_("measurements10k.txt", "r");
-    char *contents = mmap_open(f, "r", &contents_len);
+    char *contents = mmap_open("measurements10k.txt", "r", &contents_len);
     {
         printf("\n%zu\n", contents_len);
 
         printf("%s\n", &contents[contents_len - 255]);
 
-        printf("len: %zu\n", filelen_(f));
+        printf("len: %zu\n", contents_len);
     }
     mmap_close(contents, contents_len);
-    fclose(f);
 
     printf("\nDone\n");
 }

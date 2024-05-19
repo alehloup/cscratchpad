@@ -209,7 +209,7 @@ fun_ struct sslice_t next_line(struct sslice_t *text_iterator) {
 }
 
 proc_ buffer_to_lines(
-    char buffer[], const size_t buffer_len, 
+    const char buffer[], const size_t buffer_len, 
     const size_t lines_cap, struct sslice_t lines[], size_t *lines_len) 
 {   
     struct sslice_t text = {.len=buffer_len, .text=buffer};
@@ -602,27 +602,35 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
 
 #pragma region Mmap
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
-fun_ char * mmap_open(FILE *file, const char *const mode, size_t *out_buffer_len) {
+fun_ char * mmap_open(const char *const filename, const char *const mode, size_t *out_buffer_len) {
     HANDLE_ mmap_handle;
     char * out_mmap_buffer;
 
     int readit = mode[0] == 'r' && mode[1] != '+';
 
-    size_t fileSize = filelen_(file);
-    assert(fileSize > 0);
+    FILE *file = fopen_(filename, mode);
+    {
+        size_t fileSize = filelen_(file);
+        assert(fileSize > 0);
 
-    mmap_handle = CreateFileMapping(
-        (HANDLE_)(size_t)_get_osfhandle(fileno_(file)),
-        0, 
-        readit ? PAGE_READONLY : PAGE_READWRITE, 
-        0, 0, 0
-    );
-    assert(mmap_handle);
+        mmap_handle = CreateFileMapping(
+            (HANDLE_)(size_t)_get_osfhandle(fileno_(file)),
+            0, 
+            readit ? PAGE_READONLY : PAGE_READWRITE, 
+            0, 0, 0
+        );
+        assert(mmap_handle);
 
-    out_mmap_buffer = (char *)MapViewOfFile(mmap_handle, FILE_MAP_READ | (readit ? 0 : FILE_MAP_WRITE), 0, 0, 0);
-    assert(out_mmap_buffer);
+        out_mmap_buffer = (char *)MapViewOfFile(
+            mmap_handle, 
+            FILE_MAP_READ | (readit ? 0 : FILE_MAP_WRITE),
+            0, 0, 0
+        );
+        assert(out_mmap_buffer);
 
-    *out_buffer_len = fileSize;
+        *out_buffer_len = fileSize;
+    }
+    fclose(file);
 
     return out_mmap_buffer;
 }
@@ -631,17 +639,28 @@ proc_ mmap_close(char *mmap_buffer, size_t mmap_buffer_size) {
     UnmapViewOfFile((void *)mmap_buffer);
 }
 #else // Unix
-fun_ char * mmap_open(FILE *file, const char *const mode, size_t *out_buffer_len) {
+fun_ char * mmap_open(const char *const filename, const char *const mode, size_t *out_buffer_len) {
     char * out_mmap_buffer;
 
     int readit = mode[0] == 'r' && mode[1] != '+';
     
-    size_t fileSize = filelen_(file);
-    assert(fileSize);
-    *out_buffer_len = fileSize;
+    FILE *file = fopen_(filename, mode);
+    {
+        size_t fileSize = filelen_(file);
+        assert(fileSize);
+        *out_buffer_len = fileSize;
 
-    out_mmap_buffer = (char *)mmap(0, fileSize, PROT_READ | (readit ? 0 : PROT_WRITE), MAP_SHARED, fileno_(file), 0);
-    assert(out_mmap_buffer);
+        out_mmap_buffer = (char *)mmap(
+            0, 
+            fileSize, 
+            PROT_READ | (readit ? 0 : PROT_WRITE), 
+            MAP_SHARED, 
+            fileno_(file),
+            0
+        );
+        assert(out_mmap_buffer);
+    }
+    fclose(file);
 
     return out_mmap_buffer;
 }

@@ -11,11 +11,18 @@ fun_ struct mmap_t read_cidades(const size_t cap, struct sslice_t cidades[], siz
     return m;
 } 
 
+#define nmax_cidades 512
 proc_ run(void) {
-    struct sslice_t cidades[512] = {{.len=0, .text=0}};
-    size_t cidades_len = 0;
+    struct sslice_t cidades[nmax_cidades] = {{.len=0, .text=0}};
+    size_t cidades_len = 0, mmap_cidades_len = 0;
     
-    struct mmap_t mcidades = read_cidades(arrsizeof(cidades), cidades, &cidades_len);
+    FILE *arq_cidades = fopen_("r", "cidades.txt");
+    char *mmap_cidades = mmap_open(arq_cidades, "r", &mmap_cidades_len);
+    
+    buffer_to_lines(
+        mmap_cidades, mmap_cidades_len, 
+        nmax_cidades, cidades, &cidades_len
+    );
     
     struct mmap_t mmeasurements = mmap_create_for_write("measurements" N_LINES_STR ".txt", 16ll * N_LINES);
     char *buffer = mmeasurements.contents;
@@ -68,7 +75,9 @@ proc_ run(void) {
     }
     printf("size: %zu\n", idx);
 
-    mmap_close(mcidades);
+    mmap_close(mmap_cidades, mmap_cidades_len);
+    fclose(arq_cidades);
+
     mmap_write_close_and_truncate(mmeasurements);
 }
 

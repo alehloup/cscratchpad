@@ -40,7 +40,7 @@ static inline City * my_cities(unsigned int thread_idx) {
 }
 
 // Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
-routine_ chunked_run(void* threadidx /* thread_idx */) {
+static inline void * chunked_run(void *threadidx /* thread_idx */) {
     unsigned int thread_idx = (unsigned int)(size_t) threadidx;
     unsigned int line_num = 0;
     

@@ -42,21 +42,6 @@ extern "C" { // Cancels Name Mangling when compiled as C++
 #pragma endregion Includes
 
 
-#pragma region Defines
-//
-#define routine_ inline static ROURET_T
-
-#if defined(_WINDOWS_)
-    #define ROURET_T long unsigned int
-    #define THREAD_T HANDLE
-#else 
-    #define ROURET_T void *
-    #define THREAD_T pthread_t
-#endif
-//
-#pragma endregion Defines
-
-
 #pragma region Strings
 //
 // struct lenstr_t { size_t len; const char *str; };
@@ -694,9 +679,12 @@ static inline void mmap_close(char *mmap_buffer, size_t mmap_buffer_size) {
 
 #pragma region Threads
 //
-#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
-static inline THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_id) {
-    THREAD_T thread = CreateThread(0, THREAD_STACK_SIZE_, (LPTHREAD_START_ROUTINE)routine, (void *)(thread_id), 0, 0);
+#if defined(_WINDOWS_)
+    // is _WINDOWS_
+#define THREAD_T HANDLE
+
+static inline THREAD_T go(void * (*routine)(void *thread_idx), size_t thread_id) {
+    THREAD_T thread = CreateThread(0, THREAD_STACK_SIZE_, (LPTHREAD_START_ROUTINE)(size_t)routine, (void *)(thread_id), 0, 0);
     assert(thread != 0);
 
     return thread;
@@ -704,8 +692,12 @@ static inline THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_i
 static inline void join_thread(THREAD_T thread) {
     WaitForSingleObject(thread, INFINITE);
 }
-#else // Unix
-static inline THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_id) {
+    //
+#else 
+    // is Unix
+#define THREAD_T pthread_t
+
+static inline THREAD_T go(void * (*routine)(void *thread_idx), size_t thread_id) {
     int create_thread_success = 0;
     THREAD_T thread;
 
@@ -714,7 +706,7 @@ static inline THREAD_T go(ROURET_T (*routine)(void *thread_idx), size_t thread_i
     pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE_);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    create_thread_success = pthread_create(&thread, &attr, routine, (void*)(thread_id)) == 0;
+    create_thread_success = pthread_create(&thread, &attr, routine, (void *)(thread_id)) == 0;
     assert(create_thread_success);
 
     return thread;
@@ -725,7 +717,7 @@ static inline void join_thread(THREAD_T thread) {
 #endif // endif _WINDOWS_ else Unix
 
 static inline void go_threads(
-    ROURET_T (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, 
+    void * (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, 
     const size_t threads_cap, THREAD_T threads[], size_t *threads_len)
 {
     size_t total_after_spawn = *threads_len + number_of_threads_to_spawn;    

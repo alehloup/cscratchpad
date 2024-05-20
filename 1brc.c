@@ -20,17 +20,17 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 
 #define TABLE_SIZE 6570
 
-typedef struct City { const char* name; size_t count; long long int sum; long long int min; long long int max; } City;
-static City thread_cities[NUM_THREADS][TABLE_SIZE];
+struct City { const char* name; size_t count; long long int sum; long long int min; long long int max; };
+static struct City thread_cities[NUM_THREADS][TABLE_SIZE];
 
 static char * contents = 0; // will be the mmap buffer
 static size_t contents_len = 0; // will be the mmap buffer len
 
-static inline City * my_cities(unsigned int thread_idx) {
-    City* cities = thread_cities[thread_idx];
+static inline struct City * my_cities(unsigned int thread_idx) {
+    struct City* cities = thread_cities[thread_idx];
 
     for (unsigned int i = 0; i < ncity; ++i) {
-        City *city = &cities[hash_order[i]];
+        struct City *city = &cities[hash_order[i]];
         city->name = city_names[i];
         city->min = 1000;
         city->max = -1000;
@@ -44,7 +44,7 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     unsigned int thread_idx = (unsigned int)(size_t) threadidx;
     unsigned int line_num = 0;
     
-    City *cities = my_cities(thread_idx);
+    struct City *cities = my_cities(thread_idx);
 
     char *data = contents;
 
@@ -88,7 +88,7 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     while(cur < end) {
         // Each iteration we start at the second letter of a line
 
-        City *city = 0; long long int measure = 1;
+        struct City *city = 0; long long int measure = 1;
 
         // Advance the i'ndex, building the city name[1:9] hash at the same time
         size_t sum_hash = 0, city_hash = 0;
@@ -148,14 +148,14 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
 }
 
 static inline void aggregate_results(void) {
-    City* thread0 = thread_cities[0];
+    struct City* thread0 = thread_cities[0];
 
     for (unsigned int i_thread = 1; i_thread < NUM_THREADS; ++i_thread) {
-        City* thread_cur = thread_cities[i_thread];
+        struct City* thread_cur = thread_cities[i_thread];
 
         for (unsigned int i = 0; i < ncity; ++i) {
-            City *dst_city = &thread0[hash_order[i]];
-            City *src_city = &thread_cur[hash_order[i]];
+            struct City *dst_city = &thread0[hash_order[i]];
+            struct City *src_city = &thread_cur[hash_order[i]];
 
             dst_city->count += src_city->count;
             dst_city->sum   += src_city->sum;
@@ -172,7 +172,7 @@ static inline void aggregate_results(void) {
 
 static inline void print_results(void) {
     for (unsigned int i = 0; i < ncity; ++i) {
-        City *city = &thread_cities[0][hash_order[i]];
+        struct City *city = &thread_cities[0][hash_order[i]];
         printf("%s  #%zu  $%.1f  @%.1f  [%.1f  %.1f]\n", city->name, city->count, 
             /*$sum*/ (double)city->sum / 10.0,
             /*@avg*/ ((double)city->sum / ((double)city->count*10)),

@@ -54,7 +54,7 @@ static const char *const flags_clang =
     CLANG_ACCEPT_C_ARRAY_PLS
 ;
 
-proc_ delete_artifacts(void) {
+static inline void delete_artifacts(void) {
     int discard = printf("\n===== Delete Artifacts =====\n");
     discard = printf("rm *.exe *.out *.obj *.nativecodeanalysis.xml\n");
     discard = system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");

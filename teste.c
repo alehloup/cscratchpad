@@ -1,5 +1,12 @@
-#include "ale.h"
+#include <stdio.h>
+
+struct woa {int x;};
+
+static inline int f(struct woa * stc) {
+    return stc->x;
+}
 
 int main(void) {
-    return 0;
+    struct woa stc = {0};
+    printf("Woa: %d\n", f(&stc));
 }

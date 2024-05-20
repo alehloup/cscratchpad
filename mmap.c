@@ -1,6 +1,6 @@
 #include "ale.h"
 
-proc_ run(void) {
+static inline void run(void) {
     size_t contents_len = 0;
 
     char *contents = mmap_open("measurements10k.txt", "r", &contents_len);

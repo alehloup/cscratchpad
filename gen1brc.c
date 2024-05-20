@@ -11,7 +11,7 @@
 
 static size_t seed = 41635984;
 
-proc_ run(void) {
+static inline void run(void) {
     struct lenstr_t cidades[nmax_cidades] = {{0, 0}};
     size_t idx = 0, cidades_len = 0, mmap_cidades_len = 0, mmap_measurements_len = 0;
 

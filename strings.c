@@ -1,6 +1,6 @@
 #include "ale.h"
 
-proc_ test_buffers(void) {
+static inline void test_buffers(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t string = to_lenstr("Alessandro");
     char buff[256];
@@ -14,7 +14,7 @@ proc_ test_buffers(void) {
     (void) printed;
 }
 
-proc_ test_to_lines(void) {
+static inline void test_to_lines(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t text = to_lenstr("Alessandro \n Luiz\n Stamatto \n Ferreira");
     
@@ -30,7 +30,7 @@ proc_ test_to_lines(void) {
     (void) printed;
 }
 
-proc_ test_split(void) {
+static inline void test_split(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t text = to_lenstr("Alessandro  Luiz Stamatto  Ferreira");
 
@@ -46,7 +46,7 @@ proc_ test_split(void) {
     (void) printed;
 }
 
-proc_ print_lenstrcmp(struct lenstr_t a, struct lenstr_t b) {
+static inline void print_lenstrcmp(struct lenstr_t a, struct lenstr_t b) {
     int printed = printf("\n TEST %s \n", __func__);
     printf("lenstrcmp, ");
     
@@ -58,7 +58,7 @@ proc_ print_lenstrcmp(struct lenstr_t a, struct lenstr_t b) {
     (void) printed;
 }
 
-proc_ test_string_eq(void) {
+static inline void test_string_eq(void) {
     int printed = printf("\n TEST %s \n", __func__);
     print_lenstrcmp(to_lenstr("Alessandro"), to_lenstr("Alessandr"));
     print_lenstrcmp(to_lenstr("Alessandro"), to_lenstr("Alessandro"));
@@ -67,7 +67,7 @@ proc_ test_string_eq(void) {
     (void) printed;
 }
 
-proc_ test_fileread(void) {
+static inline void test_fileread(void) {
     int printed = printf("\n TEST %s \n", __func__);
     char b[2048];
     size_t b_len = 0;
@@ -77,7 +77,7 @@ proc_ test_fileread(void) {
     (void) printed;
 }
 
-proc_ test_fileread_to_lines(void) {
+static inline void test_fileread_to_lines(void) {
     int printed = printf("\n TEST %s \n", __func__);
     char b[2048];
     size_t b_len = 0;
@@ -95,13 +95,13 @@ proc_ test_fileread_to_lines(void) {
     (void) printed;
 }
 
-proc_ test_filewrite(void) {
+static inline void test_filewrite(void) {
     int printed = printf("\n TEST %s \n", __func__);
     lenstr_to_file(to_lenstr("Woa\nTestando arquivos!\n"), "saida.txt");
     (void) printed;
 }
 
-proc_ test_subss(void) {
+static inline void test_subss(void) {
     int printed = printf("\n TEST %s \n", __func__);
     size_t end = arrsizeof("Alessandro");
     struct lenstr_t nome = {end - 1, "Alessandro"};
@@ -113,7 +113,7 @@ proc_ test_subss(void) {
     (void) printed;
 }
 
-proc_ test_literal_lenstr(void) {
+static inline void test_literal_lenstr(void) {
     lenstr_print(to_lenstr("Alex"));
     lenstr_print(to_lenstr("Sara"));
     lenstr_print(to_lenstr("1234567"));

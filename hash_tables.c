@@ -1,11 +1,11 @@
 #include "ale.h"
 
-proc_ test_get_exp(void) {
+static inline void test_get_exp(void) {
     int hash_table[1 << 6] = {0};
     printf("exp: %u\n", highbit((unsigned int)arrsizeof(hash_table)));
 }
 
-proc_ test_hashtable_insertions(void) {
+static inline void test_hashtable_insertions(void) {
     unsigned int pos = 0;
     struct lenstr_t keys[1 << 6] = {{0, 0}};
     size_t keys_len = 0;

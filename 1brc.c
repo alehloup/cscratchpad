@@ -26,7 +26,7 @@ static City thread_cities[NUM_THREADS][TABLE_SIZE];
 static char * contents = 0; // will be the mmap buffer
 static size_t contents_len = 0; // will be the mmap buffer len
 
-fun_ City * my_cities(unsigned int thread_idx) {
+static inline City * my_cities(unsigned int thread_idx) {
     City* cities = thread_cities[thread_idx];
 
     for (unsigned int i = 0; i < ncity; ++i) {
@@ -147,7 +147,7 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
     return 0;
 }
 
-proc_ aggregate_results(void) {
+static inline void aggregate_results(void) {
     City* thread0 = thread_cities[0];
 
     for (unsigned int i_thread = 1; i_thread < NUM_THREADS; ++i_thread) {
@@ -170,7 +170,7 @@ proc_ aggregate_results(void) {
     }
 }
 
-proc_ print_results(void) {
+static inline void print_results(void) {
     for (unsigned int i = 0; i < ncity; ++i) {
         City *city = &thread_cities[0][hash_order[i]];
         printf("%s  #%zu  $%.1f  @%.1f  [%.1f  %.1f]\n", city->name, city->count, 
@@ -181,7 +181,7 @@ proc_ print_results(void) {
     }
 }
 
-proc_ run(void) {
+static inline void run(void) {
     printf("\n Running 1BRC on file: %s\n", FILEPATH);
     contents = mmap_open(FILEPATH, "r", &contents_len);
     

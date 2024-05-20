@@ -2,12 +2,12 @@
 
 struct lencount_t { size_t len; size_t count; };
 
-fun_ int ss_cmp(const void *a_void, const void *b_void) {
+static inline int ss_cmp(const void *a_void, const void *b_void) {
     const struct lenstr_t *a = (const struct lenstr_t *)a_void, *b = (const struct lenstr_t *)b_void;
     return lenstr_cmp_locale(*a, *b);
 }
 
-fun_ int lens_cmp(const void *a_void, const void *b_void) {
+static inline int lens_cmp(const void *a_void, const void *b_void) {
     const struct lencount_t *a = (const struct lencount_t *)a_void, *b = (const struct lencount_t *)b_void;
     return (int)(b->count - a->count); // reverse
 }
@@ -18,7 +18,7 @@ static struct lenstr_t lines[32000];
 
 static struct lenstr_t cities_arr[1024];
 
-proc_ run(void) {
+static inline void run(void) {
     size_t filesize = 0, lines_len = 0, cities_len = 0, lens_count[128] = {0};
     char *contents = mmap_open("./measurements10k.txt", "r", &filesize);
     

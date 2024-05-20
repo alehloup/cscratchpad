@@ -34,7 +34,7 @@ extern "C" {
 #pragma endregion Includes
 
 #pragma region Defines
-#define SZ_NOT_FOUND_ (size_t)-1 // constant for using as in-band error
+#define SZ_NOT_FOUND_ (size_t)-1 // constant for using as in-band error in size_t returns
 
 // really useful macro for array size at compile time
 #define arrsizeof(static_array_) (sizeof(static_array_) / sizeof(*(static_array_)))
@@ -57,60 +57,53 @@ extern "C" {
 #endif
 #pragma endregion Defines
 
-#pragma region Typedefs
-typedef void * HANDLE_;
-
-// for casting to void cmp fun
-typedef int (*cmp_fun_t)(const void *, const void *);
-#pragma endregion Typedefs
-
 #pragma region Strings
-// size_t len; const char *text;
-struct sslice_t { size_t len; const char *text; };
+// struct lenstr_t { size_t len; const char *str; };
+struct lenstr_t { size_t len; const char *str; };
 
-fun_ struct sslice_t to_sslice(const char *const cstring) {  
-    struct sslice_t sslice = {.len=strlen(cstring), .text=cstring};
-    return sslice;
+fun_ struct lenstr_t to_lenstr(const char *const cstring) {  
+    struct lenstr_t lenstr = {strlen(cstring), cstring};
+    return lenstr;
 }
 
-proc_ sslice_print(const struct sslice_t slice) { printf("%.*s\n", (int)slice.len, slice.text); }
-proc_ sslice_printend(const struct sslice_t slice, const char *const end) { printf("%.*s%s", (int)slice.len, slice.text, end); }
+proc_ lenstr_print(const struct lenstr_t lenstr) { printf("%.*s\n", (int)lenstr.len, lenstr.str); }
+proc_ lenstr_printend(const struct lenstr_t lenstr, const char *const end) { printf("%.*s%s", (int)lenstr.len, lenstr.str, end); }
 
-fun_ int sslice_cmp(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
-    size_t min_len = a_text_slice.len <= b_text_slice.len ? a_text_slice.len : b_text_slice.len;
+fun_ int lenstr_cmp(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
+    size_t min_len = a_lenstr.len <= b_lenstr.len ? a_lenstr.len : b_lenstr.len;
     for (size_t i = 0; i < min_len; ++i) {
-        if (a_text_slice.text[i] != b_text_slice.text[i]) {
-            return a_text_slice.text[i] - b_text_slice.text[i];
+        if (a_lenstr.str[i] != b_lenstr.str[i]) {
+            return a_lenstr.str[i] - b_lenstr.str[i];
         }
     }
-    return a_text_slice.len == b_text_slice.len ? 0 : (a_text_slice.len < b_text_slice.len ? - 1 : 1);
+    return a_lenstr.len == b_lenstr.len ? 0 : (a_lenstr.len < b_lenstr.len ? - 1 : 1);
 }
 
 proc_ set_locale_to_utf8(void) {
     setlocale(LC_CTYPE, "en_US.UTF-8");
 }
 // You need to have set a locale, default locale is C locale. Best to call set_locale_to_utf8
-fun_ int sslice_cmp_locale(const struct sslice_t a_text_slice, const struct sslice_t b_text_slice) {
+fun_ int lenstr_cmp_locale(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
     char a[512], b[512];
-    assert(a_text_slice.len < 512 && b_text_slice.len < 512);
+    assert(a_lenstr.len < 512 && b_lenstr.len < 512);
 
-    memcpy(a, a_text_slice.text, a_text_slice.len);
-    memcpy(b, b_text_slice.text, b_text_slice.len);
-    a[a_text_slice.len] = 0;
-    b[b_text_slice.len] = 0;
+    memcpy(a, a_lenstr.str, a_lenstr.len);
+    memcpy(b, b_lenstr.str, b_lenstr.len);
+    a[a_lenstr.len] = 0;
+    b[b_lenstr.len] = 0;
 
     return strcoll(a, b);
 }
 
-fun_ int startswith(const struct sslice_t prefix, const struct sslice_t text) {
-    struct sslice_t text_start = {.len=prefix.len, .text=text.text};
-    return sslice_cmp(prefix, text_start) == 0;
+fun_ int startswith(const struct lenstr_t prefix, const struct lenstr_t text) {
+    struct lenstr_t text_start = {prefix.len, text.str};
+    return lenstr_cmp(prefix, text_start) == 0;
 }
 
-fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
-    struct sslice_t text_trimmed;
-    const char *const text = text_slice.text;
-    size_t text_len = text_slice.len;
+fun_ struct lenstr_t trimmed(const struct lenstr_t lenstr) {
+    struct lenstr_t text_trimmed;
+    const char *const text = lenstr.str;
+    size_t text_len = lenstr.len;
 
     size_t start = 0;
     for (start = 0; start < text_len && text[start] <= ' '; ++start) {
@@ -124,7 +117,7 @@ fun_ struct sslice_t trimmed(const struct sslice_t text_slice) {
     }
 
     text_trimmed.len = text_len;
-    text_trimmed.text = &text[start];
+    text_trimmed.str = &text[start];
     return text_trimmed;
 }
 
@@ -137,72 +130,72 @@ fun_ size_t char_pos(const char letter, const char *const cstring) {
     }
 }
 
-fun_ size_t char_pos_slice(const char letter, const struct sslice_t text_slice) {
+fun_ size_t char_pos_lenstr(const char letter, const struct lenstr_t lenstr) {
     const char *const ptr = 
-        text_slice.len == 0 ? 0 
-        : (const char *) memchr((void const *)text_slice.text, letter, text_slice.len);
-    if (ptr >= text_slice.text) {
-        return (size_t)(ptr - text_slice.text);
+        lenstr.len == 0 ? 0 
+        : (const char *) memchr((void const *)lenstr.str, letter, lenstr.len);
+    if (ptr >= lenstr.str) {
+        return (size_t)(ptr - lenstr.str);
     } else {
         return SZ_NOT_FOUND_;
     }
 }
 
-fun_ struct sslice_t subss(struct sslice_t text_slice, const int start, const int end) {
-    size_t pos_start = start < 0 ? text_slice.len - (size_t)abs(start) : (size_t)start;
-    size_t pos_end = end < 0 ? text_slice.len - (size_t)abs(end) : (size_t)end;
+fun_ struct lenstr_t subss(struct lenstr_t lenstr, const int start, const int end) {
+    size_t pos_start = start < 0 ? lenstr.len - (size_t)abs(start) : (size_t)start;
+    size_t pos_end = end < 0 ? lenstr.len - (size_t)abs(end) : (size_t)end;
 
-    size_t true_end = pos_end > text_slice.len ? text_slice.len : pos_end;
+    size_t true_end = pos_end > lenstr.len ? lenstr.len : pos_end;
     size_t true_start = pos_start != 0 && pos_start > true_end ? true_end-1 : pos_start;
 
     size_t len = true_start < true_end ? true_end - true_start : 0;
 
-    struct sslice_t sub = {.len=len, .text=&text_slice.text[true_start]};
+    struct lenstr_t sub = {len, &lenstr.str[true_start]};
     return sub;
 }
 
-proc_ split(const struct sslice_t text_slice, const char splitter, 
-    const size_t parts_cap, struct sslice_t parts[], size_t *parts_len) 
+proc_ split(const struct lenstr_t lenstr, const char splitter, 
+    const size_t parts_cap, struct lenstr_t parts[], size_t *parts_len) 
 {
-    struct sslice_t cur = text_slice;
+    struct lenstr_t cur = lenstr;
     size_t pos = 0;
     
-    for (pos = char_pos_slice(splitter, cur); pos != SZ_NOT_FOUND_; pos = char_pos_slice(splitter, cur)) {
-        struct sslice_t part = {.len=pos, .text=cur.text};
+    for (pos = char_pos_lenstr(splitter, cur); pos != SZ_NOT_FOUND_; pos = char_pos_lenstr(splitter, cur)) {
+        struct lenstr_t part = {pos, cur.str};
 
         assert(*parts_len < parts_cap);
         parts[(*parts_len)++] = part;
         ++pos;
         cur.len -= pos; 
-        cur.text = &cur.text[pos];
+        cur.str = &cur.str[pos];
     }
 
     if (cur.len > 0) {
-        struct sslice_t part = {.len=cur.len, .text=cur.text};
+        struct lenstr_t part = {cur.len, cur.str};
         assert(*parts_len < parts_cap);
         parts[(*parts_len)++] = part;
     }
 }
 
-proc_ to_lines(const struct sslice_t text_slice, const size_t lines_cap, struct sslice_t lines[], size_t *lines_len) {
-    split(text_slice, '\n', lines_cap, lines, lines_len);
+proc_ to_lines(const struct lenstr_t lenstr, const size_t lines_cap, struct lenstr_t lines[], size_t *lines_len) {
+    split(lenstr, '\n', lines_cap, lines, lines_len);
 }
 
-fun_ struct sslice_t next_line(struct sslice_t *text_iterator) {
-    struct sslice_t line = *text_iterator;
+fun_ struct lenstr_t next_line(struct lenstr_t *text_iterator) {
+    struct lenstr_t line = *text_iterator;
 
-    size_t slashnpos = char_pos_slice('\n', *text_iterator);
+    size_t slashnpos = char_pos_lenstr('\n', *text_iterator);
 
     if (slashnpos == SZ_NOT_FOUND_) {
         text_iterator->len = 0;
-        text_iterator->text = "";
+        text_iterator->str = "";
 
         return line;
     } 
 
     line.len = slashnpos;
     
-    text_iterator->text = &text_iterator->text[(slashnpos+1)];
+    text_iterator->str = &text_iterator->str[(slashnpos+1)];
     text_iterator->len -= (slashnpos+1);
 
     return line;
@@ -210,23 +203,23 @@ fun_ struct sslice_t next_line(struct sslice_t *text_iterator) {
 
 proc_ buffer_to_lines(
     const char buffer[], const size_t buffer_len, 
-    const size_t lines_cap, struct sslice_t lines[], size_t *lines_len) 
+    const size_t lines_cap, struct lenstr_t lines[], size_t *lines_len) 
 {   
-    struct sslice_t text = {.len=buffer_len, .text=buffer};
+    struct lenstr_t text = {buffer_len, buffer};
     to_lines(text, lines_cap, lines, lines_len);
 }
 
-proc_ buffer_appendslice(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
-    const struct sslice_t src_chars_slice) 
+proc_ buffer_append_lenstr(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
+    const struct lenstr_t src_chars_lenstr) 
 {
-    assert((*dst_buffer_len) + src_chars_slice.len < dst_buffer_cap);
+    assert((*dst_buffer_len) + src_chars_lenstr.len < dst_buffer_cap);
 
-    memcpy(&dst_buffer[*dst_buffer_len], src_chars_slice.text, src_chars_slice.len);
+    memcpy(&dst_buffer[*dst_buffer_len], src_chars_lenstr.str, src_chars_lenstr.len);
 
-    *dst_buffer_len += src_chars_slice.len;
+    *dst_buffer_len += src_chars_lenstr.len;
     dst_buffer[(*dst_buffer_len)] = 0;
 }
-proc_ buffer_appendcstr(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
+proc_ buffer_append_cstr(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
 const char *const cstr) 
 {
     const size_t cstr_len = strlen(cstr);
@@ -238,11 +231,11 @@ const char *const cstr)
     *dst_buffer_len += cstr_len;
     dst_buffer[(*dst_buffer_len)] = 0;
 }
-proc_ buffer_appendcstrs(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
+proc_ buffer_append_cstrs(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
     const char *const cstrs[], const size_t cstrs_len) 
 { 
     for (size_t i = 0; i < cstrs_len; ++i) {
-        buffer_appendcstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
+        buffer_append_cstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
     }
 }
 
@@ -325,9 +318,9 @@ fun_ size_t rnd(size_t seed[1]) {
 #pragma endregion Random
 
 #pragma region Hashfuns
-fun_ size_t sslice_hash(const struct sslice_t chars_slice) {
-    const char *const chars = chars_slice.text;
-    size_t chars_len = chars_slice.len;
+fun_ size_t lenstr_hash(const struct lenstr_t chars_lenstr) {
+    const char *const chars = chars_lenstr.str;
+    size_t chars_len = chars_lenstr.len;
 
     size_t h = ((size_t)0x7A5662DCDFULL);
     
@@ -410,30 +403,30 @@ proc_ ht_number_to_arr(
     }
 }
 
-fun_ unsigned int ht_sslice_lookup(
-        const struct sslice_t search_key, 
-        const size_t hashtable_cap, struct sslice_t hashtable[]) 
+fun_ unsigned int ht_lenstr_lookup(
+        const struct lenstr_t search_key, 
+        const size_t hashtable_cap, struct lenstr_t hashtable[]) 
 {
     unsigned char exp = highbit((unsigned int)hashtable_cap);
-    size_t h = sslice_hash(search_key);
+    size_t h = lenstr_hash(search_key);
     unsigned int pos = ht_lookup(h, (unsigned int)h, exp);
 
     assert(search_key.len != 0);
 
-    while (hashtable[pos].len != 0 && sslice_cmp(search_key, hashtable[pos]) != 0) {
+    while (hashtable[pos].len != 0 && lenstr_cmp(search_key, hashtable[pos]) != 0) {
         pos = ht_lookup(h, pos, exp);
     }
 
     return pos;
 }
 
-fun_ unsigned int ht_sslice_upsert(
-        const struct sslice_t search_key, 
-        const size_t hashtable_cap, struct sslice_t hashtable[], size_t *hashtable_len) 
+fun_ unsigned int ht_lenstr_upsert(
+        const struct lenstr_t search_key, 
+        const size_t hashtable_cap, struct lenstr_t hashtable[], size_t *hashtable_len) 
 {
     unsigned int pos = (
         (void)assert((*hashtable_len) < hashtable_cap),
-        ht_sslice_lookup(search_key, hashtable_cap, hashtable)
+        ht_lenstr_lookup(search_key, hashtable_cap, hashtable)
     );
 
 
@@ -442,20 +435,20 @@ fun_ unsigned int ht_sslice_upsert(
     return pos;
 }
 
-proc_ ht_sslice_print(const size_t hashtable_cap, struct sslice_t hashtable[], const size_t hashtable_len) {
+proc_ ht_lenstr_print(const size_t hashtable_cap, struct lenstr_t hashtable[], const size_t hashtable_len) {
     printf("#%zu %zu\n", hashtable_len, hashtable_cap);
     for (size_t i = 0; i < hashtable_cap; ++i) {
         if (hashtable[i].len == 0) {
             continue;
         }
-        sslice_printend(hashtable[i], ", ");
+        lenstr_printend(hashtable[i], ", ");
     }
     printf("\n");
 }
 
-proc_ ht_sslice_to_arr(
-    const size_t hashtable_cap, struct sslice_t hashtable[],
-    const size_t array_cap, struct sslice_t array[], size_t *array_len)
+proc_ ht_lenstr_to_arr(
+    const size_t hashtable_cap, struct lenstr_t hashtable[],
+    const size_t array_cap, struct lenstr_t array[], size_t *array_len)
 {
     for (size_t i = 0; i < hashtable_cap; ++i) {
         if (hashtable[i].len == 0) {
@@ -557,12 +550,12 @@ proc_ file_to_buffer(
 proc_ file_to_lines(
     const char *const filename, 
     const size_t buffer_cap, char buffer[], size_t *buffer_len, 
-    const size_t lines_cap, struct sslice_t lines[], size_t *lines_len) 
+    const size_t lines_cap, struct lenstr_t lines[], size_t *lines_len) 
 {
     file_to_buffer(filename, buffer_cap, buffer, buffer_len);
     
     {
-        struct sslice_t text = {.len=*buffer_len, .text=buffer};
+        struct lenstr_t text = {*buffer_len, buffer};
         to_lines(text, lines_cap, lines, lines_len);
     }
 }
@@ -577,27 +570,27 @@ proc_ buffer_to_file(const size_t buffer_cap, char buffer[], size_t *buffer_len,
     fclose(f);
 }
 
-proc_ lines_to_file(const size_t lines_cap, struct sslice_t lines[], size_t *lines_len, const char *const filename) {
+proc_ lines_to_file(const size_t lines_cap, struct lenstr_t lines[], size_t *lines_len, const char *const filename) {
     FILE *f = fopen_(filename, "wb");
         assert(f);
         assert(*lines_len < lines_cap);
         
         for (size_t i = 0; i < (*lines_len); ++i) {
-            size_t bytes_written = fwrite(lines[i].text, 1, lines[i].len, f);
+            size_t bytes_written = fwrite(lines[i].str, 1, lines[i].len, f);
             bytes_written += fwrite("\n", 1, 1, f);
             assert(bytes_written == lines[i].len + 1);
         }
     fclose(f);
 }
 
-proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
+proc_ lenstr_to_file(struct lenstr_t lenstr, const char *const filename) {
     FILE *f = fopen_(filename, "wb");
         size_t bytes_written = (
             (void)assert(f),
-            fwrite(text_slice.text, 1, text_slice.len, f)
+            fwrite(lenstr.str, 1, lenstr.len, f)
         );
         bytes_written += fwrite("\n", 1, 1, f);
-        assert(bytes_written == text_slice.len + 1);
+        assert(bytes_written == lenstr.len + 1);
     fclose(f);
 }
 #pragma endregion Files
@@ -605,7 +598,7 @@ proc_ sslice_to_file(struct sslice_t text_slice, const char *const filename) {
 #pragma region Mmap
 #if defined(_WINDOWS_) // if _WINDOWS_ else Unix
 fun_ char * mmap_open(const char *const filename, const char *const mode, size_t *out_buffer_len) {
-    HANDLE_ mmap_handle;
+    void * mmap_handle;
     char * out_mmap_buffer;
 
     int readit = mode[0] == 'r' && mode[1] != '+';
@@ -616,7 +609,7 @@ fun_ char * mmap_open(const char *const filename, const char *const mode, size_t
         assert(fileSize > 0);
 
         mmap_handle = CreateFileMapping(
-            (HANDLE_)(size_t)_get_osfhandle(fileno_(file)),
+            (void *)(size_t)_get_osfhandle(fileno_(file)),
             0, 
             readit ? PAGE_READONLY : PAGE_READWRITE, 
             0, 0, 0
@@ -757,7 +750,7 @@ fun_ int compile_c(const char *const c_file_c, const char *const flags) {
         " ", c_file, ".c -o ", c_file, ".exe ",  // compile .c to .exe
         "&& echo _ Compiled ", c_file, ".exe! \n", // print that it was compiled
     };
-    buffer_appendcstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
+    buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
     (void) ptr;
 
@@ -783,7 +776,7 @@ fun_ int compile_run_c(const char *const c_file_c, const char *const flags) {
         "&& echo _ Running ", c_file, ".exe... ", // print that execution will begin
         "&& \"./", c_file, ".exe", "\" " // execute
     };
-    buffer_appendcstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
+    buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
     (void) ptr;
 

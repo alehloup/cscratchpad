@@ -53,12 +53,12 @@ routine_ chunked_run(void* threadidx /* thread_idx */) {
     const char *cur = 0, *end = 0;
 
     if (MULTI_THREAD) {
-        const size_t slice_size = (size_t) contents_len / NUM_THREADS; // size per thread
+        const size_t lenstr_size = (size_t) contents_len / NUM_THREADS; // size per thread
         
-        i = (slice_size * ((size_t) thread_idx));
+        i = (lenstr_size * ((size_t) thread_idx));
         i = i > 0 ? i - 1 : 0;
 
-        len = i + slice_size;
+        len = i + lenstr_size;
 
         while (data[len] != '\n') ++len;
 

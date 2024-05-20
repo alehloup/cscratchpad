@@ -12,7 +12,7 @@
 static size_t seed = 41635984;
 
 proc_ run(void) {
-    struct sslice_t cidades[nmax_cidades] = {{.len=0, .text=0}};
+    struct lenstr_t cidades[nmax_cidades] = {{0, 0}};
     size_t idx = 0, cidades_len = 0, mmap_cidades_len = 0, mmap_measurements_len = 0;
 
     char *mmap_cidades = 0, *mmap_mmeasurements = 0;
@@ -32,11 +32,11 @@ proc_ run(void) {
             size_t start_idx = idx;
             size_t range = 1001;
 
-            struct sslice_t cidade = cidades[rnd(&seed) % cidades_len];
+            struct lenstr_t cidade = cidades[rnd(&seed) % cidades_len];
             size_t measurement = rnd(&seed) % range;
             
-            buffer_appendslice(mmap_measurements_len, mmap_mmeasurements, &idx, cidade);
-            buffer_appendcstr(mmap_measurements_len, mmap_mmeasurements, &idx, ";");
+            buffer_append_lenstr(mmap_measurements_len, mmap_mmeasurements, &idx, cidade);
+            buffer_append_cstr(mmap_measurements_len, mmap_mmeasurements, &idx, ";");
 
             if (cidade.len % 2 == 0) {
                 range = 552;

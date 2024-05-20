@@ -1,8 +1,8 @@
 #include "ale.h"
 
-// #define N_LINES 1000000000ll
+// #define N_LINES 1000000000
 // #define N_LINES_STR "1B"
-#define N_LINES 10000ll
+#define N_LINES 10000
 #define N_LINES_STR "10k"
 
 #define FILENAME "measurements" N_LINES_STR ".txt"
@@ -17,7 +17,7 @@ static inline void run(void) {
 
     char *mmap_cidades = 0, *mmap_mmeasurements = 0;
 
-    file_create(FILENAME, 16ll * N_LINES);
+    file_create(FILENAME, (size_t)16 * N_LINES);
     
     mmap_cidades = mmap_open("cidades.txt", "r", &mmap_cidades_len);
     mmap_mmeasurements = mmap_open(FILENAME, "r+", &mmap_measurements_len);

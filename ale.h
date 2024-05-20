@@ -301,8 +301,8 @@ static inline unsigned char highbit(unsigned int uint_) {
 static inline size_t rnd(size_t seed[1]) {
     size_t sd = *seed = 
         (*seed 
-            * ((size_t)0x9b60933458e17d7dULL) 
-            + ((size_t)0xd737232eeccdf7edULL)
+            * ((size_t)0x9b60933458e17d7d)
+            + ((size_t)0xd737232eeccdf7ed)
         ) 
         * (size_t)11111111111;
 

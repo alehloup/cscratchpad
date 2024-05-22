@@ -9,7 +9,7 @@ static inline int ss_cmp(const void *a_void, const void *b_void) {
 
 static inline int lens_cmp(const void *a_void, const void *b_void) {
     const struct lencount_t *a = (const struct lencount_t *)a_void, *b = (const struct lencount_t *)b_void;
-    return (int)(b->count - a->count); // reverse
+    return (int)(b->count - a->count); /* reverse */
 }
 
 static struct lenstr_t cities[1<<15] = {{0,0}};
@@ -24,16 +24,21 @@ static inline void run(void) {
     
     buffer_to_lines(contents, filesize, arrsizeof(lines), lines, &lines_len);
 
-    // Process measurements%SZ.txt putting each city name in the hash table, and each line len in lens_count
+    /* Process measurements%SZ.txt putting each city name in the hash table, and each line len in lens_count */
     for (size_t i = 0; i < lines_len; ++i) {
-        struct lenstr_t ss = {char_pos_lenstr(';', lines[i]), lines[i].str };
-        unsigned int pos = ht_lenstr_upsert(ss, arrsizeof(cities), cities, &cities_len);
+        unsigned int pos = 0;
+        struct lenstr_t ss = {0, 0};
+
+        ss.len = char_pos_lenstr(';', lines[i]);
+        ss.str = lines[i].str;
+
+        pos = ht_lenstr_upsert(ss, arrsizeof(cities), cities, &cities_len);
         (void) pos;
 
         ++lens_count[lines[i].len];
     }
 
-    { // Print Cities Names sorted 
+    { /* Print Cities Names sorted */
         size_t cities_arr_len = 0;
 
         ht_lenstr_to_arr(
@@ -48,13 +53,15 @@ static inline void run(void) {
         }
     }
 
-    { // Show Counts of len of cities names
+    { /* Show Counts of len of cities names */
         struct lencount_t counts[64] = {{0, 0}};
         size_t counts_len = 0;
 
         for (size_t i = 0; i < arrsizeof(lens_count); ++i) {
             if (lens_count[i]) {
-                struct lencount_t cnts = {i, lens_count[i]};
+                struct lencount_t cnts = {0, 0};
+                cnts.count = i;
+                cnts.len = lens_count[i];
                 counts[counts_len++] = cnts;
             }
         }

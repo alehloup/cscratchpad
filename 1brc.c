@@ -1,6 +1,6 @@
 #include "ale.h"
 
-#define NUM_THREADS 12 // Also works for 4096 threads > : )
+#define NUM_THREADS 12 /* Also works for 4096 threads > : ) */
 static const int SINGLE_THREAD = NUM_THREADS == 1;
 static const int MULTI_THREAD = NUM_THREADS > 1;
 
@@ -23,8 +23,8 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 struct City { const char* name; size_t count; long long int sum; long long int min; long long int max; };
 static struct City thread_cities[NUM_THREADS][TABLE_SIZE];
 
-static char * contents = 0; // will be the mmap buffer
-static size_t contents_len = 0; // will be the mmap buffer len
+static char * contents = 0; /* will be the mmap buffer */
+static size_t contents_len = 0; /* will be the mmap buffer len */
 
 static inline struct City * my_cities(unsigned int thread_idx) {
     struct City* cities = thread_cities[thread_idx];
@@ -39,7 +39,7 @@ static inline struct City * my_cities(unsigned int thread_idx) {
     return cities;
 }
 
-// Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1
+/* Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1 */
 static inline void * chunked_run(void *threadidx /* thread_idx */) {
     unsigned int thread_idx = (unsigned int)(size_t) threadidx;
     unsigned int line_num = 0;
@@ -53,7 +53,7 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     const char *cur = 0, *end = 0;
 
     if (MULTI_THREAD) {
-        const size_t lenstr_size = (size_t) contents_len / NUM_THREADS; // size per thread
+        const size_t lenstr_size = (size_t) contents_len / NUM_THREADS; /* size per thread */
         
         i = (lenstr_size * ((size_t) thread_idx));
         i = i > 0 ? i - 1 : 0;
@@ -63,18 +63,18 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
         while (data[len] != '\n') ++len;
 
         if (thread_idx == NUM_THREADS - 1) {
-            len = contents_len - 1; // last thread gets the excedent
+            len = contents_len - 1; /* last thread gets the excedent */
         }
     }
 
     if (i > 0) {
         while (data[i] != '\n') 
             ++i;
-        ++i; // skips to next line
+        ++i; /* skips to next line */
     } else {
         i = 0;
     }
-    i += 1; // skip to second letter of next line
+    i += 1; /* skip to second letter of next line */
 
     assert(i < len);
     assert(len < contents_len);
@@ -86,11 +86,11 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     (void) line_num;
 
     while(cur < end) {
-        // Each iteration we start at the second letter of a line
+        /* Each iteration we start at the second letter of a line */
 
         struct City *city = 0; long long int measure = 1;
 
-        // Advance the i'ndex, building the city name[1:9] hash at the same time
+        /* Advance the i'ndex, building the city name[1:9] hash at the same time */
         size_t sum_hash = 0, city_hash = 0;
 
         city_hash = sum_hash + (size_t)*(cur++);
@@ -108,13 +108,13 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
         /* -----------------------------------------  */
 
 
-        // Increment to move past the ';'
+        /* Increment to move past the ';' */
         while(*cur != ';') {
             ++cur;
         }
         ++cur; 
 
-        //parse number
+        /* parse number */
         measure = 1;
         if (cur[0] == '-') {
             measure = -1;
@@ -122,13 +122,13 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
         }
         if (cur[1] == '.') {
             measure *= (cur[0] - '0')*10 + (cur[2] - '0');
-            cur += 5; // skips to second char of next line
+            cur += 5; /* skips to second char of next line */
         } else {
             measure *= (cur[0] - '0')*100 + (cur[1] - '0')*10 + (cur[3] - '0');
-            cur += 6; // skips to second char of next line
+            cur += 6; /* skips to second char of next line */
         }
 
-        //update city measurements
+        /* update city measurements */
         city = &cities[city_hash];
         ++city->count;
         city->sum += measure;

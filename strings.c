@@ -53,7 +53,7 @@ static inline void print_lenstrcmp(struct lenstr_t a, struct lenstr_t b) {
     lenstr_printend(a, " ");
     printf("cmp ");
     lenstr_printend(b, "");
-    // ==
+    /* == */
     printf(" %d \n", lenstr_cmp(a, b));
     (void) printed;
 }
@@ -104,7 +104,9 @@ static inline void test_filewrite(void) {
 static inline void test_subss(void) {
     int printed = printf("\n TEST %s \n", __func__);
     size_t end = arrsizeof("Alessandro");
-    struct lenstr_t nome = {end - 1, "Alessandro"};
+    struct lenstr_t nome = {0, 0};
+    nome.len = end - 1;
+    nome.str = "Alessandro";
 
     lenstr_print(nome);
     lenstr_print(subss(nome, 2, (int)end));

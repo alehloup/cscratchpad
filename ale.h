@@ -1,15 +1,15 @@
 #pragma once
 #ifdef __cplusplus 
-extern "C" { // Cancels Name Mangling when compiled as C++
+extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #endif
 
 
-//configure
+/* configure */
 #define THREAD_STACK_SIZE_ 64 * 1024
 
 
 #pragma region Includes
-//
+/* */
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -26,29 +26,36 @@ extern "C" { // Cancels Name Mangling when compiled as C++
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
     #include <io.h>
-#else // assume Unix:
+#else /* assume Unix: */
     #include <unistd.h>
     #include <pthread.h>
     #include <sys/stat.h>
     #include <sys/mman.h>
 #endif
 
-// really useful macro for array size at compile time
+/* really useful macro for array size at compile time */
 #define arrsizeof(static_array_) (sizeof(static_array_) / sizeof(*(static_array_)))
 
-// constant for using as in-band error in size_t returns
+/* constant for using as in-band error in size_t returns */
 #define SZ_NOT_FOUND_ (size_t)-1 
-//
+
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
+#define inline
+#endif
+/* */
 #pragma endregion Includes
 
 
 #pragma region Strings
-//
-// struct lenstr_t { size_t len; const char *str; };
+/* */
+/* struct lenstr_t { size_t len; const char *str; }; */
 struct lenstr_t { size_t len; const char *str; };
 
 static inline struct lenstr_t to_lenstr(const char *const cstring) {  
-    struct lenstr_t lenstr = {strlen(cstring), cstring};
+    struct lenstr_t lenstr = {0, 0};
+    lenstr.len = strlen(cstring);
+    lenstr.str = cstring;
+
     return lenstr;
 }
 
@@ -68,7 +75,7 @@ static inline int lenstr_cmp(const struct lenstr_t a_lenstr, const struct lenstr
 static inline void set_locale_to_utf8(void) {
     setlocale(LC_CTYPE, "en_US.UTF-8");
 }
-// You need to have set a locale, default locale is C locale. Best to call set_locale_to_utf8
+/* You need to have set a locale, default locale is C locale. Best to call set_locale_to_utf8 */
 static inline int lenstr_cmp_locale(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
     char a[512], b[512];
     assert(a_lenstr.len < 512 && b_lenstr.len < 512);
@@ -82,7 +89,9 @@ static inline int lenstr_cmp_locale(const struct lenstr_t a_lenstr, const struct
 }
 
 static inline int startswith(const struct lenstr_t prefix, const struct lenstr_t text) {
-    struct lenstr_t text_start = {prefix.len, text.str};
+    struct lenstr_t text_start = {0, 0}; 
+    text_start.len = prefix.len; 
+    text_start.str = text.str;
     return lenstr_cmp(prefix, text_start) == 0;
 }
 
@@ -136,7 +145,9 @@ static inline struct lenstr_t subss(struct lenstr_t lenstr, const int start, con
 
     size_t len = true_start < true_end ? true_end - true_start : 0;
 
-    struct lenstr_t sub = {len, &lenstr.str[true_start]};
+    struct lenstr_t sub = {0, 0};
+    sub.len = len;
+    sub.str = &lenstr.str[true_start];
     return sub;
 }
 
@@ -147,7 +158,9 @@ static inline void split(const struct lenstr_t lenstr, const char splitter,
     size_t pos = 0;
     
     for (pos = char_pos_lenstr(splitter, cur); pos != SZ_NOT_FOUND_; pos = char_pos_lenstr(splitter, cur)) {
-        struct lenstr_t part = {pos, cur.str};
+        struct lenstr_t part = {0, 0};
+        part.len = pos;
+        part.str = cur.str;
 
         assert(*parts_len < parts_cap);
         parts[(*parts_len)++] = part;
@@ -157,7 +170,9 @@ static inline void split(const struct lenstr_t lenstr, const char splitter,
     }
 
     if (cur.len > 0) {
-        struct lenstr_t part = {cur.len, cur.str};
+        struct lenstr_t part = {0, 0};
+        part.len = cur.len;
+        part.str = cur.str;
         assert(*parts_len < parts_cap);
         parts[(*parts_len)++] = part;
     }
@@ -191,7 +206,9 @@ static inline void buffer_to_lines(
     const char buffer[], const size_t buffer_len, 
     const size_t lines_cap, struct lenstr_t lines[], size_t *lines_len) 
 {   
-    struct lenstr_t text = {buffer_len, buffer};
+    struct lenstr_t text = {0, 0};
+    text.len = buffer_len;
+    text.str = buffer;
     to_lines(text, lines_cap, lines, lines_len);
 }
 
@@ -232,12 +249,12 @@ static inline size_t size_without_nullbytes(const char *const buffer, size_t cur
     
     return ++current_size;
 }
-//
+/* */
 #pragma endregion Strings
 
 
 #pragma region Math
-//
+/* */
 static inline size_t power2_number_mod(size_t power2_number, size_t modval) { return (power2_number) & (modval - 1); }
 
 static inline size_t greatest_common_divisor(size_t m, size_t n) {
@@ -247,32 +264,32 @@ static inline size_t greatest_common_divisor(size_t m, size_t n) {
 }
 static inline size_t least_common_multiple(size_t m, size_t n) { return m / greatest_common_divisor(m, n) * n; }
 
-/* COMMENTED OUT SINCE NOT ALL PLATFORMS HAVE FLOATS*/
-// static inline float sqrtapproximate_newton(float n) {
-//     float x = 1;
-//     while (fabsf(x * x - n) > 1e-8f)
-//         x = (x + n / x) / 2;
-//     return x;
-// }
-// static inline float inversesqrtapproximate_newton(float number) {
-//     union FloatIntUnion { float f; int i; };
+/* COMMENTED OUT SINCE NOT ALL PLATFORMS HAVE FLOATS 
+ static inline float sqrtapproximate_newton(float n) {
+     float x = 1;
+     while (fabsf(x * x - n) > 1e-8f)
+         x = (x + n / x) / 2;
+     return x;
+ }
+ static inline float inversesqrtapproximate_newton(float number) {
+     union FloatIntUnion { float f; int i; };
 
-//     float y = 0;
+     float y = 0;
 
-//     union FloatIntUnion u; u.f = number;
-//     u.i = 0x5f3759df - (u.i >> 1);
+     union FloatIntUnion u; u.f = number;
+     u.i = 0x5f3759df - (u.i >> 1);
 
-//     y = u.f;
-//     y = y * (1.5f - ((number * 0.5f) * y * y));
+     y = u.f;
+     y = y * (1.5f - ((number * 0.5f) * y * y));
 
-//     return y;
-// }
-//
+     return y;
+ }
+*/ 
 #pragma endregion Math
 
 
 #pragma region Bits
-//
+/* */
 static inline unsigned char highbit(unsigned int uint_) {
     #if defined(__GNUC__) || defined(__clang__)
         return (unsigned char)((char)(sizeof(int) * 8 - 1) - (char)__builtin_clz(uint_));
@@ -292,12 +309,12 @@ static inline unsigned char highbit(unsigned int uint_) {
         return exp;
     #endif     
 }
-//
+/* */
 #pragma endregion Bits
 
 
 #pragma region Random
-//
+/* */
 static inline size_t rnd(size_t seed[1]) {
     size_t sd = *seed = 
         (*seed 
@@ -310,12 +327,12 @@ static inline size_t rnd(size_t seed[1]) {
     
     return (size_t)((sd ^ (sd >> shift)) >> 1u);
 }
-//
+/* */
 #pragma endregion Random
 
 
 #pragma region Hashfuns
-//
+/* */
 static inline size_t lenstr_hash(const struct lenstr_t chars_lenstr) {
     const char *const chars = chars_lenstr.str;
     size_t chars_len = chars_lenstr.len;
@@ -337,17 +354,17 @@ static inline size_t number_hash(size_t number) {
     
     return (x ^ (x >> 31)) >> 1;
 }
-//
+/* */
 #pragma endregion Hashfuns
 
 
 #pragma region Hashtable
-//
-// Mask-Step-Index (MSI) lookup. Returns the next index. 
+/* */
+/* Mask-Step-Index (MSI) lookup. Returns the next index. */
 static inline unsigned int ht_lookup(
-    size_t hash, // 1st hash acts as base location
-    unsigned int index, // 2nd "hash" steps over the "list of elements" from base-location
-    unsigned char exp // power-2 exp used as the Hash Table capacity
+    size_t hash, /* 1st hash acts as base location */
+    unsigned int index, /* 2nd "hash" steps over the "list of elements" from base-location */
+    unsigned char exp /* power-2 exp used as the Hash Table capacity */
 ) {
     unsigned int step = (unsigned int)(hash >> (sizeof(size_t)*8 - exp)) | 1;
     return (((unsigned int)index + step) & ((unsigned int) ((1 << exp) - 1)));
@@ -459,14 +476,14 @@ static inline void ht_lenstr_to_arr(
         array[(*array_len)++] = hashtable[i];
     }
 }
-//
+/* */
 #pragma endregion Hashtable
 
 
 #pragma region Files
-//
-// Windows vs Unix file operations
-#if defined(_WINDOWS_) // _WINDOWS_
+/* */
+/* Windows vs Unix file operations */
+#if defined(_WINDOWS_) /* _WINDOWS_ */
     static inline int fileno_(FILE *stream) {
         return _fileno(stream);
     }
@@ -494,7 +511,7 @@ static inline void ht_lenstr_to_arr(
             return fopen(pathname, mode);
         }
     #endif
-#else // Unix
+#else /* Unix */
     static inline int fileno_(FILE *stream) {
         return fileno(stream);
     }
@@ -559,7 +576,9 @@ static inline void file_to_lines(
     file_to_buffer(filename, buffer_cap, buffer, buffer_len);
     
     {
-        struct lenstr_t text = {*buffer_len, buffer};
+        struct lenstr_t text = {0, 0};
+        text.len = *buffer_len;
+        text.str = buffer;
         to_lines(text, lines_cap, lines, lines_len);
     }
 }
@@ -597,13 +616,13 @@ static inline void lenstr_to_file(struct lenstr_t lenstr, const char *const file
         assert(bytes_written == lenstr.len + 1);
     fclose(f);
 }
-//
+/* */
 #pragma endregion Files
 
 
 #pragma region Mmap
-//
-#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
+/* */
+#if defined(_WINDOWS_) /* if _WINDOWS_ else Unix */
 static inline char * mmap_open(const char *const filename, const char *const mode, size_t *out_buffer_len) {
     void * mmap_handle;
     char * out_mmap_buffer;
@@ -611,7 +630,7 @@ static inline char * mmap_open(const char *const filename, const char *const mod
     int readit = mode[0] == 'r' && mode[1] != '+';
 
     FILE *file = fopen_(filename, mode);
-    { // File opened
+    { /* File opened */
         size_t fileSize = filelen_(file);
         assert(fileSize > 0);
 
@@ -621,7 +640,7 @@ static inline char * mmap_open(const char *const filename, const char *const mod
             readit ? PAGE_READONLY : PAGE_READWRITE, 
             0, 0, 0
         );
-        { // FileMapping handle opened
+        { /* FileMapping handle opened */
             assert(mmap_handle);
 
             out_mmap_buffer = (char *)MapViewOfFile(
@@ -630,11 +649,11 @@ static inline char * mmap_open(const char *const filename, const char *const mod
                 0, 0, 0
             );
             assert(out_mmap_buffer);
-        } // Closing FileMapping handle:
+        } /* Closing FileMapping handle: */
         CloseHandle(mmap_handle);
 
         *out_buffer_len = fileSize;
-    } // Closing file:
+    } /* Closing file: */
     fclose(file);
 
     return out_mmap_buffer;
@@ -643,14 +662,14 @@ static inline void mmap_close(char *mmap_buffer, size_t mmap_buffer_size) {
     assert(mmap_buffer_size);
     UnmapViewOfFile((void *)mmap_buffer);
 }
-#else // Unix
+#else /* Unix */
 static inline char * mmap_open(const char *const filename, const char *const mode, size_t *out_buffer_len) {
     char * out_mmap_buffer;
 
     int readit = mode[0] == 'r' && mode[1] != '+';
     
     FILE *file = fopen_(filename, mode);
-    { // File opened
+    { /* File opened */
         size_t fileSize = filelen_(file);
         assert(fileSize);
         *out_buffer_len = fileSize;
@@ -664,7 +683,7 @@ static inline char * mmap_open(const char *const filename, const char *const mod
             0
         );
         assert(out_mmap_buffer);
-    } // Closing file:
+    } /* Closing file: */
     fclose(file);
 
     return out_mmap_buffer;
@@ -672,15 +691,15 @@ static inline char * mmap_open(const char *const filename, const char *const mod
 static inline void mmap_close(char *mmap_buffer, size_t mmap_buffer_size) {
     munmap(mmap_buffer, mmap_buffer_size);
 }
-#endif // endif _WINDOWS_ else Unix
-//
+#endif /* endif _WINDOWS_ else Unix */
+/* */
 #pragma endregion Mmap
 
 
 #pragma region Threads
-//
+/* */
 #if defined(_WINDOWS_)
-    // is _WINDOWS_
+    /* is _WINDOWS_ */
 #define THREAD_T HANDLE
 
 static inline THREAD_T go(void * (*routine)(void *thread_idx), size_t thread_id) {
@@ -692,9 +711,9 @@ static inline THREAD_T go(void * (*routine)(void *thread_idx), size_t thread_id)
 static inline void join_thread(THREAD_T thread) {
     WaitForSingleObject(thread, INFINITE);
 }
-    //
+    /* */
 #else 
-    // is Unix
+    /* is Unix */
 #define THREAD_T pthread_t
 
 static inline THREAD_T go(void * (*routine)(void *thread_idx), size_t thread_id) {
@@ -714,7 +733,7 @@ static inline THREAD_T go(void * (*routine)(void *thread_idx), size_t thread_id)
 static inline void join_thread(THREAD_T thread) {
     pthread_join(thread, 0);
 }
-#endif // endif _WINDOWS_ else Unix
+#endif /* endif _WINDOWS_ else Unix */
 
 static inline void go_threads(
     void * (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, 
@@ -735,18 +754,18 @@ static inline void join_threads(THREAD_T threads[], const size_t threads_len) {
         join_thread(threads[i]);
     }
 }
-//
+/* */
 #pragma endregion Threads
 
 
 #pragma region System
-//
-#if defined(_WINDOWS_) // if _WINDOWS_ else Unix
+/* */
+#if defined(_WINDOWS_) /* if _WINDOWS_ else Unix */
     static inline void sleep_(unsigned int seconds) {
         assert(seconds < 60 * 60 * 24 + 1);
         Sleep(seconds * 1000);
     }
-#else // Unix
+#else /* Unix */
     static inline void sleep_(unsigned int seconds) {
         assert(seconds < 60 * 60 * 24 + 1);
         sleep(seconds);
@@ -758,17 +777,18 @@ static inline int compile_c(const char *const c_file_c, const char *const flags)
     size_t buffer_len = 0; 
 
     char c_file[256] = {0};
-    const size_t c_file_len = char_pos('.', c_file_c) == SZ_NOT_FOUND_ ? strlen(c_file_c) : strlen(c_file_c) - 2;
+    const size_t dot_pos = char_pos('.', c_file_c);
+    const size_t c_file_len = dot_pos == SZ_NOT_FOUND_ ? strlen(c_file_c) : dot_pos;
 
     void *ptr = (
         (void)assert(c_file_len < 255),
         memcpy(c_file, c_file_c, c_file_len)
-    ); // remove .c
+    ); /* remove .c */
 
     const char *const parts[] = {
-        flags, // pass the compiler and flags
-        " ", c_file, ".c -o ", c_file, ".exe ",  // compile .c to .exe
-        "&& echo _ Compiled ", c_file, ".exe! \n", // print that it was compiled
+        flags, /* pass the compiler and flags */
+        " ", c_file, ".c -o ", c_file, ".exe ",  /* compile .c to .exe */
+        "&& echo _ Compiled ", c_file, ".exe! \n", /* print that it was compiled */
     };
     buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
@@ -783,18 +803,19 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     size_t buffer_len = 0; 
 
     char c_file[256] = {0};
-    const size_t c_file_len = char_pos('.', c_file_c) == SZ_NOT_FOUND_ ? strlen(c_file_c) : strlen(c_file_c) - 2;
+    const size_t dot_pos = char_pos('.', c_file_c);
+    const size_t c_file_len = dot_pos == SZ_NOT_FOUND_ ? strlen(c_file_c) : dot_pos;
 
     void *ptr = (
         (void)assert(c_file_len < 255),
         memcpy(c_file, c_file_c, c_file_len)
-    ); // remove .c
+    ); /* remove .c */
 
     const char *const parts[] = {
-        flags, // pass the compiler and flags
-        " ", c_file, ".c -o ", c_file, ".exe ",  // compile .c to .exe
-        "&& echo _ Running ", c_file, ".exe... ", // print that execution will begin
-        "&& \"./", c_file, ".exe", "\" " // execute
+        flags, /* pass the compiler and flags */
+        " ", c_file, ".c -o ", c_file, ".exe ",  /* compile .c to .exe */
+        "&& echo _ Running ", c_file, ".exe... ", /* print that execution will begin */
+        "&& \"./", c_file, ".exe", "\" " /* execute */
     };
     buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
@@ -803,12 +824,12 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     printf("\n%.*s\n", (int)buffer_len, buffer);
     return system(buffer);
 }
-//
+/* */
 #pragma endregion System
 
 
 #pragma region Benchmark
-//
+/* */
 static clock_t BENCHCLOCK_ = 0;
 static inline void start_benchclock(void) {
     BENCHCLOCK_ = clock(); 
@@ -822,10 +843,10 @@ static inline void stop_benchclock(void) {
 }
 
 #define BENCH_MAIN_ int main(void) {start_benchclock(); run(); stop_benchclock(); return 0;}
-//
+/* */
 #pragma endregion Benchmark
 
 
 #ifdef __cplusplus
-} // closes extern C, Cancels Name Mangling when compiled as C++
+} /* closes extern C, Cancels Name Mangling when compiled as C++ */
 #endif

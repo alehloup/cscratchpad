@@ -5,7 +5,7 @@
     #define CLANG_ACCEPT_C_ARRAY_PLS " -Wno-unsafe-buffer-usage"
     #define GCC_ACCEPT_PRAGMA_REGION_PLS ""
 #else 
-    // GCC errors with "fortify is redefined" so... no fortify
+    /* GCC errors with "fortify is redefined" so... no fortify */
     #define FORTIFY "" 
     #define CLANG_ACCEPT_C_ARRAY_PLS ""
     #define GCC_ACCEPT_PRAGMA_REGION_PLS " -Wno-unknown-pragmas"
@@ -128,7 +128,7 @@ int main(int argc, const char *const *argv) {
 
         case 'd':case 'D':
             return system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
-        //break;
+        /* break; */
     } 
 
     switch (flags[0]) {

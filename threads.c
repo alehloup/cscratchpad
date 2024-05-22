@@ -3,7 +3,7 @@
 #define NUM_THREADS_TO_CREATE 8001
 static size_t results[NUM_THREADS_TO_CREATE];
 
-void * sum(void *thread_idx) {
+static inline void * sum(void *thread_idx) {
     size_t threadIdx = (size_t)(thread_idx);
     results[threadIdx] = threadIdx * 10l;
     return 0;

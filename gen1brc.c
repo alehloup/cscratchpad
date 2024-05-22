@@ -1,7 +1,7 @@
 #include "ale.h"
 
-// #define N_LINES 1000000000
-// #define N_LINES_STR "1B"
+/* #define N_LINES 1000000000 */
+/* #define N_LINES_STR "1B" */
 #define N_LINES 10000
 #define N_LINES_STR "10k"
 
@@ -21,7 +21,7 @@ static inline void run(void) {
     
     mmap_cidades = mmap_open("cidades.txt", "r", &mmap_cidades_len);
     mmap_mmeasurements = mmap_open(FILENAME, "r+", &mmap_measurements_len);
-    { // mmaps opened
+    { /* mmaps opened */
         buffer_to_lines(
         mmap_cidades, mmap_cidades_len, 
         nmax_cidades, cidades, &cidades_len
@@ -53,7 +53,7 @@ static inline void run(void) {
                 measurement = measurement > measurement2 ? measurement : measurement2;
             }
 
-            { // size_t to format DD.D
+            { /* size_t to format DD.D */
                 size_t tenths = measurement / 100;
                 size_t unities = measurement;
                 if (tenths > 0) {
@@ -72,7 +72,7 @@ static inline void run(void) {
             }
         }
         printf("size: %zu\n", idx);
-    } // closing mmaps
+    } /* closing mmaps */
     mmap_close(mmap_cidades, mmap_cidades_len);
     mmap_close(mmap_mmeasurements, mmap_measurements_len);
 

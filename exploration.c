@@ -19,13 +19,14 @@ static struct lenstr_t lines[32000];
 static struct lenstr_t cities_arr[1024];
 
 static inline void run(void) {
+    size_t i;
     size_t filesize = 0, lines_len = 0, cities_len = 0, lens_count[128] = {0};
     char *contents = mmap_open("./measurements10k.txt", "r", &filesize);
     
     buffer_to_lines(contents, filesize, arrsizeof(lines), lines, &lines_len);
 
     /* Process measurements%SZ.txt putting each city name in the hash table, and each line len in lens_count */
-    for (size_t i = 0; i < lines_len; ++i) {
+    for (i = 0; i < lines_len; ++i) {
         unsigned int pos = 0;
         struct lenstr_t ss = {0, 0};
 
@@ -48,7 +49,7 @@ static inline void run(void) {
 
         qsort(cities_arr, cities_arr_len, sizeof(cities_arr[0]), ss_cmp);
 
-        for (size_t i = 0; i < cities_arr_len; ++i) {
+        for (i = 0; i < cities_arr_len; ++i) {
             lenstr_printend(cities_arr[i], "\n");
         }
     }
@@ -57,7 +58,7 @@ static inline void run(void) {
         struct lencount_t counts[64] = {{0, 0}};
         size_t counts_len = 0;
 
-        for (size_t i = 0; i < arrsizeof(lens_count); ++i) {
+        for (i = 0; i < arrsizeof(lens_count); ++i) {
             if (lens_count[i]) {
                 struct lencount_t cnts = {0, 0};
                 cnts.count = i;
@@ -68,7 +69,7 @@ static inline void run(void) {
 
         qsort(counts, counts_len, sizeof(counts[0]), lens_cmp);
 
-        for (size_t i = 0; i < counts_len; ++i) {
+        for (i = 0; i < counts_len; ++i) {
             printf("%zu: %zu, ", counts[i].len, counts[i].count);
         }
         printf("\n");

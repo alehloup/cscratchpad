@@ -1,7 +1,8 @@
 #include "ale.h"
 
 int main(void) {
-    size_t seed = 41635984;
+    unsigned int i;
+    size_t seed = 2147483269;
 
     #define N 20
     int counts[N] = {0};
@@ -9,11 +10,17 @@ int main(void) {
 
     start_benchclock();
 
-    for(unsigned int i = 0; i < 1000000000; ++i) {
-        counts[rnd(&seed) % N] +=1;
+    srand((unsigned int)seed);
+
+    for(i = 0; i < 1000; ++i) {
+        int x = rand();
+        while (x > N) {
+            x = rand();
+        }
+        counts[x] +=1;
     }
     
-    for(unsigned int i = 0; i < N; ++i) {
+    for(i = 0; i < N; ++i) {
         printf("%u: %d\n", i+1, counts[i]);
     }
     

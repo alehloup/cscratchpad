@@ -84,10 +84,11 @@ static inline void test_fileread_to_lines(void) {
 
     struct lenstr_t lines[256];
     size_t lines_len = 0;
+    size_t i;
 
     file_to_lines("commands.txt", arrsizeof(b), b, &b_len, arrsizeof(lines), lines, &lines_len);
 
-    for (size_t i = 0; i < lines_len; ++i) {
+    for (i = 0; i < lines_len; ++i) {
         printf("%zu: ", i); lenstr_print(lines[i]);
     }
 

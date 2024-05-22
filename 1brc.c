@@ -20,7 +20,7 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 
 #define TABLE_SIZE 6570
 
-struct City { const char* name; size_t count; long long int sum; long long int min; long long int max; };
+struct City { const char* name; size_t count; long_long int sum; long_long int min; long_long int max; };
 static struct City thread_cities[NUM_THREADS][TABLE_SIZE];
 
 static char * contents = 0; /* will be the mmap buffer */
@@ -88,7 +88,7 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     while(cur < end) {
         /* Each iteration we start at the second letter of a line */
 
-        struct City *city = 0; long long int measure = 1;
+        struct City *city = 0; long_long int measure = 1;
 
         /* Advance the i'ndex, building the city name[1:9] hash at the same time */
         size_t sum_hash = 0, city_hash = 0;

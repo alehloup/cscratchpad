@@ -9,9 +9,10 @@
 
 #define nmax_cidades 512
 
-static size_t seed = 41635984;
+static size_t seed = 2147483269;
 
 static inline void run(void) {
+    size_t i;
     struct lenstr_t cidades[nmax_cidades] = {{0, 0}};
     size_t idx = 0, cidades_len = 0, mmap_cidades_len = 0, mmap_measurements_len = 0;
 
@@ -27,13 +28,13 @@ static inline void run(void) {
         nmax_cidades, cidades, &cidades_len
         );
 
-        for (size_t i = 0; i < N_LINES; ++i) {
+        for (i = 0; i < N_LINES; ++i) {
             int printit = i % 100 == 0;
             size_t start_idx = idx;
             size_t range = 1001;
 
-            struct lenstr_t cidade = cidades[rnd(&seed) % cidades_len];
-            size_t measurement = rnd(&seed) % range;
+            struct lenstr_t cidade = cidades[((size_t)rand()) % cidades_len];
+            size_t measurement = ((size_t)rand()) % range;
             
             buffer_append_lenstr(mmap_measurements_len, mmap_mmeasurements, &idx, cidade);
             buffer_append_cstr(mmap_measurements_len, mmap_mmeasurements, &idx, ";");
@@ -42,13 +43,13 @@ static inline void run(void) {
                 range = 552;
             }
 
-            if (rnd(&seed) % 100 == 1) {
-                size_t measurement2 = rnd(&seed) % (range - 152);
+            if (((size_t)rand()) % 100 == 1) {
+                size_t measurement2 = ((size_t)rand()) % (range - 152);
                 
                 mmap_mmeasurements[idx++] = '-';
                 measurement = measurement < measurement2 ? measurement : measurement2;
             } else {
-                size_t measurement2 = rnd(&seed) % range;
+                size_t measurement2 = ((size_t)rand()) % range;
                 
                 measurement = measurement > measurement2 ? measurement : measurement2;
             }
@@ -85,6 +86,7 @@ static inline void run(void) {
 }
 
 int main(void) {
+    srand((unsigned int)seed);
     run();
     printf("Done \n");
 }

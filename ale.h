@@ -1,5 +1,5 @@
 #pragma once
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #endif
 
@@ -39,8 +39,11 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 /* constant for using as in-band error in size_t returns */
 #define SZ_NOT_FOUND_ (size_t)-1 
 
-#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
+#if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901) && !defined(__cplusplus)
 #define inline
+#define long_long long
+#else
+#define long_long long long
 #endif
 /* */
 #pragma endregion Includes
@@ -64,7 +67,8 @@ static inline void lenstr_printend(const struct lenstr_t lenstr, const char *con
 
 static inline int lenstr_cmp(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
     size_t min_len = a_lenstr.len <= b_lenstr.len ? a_lenstr.len : b_lenstr.len;
-    for (size_t i = 0; i < min_len; ++i) {
+    size_t i;
+    for (i = 0; i < min_len; ++i) {
         if (a_lenstr.str[i] != b_lenstr.str[i]) {
             return a_lenstr.str[i] - b_lenstr.str[i];
         }
@@ -106,7 +110,8 @@ static inline struct lenstr_t trimmed(const struct lenstr_t lenstr) {
     }
 
     if (text_len > 0) {
-        for (size_t last = text_len - 1; last < text_len && text_len > 0 && text[last] <= ' '; --last) {
+        size_t last;
+        for (last = text_len - 1; last < text_len && text_len > 0 && text[last] <= ' '; --last) {
             --text_len;
         }
     }
@@ -237,7 +242,8 @@ const char *const cstr)
 static inline void buffer_append_cstrs(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
     const char *const cstrs[], const size_t cstrs_len) 
 { 
-    for (size_t i = 0; i < cstrs_len; ++i) {
+    size_t i;
+    for (i = 0; i < cstrs_len; ++i) {
         buffer_append_cstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
     }
 }
@@ -313,34 +319,17 @@ static inline unsigned char highbit(unsigned int uint_) {
 #pragma endregion Bits
 
 
-#pragma region Random
-/* */
-static inline size_t rnd(size_t seed[1]) {
-    size_t sd = *seed = 
-        (*seed 
-            * ((size_t)0x9b60933458e17d7d)
-            + ((size_t)0xd737232eeccdf7ed)
-        ) 
-        * (size_t)11111111111;
-
-    unsigned int shift = (unsigned int)(sizeof(size_t)*4 - (sd >> (sizeof(size_t)*8 - 2)));
-    
-    return (size_t)((sd ^ (sd >> shift)) >> 1u);
-}
-/* */
-#pragma endregion Random
-
-
 #pragma region Hashfuns
 /* */
 static inline size_t lenstr_hash(const struct lenstr_t chars_lenstr) {
     const char *const chars = chars_lenstr.str;
     size_t chars_len = chars_lenstr.len;
 
-    size_t h = ((size_t)0x7A5662DCDFULL);
+    size_t h = ((size_t)2147482697);
     
-    for(size_t i = 0; i < chars_len; ++i) { 
-        h ^= chars[i] & 255; h *= ((size_t)1111111111111111111ULL);
+    size_t i;
+    for(i = 0; i < chars_len; ++i) { 
+        h ^= chars[i] & 255; h *= ((size_t)2147482951);
     }
     return (h ^ (h >> 31)) >> 1;
 }
@@ -348,9 +337,9 @@ static inline size_t lenstr_hash(const struct lenstr_t chars_lenstr) {
 static inline size_t number_hash(size_t number) {
     size_t x = number;
     
-    x *= ((size_t)0x94d049bb133111ebULL); 
+    x *= ((size_t)2147480369); 
     x = (x ^ (x >> 31));
-    x *= ((size_t)0xbf58476d1ce4e5b9ULL); 
+    x *= ((size_t)2147476769); 
     
     return (x ^ (x >> 31)) >> 1;
 }
@@ -398,8 +387,9 @@ static inline unsigned int ht_number_upsert(
 }
 
 static inline void ht_number_print(const size_t hashtable_cap, size_t hashtable[], const size_t hashtable_len) {
+    size_t i;
     printf("#%zu %zu\n", hashtable_len, hashtable_cap);
-    for (size_t i = 0; i < hashtable_cap; ++i) {
+    for (i = 0; i < hashtable_cap; ++i) {
         if (!hashtable[0]) {
             continue;
         }
@@ -412,7 +402,8 @@ static inline void ht_number_to_arr(
     const size_t hashtable_cap, size_t hashtable[],
     const size_t array_cap, size_t array[], size_t *array_len)
 {
-    for (size_t i = 0; i < hashtable_cap; ++i) {
+    size_t i;
+    for (i = 0; i < hashtable_cap; ++i) {
         if (!hashtable[0]) {
             continue;
         }
@@ -454,8 +445,9 @@ static inline unsigned int ht_lenstr_upsert(
 }
 
 static inline void ht_lenstr_print(const size_t hashtable_cap, struct lenstr_t hashtable[], const size_t hashtable_len) {
+    size_t i;
     printf("#%zu %zu\n", hashtable_len, hashtable_cap);
-    for (size_t i = 0; i < hashtable_cap; ++i) {
+    for (i = 0; i < hashtable_cap; ++i) {
         if (hashtable[i].len == 0) {
             continue;
         }
@@ -468,7 +460,8 @@ static inline void ht_lenstr_to_arr(
     const size_t hashtable_cap, struct lenstr_t hashtable[],
     const size_t array_cap, struct lenstr_t array[], size_t *array_len)
 {
-    for (size_t i = 0; i < hashtable_cap; ++i) {
+    size_t i;
+    for (i = 0; i < hashtable_cap; ++i) {
         if (hashtable[i].len == 0) {
             continue;
         }
@@ -491,10 +484,10 @@ static inline void ht_lenstr_to_arr(
         return (size_t)_filelengthi64(fileno_(stream));
     }
     static inline int fseek_(FILE *stream, size_t offset, int whence) {
-        return _fseeki64(stream, (long long)offset, whence);
+        return _fseeki64(stream, (long_long int)offset, whence);
     }
     static inline void ftruncate_(FILE *stream, size_t size) {
-        int success = _chsize_s(fileno_(stream), (long long int)size) == 0;
+        int success = _chsize_s(fileno_(stream), (long_long int)size) == 0;
         assert(success);
     }
 
@@ -559,7 +552,7 @@ static inline void file_to_buffer(
         
         size_t bytesread = (
             (void)assert(dst_buffer_cap >= fsize+2),
-            fread(dst_buffer, 1LL, fsize, f)
+            fread(dst_buffer, 1, fsize, f)
         );
         assert(bytesread == fsize); 
         
@@ -595,10 +588,11 @@ static inline void buffer_to_file(const size_t buffer_cap, char buffer[], size_t
 
 static inline void lines_to_file(const size_t lines_cap, struct lenstr_t lines[], size_t *lines_len, const char *const filename) {
     FILE *f = fopen_(filename, "wb");
+        size_t i;
         assert(f);
         assert(*lines_len < lines_cap);
         
-        for (size_t i = 0; i < (*lines_len); ++i) {
+        for (i = 0; i < (*lines_len); ++i) {
             size_t bytes_written = fwrite(lines[i].str, 1, lines[i].len, f);
             bytes_written += fwrite("\n", 1, 1, f);
             assert(bytes_written == lines[i].len + 1);
@@ -739,18 +733,20 @@ static inline void go_threads(
     void * (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, 
     const size_t threads_cap, THREAD_T threads[], size_t *threads_len)
 {
+    size_t i;
     size_t total_after_spawn = *threads_len + number_of_threads_to_spawn;    
     assert(total_after_spawn <= threads_cap && total_after_spawn < 8192);
 
-    for (size_t i = *threads_len; i < total_after_spawn; ++i) {
+    for (i = *threads_len; i < total_after_spawn; ++i) {
         threads[i] = go(routine, (size_t)i);
     }
     *threads_len += number_of_threads_to_spawn;
 }
 static inline void join_threads(THREAD_T threads[], const size_t threads_len) {
+    size_t i;
     assert(threads_len <= 8192);
     
-    for (size_t i = 0; i < threads_len; ++i) {
+    for (i = 0; i < threads_len; ++i) {
         join_thread(threads[i]);
     }
 }
@@ -785,11 +781,13 @@ static inline int compile_c(const char *const c_file_c, const char *const flags)
         memcpy(c_file, c_file_c, c_file_len)
     ); /* remove .c */
 
-    const char *const parts[] = {
-        flags, /* pass the compiler and flags */
-        " ", c_file, ".c -o ", c_file, ".exe ",  /* compile .c to .exe */
-        "&& echo _ Compiled ", c_file, ".exe! \n", /* print that it was compiled */
+    const char * parts[] = {
+        0/* 0 flags*/, 
+        " ", 0 /*2 c_file*/, ".c -o ", 0/*4 c_file*/, ".exe ",  /* compile .c to .exe */
+        "&& echo _ Compiled ", 0 /*7 c_file*/, ".exe! \n", /* print that it was compiled */
     };
+    parts[0] = flags; parts[2] = c_file; parts[4] = c_file; parts[7] = c_file;
+
     buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
     (void) ptr;
@@ -811,12 +809,14 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
         memcpy(c_file, c_file_c, c_file_len)
     ); /* remove .c */
 
-    const char *const parts[] = {
-        flags, /* pass the compiler and flags */
-        " ", c_file, ".c -o ", c_file, ".exe ",  /* compile .c to .exe */
-        "&& echo _ Running ", c_file, ".exe... ", /* print that execution will begin */
-        "&& \"./", c_file, ".exe", "\" " /* execute */
+    const char * parts[] = {
+        0 /*0 flags*/, /* pass the compiler and flags */
+        " ", 0 /*2 c_file*/, ".c -o ", 0 /*4 c_file*/, ".exe ",  /* compile .c to .exe */
+        "&& echo _ Running ", 0 /*7 c_file*/, ".exe... ", /* print that execution will begin */
+        "&& \"./", 0 /*10 c_file*/, ".exe", "\" " /* execute */
     };
+    parts[0] = flags; parts[2] = c_file; parts[4] = c_file; parts[7] = c_file; parts[10] = c_file;
+
     buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
 
     (void) ptr;

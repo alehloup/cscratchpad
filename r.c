@@ -60,10 +60,12 @@ static const char *const flags_clang =
     CLANG_ACCEPT_C_ARRAY_PLS
 ;
 
+static const char *const flags_c89  = " gcc -std=c89 -pedantic -Werror";
+
 static inline void delete_artifacts(void) {
     int discard = printf("\n===== Delete Artifacts =====\n");
-    discard = printf("rm *.exe *.out *.obj *.nativecodeanalysis.xml\n");
-    discard = system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
+    discard = printf("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml\n");
+    discard = system("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml");
     (void) discard;
 }
 
@@ -118,6 +120,10 @@ int main(int argc, const char *const *argv) {
             flags = flags_clang;
         break;
 
+        case '8':
+            flags = flags_c89;
+        break;
+
         case 'v':case 'V':
             flags = "verify";
         break;
@@ -127,7 +133,7 @@ int main(int argc, const char *const *argv) {
         break;
 
         case 'd':case 'D':
-            return system("rm *.exe *.out *.obj *.nativecodeanalysis.xml");
+            return system("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml");
         /* break; */
     } 
 
@@ -147,6 +153,8 @@ int main(int argc, const char *const *argv) {
             success = compile_c(filename_c, flags_msvc);
             printed = printf("\n===== Clang =====");
             success = compile_c(filename_c, flags_clang);
+            printed = printf("\n===== C89 =====");
+            success = compile_c(filename_c, flags_c89);
 
             delete_artifacts();
 
@@ -172,6 +180,8 @@ int main(int argc, const char *const *argv) {
             success = compile_run_c(filename_c, flags_msvc);
             printed = printf("\n===== Clang =====");
             success = compile_run_c(filename_c, flags_clang);
+            printed = printf("\n===== C89 =====");
+            success = compile_run_c(filename_c, flags_c89);
 
             delete_artifacts();
 

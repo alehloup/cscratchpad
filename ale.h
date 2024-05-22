@@ -6,6 +6,7 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 
 /* configure */
 #define THREAD_STACK_SIZE_ 64 * 1024
+#define MAX_NTHREADS 8192
 
 
 #pragma region Includes
@@ -40,10 +41,9 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #define SZ_NOT_FOUND_ (size_t)-1 
 
 #if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901) && !defined(__cplusplus)
+#define _C89_COMPAT_
 #define inline
-#define long_long long
-#else
-#define long_long long long
+#define __func__ "c89"
 #endif
 /* */
 #pragma endregion Includes
@@ -359,7 +359,7 @@ static inline unsigned int ht_lookup(
     return (((unsigned int)index + step) & ((unsigned int) ((1 << exp) - 1)));
 }
 
-static inline unsigned int ht_number_lookup(const size_t search_key, const size_t hashtable_cap, size_t hashtable[]) {
+static inline unsigned int ht_number_lookup(const size_t search_key, const unsigned int hashtable_cap, size_t hashtable[]) {
     const unsigned char exp = highbit((unsigned int)hashtable_cap);
     size_t h = number_hash(search_key);
     unsigned int pos = ht_lookup(h, (unsigned int)h, exp);
@@ -375,7 +375,7 @@ static inline unsigned int ht_number_lookup(const size_t search_key, const size_
 
 static inline unsigned int ht_number_upsert(
         const size_t search_key, 
-        const size_t hashtable_cap, size_t hashtable[], size_t *hashtable_len) 
+        const unsigned int hashtable_cap, size_t hashtable[], unsigned int *hashtable_len) 
 {   
     unsigned int pos = (
         (void)assert((*hashtable_len) < hashtable_cap),
@@ -386,23 +386,11 @@ static inline unsigned int ht_number_upsert(
     return pos;
 }
 
-static inline void ht_number_print(const size_t hashtable_cap, size_t hashtable[], const size_t hashtable_len) {
-    size_t i;
-    printf("#%zu %zu\n", hashtable_len, hashtable_cap);
-    for (i = 0; i < hashtable_cap; ++i) {
-        if (!hashtable[0]) {
-            continue;
-        }
-        printf("%zu, ", hashtable[i]);
-    }
-    printf("\n");
-}
-
 static inline void ht_number_to_arr(
-    const size_t hashtable_cap, size_t hashtable[],
-    const size_t array_cap, size_t array[], size_t *array_len)
+    const unsigned int hashtable_cap, size_t hashtable[],
+    const unsigned int array_cap, size_t array[], unsigned int *array_len)
 {
-    size_t i;
+    unsigned int i;
     for (i = 0; i < hashtable_cap; ++i) {
         if (!hashtable[0]) {
             continue;
@@ -414,7 +402,7 @@ static inline void ht_number_to_arr(
 
 static inline unsigned int ht_lenstr_lookup(
         const struct lenstr_t search_key, 
-        const size_t hashtable_cap, struct lenstr_t hashtable[]) 
+        const unsigned int hashtable_cap, struct lenstr_t hashtable[]) 
 {
     unsigned char exp = highbit((unsigned int)hashtable_cap);
     size_t h = lenstr_hash(search_key);
@@ -431,7 +419,7 @@ static inline unsigned int ht_lenstr_lookup(
 
 static inline unsigned int ht_lenstr_upsert(
         const struct lenstr_t search_key, 
-        const size_t hashtable_cap, struct lenstr_t hashtable[], size_t *hashtable_len) 
+        const unsigned int hashtable_cap, struct lenstr_t hashtable[], unsigned int *hashtable_len) 
 {
     unsigned int pos = (
         (void)assert((*hashtable_len) < hashtable_cap),
@@ -444,9 +432,9 @@ static inline unsigned int ht_lenstr_upsert(
     return pos;
 }
 
-static inline void ht_lenstr_print(const size_t hashtable_cap, struct lenstr_t hashtable[], const size_t hashtable_len) {
-    size_t i;
-    printf("#%zu %zu\n", hashtable_len, hashtable_cap);
+static inline void ht_lenstr_print(const unsigned int hashtable_cap, struct lenstr_t hashtable[], const unsigned int hashtable_len) {
+    unsigned int i;
+    printf("#%u %u\n", hashtable_len, hashtable_cap);
     for (i = 0; i < hashtable_cap; ++i) {
         if (hashtable[i].len == 0) {
             continue;
@@ -457,10 +445,10 @@ static inline void ht_lenstr_print(const size_t hashtable_cap, struct lenstr_t h
 }
 
 static inline void ht_lenstr_to_arr(
-    const size_t hashtable_cap, struct lenstr_t hashtable[],
-    const size_t array_cap, struct lenstr_t array[], size_t *array_len)
+    const unsigned int hashtable_cap, struct lenstr_t hashtable[],
+    const unsigned int array_cap, struct lenstr_t array[], unsigned int *array_len)
 {
-    size_t i;
+    unsigned int i;
     for (i = 0; i < hashtable_cap; ++i) {
         if (hashtable[i].len == 0) {
             continue;
@@ -484,10 +472,18 @@ static inline void ht_lenstr_to_arr(
         return (size_t)_filelengthi64(fileno_(stream));
     }
     static inline int fseek_(FILE *stream, size_t offset, int whence) {
-        return _fseeki64(stream, (long_long int)offset, whence);
+        #ifdef _C89_COMPAT_
+            return _fseeki64(stream, (long int)offset, whence);
+        #else 
+            return _fseeki64(stream, (long long int)offset, whence);
+        #endif 
     }
     static inline void ftruncate_(FILE *stream, size_t size) {
-        int success = _chsize_s(fileno_(stream), (long_long int)size) == 0;
+        #ifdef _C89_COMPAT_
+            int success = _chsize_s(fileno_(stream), (long int)size) == 0;
+        #else
+            int success = _chsize_s(fileno_(stream), (long long int)size) == 0;
+        #endif
         assert(success);
     }
 
@@ -731,20 +727,23 @@ static inline void join_thread(THREAD_T thread) {
 
 static inline void go_threads(
     void * (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, 
-    const size_t threads_cap, THREAD_T threads[], size_t *threads_len)
+    const unsigned int threads_cap, THREAD_T threads[], unsigned int *threads_len)
 {
-    size_t i;
-    size_t total_after_spawn = *threads_len + number_of_threads_to_spawn;    
-    assert(total_after_spawn <= threads_cap && total_after_spawn < 8192);
+    unsigned int i;
+    unsigned int total_after_spawn = *threads_len + number_of_threads_to_spawn;
+    assert(*threads_len < MAX_NTHREADS);
+    assert(total_after_spawn < MAX_NTHREADS);
+    assert(total_after_spawn <= threads_cap);
+
 
     for (i = *threads_len; i < total_after_spawn; ++i) {
         threads[i] = go(routine, (size_t)i);
     }
     *threads_len += number_of_threads_to_spawn;
 }
-static inline void join_threads(THREAD_T threads[], const size_t threads_len) {
-    size_t i;
-    assert(threads_len <= 8192);
+static inline void join_threads(THREAD_T threads[], const unsigned int threads_len) {
+    unsigned int i;
+    assert(threads_len <= MAX_NTHREADS);
     
     for (i = 0; i < threads_len; ++i) {
         join_thread(threads[i]);
@@ -836,10 +835,10 @@ static inline void start_benchclock(void) {
 } 
 static inline void stop_benchclock(void) {
     clock_t end_time = clock();
-    size_t total_time = (size_t)(end_time - BENCHCLOCK_);
-    size_t seconds = (size_t)(total_time / CLOCKS_PER_SEC);
-    size_t milliseconds = (size_t)(total_time % CLOCKS_PER_SEC) * 1000 / CLOCKS_PER_SEC;
-    printf("\n\nExecuted in %zu seconds and %03zu milliseconds \n", seconds, milliseconds);
+    unsigned int total_time = (unsigned int)(end_time - BENCHCLOCK_);
+    unsigned int seconds = (unsigned int) (total_time / CLOCKS_PER_SEC);
+    unsigned int milliseconds = (unsigned int) ((total_time % CLOCKS_PER_SEC) * 1000 / CLOCKS_PER_SEC);
+    printf("\n\nExecuted in %u seconds and %03u milliseconds \n", seconds, milliseconds);
 }
 
 #define BENCH_MAIN_ int main(void) {start_benchclock(); run(); stop_benchclock(); return 0;}

@@ -1,31 +1,37 @@
 #include "ale.h"
 
 #define NUM_THREADS_TO_CREATE 8001
-static size_t results[NUM_THREADS_TO_CREATE];
+static unsigned int results[NUM_THREADS_TO_CREATE];
 
 static inline void * sum(void *thread_idx) {
-    size_t threadIdx = (size_t)(thread_idx);
-    results[threadIdx] = threadIdx * 10l;
+    unsigned int threadIdx = (unsigned int)(size_t)(thread_idx);
+    results[threadIdx] = threadIdx * 10;
     return 0;
 }
 
 int main() {
     THREAD_T threads[NUM_THREADS_TO_CREATE];
-    size_t threads_len = 0, totalSum = 0, correctSum = 0;
-    size_t i;
+    unsigned int threads_len = 0, threads_cap = (unsigned int)arrsizeof(threads);
+    unsigned int totalSum = 0, correctSum = 0;
     
-    go_threads(sum, NUM_THREADS_TO_CREATE, arrsizeof(threads), threads, &threads_len);
+    go_threads(sum, NUM_THREADS_TO_CREATE, threads_cap, threads, &threads_len);
     join_threads(threads, threads_len);
 
-    for (i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
-        totalSum += results[i];
+    {
+        unsigned int i;
+        for (i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
+            totalSum += results[i];
+        }
     }
 
-    for (i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
-        correctSum += (i*10);
+    {
+        unsigned int i;
+        for (i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
+            correctSum += (i*10);
+        }
     }
     
-    printf("\nTotal sum: %zu vs %zu \n ", totalSum, correctSum);
+    printf("\nTotal sum: %u %s %u \n ", totalSum, totalSum == correctSum ? "==" : "!=" ,correctSum);
 
     return 0;
 }

@@ -1,8 +1,6 @@
 #include "ale.h"
 
 #define NUM_THREADS 12 /* Also works for 4096 threads > : ) */
-static const int SINGLE_THREAD = NUM_THREADS == 1;
-static const int MULTI_THREAD = NUM_THREADS > 1;
 
 #define FILEPATH "./measurements10k.txt"
 
@@ -20,7 +18,7 @@ static const char* const city_names[] = {"Abha", "Abidjan", "Abéché", "Accra",
 
 #define TABLE_SIZE 6570
 
-struct City { const char* name; size_t count; long_long int sum; long_long int min; long_long int max; };
+struct City { const char* name; unsigned int count; int sum; int min; int max; };
 static struct City thread_cities[NUM_THREADS][TABLE_SIZE];
 
 static char * contents = 0; /* will be the mmap buffer */
@@ -29,7 +27,8 @@ static size_t contents_len = 0; /* will be the mmap buffer len */
 static inline struct City * my_cities(unsigned int thread_idx) {
     struct City* cities = thread_cities[thread_idx];
 
-    for (unsigned int i = 0; i < ncity; ++i) {
+    unsigned int i;
+    for (i = 0; i < ncity; ++i) {
         struct City *city = &cities[hash_order[i]];
         city->name = city_names[i];
         city->min = 1000;
@@ -52,20 +51,20 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     size_t i = 0, len = contents_len - 1;
     const char *cur = 0, *end = 0;
 
-    if (MULTI_THREAD) {
-        const size_t lenstr_size = (size_t) contents_len / NUM_THREADS; /* size per thread */
-        
-        i = (lenstr_size * ((size_t) thread_idx));
-        i = i > 0 ? i - 1 : 0;
 
-        len = i + lenstr_size;
+    const size_t lenstr_size = (size_t) contents_len / NUM_THREADS; /* size per thread */
+    
+    i = (lenstr_size * ((size_t) thread_idx));
+    i = i > 0 ? i - 1 : 0;
 
-        while (data[len] != '\n') ++len;
+    len = i + lenstr_size;
 
-        if (thread_idx == NUM_THREADS - 1) {
-            len = contents_len - 1; /* last thread gets the excedent */
-        }
+    while (data[len] != '\n') ++len;
+
+    if (thread_idx == NUM_THREADS - 1) {
+        len = contents_len - 1; /* last thread gets the excedent */
     }
+
 
     if (i > 0) {
         while (data[i] != '\n') 
@@ -88,23 +87,26 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     while(cur < end) {
         /* Each iteration we start at the second letter of a line */
 
-        struct City *city = 0; long_long int measure = 1;
+        struct City *city = 0; int measure = 1;
 
-        /* Advance the i'ndex, building the city name[1:9] hash at the same time */
-        size_t sum_hash = 0, city_hash = 0;
+        size_t city_hash = 0;
+        { /* Advance the i'ndex, building the city name[1:9] hash at the same time */
+            size_t sum_hash = 0;
+            unsigned int si;
 
-        city_hash = sum_hash + (size_t)*(cur++);
-        sum_hash = city_hash << 8;
-        city_hash = sum_hash + (size_t)*(cur++);
-        sum_hash = city_hash << 8;
-        city_hash = sum_hash + (size_t)*(cur++);
-        sum_hash = city_hash << 8;
-
-        for (unsigned int si = 0; si < 5 && *cur != ';'; ++si, ++cur) {
-            city_hash = sum_hash + (size_t)*cur;
+            city_hash = sum_hash + (size_t)*(cur++);
             sum_hash = city_hash << 8;
-        } 
-        city_hash = ((city_hash % 13087) % TABLE_SIZE);
+            city_hash = sum_hash + (size_t)*(cur++);
+            sum_hash = city_hash << 8;
+            city_hash = sum_hash + (size_t)*(cur++);
+            sum_hash = city_hash << 8;
+
+            for (si = 0; si < 5 && *cur != ';'; ++si, ++cur) {
+                city_hash = sum_hash + (size_t)*cur;
+                sum_hash = city_hash << 8;
+            } 
+            city_hash = ((city_hash % 13087) % TABLE_SIZE);
+        }
         /* -----------------------------------------  */
 
 
@@ -150,10 +152,12 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
 static inline void aggregate_results(void) {
     struct City* thread0 = thread_cities[0];
 
-    for (unsigned int i_thread = 1; i_thread < NUM_THREADS; ++i_thread) {
+    unsigned int i_thread;
+    for (i_thread = 1; i_thread < NUM_THREADS; ++i_thread) {
         struct City* thread_cur = thread_cities[i_thread];
 
-        for (unsigned int i = 0; i < ncity; ++i) {
+        unsigned int i;
+        for (i = 0; i < ncity; ++i) {
             struct City *dst_city = &thread0[hash_order[i]];
             struct City *src_city = &thread_cur[hash_order[i]];
 
@@ -171,30 +175,38 @@ static inline void aggregate_results(void) {
 }
 
 static inline void print_results(void) {
-    for (unsigned int i = 0; i < ncity; ++i) {
+    unsigned int i;
+    for (i = 0; i < ncity; ++i) {
         struct City *city = &thread_cities[0][hash_order[i]];
-        printf("%s  #%zu  $%.1f  @%.1f  [%.1f  %.1f]\n", city->name, city->count, 
-            /*$sum*/ (double)city->sum / 10.0,
-            /*@avg*/ ((double)city->sum / ((double)city->count*10)),
-            /*[min  max]*/ (double)city->min/10.0, (double)city->max/10.0
+        printf(
+            "%s"
+            " #%u"  
+            " $%.1f"
+            " %s"
+            "@%.1f"
+            " [%.1f"
+            " %.1f]\n", 
+            city->name, 
+            city->count, 
+            /*$sum*/ city->sum / 10.0,
+            /*sign*/ city->sum < 0 ? "-" : "", 
+            /*@avg*/ city->count > 0 ? ((unsigned int)abs(city->sum)) / (city->count * 10.0) : 0,
+            /*[min*/ city->min/10.0,
+            /*max]*/ city->max/10.0
         );
     }
 }
 
 static inline void run(void) {
+    THREAD_T threads[NUM_THREADS];
+    unsigned int threads_len = 0;
+
     printf("\n Running 1BRC on file: %s\n", FILEPATH);
     contents = mmap_open(FILEPATH, "r", &contents_len);
-    
-    if (SINGLE_THREAD) {
-        chunked_run(0);
-    } else {
-        THREAD_T threads[NUM_THREADS];
-        size_t threads_len = 0;
 
-        go_threads( chunked_run, NUM_THREADS, arrsizeof(threads), threads, &threads_len);
-        join_threads(threads, threads_len);
-        aggregate_results();
-    }
+    go_threads( chunked_run, NUM_THREADS, (unsigned int)arrsizeof(threads), threads, &threads_len);
+    join_threads(threads, threads_len);
+    aggregate_results();
 
     print_results();
 }

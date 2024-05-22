@@ -10,7 +10,7 @@ static inline void test_buffers(void) {
     buffer_append_lenstr(arrsizeof(buff), buff, &buff_len, to_lenstr(" Luiz"));
     buffer_append_lenstr(arrsizeof(buff), buff, &buff_len, to_lenstr(" Stamatto"));
 
-    printf("%s |%zu| \n", buff, buff_len);
+    printf("%s |%u| \n", buff, (unsigned int)buff_len);
     (void) printed;
 }
 
@@ -73,7 +73,7 @@ static inline void test_fileread(void) {
     size_t b_len = 0;
     file_to_buffer("commands.txt", arrsizeof(b), b, &b_len);
 
-    printf("|%zu|\n%s\n", b_len, b);
+    printf("|%u|\n%s\n", (unsigned int)b_len, b);
     (void) printed;
 }
 
@@ -89,7 +89,7 @@ static inline void test_fileread_to_lines(void) {
     file_to_lines("commands.txt", arrsizeof(b), b, &b_len, arrsizeof(lines), lines, &lines_len);
 
     for (i = 0; i < lines_len; ++i) {
-        printf("%zu: ", i); lenstr_print(lines[i]);
+        printf("%u: ", (unsigned int)i); lenstr_print(lines[i]);
     }
 
     lines_to_file(arrsizeof(lines), lines, &lines_len, "linhas.txt");

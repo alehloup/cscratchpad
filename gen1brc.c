@@ -91,4 +91,6 @@ int main(void) {
     srand((unsigned int)seed);
     run();
     printf("Done \n");
+
+    return 0;
 }

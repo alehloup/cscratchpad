@@ -139,22 +139,37 @@ int main(int argc, const char *const *argv) {
 
     switch (flags[0]) {
         default: 
-            return compile_run_c(filename_c, flags)
+            success = compile_run_c(filename_c, flags);
+            printf("command=%d %s\n", success, success == 0? "success" : "error");
+
+            if (success == 0) {
+                printf("\n\nDone, SUCCESS\n\n");
+            } else {
+                printf("\n\nDone, ERROR!\n\n");
+            }
+        
+            return success
         ;
 
         case 'v':
             printed = printf("\n===== GCC =====");
             success = compile_c(filename_c, flags_gcc);
+            printed = printf("gcc=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== G++ =====");
             success = compile_c(filename_c, flags_gpp);
+            printed = printf("g++=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== TCC =====");
             success = compile_c(filename_c, flags_tinyc);
+            printed = printf("tcc=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== MSVC =====");
             success = compile_c(filename_c, flags_msvc);
+            printed = printf("msvc=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== Clang =====");
             success = compile_c(filename_c, flags_clang);
+            printed = printf("clang=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== C89 =====");
             success = compile_c(filename_c, flags_c89);
+            printed = printf("c89=%d %s\n", success, success == 0? "success" : "error");
 
             delete_artifacts();
 
@@ -172,16 +187,22 @@ int main(int argc, const char *const *argv) {
         case 'a':
             printed = printf("\n===== GCC =====");
             success = compile_run_c(filename_c, flags_gcc);
+            printed = printf("gcc=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== G++ =====");
             success = compile_run_c(filename_c, flags_gpp);
+            printed = printf("g++=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== TCC =====");
             success = compile_run_c(filename_c, flags_tinyc);
+            printed = printf("tcc=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== MSVC =====");
             success = compile_run_c(filename_c, flags_msvc);
+            printed = printf("msvc=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== Clang =====");
             success = compile_run_c(filename_c, flags_clang);
+            printed = printf("clang=%d %s\n", success, success == 0? "success" : "error");
             printed = printf("\n===== C89 =====");
             success = compile_run_c(filename_c, flags_c89);
+            printed = printf("c89=%d %s\n", success, success == 0? "success" : "error");
 
             delete_artifacts();
 

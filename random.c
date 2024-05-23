@@ -13,10 +13,7 @@ int main(void) {
     srand((unsigned int)seed);
 
     for(i = 0; i < 1000; ++i) {
-        int x = rand();
-        while (x > N) {
-            x = rand();
-        }
+        unsigned int x = ((unsigned int) rand()) % N;
         counts[x] +=1;
     }
     

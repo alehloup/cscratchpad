@@ -269,28 +269,7 @@ static inline size_t greatest_common_divisor(size_t m, size_t n) {
     return n;
 }
 static inline size_t least_common_multiple(size_t m, size_t n) { return m / greatest_common_divisor(m, n) * n; }
-
-/* COMMENTED OUT SINCE NOT ALL PLATFORMS HAVE FLOATS 
- static inline float sqrtapproximate_newton(float n) {
-     float x = 1;
-     while (fabsf(x * x - n) > 1e-8f)
-         x = (x + n / x) / 2;
-     return x;
- }
- static inline float inversesqrtapproximate_newton(float number) {
-     union FloatIntUnion { float f; int i; };
-
-     float y = 0;
-
-     union FloatIntUnion u; u.f = number;
-     u.i = 0x5f3759df - (u.i >> 1);
-
-     y = u.f;
-     y = y * (1.5f - ((number * 0.5f) * y * y));
-
-     return y;
- }
-*/ 
+/* */
 #pragma endregion Math
 
 

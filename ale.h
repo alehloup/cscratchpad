@@ -99,28 +99,6 @@ static inline int startswith(const struct lenstr_t prefix, const struct lenstr_t
     return lenstr_cmp(prefix, text_start) == 0;
 }
 
-static inline struct lenstr_t trimmed(const struct lenstr_t lenstr) {
-    struct lenstr_t text_trimmed;
-    const char *const text = lenstr.str;
-    size_t text_len = lenstr.len;
-
-    size_t start = 0;
-    for (start = 0; start < text_len && text[start] <= ' '; ++start) {
-        --text_len;
-    }
-
-    if (text_len > 0) {
-        size_t last;
-        for (last = text_len - 1; last < text_len && text_len > 0 && text[last] <= ' '; --last) {
-            --text_len;
-        }
-    }
-
-    text_trimmed.len = text_len;
-    text_trimmed.str = &text[start];
-    return text_trimmed;
-}
-
 static inline size_t char_pos(const char letter, const char *const cstring) {
     const char *ptr = strchr(cstring, letter);
     if (ptr >= cstring) {
@@ -187,25 +165,6 @@ static inline void to_lines(const struct lenstr_t lenstr, const size_t lines_cap
     split(lenstr, '\n', lines_cap, lines, lines_len);
 }
 
-static inline struct lenstr_t next_line(struct lenstr_t *text_iterator) {
-    struct lenstr_t line = *text_iterator;
-
-    size_t slashnpos = char_pos_lenstr('\n', *text_iterator);
-
-    if (slashnpos == SZ_NOT_FOUND_) {
-        text_iterator->len = 0;
-        text_iterator->str = "";
-
-        return line;
-    } 
-
-    line.len = slashnpos;
-    
-    text_iterator->str = &text_iterator->str[(slashnpos+1)];
-    text_iterator->len -= (slashnpos+1);
-
-    return line;
-}
 
 static inline void buffer_to_lines(
     const char buffer[], const size_t buffer_len, 

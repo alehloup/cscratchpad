@@ -167,9 +167,9 @@ int main(int argc, const char *const *argv) {
             printed = printf("\n===== Clang =====");
             success = compile_c(filename_c, flags_clang);
             printed = printf("clang=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== C89 =====");
-            success = compile_c(filename_c, flags_c89);
-            printed = printf("c89=%d %s\n", success, success == 0? "success" : "error");
+            // printed = printf("\n===== C89 =====");
+            // success = compile_c(filename_c, flags_c89);
+            // printed = printf("c89=%d %s\n", success, success == 0? "success" : "error");
 
             delete_artifacts();
 
@@ -200,9 +200,9 @@ int main(int argc, const char *const *argv) {
             printed = printf("\n===== Clang =====");
             success = compile_run_c(filename_c, flags_clang);
             printed = printf("clang=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== C89 =====");
-            success = compile_run_c(filename_c, flags_c89);
-            printed = printf("c89=%d %s\n", success, success == 0? "success" : "error");
+            // printed = printf("\n===== C89 =====");
+            // success = compile_run_c(filename_c, flags_c89);
+            // printed = printf("c89=%d %s\n", success, success == 0? "success" : "error");
 
             delete_artifacts();
 

@@ -33,18 +33,6 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
     #include <sys/stat.h>
     #include <sys/mman.h>
 #endif
-
-/* really useful macro for array size at compile time */
-#define arrsizeof(static_array_) (sizeof(static_array_) / sizeof(*(static_array_)))
-
-/* constant for using as in-band error in size_t returns */
-#define SZ_NOT_FOUND_ (size_t)-1 
-
-#if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901) && !defined(__cplusplus)
-#define _C89_COMPAT_
-#define inline
-#define __func__ "c89"
-#endif
 /* */
 #pragma endregion Includes
 
@@ -104,7 +92,7 @@ static inline size_t char_pos(const char letter, const char *const cstring) {
     if (ptr >= cstring) {
         return (size_t)(ptr - cstring);
     } else {
-        return SZ_NOT_FOUND_;
+        return (size_t)-1;
     }
 }
 
@@ -115,7 +103,7 @@ static inline size_t char_pos_lenstr(const char letter, const struct lenstr_t le
     if (ptr >= lenstr.str) {
         return (size_t)(ptr - lenstr.str);
     } else {
-        return SZ_NOT_FOUND_;
+        return (size_t)-1;
     }
 }
 
@@ -140,7 +128,7 @@ static inline void split(const struct lenstr_t lenstr, const char splitter,
     struct lenstr_t cur = lenstr;
     size_t pos = 0;
     
-    for (pos = char_pos_lenstr(splitter, cur); pos != SZ_NOT_FOUND_; pos = char_pos_lenstr(splitter, cur)) {
+    for (pos = char_pos_lenstr(splitter, cur); pos != (size_t)-1; pos = char_pos_lenstr(splitter, cur)) {
         struct lenstr_t part = {0, 0};
         part.len = pos;
         part.str = cur.str;
@@ -410,18 +398,10 @@ static inline void ht_lenstr_to_arr(
         return (size_t)_filelengthi64(fileno_(stream));
     }
     static inline int fseek_(FILE *stream, size_t offset, int whence) {
-        #ifdef _C89_COMPAT_
-            return _fseeki64(stream, (long int)offset, whence);
-        #else 
-            return _fseeki64(stream, (long long int)offset, whence);
-        #endif 
+        return _fseeki64(stream, (long long int)offset, whence);
     }
     static inline void ftruncate_(FILE *stream, size_t size) {
-        #ifdef _C89_COMPAT_
-            int success = _chsize_s(fileno_(stream), (long int)size) == 0;
-        #else
-            int success = _chsize_s(fileno_(stream), (long long int)size) == 0;
-        #endif
+        int success = _chsize_s(fileno_(stream), (long long int)size) == 0;
         assert(success);
     }
 
@@ -664,20 +644,14 @@ static inline void join_thread(THREAD_T thread) {
 #endif /* endif _WINDOWS_ else Unix */
 
 static inline void go_threads(
-    void * (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, 
-    const unsigned int threads_cap, THREAD_T threads[], unsigned int *threads_len)
+    void * (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, THREAD_T threads[])
 {
     unsigned int i;
-    unsigned int total_after_spawn = *threads_len + number_of_threads_to_spawn;
-    assert(*threads_len < MAX_NTHREADS);
-    assert(total_after_spawn < MAX_NTHREADS);
-    assert(total_after_spawn <= threads_cap);
+    assert(number_of_threads_to_spawn < MAX_NTHREADS);
 
-
-    for (i = *threads_len; i < total_after_spawn; ++i) {
+    for (i = 0; i < number_of_threads_to_spawn; ++i) {
         threads[i] = go(routine, (size_t)i);
     }
-    *threads_len += number_of_threads_to_spawn;
 }
 static inline void join_threads(THREAD_T threads[], const unsigned int threads_len) {
     unsigned int i;
@@ -711,21 +685,21 @@ static inline int compile_c(const char *const c_file_c, const char *const flags)
 
     char c_file[256] = {0};
     const size_t dot_pos = char_pos('.', c_file_c);
-    const size_t c_file_len = dot_pos == SZ_NOT_FOUND_ ? strlen(c_file_c) : dot_pos;
+    const size_t c_file_len = dot_pos == (size_t)-1 ? strlen(c_file_c) : dot_pos;
 
     void *ptr = (
         (void)assert(c_file_len < 255),
         memcpy(c_file, c_file_c, c_file_len)
     ); /* remove .c */
 
-    const char * parts[] = {
+    const char * parts[9] = {
         0/* 0 flags*/, 
         " ", 0 /*2 c_file*/, ".c -o ", 0/*4 c_file*/, ".exe ",  /* compile .c to .exe */
         "&& echo _ Compiled ", 0 /*7 c_file*/, ".exe! \n", /* print that it was compiled */
     };
     parts[0] = flags; parts[2] = c_file; parts[4] = c_file; parts[7] = c_file;
 
-    buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
+    buffer_append_cstrs(2048, buffer, &buffer_len, parts, 9);
 
     (void) ptr;
 
@@ -739,14 +713,14 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
 
     char c_file[256] = {0};
     const size_t dot_pos = char_pos('.', c_file_c);
-    const size_t c_file_len = dot_pos == SZ_NOT_FOUND_ ? strlen(c_file_c) : dot_pos;
+    const size_t c_file_len = dot_pos == (size_t)-1 ? strlen(c_file_c) : dot_pos;
 
     void *ptr = (
         (void)assert(c_file_len < 255),
         memcpy(c_file, c_file_c, c_file_len)
     ); /* remove .c */
 
-    const char * parts[] = {
+    const char * parts[13] = {
         0 /*0 flags*/, /* pass the compiler and flags */
         " ", 0 /*2 c_file*/, ".c -o ", 0 /*4 c_file*/, ".exe ",  /* compile .c to .exe */
         "&& echo _ Running ", 0 /*7 c_file*/, ".exe... ", /* print that execution will begin */
@@ -754,7 +728,7 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     };
     parts[0] = flags; parts[2] = c_file; parts[4] = c_file; parts[7] = c_file; parts[10] = c_file;
 
-    buffer_append_cstrs(arrsizeof(buffer), buffer, &buffer_len, parts, arrsizeof(parts));
+    buffer_append_cstrs(2048, buffer, &buffer_len, parts, 13);
 
     (void) ptr;
 

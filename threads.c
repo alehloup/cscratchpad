@@ -11,11 +11,10 @@ static inline void * sum(void *thread_idx) {
 
 int main() {
     THREAD_T threads[NUM_THREADS_TO_CREATE];
-    unsigned int threads_len = 0, threads_cap = (unsigned int)arrsizeof(threads);
     unsigned int totalSum = 0, correctSum = 0;
     
-    go_threads(sum, NUM_THREADS_TO_CREATE, threads_cap, threads, &threads_len);
-    join_threads(threads, threads_len);
+    go_threads(sum, NUM_THREADS_TO_CREATE, threads);
+    join_threads(threads, NUM_THREADS_TO_CREATE);
 
     {
         unsigned int i;

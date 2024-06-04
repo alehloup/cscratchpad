@@ -1,14 +1,16 @@
 #include "ale.h"
 
+#define buffer_cap 256
+
 static inline void test_buffers(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t string = to_lenstr("Alessandro");
-    char buff[256];
+    char buff[buffer_cap];
     size_t buff_len = 0;
 
-    buffer_append_lenstr(arrsizeof(buff), buff, &buff_len, string);
-    buffer_append_lenstr(arrsizeof(buff), buff, &buff_len, to_lenstr(" Luiz"));
-    buffer_append_lenstr(arrsizeof(buff), buff, &buff_len, to_lenstr(" Stamatto"));
+    buffer_append_lenstr(buffer_cap, buff, &buff_len, string);
+    buffer_append_lenstr(buffer_cap, buff, &buff_len, to_lenstr(" Luiz"));
+    buffer_append_lenstr(buffer_cap, buff, &buff_len, to_lenstr(" Stamatto"));
 
     printf("%s |%u| \n", buff, (unsigned int)buff_len);
     (void) printed;
@@ -18,15 +20,15 @@ static inline void test_to_lines(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t text = to_lenstr("Alessandro \n Luiz\n Stamatto \n Ferreira");
     
-    struct lenstr_t lines[256];
+    struct lenstr_t lines[buffer_cap];
     size_t lines_len = 0;
 
-    to_lines(text, arrsizeof(lines), lines, &lines_len);
+    to_lines(text, buffer_cap, lines, &lines_len);
 
-    lenstr_print(trimmed(lines[0]));
-    lenstr_print(trimmed(lines[1]));
-    lenstr_print(trimmed(lines[2]));
-    lenstr_print(trimmed(lines[3]));
+    lenstr_print(lines[0]);
+    lenstr_print(lines[1]);
+    lenstr_print(lines[2]);
+    lenstr_print(lines[3]);
     (void) printed;
 }
 
@@ -34,15 +36,15 @@ static inline void test_split(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t text = to_lenstr("Alessandro  Luiz Stamatto  Ferreira");
 
-    struct lenstr_t words[256];
+    struct lenstr_t words[buffer_cap];
     size_t words_len = 0;
 
-    split(text, ' ', arrsizeof(words), words, &words_len);
+    split(text, ' ', buffer_cap, words, &words_len);
 
-    lenstr_print(trimmed(words[0]));
-    lenstr_print(trimmed(words[1]));
-    lenstr_print(trimmed(words[2]));
-    lenstr_print(trimmed(words[3]));
+    lenstr_print(words[0]);
+    lenstr_print(words[1]);
+    lenstr_print(words[2]);
+    lenstr_print(words[3]);
     (void) printed;
 }
 
@@ -67,11 +69,13 @@ static inline void test_string_eq(void) {
     (void) printed;
 }
 
+#define b_cap 2048
+
 static inline void test_fileread(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    char b[2048];
+    char b[b_cap];
     size_t b_len = 0;
-    file_to_buffer("commands.txt", arrsizeof(b), b, &b_len);
+    file_to_buffer("commands.txt", b_cap, b, &b_len);
 
     printf("|%u|\n%s\n", (unsigned int)b_len, b);
     (void) printed;
@@ -79,20 +83,20 @@ static inline void test_fileread(void) {
 
 static inline void test_fileread_to_lines(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    char b[2048];
+    char b[b_cap];
     size_t b_len = 0;
 
-    struct lenstr_t lines[256];
+    struct lenstr_t lines[buffer_cap];
     size_t lines_len = 0;
     size_t i;
 
-    file_to_lines("commands.txt", arrsizeof(b), b, &b_len, arrsizeof(lines), lines, &lines_len);
+    file_to_lines("commands.txt",b_cap, b, &b_len, buffer_cap, lines, &lines_len);
 
     for (i = 0; i < lines_len; ++i) {
         printf("%u: ", (unsigned int)i); lenstr_print(lines[i]);
     }
 
-    lines_to_file(arrsizeof(lines), lines, &lines_len, "linhas.txt");
+    lines_to_file(buffer_cap, lines, &lines_len, "linhas.txt");
     (void) printed;
 }
 
@@ -104,7 +108,7 @@ static inline void test_filewrite(void) {
 
 static inline void test_subss(void) {
     int printed = printf("\n TEST %s \n", __func__);
-    size_t end = arrsizeof("Alessandro");
+    size_t end = strlen("Alessandro");
     struct lenstr_t nome = {0, 0};
     nome.len = end - 1;
     nome.str = "Alessandro";

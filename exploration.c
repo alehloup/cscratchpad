@@ -12,19 +12,24 @@ static inline int lens_cmp(const void *a_void, const void *b_void) {
     return (int)(b->count - a->count); /* reverse */
 }
 
-static struct lenstr_t cities[1<<15] = {{0,0}};
+#define cities_cap 1<<15
+static struct lenstr_t cities[cities_cap] = {{0,0}};
 
-static struct lenstr_t lines[32000];
+#define lines_cap 32000
+static struct lenstr_t lines[lines_cap];
 
+#define cities_arr_cap 1024
 static struct lenstr_t cities_arr[1024];
+
+#define lens_count_cap 128
 
 static inline void run(void) {
     size_t filesize = 0, lines_len = 0;
-    unsigned int cities_len = 0, lens_count[128] = {0};
+    unsigned int cities_len = 0, lens_count[lens_count_cap] = {0};
     
     char *contents = mmap_open("./measurements10k.txt", "r", &filesize);
     
-    buffer_to_lines(contents, filesize, arrsizeof(lines), lines, &lines_len);
+    buffer_to_lines(contents, filesize, lines_cap, lines, &lines_len);
 
     { /* Process measurements%SZ.txt putting each city name in the hash table, and each line len in lens_count */
         size_t i;
@@ -35,7 +40,7 @@ static inline void run(void) {
             ss.len = char_pos_lenstr(';', lines[i]);
             ss.str = lines[i].str;
 
-            pos = ht_lenstr_upsert(ss, (unsigned int)arrsizeof(cities), cities, &cities_len);
+            pos = ht_lenstr_upsert(ss, cities_cap, cities, &cities_len);
             (void) pos;
 
             ++lens_count[lines[i].len];
@@ -47,8 +52,8 @@ static inline void run(void) {
         unsigned int i;
 
         ht_lenstr_to_arr(
-            (unsigned int)arrsizeof(cities), cities,
-            (unsigned int)arrsizeof(cities_arr), cities_arr, &cities_arr_len
+            cities_cap, cities,
+            cities_arr_cap, cities_arr, &cities_arr_len
         );
 
         qsort(cities_arr, (size_t)cities_arr_len, sizeof(cities_arr[0]), ss_cmp);
@@ -61,7 +66,6 @@ static inline void run(void) {
     { /* Show Counts of len of cities names */
         struct lencount_t counts[64] = {{0, 0}};
         unsigned int counts_len = 0, i = 0;
-        unsigned int lens_count_cap = (unsigned int)arrsizeof(lens_count);
 
         for (i = 0; i < lens_count_cap; ++i) {
             if (lens_count[i]) {

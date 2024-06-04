@@ -199,13 +199,12 @@ static inline void print_results(void) {
 
 static inline void run(void) {
     THREAD_T threads[NUM_THREADS];
-    unsigned int threads_len = 0;
 
     printf("\n Running 1BRC on file: %s\n", FILEPATH);
     contents = mmap_open(FILEPATH, "r", &contents_len);
 
-    go_threads( chunked_run, NUM_THREADS, (unsigned int)arrsizeof(threads), threads, &threads_len);
-    join_threads(threads, threads_len);
+    go_threads(chunked_run, NUM_THREADS, threads);
+    join_threads(threads, NUM_THREADS);
     aggregate_results();
 
     print_results();

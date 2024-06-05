@@ -1,4 +1,7 @@
-#include "ale.h"
+#include "./aleh/string.h"
+#include "./aleh/htmsi.h"
+#include "./aleh/mmap.h"
+#include "./aleh/system.h"
 
 struct lencount_t { unsigned int len; unsigned int count; };
 

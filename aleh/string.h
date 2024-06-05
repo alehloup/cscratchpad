@@ -11,8 +11,22 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #include <math.h>
 
 
-/* struct lenstr_t { size_t len; const char *str; }; */
-struct lenstr_t { size_t len; const char *str; };
+#if !defined(LENSTR_T_DEFINED)
+    #define LENSTR_T_DEFINED
+    /* struct lenstr_t { size_t len; const char *str; }; */
+    struct lenstr_t { size_t len; const char *str; };
+
+    static inline int lenstr_cmp(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
+        size_t min_len = a_lenstr.len <= b_lenstr.len ? a_lenstr.len : b_lenstr.len;
+        size_t i;
+        for (i = 0; i < min_len; ++i) {
+            if (a_lenstr.str[i] != b_lenstr.str[i]) {
+                return a_lenstr.str[i] - b_lenstr.str[i];
+            }
+        }
+        return a_lenstr.len == b_lenstr.len ? 0 : (a_lenstr.len < b_lenstr.len ? - 1 : 1);
+    }
+#endif
 
 static inline struct lenstr_t to_lenstr(const char *const cstring) {  
     struct lenstr_t lenstr = {0, 0};
@@ -24,17 +38,6 @@ static inline struct lenstr_t to_lenstr(const char *const cstring) {
 
 static inline void lenstr_print(const struct lenstr_t lenstr) { printf("%.*s\n", (int)lenstr.len, lenstr.str); }
 static inline void lenstr_printend(const struct lenstr_t lenstr, const char *const end) { printf("%.*s%s", (int)lenstr.len, lenstr.str, end); }
-
-static inline int lenstr_cmp(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
-    size_t min_len = a_lenstr.len <= b_lenstr.len ? a_lenstr.len : b_lenstr.len;
-    size_t i;
-    for (i = 0; i < min_len; ++i) {
-        if (a_lenstr.str[i] != b_lenstr.str[i]) {
-            return a_lenstr.str[i] - b_lenstr.str[i];
-        }
-    }
-    return a_lenstr.len == b_lenstr.len ? 0 : (a_lenstr.len < b_lenstr.len ? - 1 : 1);
-}
 
 static inline void set_locale_to_utf8(void) {
     setlocale(LC_CTYPE, "en_US.UTF-8");

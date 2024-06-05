@@ -1,4 +1,4 @@
-#include "ale.h"
+#include "./aleh/system.h"
 
 #if defined(_WIN32) || defined(_WIN64)
     #define FORTIFY " -D_FORTIFY_SOURCE=3"

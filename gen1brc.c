@@ -1,4 +1,6 @@
-#include "ale.h"
+#include <stdlib.h>
+#include "./aleh/string.h"
+#include "./aleh/mmap.h"
 
 /* #define N_LINES 1000000000 */
 /* #define N_LINES_STR "1B" */

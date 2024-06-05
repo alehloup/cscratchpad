@@ -1,4 +1,4 @@
-#include "ale.h"
+#include "./aleh/string.h"
 
 #define buffer_cap 256
 
@@ -71,41 +71,6 @@ static inline void test_string_eq(void) {
 
 #define b_cap 2048
 
-static inline void test_fileread(void) {
-    int printed = printf("\n TEST %s \n", __func__);
-    char b[b_cap];
-    size_t b_len = 0;
-    file_to_buffer("commands.txt", b_cap, b, &b_len);
-
-    printf("|%u|\n%s\n", (unsigned int)b_len, b);
-    (void) printed;
-}
-
-static inline void test_fileread_to_lines(void) {
-    int printed = printf("\n TEST %s \n", __func__);
-    char b[b_cap];
-    size_t b_len = 0;
-
-    struct lenstr_t lines[buffer_cap];
-    size_t lines_len = 0;
-    size_t i;
-
-    file_to_lines("commands.txt",b_cap, b, &b_len, buffer_cap, lines, &lines_len);
-
-    for (i = 0; i < lines_len; ++i) {
-        printf("%u: ", (unsigned int)i); lenstr_print(lines[i]);
-    }
-
-    lines_to_file(buffer_cap, lines, &lines_len, "linhas.txt");
-    (void) printed;
-}
-
-static inline void test_filewrite(void) {
-    int printed = printf("\n TEST %s \n", __func__);
-    lenstr_to_file(to_lenstr("Woa\nTestando arquivos!\n"), "saida.txt");
-    (void) printed;
-}
-
 static inline void test_subss(void) {
     int printed = printf("\n TEST %s \n", __func__);
     size_t end = strlen("Alessandro");
@@ -131,9 +96,6 @@ int main(void) {
     test_to_lines();
     test_split();
     test_string_eq();
-    test_fileread();
-    test_fileread_to_lines();
-    test_filewrite();
     test_subss();
     test_literal_lenstr();
 

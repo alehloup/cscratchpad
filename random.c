@@ -1,4 +1,4 @@
-#include "ale.h"
+#include "./aleh/system.h"
 
 int main(void) {
     unsigned int i;

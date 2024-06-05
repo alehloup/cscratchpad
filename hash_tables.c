@@ -1,4 +1,5 @@
-#include "ale.h"
+#include "./aleh/string.h"
+#include "./aleh/htmsi.h"
 
 #define table_cap (unsigned int)(1 << 6)
 

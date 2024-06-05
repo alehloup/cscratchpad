@@ -26,6 +26,11 @@
         "inttypes.h": "c",
         "math.h": "c",
         "memory.h": "c",
-        "intrin.h": "c"
+        "intrin.h": "c",
+        "hash.h": "c",
+        "mmap.h": "c",
+        "file.h": "c",
+        "system.h": "c",
+        "htmsi.h": "c"
     }
 }

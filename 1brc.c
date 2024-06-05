@@ -1,4 +1,6 @@
-#include "ale.h"
+#include "./aleh/mmap.h"
+#include "./aleh/thread.h"
+#include "./aleh/system.h"
 
 #define NUM_THREADS 12 /* Also works for 4096 threads > : ) */
 

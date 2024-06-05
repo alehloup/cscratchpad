@@ -47,7 +47,7 @@ static const char *const flags_tinyc =
 ;
 
 static const char *const flags_msvc =
-    "  cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl"
+    "  cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl /D_CRT_SECURE_NO_WARNINGS"
 ;
 
 static const char *const flags_clang = 

@@ -1,4 +1,5 @@
-#include "ale.h"
+#include <stdio.h>
+#include "./aleh/thread.h"
 
 #define NUM_THREADS_TO_CREATE 8001
 static unsigned int results[NUM_THREADS_TO_CREATE];

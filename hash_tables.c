@@ -3,12 +3,6 @@
 
 #define table_cap (unsigned int)(1 << 6)
 
-static inline void test_get_exp(void) {
-    int hash_table[table_cap] = {0};
-    printf("exp: %u\n", highbit((unsigned int)table_cap));
-    (void) hash_table;
-}
-
 static inline void test_hashtable_insertions(void) {
     unsigned int pos = 0;
     
@@ -17,34 +11,34 @@ static inline void test_hashtable_insertions(void) {
 
     printf("Keys cap: %u\n", table_cap);
 
-    pos = ht_lenstr_upsert(to_lenstr("Alessandro Stamatto"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Alessandro Stamatto"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Sarah Sakamoto"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Sarah Sakamoto"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Adir Luiz"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Adir Luiz"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Ines Stamatto"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Ines Stamatto"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Luane Stamatto"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Luane Stamatto"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Alessandro Stamatto"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Alessandro Stamatto"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Luane Stam"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Luane Stam"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Sarah Sakamoto"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Sarah Sakamoto"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Alex Stam"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Alex Stam"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    pos = ht_lenstr_upsert(to_lenstr("Alessandro Stam"), table_cap, keys, &keys_len);
+    pos = ht_msi_lenstr_upsert(to_lenstr("Alessandro Stam"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
     printf("Len: %u Cap: %u\n", keys_len, table_cap);
@@ -52,7 +46,6 @@ static inline void test_hashtable_insertions(void) {
 
 
 int main(void) {
-    test_get_exp();
     test_hashtable_insertions();
 
     printf("\nTested hashtable functions.\n");

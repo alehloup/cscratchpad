@@ -6,20 +6,49 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 
 #if defined(_WIN32) || defined(_WIN64)
     #if !defined(WIN32_LEAN_AND_MEAN)
-        #if defined(_MSC_VER)
-            #pragma warning(disable: 28301) 
-            #pragma warning(disable: 28251)
-        #endif
         #define WIN32_LEAN_AND_MEAN
         #include <Windows.h>
-        #include <io.h>
     #endif
+    #include <io.h>
 #else /* assume Unix: */
     #include <unistd.h>
 #endif
-#include <stdlib.h>
+#include <assert.h>
 #include <time.h>
-#include "string.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+
+static inline size_t aleh_system_char_pos(const char letter, const char *const cstring) {
+    const char *ptr = strchr(cstring, letter);
+    if (ptr >= cstring) {
+        return (size_t)(ptr - cstring);
+    } else {
+        return (size_t)-1;
+    }
+}
+
+static inline void aleh_system_buffer_append_cstr(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
+const char *const cstr) 
+{
+    const size_t cstr_len = strlen(cstr);
+
+    assert((*dst_buffer_len) + cstr_len < dst_buffer_cap);
+
+    memcpy(&dst_buffer[*dst_buffer_len], cstr, cstr_len);
+
+    *dst_buffer_len += cstr_len;
+    dst_buffer[(*dst_buffer_len)] = 0;
+}
+static inline void aleh_system_buffer_append_cstrs(const size_t dst_buffer_cap, char dst_buffer[], size_t *dst_buffer_len, 
+    const char *const cstrs[], const size_t cstrs_len) 
+{ 
+    size_t i;
+    for (i = 0; i < cstrs_len; ++i) {
+        aleh_system_buffer_append_cstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
+    }
+}
 
 #if defined(_WINDOWS_) /* if _WINDOWS_ else Unix */
     static inline void sleep_(unsigned int seconds) {
@@ -38,7 +67,7 @@ static inline int compile_c(const char *const c_file_c, const char *const flags)
     size_t buffer_len = 0; 
 
     char c_file[256] = {0};
-    const size_t dot_pos = char_pos('.', c_file_c);
+    const size_t dot_pos = aleh_system_char_pos('.', c_file_c);
     const size_t c_file_len = dot_pos == (size_t)-1 ? strlen(c_file_c) : dot_pos;
 
     void *ptr = (
@@ -53,7 +82,7 @@ static inline int compile_c(const char *const c_file_c, const char *const flags)
     };
     parts[0] = flags; parts[2] = c_file; parts[4] = c_file; parts[7] = c_file;
 
-    buffer_append_cstrs(2048, buffer, &buffer_len, parts, 9);
+    aleh_system_buffer_append_cstrs(2048, buffer, &buffer_len, parts, 9);
 
     (void) ptr;
 
@@ -66,7 +95,7 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     size_t buffer_len = 0; 
 
     char c_file[256] = {0};
-    const size_t dot_pos = char_pos('.', c_file_c);
+    const size_t dot_pos = aleh_system_char_pos('.', c_file_c);
     const size_t c_file_len = dot_pos == (size_t)-1 ? strlen(c_file_c) : dot_pos;
 
     void *ptr = (
@@ -82,19 +111,16 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     };
     parts[0] = flags; parts[2] = c_file; parts[4] = c_file; parts[7] = c_file; parts[10] = c_file;
 
-    buffer_append_cstrs(2048, buffer, &buffer_len, parts, 13);
+    aleh_system_buffer_append_cstrs(2048, buffer, &buffer_len, parts, 13);
 
     (void) ptr;
 
     printf("\n%.*s\n", (int)buffer_len, buffer);
     return system(buffer);
 }
-/* */
-#pragma endregion System
 
 
-#pragma region Benchmark
-/* */
+
 static clock_t BENCHCLOCK_ = 0;
 static inline void start_benchclock(void) {
     BENCHCLOCK_ = clock(); 

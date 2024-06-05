@@ -15,18 +15,18 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
     #define LENSTR_T_DEFINED
     /* struct lenstr_t { size_t len; const char *str; }; */
     struct lenstr_t { size_t len; const char *str; };
-
-    static inline int lenstr_cmp(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
-        size_t min_len = a_lenstr.len <= b_lenstr.len ? a_lenstr.len : b_lenstr.len;
-        size_t i;
-        for (i = 0; i < min_len; ++i) {
-            if (a_lenstr.str[i] != b_lenstr.str[i]) {
-                return a_lenstr.str[i] - b_lenstr.str[i];
-            }
-        }
-        return a_lenstr.len == b_lenstr.len ? 0 : (a_lenstr.len < b_lenstr.len ? - 1 : 1);
-    }
 #endif
+
+static inline int lenstr_cmp(const struct lenstr_t a_lenstr, const struct lenstr_t b_lenstr) {
+    size_t min_len = a_lenstr.len <= b_lenstr.len ? a_lenstr.len : b_lenstr.len;
+    size_t i;
+    for (i = 0; i < min_len; ++i) {
+        if (a_lenstr.str[i] != b_lenstr.str[i]) {
+            return a_lenstr.str[i] - b_lenstr.str[i];
+        }
+    }
+    return a_lenstr.len == b_lenstr.len ? 0 : (a_lenstr.len < b_lenstr.len ? - 1 : 1);
+}
 
 static inline struct lenstr_t to_lenstr(const char *const cstring) {  
     struct lenstr_t lenstr = {0, 0};

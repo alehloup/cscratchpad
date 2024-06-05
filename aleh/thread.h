@@ -11,14 +11,10 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #include <assert.h>
 #if defined(_WIN32) || defined(_WIN64)
     #if !defined(WIN32_LEAN_AND_MEAN)
-        #if defined(_MSC_VER)
-            #pragma warning(disable: 28301) 
-            #pragma warning(disable: 28251)
-        #endif
         #define WIN32_LEAN_AND_MEAN
         #include <Windows.h>
-        #include <io.h>
     #endif
+    #include <io.h>
 #else /* assume Unix: */
     #include <unistd.h>
     #include <pthread.h>

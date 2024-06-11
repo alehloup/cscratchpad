@@ -5,8 +5,9 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 
 
 /* configure */
-#define THREAD_STACK_SIZE_ 64 * 1024
-#define MAX_NTHREADS 8192
+static const unsigned int THREAD_STACK_SIZE_ = 64 * 1024;
+static const unsigned int MAX_NTHREADS_ = 8192;
+
 
 #include <assert.h>
 #if defined(_WIN32) || defined(_WIN64)
@@ -63,7 +64,7 @@ static inline void go_threads(
     void * (*routine)(void *thread_idx), unsigned int number_of_threads_to_spawn, THREAD_T threads[])
 {
     unsigned int i;
-    assert(number_of_threads_to_spawn < MAX_NTHREADS);
+    assert(number_of_threads_to_spawn < MAX_NTHREADS_);
 
     for (i = 0; i < number_of_threads_to_spawn; ++i) {
         threads[i] = go(routine, (size_t)i);
@@ -71,7 +72,7 @@ static inline void go_threads(
 }
 static inline void join_threads(THREAD_T threads[], const unsigned int threads_len) {
     unsigned int i;
-    assert(threads_len <= MAX_NTHREADS);
+    assert(threads_len <= MAX_NTHREADS_);
     
     for (i = 0; i < threads_len; ++i) {
         join_thread(threads[i]);

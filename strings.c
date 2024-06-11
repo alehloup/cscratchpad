@@ -1,6 +1,6 @@
 #include "./aleh/string.h"
 
-#define buffer_cap 256
+enum { buffer_cap = 256 };
 
 static inline void test_buffers(void) {
     int printed = printf("\n TEST %s \n", __func__);

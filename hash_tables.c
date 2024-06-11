@@ -1,7 +1,7 @@
 #include "./aleh/string.h"
 #include "./aleh/htmsi.h"
 
-#define table_cap (unsigned int)(1 << 6)
+enum { table_cap = (1u << 6u) };
 
 static inline void test_hashtable_insertions(void) {
     unsigned int pos = 0;
@@ -9,7 +9,7 @@ static inline void test_hashtable_insertions(void) {
     struct lenstr_t keys[table_cap] = {{0, 0}};
     unsigned int keys_len = 0;
 
-    printf("Keys cap: %u\n", table_cap);
+    printf("Keys cap: %d\n", table_cap);
 
     pos = ht_msi_lenstr_upsert(to_lenstr("Alessandro Stamatto"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
@@ -41,7 +41,7 @@ static inline void test_hashtable_insertions(void) {
     pos = ht_msi_lenstr_upsert(to_lenstr("Alessandro Stam"), table_cap, keys, &keys_len);
     printf("[%u] %s \n", pos, keys[pos].str);
 
-    printf("Len: %u Cap: %u\n", keys_len, table_cap);
+    printf("Len: %u Cap: %d\n", keys_len, table_cap);
 }
 
 

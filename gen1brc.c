@@ -3,14 +3,8 @@
 #include "./aleh/file.h"
 #include "./aleh/mmap.h"
 
-/* #define N_LINES 1000000000 */
-/* #define N_LINES_STR "1B" */
-#define N_LINES 10000
-#define N_LINES_STR "10k"
-
-#define FILENAME "measurements" N_LINES_STR ".txt"
-
-#define nmax_cidades 512
+enum { N_LINES = 10000, nmax_cidades = 512 };
+static const char *FILENAME = "measurements10k.txt";
 
 static size_t seed = 2147483269;
 

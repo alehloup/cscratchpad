@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "./aleh/thread.h"
 
-#define NUM_THREADS_TO_CREATE 8001
+enum { NUM_THREADS_TO_CREATE = 8001 };
 static unsigned int results[NUM_THREADS_TO_CREATE];
 
 static inline void * sum(void *thread_idx) {

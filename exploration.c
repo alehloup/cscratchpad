@@ -15,16 +15,16 @@ static inline int lens_cmp(const void *a_void, const void *b_void) {
     return (int)(b->count - a->count); /* reverse */
 }
 
-#define cities_cap 1<<15
+enum { cities_cap = 1<<15 };
 static struct lenstr_t cities[cities_cap] = {{0,0}};
 
-#define lines_cap 32000
+enum { lines_cap = 32000 };
 static struct lenstr_t lines[lines_cap];
 
-#define cities_arr_cap 1024
+enum { cities_arr_cap = 1024 };
 static struct lenstr_t cities_arr[1024];
 
-#define lens_count_cap 128
+enum { lens_count_cap = 128 };
 
 static inline void run(void) {
     size_t filesize = 0, lines_len = 0;
@@ -43,7 +43,7 @@ static inline void run(void) {
             ss.len = char_pos_lenstr(';', lines[i]);
             ss.str = lines[i].str;
 
-            pos = ht_lenstr_upsert(ss, cities_cap, cities, &cities_len);
+            pos = ht_msi_lenstr_upsert(ss, cities_cap, cities, &cities_len);
             (void) pos;
 
             ++lens_count[lines[i].len];
@@ -54,7 +54,7 @@ static inline void run(void) {
         unsigned int cities_arr_len = 0;
         unsigned int i;
 
-        ht_lenstr_to_arr(
+        ht_msi_lenstr_to_arr(
             cities_cap, cities,
             cities_arr_cap, cities_arr, &cities_arr_len
         );

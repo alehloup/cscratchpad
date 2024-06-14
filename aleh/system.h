@@ -67,8 +67,7 @@ static inline void start_benchclock(void) {
     BENCHCLOCK_ = clock(); 
 } 
 static inline void stop_benchclock(void) {
-    clock_t end_time = clock();
-    printf("\n\nExecuted in %.3f seconds \n", ((double)end_time - BENCHCLOCK_) / (double)CLOCKS_PER_SEC);
+    printf("\n\nExecuted in %.3f seconds \n", (double)(clock() - BENCHCLOCK_) / (double)CLOCKS_PER_SEC);
 }
 
 static inline int compile_c(const char *const c_file_c, const char *const flags) {

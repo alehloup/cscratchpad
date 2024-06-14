@@ -71,7 +71,7 @@ static inline void stop_benchclock(void) {
 }
 
 static inline int compile_c(const char *const c_file_c, const char *const flags) {
-    char buffer[2048] = {0}; 
+    char buffer[1024] = {0}; 
     size_t buffer_len = 0; 
 
     char c_file[256] = {0};
@@ -83,13 +83,12 @@ static inline int compile_c(const char *const c_file_c, const char *const flags)
         memcpy(c_file, c_file_c, c_file_len)
     ); /* remove .c */
 
-    const char * parts[9] = {
+    const char * parts[6] = {
         flags, 
-        " ", c_file, ".c -o ", c_file, ".exe ",  /* compile .c to .exe */
-        "&& echo _ Compiled _ ", c_file, ".exe! \n", /* print that it was compiled */
+        " ", c_file, ".c -o ", c_file, ".exe "  /* compile .c to .exe */
     };
 
-    aleh_system_buffer_append_cstrs(2048, buffer, &buffer_len, parts, 9);
+    aleh_system_buffer_append_cstrs(1024, buffer, &buffer_len, parts, 6);
 
     (void) ptr;
     printf("\n%.*s\n", (int)buffer_len, buffer);
@@ -111,10 +110,11 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     ); /* remove .c */
 
     const char * parts[4] = {
-        "echo _ Executing _ && \"./", c_file, ".exe", "\" " /* execute */
+        "true && \"./", c_file, ".exe", "\" " /* execute */
     };
 
     int success = compile_c(c_file_c, flags);
+    sleep_(1);
 
     aleh_system_buffer_append_cstrs(256, buffer, &buffer_len, parts, 4);
 

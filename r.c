@@ -142,7 +142,7 @@ int main(int argc, const char *const *argv) {
             success = compile_run_c(filename_c, flags);
 
             if (success == 0) {
-                printf("\n\nDone, SUCCESS\n\n");
+                // printf("\n\nDone, SUCCESS\n\n");
             } else {
                 printf("\n\nDone, ERROR!\n\n");
             }
@@ -175,7 +175,7 @@ int main(int argc, const char *const *argv) {
             (void) printed;            
 
             if (success == 0) {
-                printf("\n\nDone, SUCCESS\n\n");
+                // printf("\n\nDone, SUCCESS\n\n");
             } else {
                 printf("\n\nDone, ERROR!\n\n");
             }
@@ -208,7 +208,7 @@ int main(int argc, const char *const *argv) {
             (void) printed;
 
             if (success == 0) {
-                printf("\n\nDone, SUCCESS\n\n");
+                // printf("\n\nDone, SUCCESS\n\n");
             } else {
                 printf("\n\nDone, ERROR!\n\n");
             }

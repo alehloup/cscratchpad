@@ -140,7 +140,6 @@ int main(int argc, const char *const *argv) {
     switch (flags[0]) {
         default: 
             success = compile_run_c(filename_c, flags);
-            printf("command=%d %s\n", success, success == 0? "success" : "error");
 
             if (success == 0) {
                 printf("\n\nDone, SUCCESS\n\n");

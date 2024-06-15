@@ -57,6 +57,7 @@ static const char *const flags_clang =
     " -fsanitize=undefined -fsanitize=bounds"
     " -Wshadow"
     " -Wdouble-promotion"
+    " -D_CRT_SECURE_NO_WARNINGS"
     CLANG_ACCEPT_C_ARRAY_PLS
 ;
 
@@ -140,39 +141,6 @@ int main(int argc, const char *const *argv) {
     switch (flags[0]) {
         default: 
             success = compile_run_c(filename_c, flags);
-
-            if (success == 0) {
-                // printf("\n\nDone, SUCCESS\n\n");
-            } else {
-                printf("\n\nDone, ERROR!\n\n");
-            }
-        
-            return success
-        ;
-
-        case 'v':
-            printed = printf("\n===== GCC =====");
-            success = compile_c(filename_c, flags_gcc);
-            printed = printf("gcc=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== G++ =====");
-            success = compile_c(filename_c, flags_gpp);
-            printed = printf("g++=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== TCC =====");
-            success = compile_c(filename_c, flags_tinyc);
-            printed = printf("tcc=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== MSVC =====");
-            success = compile_c(filename_c, flags_msvc);
-            printed = printf("msvc=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== Clang =====");
-            success = compile_c(filename_c, flags_clang);
-            printed = printf("clang=%d %s\n", success, success == 0? "success" : "error");
-            // printed = printf("\n===== C89 =====");
-            // success = compile_c(filename_c, flags_c89);
-            // printed = printf("c89=%d %s\n", success, success == 0? "success" : "error");
-
-            delete_artifacts();
-
-            (void) printed;            
 
             if (success == 0) {
                 // printf("\n\nDone, SUCCESS\n\n");

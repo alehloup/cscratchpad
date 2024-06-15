@@ -8,7 +8,7 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #include <string.h>
 #include <stdio.h>
 #include <locale.h>
-#include <math.h>
+#include <stdlib.h>
 
 
 #if !defined(LENSTR_T_DEFINED)

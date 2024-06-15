@@ -22,6 +22,10 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
         return (size_t)_filelengthi64(_fileno(stream));
     }
 #else /* Unix */
+    #include <unistd.h>
+    #include <sys/mman.h>
+    #include <sys/stat.h>
+
     static inline int aleh_mmap_fileno_(FILE *stream) {
         return fileno(stream);
     }

@@ -69,8 +69,6 @@ static inline void test_string_eq(void) {
     (void) printed;
 }
 
-#define b_cap 2048
-
 static inline void test_subss(void) {
     int printed = printf("\n TEST %s \n", __func__);
     size_t end = strlen("Alessandro");

@@ -1,14 +1,14 @@
 #include <stdlib.h>
-#include "./aleh/string.h"
-#include "./aleh/file.h"
-#include "./aleh/mmap.h"
+#include "aleh/string.h"
+#include "aleh/file.h"
+#include "aleh/mmap.h"
 
 enum { N_LINES = 10000, nmax_cidades = 512 };
 static const char *FILENAME = "measurements10k.txt";
 
 static size_t seed = 2147483269;
 
-static inline void run(void) {
+static void run(void) {
     size_t mmap_cidades_len = 0, mmap_measurements_len = 0;
     char *mmap_cidades = 0, *mmap_mmeasurements = 0;
     size_t idx = 0;

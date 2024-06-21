@@ -1,8 +1,8 @@
-#include "./aleh/string.h"
+#include "aleh/string.h"
 
 enum { buffer_cap = 256 };
 
-static inline void test_buffers(void) {
+static void test_buffers(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t string = to_lenstr("Alessandro");
     char buff[buffer_cap];
@@ -16,7 +16,7 @@ static inline void test_buffers(void) {
     (void) printed;
 }
 
-static inline void test_to_lines(void) {
+static void test_to_lines(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t text = to_lenstr("Alessandro \n Luiz\n Stamatto \n Ferreira");
     
@@ -32,7 +32,7 @@ static inline void test_to_lines(void) {
     (void) printed;
 }
 
-static inline void test_split(void) {
+static void test_split(void) {
     int printed = printf("\n TEST %s \n", __func__);
     struct lenstr_t text = to_lenstr("Alessandro  Luiz Stamatto  Ferreira");
 
@@ -48,7 +48,7 @@ static inline void test_split(void) {
     (void) printed;
 }
 
-static inline void print_lenstrcmp(struct lenstr_t a, struct lenstr_t b) {
+static void print_lenstrcmp(struct lenstr_t a, struct lenstr_t b) {
     int printed = printf("\n TEST %s \n", __func__);
     printf("lenstrcmp, ");
     
@@ -60,7 +60,7 @@ static inline void print_lenstrcmp(struct lenstr_t a, struct lenstr_t b) {
     (void) printed;
 }
 
-static inline void test_string_eq(void) {
+static void test_string_eq(void) {
     int printed = printf("\n TEST %s \n", __func__);
     print_lenstrcmp(to_lenstr("Alessandro"), to_lenstr("Alessandr"));
     print_lenstrcmp(to_lenstr("Alessandro"), to_lenstr("Alessandro"));
@@ -71,7 +71,7 @@ static inline void test_string_eq(void) {
 
 #define b_cap 2048
 
-static inline void test_subss(void) {
+static void test_subss(void) {
     int printed = printf("\n TEST %s \n", __func__);
     size_t end = strlen("Alessandro");
     struct lenstr_t nome = {0, 0};
@@ -85,7 +85,7 @@ static inline void test_subss(void) {
     (void) printed;
 }
 
-static inline void test_literal_lenstr(void) {
+static void test_literal_lenstr(void) {
     lenstr_print(to_lenstr("Alex"));
     lenstr_print(to_lenstr("Sara"));
     lenstr_print(to_lenstr("1234567"));

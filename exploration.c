@@ -1,16 +1,16 @@
-#include "./aleh/string.h"
-#include "./aleh/htmsi.h"
-#include "./aleh/mmap.h"
-#include "./aleh/system.h"
+#include "aleh/string.h"
+#include "aleh/htmsi.h"
+#include "aleh/mmap.h"
+#include "aleh/system.h"
 
 struct lencount_t { unsigned int len; unsigned int count; };
 
-static inline int ss_cmp(const void *a_void, const void *b_void) {
+static int ss_cmp(const void *a_void, const void *b_void) {
     const struct lenstr_t *a = (const struct lenstr_t *)a_void, *b = (const struct lenstr_t *)b_void;
     return lenstr_cmp_locale(*a, *b);
 }
 
-static inline int lens_cmp(const void *a_void, const void *b_void) {
+static int lens_cmp(const void *a_void, const void *b_void) {
     const struct lencount_t *a = (const struct lencount_t *)a_void, *b = (const struct lencount_t *)b_void;
     return (int)(b->count - a->count); /* reverse */
 }
@@ -26,7 +26,7 @@ static struct lenstr_t cities_arr[1024];
 
 enum { lens_count_cap = 128 };
 
-static inline void run(void) {
+static void run(void) {
     size_t filesize = 0, lines_len = 0;
     unsigned int cities_len = 0, lens_count[lens_count_cap] = {0};
     

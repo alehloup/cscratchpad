@@ -1,9 +1,9 @@
-#include "./aleh/string.h"
-#include "./aleh/htmsi.h"
+#include "aleh/string.h"
+#include "aleh/htmsi.h"
 
 enum { table_cap = (1u << 6u) };
 
-static inline void test_hashtable_insertions(void) {
+static void test_hashtable_insertions(void) {
     unsigned int pos = 0;
     
     struct lenstr_t keys[table_cap] = {{0, 0}};

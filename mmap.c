@@ -1,4 +1,4 @@
-#include "./aleh/mmap.h"
+#include "aleh/mmap.h"
 
 static inline void run(void) {
     size_t contents_len = 0;

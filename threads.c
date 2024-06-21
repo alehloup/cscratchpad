@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include "./aleh/thread.h"
+#include "aleh/thread.h"
 
 enum { NUM_THREADS_TO_CREATE = 8001 };
 static unsigned int results[NUM_THREADS_TO_CREATE];
 
-static inline void * sum(void *thread_idx) {
+static void * sum(void *thread_idx) {
     unsigned int threadIdx = (unsigned int)(size_t)(thread_idx);
     results[threadIdx] = threadIdx * 10;
     return 0;

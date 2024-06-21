@@ -1,6 +1,6 @@
-#include "./aleh/mmap.h"
-#include "./aleh/thread.h"
-#include "./aleh/system.h"
+#include "aleh/mmap.h"
+#include "aleh/thread.h"
+#include "aleh/system.h"
 
 /* Configure */
 enum { NUM_THREADS = 12 }; /* Also works for 4096 threads > : ) */
@@ -27,7 +27,7 @@ static struct City thread_cities[NUM_THREADS][TABLE_SIZE];
 static char * contents = 0; /* will be the mmap buffer */
 static size_t contents_len = 0; /* will be the mmap buffer len */
 
-static inline struct City * my_cities(unsigned int thread_idx) {
+static struct City * my_cities(unsigned int thread_idx) {
     struct City* cities = thread_cities[thread_idx];
 
     unsigned int i;
@@ -42,7 +42,7 @@ static inline struct City * my_cities(unsigned int thread_idx) {
 }
 
 /* Chunks the input by the thread_idx, runs in entire content if NUM_THREADS == 1 */
-static inline void * chunked_run(void *threadidx /* thread_idx */) {
+static void * chunked_run(void *threadidx /* thread_idx */) {
     unsigned int thread_idx = (unsigned int)(size_t) threadidx;
     unsigned int line_num = 0;
     
@@ -152,7 +152,7 @@ static inline void * chunked_run(void *threadidx /* thread_idx */) {
     return 0;
 }
 
-static inline void aggregate_results(void) {
+static void aggregate_results(void) {
     struct City* thread0 = thread_cities[0];
 
     unsigned int i_thread;
@@ -177,7 +177,7 @@ static inline void aggregate_results(void) {
     }
 }
 
-static inline void print_results(void) {
+static void print_results(void) {
     unsigned int i;
     for (i = 0; i < ncity; ++i) {
         struct City *city = &thread_cities[0][hash_order[i]];
@@ -200,7 +200,7 @@ static inline void print_results(void) {
     }
 }
 
-static inline void run(void) {
+static void run(void) {
     THREAD_T threads[NUM_THREADS];
 
     printf("\n Running 1BRC on file: %s\n", FILEPATH);

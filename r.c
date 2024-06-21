@@ -57,6 +57,7 @@ static const char *const flags_clang =
     " -fsanitize=undefined -fsanitize=bounds"
     " -Wshadow"
     " -Wdouble-promotion"
+    " -D_CRT_SECURE_NO_WARNINGS"
     CLANG_ACCEPT_C_ARRAY_PLS
 ;
 

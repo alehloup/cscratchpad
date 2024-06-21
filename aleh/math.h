@@ -12,6 +12,7 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
     #include <intrin.h>
 #endif
 #include <math.h>
+#include <stdlib.h>
 
 
 static inline size_t power2_number_mod(size_t power2_number, size_t modval) { return (power2_number) & (modval - 1); }

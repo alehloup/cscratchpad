@@ -4,6 +4,7 @@
 extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #endif
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <float.h>
@@ -13,14 +14,6 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
-
-// For alloca :
-#if defined(_WIN32) || defined(_WIN64)
-    #include <malloc.h>  // MSVC on Windows
-#else
-    #include <alloca.h>  // Linux, macOS, iOS, Android
-#endif
-
 
 #if !defined(__cplusplus) && !defined(_ISO646_H)
     #ifndef and

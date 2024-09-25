@@ -31,6 +31,10 @@
         "mmap.h": "c",
         "file.h": "c",
         "system.h": "c",
-        "htmsi.h": "c"
+        "htmsi.h": "c",
+        "iso646.h": "c",
+        "prettyc.h": "c",
+        "errno.h": "c",
+        "malloc.h": "c"
     }
 }

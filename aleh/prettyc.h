@@ -74,6 +74,9 @@ typedef void*  any;
 #define withfile(var, ...) for (FILE* var = (__VA_ARGS__), *prettyc_flag_##__LINE__ = (FILE*)1; prettyc_flag_##__LINE__; fclose(var), prettyc_flag_##__LINE__ = NULL)
 #define defer(...) for (bool prettyc_flag_##__LINE__ = 1; prettyc_flag_##__LINE__; prettyc_flag_##__LINE__ = 0, (__VA_ARGS__))
 
+#define equal_array(array_a, array_b) (sizeof(array_a) == sizeof(array_b) ? !memcmp(array_a, array_b, sizeof(array_a)) : 0)
+#define equal_pstruct(pstruct_a, pstruct_b) (sizeof(*pstruct_a) == sizeof(*pstruct_b) ? !memcmp(pstruct_a, pstruct_b, sizeof(*pstruct_a)) : 0)
+
 #ifdef __cplusplus
 } /* closes extern C, Cancels Name Mangling when compiled as C++ */
 #endif
@@ -151,8 +154,5 @@ static inline int prettyc_anything_equal(void *a, void *b) { return a == b; }
         default: prettyc_anything_equal)        \
     (a, __VA_ARGS__)
 #define like(a, ...) equal(a, __VA_ARGS__)
-
-#define equal_array(array_a, array_b) (sizeof(array_a) == sizeof(array_b) ? !memcmp(array_a, array_b, sizeof(array_a)) : 0)
-#define equal_pstruct(pstruct_a, pstruct_b) (sizeof(*pstruct_a) == sizeof(*pstruct_b) ? !memcmp(pstruct_a, pstruct_b, sizeof(*pstruct_a)) : 0)
 
 #endif

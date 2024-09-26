@@ -86,6 +86,7 @@ typedef void*  any;
 
 #ifdef __cplusplus
     #define ZEROINIT {}
+    #define threadlocal thread_local
 
     #include <type_traits>
     //len
@@ -101,13 +102,13 @@ typedef void*  any;
         return a == b;
     }
     template<> bool equal<float>(float a, float b) {
-        return fabsf(a - b) < FLT_EPSILON;
+        return fabs(a - b) < FLT_EPSILON;
     }
     template<> bool equal<double>(double a, double b) {
-        return std::fabs(a - b) < DBL_EPSILON;
+        return fabs(a - b) < DBL_EPSILON;
     }
     template<> bool equal<long double>(long double a, long double b) {
-        return std::fabs(a - b) < LDBL_EPSILON;
+        return fabs(a - b) < LDBL_EPSILON;
     }
     template<> bool equal<const char*>(const char* a, const char* b) {
         return strcmp(a, b) == 0;
@@ -118,42 +119,43 @@ typedef void*  any;
     template<typename T> bool equal(T* a, T* b) {
         return a == b;
     }
-#else
-#define ZEROINIT {0}
-
-//len
-#define len(...) \
-    ((__VA_ARGS__) == NULL) ? 0                  \
-    : _Generic((__VA_ARGS__),                    \
-    char const *: (strlen((const char*)(__VA_ARGS__))),    \
-    char *: (strlen((char*)(__VA_ARGS__))),          \
-    default: (sizeof(__VA_ARGS__) / sizeof(__VA_ARGS__[0])))
-
-//equal
-static inline int prettyc_char_equal(char a, char b) { return a == b; }
-static inline int prettyc_short_equal(short a, short b) { return a == b; }
-static inline int prettyc_int_equal(int a, int b) { return a == b; }
-static inline int prettyc_longlong_equal(long long a, long long b) { return a == b; }
-static inline int prettyc_sizet_equal(size_t a, size_t b) { return a == b; }
-static inline int prettyc_float_equal(float a, float b) { return fabs(a - b) < (double)FLT_EPSILON; }
-static inline int prettyc_double_equal(double a, double b) { return fabs(a - b) < DBL_EPSILON; }
-static inline int prettyc_literal_equal(const char *a, const char *b) { return !strcmp(a, b); }
-static inline int prettyc_string_equal(char *a, char *b) { return !strcmp(a, b); }
-static inline int prettyc_anything_equal(void *a, void *b) { return a == b; }
-//
-#define equal(a, ...)                           \
-    _Generic((__VA_ARGS__),                     \
-        char: prettyc_char_equal,               \
-        short: prettyc_short_equal,             \
-        int: prettyc_int_equal,                 \
-        long long: prettyc_longlong_equal,      \
-        size_t: prettyc_sizet_equal,            \
-        float: prettyc_float_equal,             \
-        double: prettyc_double_equal,           \
-        char *: prettyc_string_equal,           \
-        char const *: prettyc_literal_equal,    \
-        default: prettyc_anything_equal)        \
-    (a, __VA_ARGS__)
-#define like(a, ...) equal(a, __VA_ARGS__)
+#else // Pure C
+    #define ZEROINIT {0}
+    #define threadlocal _Thread_local
+    
+    //len
+    #define len(...) \
+        ((__VA_ARGS__) == NULL) ? 0                  \
+        : _Generic((__VA_ARGS__),                    \
+        char const *: (strlen((const char*)(__VA_ARGS__))),    \
+        char *: (strlen((char*)(__VA_ARGS__))),          \
+        default: (sizeof(__VA_ARGS__) / sizeof(__VA_ARGS__[0])))
+    
+    //equal
+    static inline int prettyc_char_equal(char a, char b) { return a == b; }
+    static inline int prettyc_short_equal(short a, short b) { return a == b; }
+    static inline int prettyc_int_equal(int a, int b) { return a == b; }
+    static inline int prettyc_longlong_equal(long long a, long long b) { return a == b; }
+    static inline int prettyc_sizet_equal(size_t a, size_t b) { return a == b; }
+    static inline int prettyc_float_equal(float a, float b) { return fabs(a - b) < (double)FLT_EPSILON; }
+    static inline int prettyc_double_equal(double a, double b) { return fabs(a - b) < DBL_EPSILON; }
+    static inline int prettyc_literal_equal(const char *a, const char *b) { return !strcmp(a, b); }
+    static inline int prettyc_string_equal(char *a, char *b) { return !strcmp(a, b); }
+    static inline int prettyc_anything_equal(void *a, void *b) { return a == b; }
+    //
+    #define equal(a, ...)                           \
+        _Generic((__VA_ARGS__),                     \
+            char: prettyc_char_equal,               \
+            short: prettyc_short_equal,             \
+            int: prettyc_int_equal,                 \
+            long long: prettyc_longlong_equal,      \
+            size_t: prettyc_sizet_equal,            \
+            float: prettyc_float_equal,             \
+            double: prettyc_double_equal,           \
+            char *: prettyc_string_equal,           \
+            char const *: prettyc_literal_equal,    \
+            default: prettyc_anything_equal)        \
+        (a, __VA_ARGS__)
+    #define like(a, ...) equal(a, __VA_ARGS__)
 
 #endif

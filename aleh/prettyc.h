@@ -1,5 +1,8 @@
 #pragma once
 
+/* Heavely inspired by Aartaka Pretty C and "C Until its no Longer C"*/
+// https://aartaka.me/c-not-c
+
 #ifdef __cplusplus
 extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #endif

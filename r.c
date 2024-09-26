@@ -1,5 +1,21 @@
 #include "aleh/system.h"
 
+/* For enabling Shadow Stacks: */
+// https://x86.lol/generic/2024/09/23/user-shadow-stacks.html
+// 
+// You opt in to shadow stacks using a glibc tunable (an Env Var). When everything works, you’ll see that stack smashing is prevented
+// $ GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK ./test
+
+// Linux 6.6 or later with CONFIG_X86_USER_SHADOW_STACK=y
+// GCC 8 or clang 7 or later && glibc 2.39 or later
+// Intel Tiger Lake or later || AMD Zen 3 or later
+// GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK env var
+// -fcf-protection=return (or full)
+
+/* A small bat for activating MSVC environment (For MSVC and MSVC Clang): */
+// chcp 65001
+// call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
+
 #if defined(_WIN32) || defined(_WIN64)
     #define FORTIFY " -D_FORTIFY_SOURCE=3"
     #define CLANG_ACCEPT_C_ARRAY_PLS " -Wno-unsafe-buffer-usage"

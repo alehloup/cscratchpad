@@ -152,4 +152,7 @@ static inline int prettyc_anything_equal(void *a, void *b) { return a == b; }
     (a, __VA_ARGS__)
 #define like(a, ...) equal(a, __VA_ARGS__)
 
+#define equal_array(array_a, array_b) (sizeof(array_a) == sizeof(array_b) ? !memcmp(array_a, array_b, sizeof(array_a)) : 0)
+#define equal_pstruct(pstruct_a, pstruct_b) (sizeof(*pstruct_a) == sizeof(*pstruct_b) ? !memcmp(pstruct_a, pstruct_b, sizeof(*pstruct_a)) : 0)
+
 #endif

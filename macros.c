@@ -8,6 +8,9 @@ static inline void teste_equal(void) {
     const char *lit1 = "world", *lit2 = "world";
     int a = 5, b = 5;
     size_t sz1 = 42, sz2 = 42;
+    int xv[5] = {1, 5, 3};
+    int yv[5] = {1, 5, 3};
+    struct stest k = {5, 5.2}, l = {5, 5.2};
 
     if (equal(x, y)) {
         printf("Floats are equal\n");
@@ -31,6 +34,14 @@ static inline void teste_equal(void) {
 
     if (equal(sz1, sz2)) {
         printf("Sizes are equal\n");
+    }
+
+    if (equal_array(xv, yv)) {
+        printf("equal arrays\n");
+    }
+
+    if (equal_pstruct(&k, &l)) {
+        printf("equal structs\n");
     }
 }
 

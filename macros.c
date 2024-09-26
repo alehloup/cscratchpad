@@ -70,7 +70,7 @@ int main(void) {
   printf("\n");
 
   withfile (file, fopen("hello.txt", "w"))
-        fprintf(file, "Hello world!");
+    fprintf(file, "Hello world!");
 
   teste_equal();
 

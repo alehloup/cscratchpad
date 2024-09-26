@@ -35,6 +35,7 @@
         "iso646.h": "c",
         "prettyc.h": "c",
         "errno.h": "c",
-        "malloc.h": "c"
+        "malloc.h": "c",
+        "float.h": "c"
     }
 }

@@ -1,5 +1,7 @@
 #include "aleh/prettyc.h"
 
+struct stest {int x; float y;};
+
 static inline void teste_equal(void) {
   float x = 1.0f, y = 1.0f;
     double m = 2.0, n = 2.0;
@@ -10,7 +12,7 @@ static inline void teste_equal(void) {
     size_t sz1 = 42, sz2 = 42;
     int xv[5] = {1, 5, 3};
     int yv[5] = {1, 5, 3};
-    struct stest k = {5, 5.2}, l = {5, 5.2};
+    struct stest k = {5, 5.2f}, l = {5, 5.2f};
 
     if (equal(x, y)) {
         printf("Floats are equal\n");

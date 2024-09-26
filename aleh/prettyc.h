@@ -132,9 +132,8 @@ static inline int prettyc_short_equal(short a, short b) { return a == b; }
 static inline int prettyc_int_equal(int a, int b) { return a == b; }
 static inline int prettyc_longlong_equal(long long a, long long b) { return a == b; }
 static inline int prettyc_sizet_equal(size_t a, size_t b) { return a == b; }
-static inline int prettyc_float_equal(float a, float b) { return fabsf(a - b) < FLT_EPSILON; }
+static inline int prettyc_float_equal(float a, float b) { return fabs(a - b) < (double)FLT_EPSILON; }
 static inline int prettyc_double_equal(double a, double b) { return fabs(a - b) < DBL_EPSILON; }
-static inline int prettyc_long_double_equal(long double a, long double b) { return fabsl(a - b) < LDBL_EPSILON; }
 static inline int prettyc_literal_equal(const char *a, const char *b) { return !strcmp(a, b); }
 static inline int prettyc_string_equal(char *a, char *b) { return !strcmp(a, b); }
 static inline int prettyc_anything_equal(void *a, void *b) { return a == b; }
@@ -148,7 +147,6 @@ static inline int prettyc_anything_equal(void *a, void *b) { return a == b; }
         size_t: prettyc_sizet_equal,            \
         float: prettyc_float_equal,             \
         double: prettyc_double_equal,           \
-        long double: prettyc_long_double_equal, \
         char *: prettyc_string_equal,           \
         char const *: prettyc_literal_equal,    \
         default: prettyc_anything_equal)        \

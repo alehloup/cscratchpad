@@ -137,7 +137,7 @@ typedef void*  any;
     static inline int prettyc_int_equal(int a, int b) { return a == b; }
     static inline int prettyc_longlong_equal(long long a, long long b) { return a == b; }
     static inline int prettyc_sizet_equal(size_t a, size_t b) { return a == b; }
-    static inline int prettyc_float_equal(float a, float b) { return fabs(a - b) < (double)FLT_EPSILON; }
+    static inline int prettyc_float_equal(float a, float b) { return fabs((double)a - (double)b) < (double)FLT_EPSILON; }
     static inline int prettyc_double_equal(double a, double b) { return fabs(a - b) < DBL_EPSILON; }
     static inline int prettyc_literal_equal(const char *a, const char *b) { return !strcmp(a, b); }
     static inline int prettyc_string_equal(char *a, char *b) { return !strcmp(a, b); }

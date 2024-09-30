@@ -80,7 +80,7 @@ int main(void) {
     printf("%d ", var);
   printf("\n");
 
-  withfile (file, fopen("hello.txt", "w"))
+  withfile (file, "hello.txt", "w")
     fprintf(file, "Hello world!");
 
   teste_equal();

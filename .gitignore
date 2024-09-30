@@ -54,3 +54,6 @@ dkms.conf
 
 # to exclude the big files for 1brc
 measurements*.txt
+
+#exclude test files
+hello.txt

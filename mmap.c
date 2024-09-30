@@ -16,9 +16,24 @@ static inline void run(void) {
     printf("\nDone\n");
 }
 
+static inline void run_macroed(void) {
+
+    withmmap(contents, "measurements10k.txt", "r") {
+        printf("\n%u KB\n", (unsigned int)(size_t)contents_len/1024 + 1);
+
+        printf("%s\n", &contents[(size_t)contents_len - 255]);
+
+        printf("len: %u\n", (unsigned int)(size_t)contents_len/1024 + 1);
+    }
+
+    printf("\nDone\n");
+}
+
 int main(void)
 {
     run();
+
+    run_macroed();
 
     return 0;
 }

@@ -111,6 +111,8 @@ static inline void mmap_close(char *mmap_buffer, size_t mmap_buffer_size) {
 }
 #endif /* endif _WINDOWS_ else Unix */
 
+// Puts the maped buffer len into var##_len variable, unfortunately you must convert it to size_t everytime you use, doing (size_t)var##_len 
+#define withmmap(var, filename, mode) for (char *var##_len = NULL, *var = mmap_open(filename, mode, (size_t*)&var##_len), *prettyc_flag_##__LINE__ = (char*)1; prettyc_flag_##__LINE__; mmap_close(var, (size_t)var##_len), prettyc_flag_##__LINE__ = NULL)
 
 #ifdef __cplusplus
 } /* closes extern C, Cancels Name Mangling when compiled as C++ */

@@ -75,7 +75,7 @@ typedef int64_t i64;
 #define fordescby(var, from, to, by) for (int var = from; var > to; var-=by)
 #define foreach(var, type, length, array) for (type *var = array, *prettyc_end##__LINE__ = &array[length]; var < prettyc_end##__LINE__; ++var)
 
-#define withfile(var, ...) for (FILE* var = (__VA_ARGS__), *prettyc_flag_##__LINE__ = (FILE*)1; prettyc_flag_##__LINE__; fclose(var), prettyc_flag_##__LINE__ = NULL)
+#define withfile(var, filename, mode) for (FILE* var = fopen(filename, mode), *prettyc_flag_##__LINE__ = (FILE*)1; prettyc_flag_##__LINE__; fclose(var), prettyc_flag_##__LINE__ = NULL)
 #define defer(...) for (bool prettyc_flag_##__LINE__ = 1; prettyc_flag_##__LINE__; prettyc_flag_##__LINE__ = 0, (__VA_ARGS__))
 
 #define equal_array(array_a, array_b) (sizeof(array_a) == sizeof(array_b) ? !memcmp(array_a, array_b, sizeof(array_a)) : 0)

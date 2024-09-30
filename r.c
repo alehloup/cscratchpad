@@ -27,6 +27,8 @@
     #define GCC_ACCEPT_PRAGMA_REGION_PLS " -Wno-unknown-pragmas"
 #endif
 
+static const char *const delete_files = "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb";
+
 static const char *const flags_gcc  = 
     "  gcc"
     " -std=gnu2x -Ofast -march=native -static-pie -flto -g3 -fno-omit-frame-pointer"
@@ -77,8 +79,8 @@ static const char *const flags_clang =
 
 static void delete_artifacts(void) {
     int discard = printf("\n===== Delete Artifacts =====\n");
-    discard = printf("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml\n");
-    discard = system("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml");
+    discard = printf(delete_files); printf("\n");
+    discard = system(delete_files);
     (void) discard;
 }
 
@@ -138,7 +140,7 @@ int main(int argc, const char *const *argv) {
         break;
 
         case 'd':case 'D':
-            return system("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml");
+            return system(delete_files);
         /* break; */
     } 
 

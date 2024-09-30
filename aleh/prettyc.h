@@ -43,6 +43,7 @@ typedef char*  str;
 typedef char   byte;
 typedef char*  bytes;
 typedef void*  any;
+typedef int64_t i64;
 
 #define nil NULL
 #define None NULL
@@ -87,6 +88,7 @@ typedef void*  any;
 #ifdef __cplusplus
     #define ZEROINIT {}
     #define threadlocal thread_local
+    #define atleast /* static */
 
     #include <type_traits>
     //len
@@ -122,6 +124,12 @@ typedef void*  any;
 #else // Pure C
     #define ZEROINIT {0}
     #define threadlocal _Thread_local
+
+    #if defined(__clang__) || defined(__GNUC__)
+        #define atleast static
+    #else
+        #define atleast /* static */
+    #endif 
     
     //len
     #define len(...) \

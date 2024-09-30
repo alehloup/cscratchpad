@@ -37,8 +37,7 @@ static const char *const flags_gcc  =
     " -fsanitize=undefined -fsanitize=bounds-strict"
     " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
     " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
-    " -Wshadow"
-    " -Wdouble-promotion"
+    " -Wshadow -Wdouble-promotion -Wvla"
     GCC_ACCEPT_PRAGMA_REGION_PLS
 ;
 
@@ -52,8 +51,7 @@ static const char *const flags_gpp =
     " -fsanitize=undefined -fsanitize=bounds-strict"
     " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
     " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
-    " -Wshadow"
-    " -Wdouble-promotion"
+    " -Wshadow -Wdouble-promotion -Wvla"
     " -fno-exceptions"
     GCC_ACCEPT_PRAGMA_REGION_PLS
 ;
@@ -71,8 +69,7 @@ static const char *const flags_clang =
     " -std=gnu2x -Ofast -march=native -Weverything -Werror" 
     " -fsanitize-undefined-trap-on-error" 
     " -fsanitize=undefined -fsanitize=bounds"
-    " -Wshadow"
-    " -Wdouble-promotion"
+    " -Wshadow -Wdouble-promotion"
     " -D_CRT_SECURE_NO_WARNINGS"
     CLANG_ACCEPT_C_ARRAY_PLS
 ;

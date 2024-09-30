@@ -47,8 +47,19 @@ static inline void teste_equal(void) {
     }
 }
 
+static inline void farray(int arr[atleast 10]) {
+  int i = 0;
+
+  foreach(el, int, 10, arr)
+    *el = i++;
+
+  foreach(el, int, 10, arr)
+    printf("%d ", *el);
+  printf("\n");
+}
+
 int main(void) {
-  int x[5] = ZEROINIT;
+  int x[10] = ZEROINIT;
   int t[3] = {1, 2, 3};
 
   fortimes(y, 5)
@@ -73,6 +84,10 @@ int main(void) {
     fprintf(file, "Hello world!");
 
   teste_equal();
+
+  farray(x);
+
+  printf("\nSuccess\n");
 
   return 0;
 }

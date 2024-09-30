@@ -29,7 +29,7 @@
 
 static const char *const flags_gcc  = 
     "  gcc"
-    " -std=gnu2x -Ofast -march=native -static-pie -flto -g3"
+    " -std=gnu2x -Ofast -march=native -static-pie -flto -g3 -fno-omit-frame-pointer"
     FORTIFY " -fcf-protection=full -fstack-protector-strong"
     " -Wall -Wextra -Wpedantic -Wuninitialized -Werror"
     " -fanalyzer"
@@ -43,7 +43,7 @@ static const char *const flags_gcc  =
 
 static const char *const flags_gpp = 
     "  g++" 
-    " -std=gnu++23 -Ofast -march=native -static-pie -flto -g3"
+    " -std=gnu++23 -Ofast -march=native -static-pie -flto -g3 -fno-omit-frame-pointer"
     FORTIFY " -fcf-protection=full -fstack-protector-strong"
     " -Wall -Wextra -Wpedantic -Wuninitialized -Werror" 
     " -fanalyzer"
@@ -66,7 +66,8 @@ static const char *const flags_msvc =
 
 static const char *const flags_clang = 
     "  clang" 
-    " -std=gnu2x -Ofast -march=native -Weverything -Werror" 
+    " -std=gnu2x -Ofast -march=native -g3 -fno-omit-frame-pointer"
+    " -Weverything -Werror" 
     " -fsanitize-undefined-trap-on-error" 
     " -fsanitize=undefined -fsanitize=bounds"
     " -Wshadow -Wdouble-promotion"

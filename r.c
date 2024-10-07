@@ -73,7 +73,7 @@ static const char *const flags_clang =
     " -fsanitize-undefined-trap-on-error" 
     " -fsanitize=undefined -fsanitize=bounds"
     " -Wshadow -Wdouble-promotion"
-    " -D_CRT_SECURE_NO_WARNINGS"
+    " -D_CRT_SECURE_NO_WARNINGS -Wno-pre-c2x-compat"
     CLANG_ACCEPT_C_ARRAY_PLS
 ;
 

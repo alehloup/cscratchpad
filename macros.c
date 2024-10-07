@@ -72,6 +72,10 @@ int main(void) {
     printf("%d ", *var);
   printf("\n");
 
+  forasc (var , 0 , 9)
+    printf("%d ", var);
+  printf("\n");
+
   forascby (var , 0, 9, 2)
     printf("%d ", var);
   printf("\n");

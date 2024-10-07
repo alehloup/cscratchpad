@@ -36,6 +36,8 @@
         "prettyc.h": "c",
         "errno.h": "c",
         "malloc.h": "c",
-        "float.h": "c"
+        "float.h": "c",
+        "array": "c",
+        "string_view": "c"
     }
 }

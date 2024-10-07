@@ -76,7 +76,7 @@ typedef int64_t i64;
 #define foreach(length, var, array) for (typeof(array[0]) *var = array, *prettyc_end##__LINE__ = &array[length]; var < prettyc_end##__LINE__; ++var)
 
 #define with(close, var, ...) for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
-#define withfile(var, filename, mode) for (FILE* var = fopen(filename, mode); var; fclose(var), var = NULL)
+#define withfile(var, filename, mode) with(fclose, var, fopen(filename, mode))
 #define defer(...) for (bool prettyc_flag_##__LINE__ = 1; prettyc_flag_##__LINE__; prettyc_flag_##__LINE__ = 0, (__VA_ARGS__))
 
 #define equal_array(array_a, array_b) (sizeof(array_a) == sizeof(array_b) ? !memcmp(array_a, array_b, sizeof(array_a)) : 0)

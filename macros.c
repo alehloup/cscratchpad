@@ -50,10 +50,10 @@ static inline void teste_equal(void) {
 static inline void farray(int arr[atleast 10]) {
   int i = 0;
 
-  foreach(el, 10, arr)
+  foreach(10, el , arr)
     *el = i++;
 
-  foreach(el, 10, arr)
+  foreach(10, el , arr)
     printf("%d ", *el);
   printf("\n");
 }
@@ -68,22 +68,22 @@ int main(void) {
 
   printf("%zu %zu \n", len(x), len("alessandro"));
 
-  foreach (var, len(t), t)
+  foreach (len(t), var , t)
     printf("%d ", *var);
   printf("\n");
 
-  forascby (var, 0, 9, 2)
+  forascby (var , 0, 9, 2)
     printf("%d ", var);
   printf("\n");
 
-  fordescby (var, 9, 0, 2)
+  fordescby (var , 9, 0, 2)
     printf("%d ", var);
   printf("\n");
 
-  withfile (file, "hello.txt", "w")
+  withfile (file , "hello.txt", "w")
     fprintf(file, "Hello world!");
 
-  with (file, fclose, fopen("hello2.txt", "w"))
+  with (fclose, file , fopen("hello2.txt", "w"))
     fprintf(file, "Hello world!");
 
   teste_equal();

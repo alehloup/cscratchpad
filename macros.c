@@ -59,7 +59,7 @@ static inline void farray(int arr[atleast 10]) {
 }
 
 int main(void) {
-  int x[10] = ZEROINIT;
+  int x[12] = ZEROINIT;
   int t[3] = {1, 2, 3};
 
   static_assert(sizeof(void*) == 8);

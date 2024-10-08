@@ -82,6 +82,8 @@ typedef int64_t i64;
 #define equal_array(array_a, array_b) (sizeof(array_a) == sizeof(array_b) ? !memcmp(array_a, array_b, sizeof(array_a)) : 0)
 #define equal_pstruct(pstruct_a, pstruct_b) (sizeof(*pstruct_a) == sizeof(*pstruct_b) ? !memcmp(pstruct_a, pstruct_b, sizeof(*pstruct_a)) : 0)
 
+#define array_len(...) (sizeof(__VA_ARGS__) / sizeof(__VA_ARGS__[0]))
+
 #ifdef __cplusplus
 } /* closes extern C, Cancels Name Mangling when compiled as C++ */
 #endif
@@ -146,8 +148,8 @@ typedef int64_t i64;
         : _Generic((__VA_ARGS__),                    \
             char const *: (sizeof(__VA_ARGS__) - 1), \
             char *: (strlen((char *)__VA_ARGS__)),   \
-            default:                                 \
-                (sizeof(__VA_ARGS__) != sizeof(void*) ? sizeof(__VA_ARGS__) / sizeof(__VA_ARGS__[0]) : 0))
+            default: array_len(__VA_ARGS__)          \
+        )
     
     //equal
     static inline int prettyc_char_equal(char a, char b) { return a == b; }

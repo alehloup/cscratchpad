@@ -62,6 +62,8 @@ int main(void) {
   int x[10] = ZEROINIT;
   int t[3] = {1, 2, 3};
 
+  static_assert(sizeof(void*) == 8);
+
   fortimes (y, 5)
     printf("%d ", y);
   printf("\n");
@@ -92,6 +94,7 @@ int main(void) {
 
   teste_equal();
 
+  printf("%zu\n", len(x));
   farray(x);
 
   printf("\nSuccess\n");

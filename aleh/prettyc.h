@@ -126,6 +126,14 @@ typedef int64_t i64;
     #define ZEROINIT {0}
     #define threadlocal _Thread_local
 
+    #if defined(__TINYC__)
+        #define static_assert(x) 1
+    #else
+        #ifndef static_assert
+            #define static_assert _Static_assert
+        #endif 
+    #endif
+
     #if defined(__clang__) || defined(__GNUC__)
         #define atleast static
     #else
@@ -133,12 +141,13 @@ typedef int64_t i64;
     #endif 
     
     //len
-    #define len(...)                                             \
-        ((__VA_ARGS__) == NULL) ? 0                              \
-        : _Generic((__VA_ARGS__),                                \
-        char const *: (strlen((const char*)(__VA_ARGS__))),      \
-        char *: (strlen((char*)(__VA_ARGS__))),                  \
-        default: (sizeof(__VA_ARGS__) / sizeof(__VA_ARGS__[0])))
+    #define len(...)                                 \
+        ((__VA_ARGS__) == NULL) ? 0                  \
+        : _Generic((__VA_ARGS__),                    \
+            char const *: (sizeof(__VA_ARGS__) - 1), \
+            char *: (strlen((char *)__VA_ARGS__)),   \
+            default:                                 \
+                (sizeof(__VA_ARGS__) != sizeof(void*) ? sizeof(__VA_ARGS__) / sizeof(__VA_ARGS__[0]) : 0))
     
     //equal
     static inline int prettyc_char_equal(char a, char b) { return a == b; }

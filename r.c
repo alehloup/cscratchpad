@@ -27,7 +27,7 @@
     #define GCC_ACCEPT_PRAGMA_REGION_PLS " -Wno-unknown-pragmas"
 #endif
 
-static const char *const delete_files = "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb";
+#define delete_files "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb"
 
 static const char *const flags_gcc  = 
     "  gcc"

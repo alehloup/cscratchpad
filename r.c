@@ -27,7 +27,7 @@
     " -ftrivial-auto-var-init=zero" \
     " -fno-delete-null-pointer-checks -fno-strict-aliasing -fwrapv" \
     " -Wnull-dereference -Wwrite-strings" \
-    " -D_FORTIFY_SOURCE=3"
+    " -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
 
 // ===== WARNING FLAGS =====
 #define FLAGS_WARNING \

@@ -22,7 +22,8 @@
 
 // ===== MEMORY & SAFETY FLAGS =====
 #define FLAGS_MEMORY \
-    " -fstack-protector-strong -fcf-protection=full" \
+    " -fPIE -pie" \
+    " -fstack-protector-strong -fcf-protection=full -fstack-clash-protection" \
     " -Wvla -fstrict-flex-arrays=3" \
     " -ftrivial-auto-var-init=zero" \
     " -fno-delete-null-pointer-checks -fno-strict-aliasing -fwrapv" \
@@ -33,7 +34,7 @@
 #define FLAGS_WARNING \
     " -Wall -Wextra -Wpedantic -Wuninitialized -Werror -Werror=implicit" \
     " -Werror=incompatible-pointer-types -Wconversion -Werror=int-conversion" \
-    " -Wshadow -Wdouble-promotion -Wformat=2 -Wswitch-default -Wswitch-enum"
+    " -Wshadow -fno-common -Wdouble-promotion -Wformat=2 -Wswitch-default -Wswitch-enum"
 
 // ===== SANITIZERS (Common to GCC and Clang) =====
 #define FLAGS_SANITIZE_COMMON \
@@ -67,7 +68,7 @@ static const char *const flags_gcc =
 
 static const char *const flags_clang =
     " clang" \
-    " -Weverything -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage" FLAGS_NO_MSVC_CRT_WARNINGS \
+    " -Weverything -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage -Wno-unused-macros" FLAGS_NO_MSVC_CRT_WARNINGS \
     FLAGS_COMMON " -Wcast-align -fsanitize=bounds" \
     FLAGS_LINKER;
 
@@ -89,6 +90,10 @@ int main(int argc, const char *const *argv) {
     const char * filename_c = "";
     const char * flags = "";
     int printed = 0, success = 1;
+
+    #ifdef _WIN32
+        system("chcp 65001");
+    #endif 
 
     printf("\n");
     

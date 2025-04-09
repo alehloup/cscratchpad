@@ -74,7 +74,7 @@ static const char *const flags_clang =
 static const char *const flags_tinyc = 
     " tcc -std=c11 -Wall -Werror";
 
-
+//teste
 
 #define delete_files "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb 2>/dev/null"
 

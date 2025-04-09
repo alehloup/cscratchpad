@@ -16,66 +16,67 @@
 // chcp 65001
 // call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
-#if defined(_WIN32) || defined(_WIN64)
-    #define FORTIFY " -D_FORTIFY_SOURCE=3"
-    #define CLANG_ACCEPT_C_ARRAY_PLS " -Wno-unsafe-buffer-usage"
-    #define GCC_ACCEPT_PRAGMA_REGION_PLS ""
-#else 
-    /* GCC errors with "fortify is redefined" so... no fortify */
-    #define FORTIFY "" 
-    #define CLANG_ACCEPT_C_ARRAY_PLS ""
-    #define GCC_ACCEPT_PRAGMA_REGION_PLS " -Wno-unknown-pragmas"
+// ===== OPTIMIZATION & BASE FLAGS =====
+#define FLAGS_OPTIMIZE \
+    " -std=gnu2x -O3 -march=native -g3 -fno-omit-frame-pointer"
+
+// ===== MEMORY & SAFETY FLAGS =====
+#define FLAGS_MEMORY \
+    " -fstack-protector-strong -fcf-protection=full" \
+    " -Wvla -fstrict-flex-arrays=3" \
+    " -ftrivial-auto-var-init=zero" \
+    " -fno-delete-null-pointer-checks -fno-strict-aliasing -fwrapv" \
+    " -Wnull-dereference -Wwrite-strings" \
+    " -D_FORTIFY_SOURCE=3"
+
+// ===== WARNING FLAGS =====
+#define FLAGS_WARNING \
+    " -Wall -Wextra -Wpedantic -Wuninitialized -Werror -Werror=implicit" \
+    " -Werror=incompatible-pointer-types -Wconversion -Werror=int-conversion" \
+    " -Wshadow -Wdouble-promotion -Wformat=2 -Wswitch-default -Wswitch-enum"
+
+// ===== SANITIZERS (Common to GCC and Clang) =====
+#define FLAGS_SANITIZE_COMMON \
+    " -fsanitize-undefined-trap-on-error -fsanitize=undefined"
+
+// ===== COMMON FLAGS FOR GCC/Clang =====
+#define FLAGS_COMMON \
+    FLAGS_OPTIMIZE \
+    FLAGS_MEMORY \
+    FLAGS_WARNING \
+    FLAGS_SANITIZE_COMMON
+
+// ===== LINKER FLAGS =====
+#ifdef _WIN32
+    #define FLAGS_LINKER ""
+    #define FLAGS_NO_MSVC_CRT_WARNINGS " -D_CRT_SECURE_NO_WARNINGS"
+#else
+    #define FLAGS_LINKER \
+        " -flto" \
+        " -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now" \
+        " -Wl,--as-needed -Wl,--no-copy-dt-needed-entries"
+    #define FLAGS_NO_MSVC_CRT_WARNINGS ""
 #endif
 
-#define delete_files "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb"
 
-static const char *const flags_gcc  = 
-    "  gcc"
-    " -std=gnu2x -Ofast -march=native -static-pie -flto -g3 -fno-omit-frame-pointer"
-    FORTIFY " -fcf-protection=full -fstack-protector-strong"
-    " -Wall -Wextra -Wpedantic -Wuninitialized -Werror"
-    " -fanalyzer"
-    " -fsanitize-undefined-trap-on-error" 
-    " -fsanitize=undefined -fsanitize=bounds-strict"
-    " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
-    " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
-    " -Wshadow -Wdouble-promotion -Wvla"
-    GCC_ACCEPT_PRAGMA_REGION_PLS
-;
+static const char *const flags_gcc =
+    " gcc" \
+    "  -fno-strict-overflow -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wbidi-chars=any" \
+    FLAGS_COMMON " -Wcast-align=strict -fsanitize=bounds-strict -fanalyzer" \
+    FLAGS_LINKER;
 
-static const char *const flags_gpp = 
-    "  g++" 
-    " -std=gnu++23 -Ofast -march=native -static-pie -flto -g3 -fno-omit-frame-pointer"
-    FORTIFY " -fcf-protection=full -fstack-protector-strong"
-    " -Wall -Wextra -Wpedantic -Wuninitialized -Werror" 
-    " -fanalyzer"
-    " -fsanitize-undefined-trap-on-error" 
-    " -fsanitize=undefined -fsanitize=bounds-strict"
-    " -Wcast-align=strict -Wnull-dereference -Wwrite-strings -Wformat-signedness -Wconversion"
-    " -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wswitch-default -Wswitch-enum"
-    " -Wshadow -Wdouble-promotion -Wvla"
-    " -fno-exceptions"
-    GCC_ACCEPT_PRAGMA_REGION_PLS
-;
+static const char *const flags_clang =
+    " clang" \
+    " -Weverything -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage" FLAGS_NO_MSVC_CRT_WARNINGS \
+    FLAGS_COMMON " -Wcast-align -fsanitize=bounds" \
+    FLAGS_LINKER;
 
 static const char *const flags_tinyc = 
-    "  tcc -Wall -Werror"
-;
+    " tcc -std=c11 -Wall -Werror";
 
-static const char *const flags_msvc =
-    "  cl /std:clatest /MT /W4 /Ox /analyze /GS /sdl /D_CRT_SECURE_NO_WARNINGS"
-;
 
-static const char *const flags_clang = 
-    "  clang" 
-    " -std=gnu2x -Ofast -march=native -g3 -fno-omit-frame-pointer"
-    " -Weverything -Werror" 
-    " -fsanitize-undefined-trap-on-error" 
-    " -fsanitize=undefined -fsanitize=bounds"
-    " -Wshadow -Wdouble-promotion"
-    " -D_CRT_SECURE_NO_WARNINGS -Wno-pre-c2x-compat"
-    CLANG_ACCEPT_C_ARRAY_PLS
-;
+
+#define delete_files "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb 2>/dev/null"
 
 static void delete_artifacts(void) {
     int discard = printf("\n===== Delete Artifacts =====\n");
@@ -119,20 +120,12 @@ int main(int argc, const char *const *argv) {
             flags = flags_gcc;
         break;
 
-        case 'p':case 'P':
-            flags = flags_gpp;
+        case 'c':case 'C':
+            flags = flags_clang;
         break;
 
         case 't':case 'T':
             flags = flags_tinyc;
-        break;
-
-        case 'm':case 'M':
-            flags = flags_msvc;
-        break;
-
-        case 'c':case 'C':
-            flags = flags_clang;
         break;
 
         case 'a':case 'A':
@@ -161,18 +154,14 @@ int main(int argc, const char *const *argv) {
             printed = printf("\n===== GCC =====");
             success = compile_run_c(filename_c, flags_gcc);
             printed = printf("gcc=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== G++ =====");
-            success = compile_run_c(filename_c, flags_gpp);
-            printed = printf("g++=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== TCC =====");
-            success = compile_run_c(filename_c, flags_tinyc);
-            printed = printf("tcc=%d %s\n", success, success == 0? "success" : "error");
-            printed = printf("\n===== MSVC =====");
-            success = compile_run_c(filename_c, flags_msvc);
-            printed = printf("msvc=%d %s\n", success, success == 0? "success" : "error");
+
             printed = printf("\n===== Clang =====");
             success = compile_run_c(filename_c, flags_clang);
             printed = printf("clang=%d %s\n", success, success == 0? "success" : "error");
+
+            printed = printf("\n===== TCC =====");
+            success = compile_run_c(filename_c, flags_tinyc);
+            printed = printf("tcc=%d %s\n", success, success == 0? "success" : "error");
 
             delete_artifacts();
 

@@ -38,6 +38,8 @@
         "malloc.h": "c",
         "float.h": "c",
         "array": "c",
-        "string_view": "c"
+        "string_view": "c",
+        "corecrt_math_defines.h": "c",
+        "corecrt_math.h": "c"
     }
 }

@@ -68,12 +68,12 @@ typedef int64_t i64;
 #define empty              NULL ==
 #define null               NULL ==
 
-#define fortimes(var, times) for (int var = 0; var < times; ++var)
-#define forasc(var, from, to) for (int var = from; var < to; ++var)
-#define fordesc(var, from, to) for (int var = from; var > to; --var)
-#define forascby(var, from, to, by) for (int var = from; var < to; var+=by)
-#define fordescby(var, from, to, by) for (int var = from; var > to; var-=by)
-#define foreach(length, var, array) for (typeof(array[0]) *var = array, *prettyc_end##__LINE__ = &array[length]; var < prettyc_end##__LINE__; ++var)
+#define fortimes(var, times)         for (typeof(times) _max_##var = (times), var = 0; var < _max_##var; ++var)
+#define forasc(var, from, to)        for (typeof(to) _to_##var = (to), var = (from); var < _to_##var; ++var)
+#define fordesc(var, from, to)       for (typeof(to) _to_##var = (to), var = (from); var > _to_##var; --var)
+#define forascby(var, from, to, by)  for (typeof(to) var = (from); var < (to); var += (by))
+#define fordescby(var, from, to, by) for (typeof(from) var = from; var > to; var-=by)
+#define foreach(length, var, array)  for (typeof(array[0]) *var = array, *prettyc_end##__LINE__ = &array[length]; var < prettyc_end##__LINE__; ++var)
 
 #define with(close, var, ...) for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
 #define withfile(var, filename, mode) with(fclose, var, fopen(filename, mode))

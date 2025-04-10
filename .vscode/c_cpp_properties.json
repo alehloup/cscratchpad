@@ -2,14 +2,15 @@
     "configurations": [
         {
             "name": "Win32",
-            "includePath": [],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Dev/x86_64-w64-mingw32/include",
+                "C:/Dev/lib/gcc/x86_64-w64-mingw32/13.2.0/include",
+                "C:/Dev/lib/gcc/x86_64-w64-mingw32/13.2.0/include-fixed",
+                "C:/Dev/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++"
             ],
-            "windowsSdkVersion": "10.0.22000.0",
-            "compilerPath": "C:/Dev/w64devkit/bin/gcc.exe",
+            "defines": [],
+            "compilerPath": "C:/Dev/bin/gcc.exe",
             "cStandard": "c23",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x64"

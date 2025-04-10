@@ -1,35 +1,29 @@
+#include "aleh/aleh.h"
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-static void another(void) {
-    enum { tam = 3 };
-
-    int arr[tam] = {0};
-    int last = tam-1;
-
-    arr[last] = tam;
-
-    printf("%d\n", arr[last]);
-}
 
 int main(void) {
-    enum { tam = 5 };
+    char const * const s11 = "hello";          // 5 (literal, const char *)
+    int vec[] = {1, 2, 3, 4};          // 4 (array de int)
 
-    int arr[tam] = {0};
-    int last = tam-1;
+    const char *str1 = "Hello, world!";
+    char arr[] = {1, 2, 3, 4};
+    char const *str2 = "Dynamic string";
 
-    double x = 0.5;
-    printf("%f %f\n", x, x + 1);
+    // Testando o countof e lengthof
+    printf("countof(arr): %zd\n", countof(arr));   // Espera 4 (array de tamanho fixo)
+    printf("lengthof(str1): %zd\n", lengthof(str1)); // Espera 13 (string literal)
+    printf("lengthof(str2): %zd\n", lengthof(str2)); // Espera 14 (string dinâmica)
 
-    arr[last] = tam;
+    printf("vec %zd\n", countof(vec));
+    printf("não é literal... %zd\n", lengthof(s11));
+    printf("É literal %zd\n", lengthof("É literal"));
 
-    printf("%d\n", arr[last]);
-
-    another();
-
-    last = last << 1;
-    printf("last << 1 : %d\n", last);
-
-
+    char *s = 0;
+    printf("lengthof(s): %zd\n", lengthof(s)); // nulo, 0
 
     return 0;
 }
+

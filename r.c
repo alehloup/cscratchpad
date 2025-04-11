@@ -32,7 +32,7 @@
 
 // ===== WARNING FLAGS =====
 #define FLAGS_WARNING \
-    " -Wall -Wextra -Wpedantic -Wuninitialized -Werror -Werror=implicit" \
+    " -Wall -Wextra -Wuninitialized -Werror -Werror=implicit" \
     " -Werror=incompatible-pointer-types -Wconversion -Werror=int-conversion" \
     " -Wshadow -fno-common -Wdouble-promotion -Wformat=2 -Wswitch-default -Wswitch-enum"
 

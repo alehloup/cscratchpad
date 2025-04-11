@@ -3,26 +3,26 @@
 #include <string.h>
 #include <stdlib.h>
 
+void print_str(arena a) {
+    str *pstring = new(&a, 1, str);
+
+    pstring->data = (char *) "Alessandro";
+    pstring->len = lengthof(pstring->data);
+
+    printf("%s %zd", pstring->data, pstring->len);
+}
 
 int main(void) {
-    char const * const s11 = "hello";          // 5 (literal, const char *)
-    int vec[] = {1, 2, 3, 4};          // 4 (array de int)
+    str string = S("Alessandro Stamatto");
 
-    const char *str1 = "Hello, world!";
-    char arr[] = {1, 2, 3, 4};
-    char const *str2 = "Dynamic string";
+    printf("%s %zd \n", string.data, string.len);
 
-    // Testando o countof e lengthof
-    printf("countof(arr): %zd\n", countof(arr));   // Espera 4 (array de tamanho fixo)
-    printf("lengthof(str1): %zd\n", lengthof(str1)); // Espera 13 (string literal)
-    printf("lengthof(str2): %zd\n", lengthof(str2)); // Espera 14 (string dinâmica)
+    printf("%d \n", str_equal(S("Alessandro Stamatt"), string));
 
-    printf("vec %zd\n", countof(vec));
-    printf("não é literal... %zd\n", lengthof(s11));
-    printf("É literal %zd\n", lengthof("É literal"));
+    char bytes[52] = {0};
+    arena a = {bytes, bytes + 52};
 
-    char *s = 0;
-    printf("lengthof(s): %zd\n", lengthof(s)); // nulo, 0
+    print_str(a);
 
     return 0;
 }

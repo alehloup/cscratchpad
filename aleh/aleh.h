@@ -36,7 +36,6 @@ extern void *memset(void *s, int c, size_t n);
 #define countof(x)  ((ssize_t)(sizeof(x) / sizeof(x[0])))
 #define lengthof(x) (((x) == NULL) ? 0 : (ssize_t)(strlen(x)))
 
-
 #if !defined(_ISO646_H) && !defined(and)
     #define not	!
     #define and	&&
@@ -81,3 +80,23 @@ extern void *memset(void *s, int c, size_t n);
 #define defer(...) for (bool defer_flag_##__LINE__ = 1; defer_flag_##__LINE__; defer_flag_##__LINE__ = 0, (__VA_ARGS__))
 
 
+typedef struct str { char *data; ptrdiff_t len; } str;
+#define S(s) ({(str){(char *)s, countof(s)-1};})
+
+static inline int str_equal(str a, str b) {
+    return (a.len != b.len) ? 0 : (!a.len || !memcmp(a.data, b.data, (size_t) a.len));
+}
+
+
+typedef struct arena { char *beg; char *end; } arena;
+static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
+    ptrdiff_t pad = (ptrdiff_t)( -(uintptr_t)a->beg & (uintptr_t)(align-1) );
+    
+    assert( count < (a->end - a->beg - pad)/size && "ARENA SPACE LEFT IS NOT ENOUGH" );
+    
+    void *r = a->beg + count*size;
+    a->beg += pad + count*size;
+    
+    return memset(r, 0, (size_t)(count*size));
+}
+#define new(a, n, t) ((t *)(alloc(a, n, (ptrdiff_t)sizeof(t), alignof(t))))

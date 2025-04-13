@@ -5,6 +5,7 @@
 #pragma once
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <float.h>
@@ -32,7 +33,9 @@ extern void *memset(void *s, int c, size_t n);
     #define atleast /* static */
 #endif
 
-
+#if defined(_WIN32) && !defined(ssize_t)
+  typedef ptrdiff_t ssize_t;
+#endif
 #define countof(x)  ((ssize_t)(sizeof(x) / sizeof(x[0])))
 #define lengthof(x) (((x) == NULL) ? 0 : (ssize_t)(strlen(x)))
 

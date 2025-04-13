@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-void print_str(arena a) {
+static void print_str(arena a) {
     str *pstring = new(&a, 1, str);
 
     pstring->data = (char *) "Alessandro";

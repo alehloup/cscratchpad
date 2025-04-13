@@ -21,9 +21,15 @@
     " -std=gnu2x -O3 -march=native -g3 -fno-omit-frame-pointer"
 
 // ===== MEMORY & SAFETY FLAGS =====
+#ifdef _WIN32
+    #define POSITION_INDEPENDENT_EXEC ""
+#else
+    #define POSITION_INDEPENDENT_EXEC " -fPIE -pie -fstack-clash-protection"
+#endif 
+
 #define FLAGS_MEMORY \
-    " -fPIE -pie" \
-    " -fstack-protector-strong -fcf-protection=full -fstack-clash-protection" \
+    POSITION_INDEPENDENT_EXEC \
+    " -fstack-protector-strong -fcf-protection=full" \
     " -Wvla -fstrict-flex-arrays=3" \
     " -ftrivial-auto-var-init=zero" \
     " -fno-delete-null-pointer-checks -fno-strict-aliasing -fwrapv" \
@@ -34,7 +40,8 @@
 #define FLAGS_WARNING \
     " -Wall -Wextra -Wuninitialized -Werror -Werror=implicit" \
     " -Werror=incompatible-pointer-types -Wconversion -Werror=int-conversion" \
-    " -Wshadow -fno-common -Wdouble-promotion -Wformat=2 -Wswitch-default -Wswitch-enum"
+    " -Wshadow -fno-common -Wdouble-promotion -Wformat=2 -Wswitch-default -Wswitch-enum" \
+    " -Wno-cast-qual -Wno-declaration-after-statement"
 
 // ===== SANITIZERS (Common to GCC and Clang) =====
 #define FLAGS_SANITIZE_COMMON \
@@ -68,7 +75,9 @@ static const char *const flags_gcc =
 
 static const char *const flags_clang =
     " clang" \
-    " -Weverything -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage -Wno-unused-macros" FLAGS_NO_MSVC_CRT_WARNINGS \
+    " -Weverything -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage"\
+    " -Wno-unused-macros -Wno-gnu-statement-expression-from-macro-expansion" \
+    FLAGS_NO_MSVC_CRT_WARNINGS \
     FLAGS_COMMON " -Wcast-align -fsanitize=bounds" \
     FLAGS_LINKER;
 

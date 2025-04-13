@@ -12,11 +12,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-extern size_t strlen(const char *);
-extern int memcmp(const void *s1, const void *s2, size_t n);
-extern void *memcpy(void *dest, const void *src, size_t n);
-extern void *memset(void *s, int c, size_t n);
-
 
 #ifndef typeof
     #define typeof __typeof__
@@ -33,11 +28,12 @@ extern void *memset(void *s, int c, size_t n);
     #define atleast /* static */
 #endif
 
+
 #if defined(_WIN32) && !defined(ssize_t)
   typedef ptrdiff_t ssize_t;
 #endif
 #define countof(x)  ((ssize_t)(sizeof(x) / sizeof(x[0])))
-#define lengthof(x) (((x) == NULL) ? 0 : (ssize_t)(strlen(x)))
+
 
 #if !defined(_ISO646_H) && !defined(and)
     #define not	!
@@ -48,6 +44,30 @@ extern void *memset(void *s, int c, size_t n);
 #define None NULL
 #define True true
 #define False false
+
+
+extern size_t strlen(const char *);
+static inline ssize_t cstrlen(const char *s) {
+    return !s ? 0 : (ssize_t)strlen(s);
+}
+
+extern int memcmp(const void *s1, const void *s2, size_t n);
+static inline int cmemcmp(const void *s1, const void *s2, ssize_t n) {
+    assert(n >= 0 and "cmemcmp: N can't be negative!");
+    return !n ? 1 : memcmp(s1, s2, (size_t)n);
+}
+
+extern void * memcpy(void *dest, const void *src, size_t n);
+static inline void * cmemcpy(void *dest, const void *src, ssize_t n) {
+    assert(n >= 0 and "cmemcpy: N can't be negative!");
+    return n ? memcpy(dest, src, (size_t)n) : dest;
+}
+
+extern void * memset(void *s, int c, size_t n);
+static inline void * cmemset(void *s, int c, ssize_t n) {
+    assert(n >= 0 and "cmemset: N can't be negative!");
+    return n ? memset(s, c, (size_t)n) : s;
+}
 
 
 #if !defined(min) && !defined(max)
@@ -83,23 +103,33 @@ extern void *memset(void *s, int c, size_t n);
 #define defer(...) for (bool defer_flag_##__LINE__ = 1; defer_flag_##__LINE__; defer_flag_##__LINE__ = 0, (__VA_ARGS__))
 
 
-typedef struct str { char *data; ptrdiff_t len; } str;
-#define S(s) ({(str){(char *)s, countof(s)-1};})
-
-static inline int str_equal(str a, str b) {
-    return (a.len != b.len) ? 0 : (!a.len || !memcmp(a.data, b.data, (size_t) a.len));
-}
-
-
 typedef struct arena { char *beg; char *end; } arena;
 static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
+    // Nullprogram trick, quoted from his blog:
+    // we can compute modulo by subtracting one and masking with AND
+    // however, we want the number of bytes to advance to the next alignment, which is the inverse
     ptrdiff_t pad = (ptrdiff_t)( -(uintptr_t)a->beg & (uintptr_t)(align-1) );
     
-    assert( count < (a->end - a->beg - pad)/size && "ARENA SPACE LEFT IS NOT ENOUGH" );
+    assert( count < (a->end - a->beg - pad)/size and "arena space left is not enough" );
     
     void *r = a->beg + count*size;
     a->beg += pad + count*size;
     
-    return memset(r, 0, (size_t)(count*size));
+    return cmemset(r, 0, count*size);
 }
 #define new(a, n, t) ((t *)(alloc(a, n, (ptrdiff_t)sizeof(t), alignof(t))))
+
+
+typedef struct str { char *data; ptrdiff_t len; } str;
+#define S(s) ({(str){(char *)s, countof(s)-1};})
+
+static inline int str_equal(str a, str b) {
+    return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len);
+}
+
+static inline str str_copy(arena *a, str original) {
+    str copied = original;
+    copied.data = new(a, copied.len, char);
+    cmemcpy(copied.data, original.data, copied.len);
+    return copied;
+}

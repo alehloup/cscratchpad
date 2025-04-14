@@ -4,13 +4,10 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Dev/x86_64-w64-mingw32/include",
-                "C:/Dev/lib/gcc/x86_64-w64-mingw32/13.2.0/include",
-                "C:/Dev/lib/gcc/x86_64-w64-mingw32/13.2.0/include-fixed",
-                "C:/Dev/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++"
+                "C:/Dev/w64devkit/lib/gcc/x86_64-w64-mingw32/13.2.0/include"
             ],
             "defines": [],
-            "compilerPath": "C:/Dev/bin/gcc.exe",
+            "compilerPath": "C:/Dev/w64devkit/bin/gcc.exe",
             "cStandard": "c23",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x64"

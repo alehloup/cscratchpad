@@ -324,24 +324,15 @@ static inline size_t hash_str(str s, size_t seed) {
 
 static inline str filestr(arena * a, str filename) {
     FILE* file = fopen(filename.data, "rb");
-    if (!file) return (str){0};
+        if (!file) return (str){0};
 
-        fseek(file, 0, SEEK_END);
-        ssize_t size = (ssize_t)ftell(file);
-        fseek(file, 0, SEEK_SET);
-
-        if (size <= 0) {
-            printf("Could not get file size: %zd\n", size);
-            fclose(file);
-            return (str){0};
-        }
-
-        char *data = new(a, size + 1, char);
-
-        ssize_t read_len = (ssize_t)fread(data, 1, (size_t)size, file);
-        data[read_len] = 0;
+        ssize_t cap = a->end - a->beg;
+        str r = {a->beg, cap};
+        r.len = (ssize_t)fread(r.data, 1, (size_t)r.len, file);
+        assert(r.len >= 0 and r.data + r.len + 1 < a->end and "couldn't read file");
+        r.data[r.len] = 0;
 
     fclose(file);
 
-    return (str){data, read_len};
+    return r;
 }

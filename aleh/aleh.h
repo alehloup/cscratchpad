@@ -159,7 +159,7 @@ static inline str cat(arena *a, str head, str tail) {
 }
 
 static inline str span(char *beg, char *end) {
-    return (str){beg, beg ? end - beg : 0};
+    return (str){beg, beg ? max(end - beg, 0) : 0};
 }
 
 typedef struct {str head; str tail; int ok; int padding;} head_tail_ok;
@@ -178,6 +178,15 @@ static inline head_tail_ok cut(str s, char c) {
     return r;
 }
 
+static inline int starts(str s, str prefix) {
+    return (s.len >= prefix.len) \
+        and sequal(span(s.data, s.data + prefix.len), prefix);
+}
+static inline int ends(str s, str suffix) {
+    return (s.len >= suffix.len) \
+        and sequal(span(s.data + s.len - suffix.len, s.data + s.len), suffix);
+}
+
 static inline str trimleft(str s) {
     for (; s.len and (unsigned char)*s.data <= ' '; ++s.data, --s.len);
     return s;
@@ -190,21 +199,12 @@ static inline str trim(str s) {
     return trimleft(trimright(s));
 }
 
-static inline str substring(str s, ssize_t i) {
+static inline str sadvance(str s, ssize_t i) {
     if (i > 0) {
         s.data += i;
         s.len -= i;
     }
     return s;
-}
-
-static inline int starts(str s, str prefix) {
-    return (s.len >= prefix.len) \
-        and sequal(span(s.data, s.data + prefix.len), prefix);
-}
-static inline int ends(str s, str suffix) {
-    return (s.len >= suffix.len) \
-        and sequal(substring(s, s.len - suffix.len), suffix);
 }
 
 static inline str scanword(arena *a) {

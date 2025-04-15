@@ -46,12 +46,12 @@
     #define atleast /* static */
 #endif
 
+#define _ (void)
 
 #if defined(_WIN32) && !defined(ssize_t)
   typedef ptrdiff_t ssize_t;
 #endif
 #define countof(x)  ((ssize_t)(sizeof(x) / sizeof(x[0])))
-
 
 #if !defined(_ISO646_H) && !defined(and)
     #define not	!

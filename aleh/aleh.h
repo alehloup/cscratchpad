@@ -7,9 +7,19 @@
 
 #pragma once
 
+// yes, I want the source Fortified > : )
+#ifndef _FORTIFY_SOURCE
+    #define _FORTIFY_SOURCE 3
+#endif
+
 // necessary to fix file and offsets to 64 
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE64_SOURCE
+
+// necessary when using msvc-clang, msvc yaps too much
+#ifndef _CRT_SECURE_NO_WARNINGS
+    #define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include <assert.h>
 #include <stdbool.h>

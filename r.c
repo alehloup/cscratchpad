@@ -21,20 +21,13 @@
     " -std=gnu2x -O3 -march=native -g3 -fno-omit-frame-pointer"
 
 // ===== MEMORY & SAFETY FLAGS =====
-#ifdef _WIN32
-    #define POSITION_INDEPENDENT_EXEC ""
-#else
-    #define POSITION_INDEPENDENT_EXEC " -fPIE -pie -fstack-clash-protection"
-#endif 
-
 #define FLAGS_MEMORY \
-    POSITION_INDEPENDENT_EXEC \
     " -fstack-protector-strong -fcf-protection=full" \
     " -Wvla -fstrict-flex-arrays=3" \
     " -ftrivial-auto-var-init=zero" \
+    " -Wcast-align -fsanitize=bounds" \
     " -fno-delete-null-pointer-checks -fno-strict-aliasing -fwrapv" \
-    " -Wnull-dereference -Wwrite-strings" \
-    " -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
+    " -Wnull-dereference -Wwrite-strings"
 
 // ===== WARNING FLAGS =====
 #define FLAGS_WARNING \
@@ -57,32 +50,20 @@
 // ===== LINKER FLAGS =====
 #ifdef _WIN32
     #define FLAGS_LINKER ""
-    #define FLAGS_NO_MSVC_CRT_WARNINGS " -D_CRT_SECURE_NO_WARNINGS"
 #else
+    // pie and clash-prot are not linker, but are not Win so I put them here =p
     #define FLAGS_LINKER \
-        " -flto" \
+        " -flto -fPIE -pie -fstack-clash-protection" \
         " -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now" \
         " -Wl,--as-needed -Wl,--no-copy-dt-needed-entries"
-    #define FLAGS_NO_MSVC_CRT_WARNINGS ""
 #endif
 
 
-static const char *const flags_gcc =
-    " gcc" \
-    "  -fno-strict-overflow -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wbidi-chars=any" \
-    FLAGS_COMMON " -Wcast-align=strict -fsanitize=bounds-strict -fanalyzer" \
-    FLAGS_LINKER;
+static const char *const flags_gcc = " gcc -fanalyzer " FLAGS_COMMON FLAGS_LINKER;
 
-static const char *const flags_clang =
-    " clang" \
-    " -Weverything -Wno-pre-c2x-compat -Wno-unsafe-buffer-usage"\
-    " -Wno-unused-macros -Wno-gnu-statement-expression-from-macro-expansion" \
-    FLAGS_NO_MSVC_CRT_WARNINGS \
-    FLAGS_COMMON " -Wcast-align -fsanitize=bounds" \
-    FLAGS_LINKER;
+static const char *const flags_clang = " clang " FLAGS_COMMON FLAGS_LINKER;
 
-static const char *const flags_tinyc = 
-    " tcc -std=c11 -Wall -Werror";
+static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror";
 
 
 #define delete_files "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb 2>/dev/null"

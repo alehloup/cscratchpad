@@ -1,38 +1,29 @@
 -std=gnu2x
--O3
--march=native
--g3
--fno-omit-frame-pointer
+-O3 -march=native
+-g3 -fno-omit-frame-pointer
 
--fstack-protector-strong
--fcf-protection=full
--Wvla
--fstrict-flex-arrays=3
+-Wall -Wextra -Werror
+
+-fstack-protector-strong -fcf-protection=full
+-Wvla -fstrict-flex-arrays=3
 -ftrivial-auto-var-init=zero
--Wcast-align
--fsanitize=bounds
+-Wnull-dereference -Wwrite-strings -Wcast-align
+
 -fno-delete-null-pointer-checks
 -fno-strict-aliasing
 -fwrapv
--Wnull-dereference
--Wwrite-strings
 
--Wall
--Wextra
--Wuninitialized
--Werror
--Werror=implicit
--Werror=incompatible-pointer-types
--Wconversion
--Werror=int-conversion
--Wshadow
--fno-common
--Wdouble-promotion
+-Wuninitialized -Wshadow
+-Wconversion -Wdouble-promotion
 -Wformat=2
--Wswitch-default
--Wswitch-enum
--Wno-cast-qual
--Wno-declaration-after-statement
+-Wswitch-default -Wswitch-enum
 
--fsanitize-undefined-trap-on-error
--fsanitize=undefined
+-fno-common -Wno-cast-qual -Wno-declaration-after-statement
+
+-fsanitize-undefined-trap-on-error -fsanitize=undefined -fsanitize=bounds
+
+-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
+-U_FILE_OFFSET_BITS -D_FILE_OFFSET_BITS=64
+-U_LARGEFILE64_SOURCE -D_LARGEFILE64_SOURCE
+-U_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS
+-UWIN32_LEAN_AND_MEAN -DWIN32_LEAN_AND_MEAN

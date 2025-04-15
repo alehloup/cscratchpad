@@ -52,6 +52,10 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# vscode configurations
+.vscode/
+.vscode/c_cpp_properties.json
+
 # to exclude the big files for 1brc
 measurements*.txt
 

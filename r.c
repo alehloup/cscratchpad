@@ -1,20 +1,6 @@
 #include "aleh/system.h"
 
-/* For enabling Shadow Stacks: */
-// https://x86.lol/generic/2024/09/23/user-shadow-stacks.html
-// 
-// You opt in to shadow stacks using a glibc tunable (an Env Var). When everything works, you’ll see that stack smashing is prevented
-// $ GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK ./test
-
-// Linux 6.6 or later with CONFIG_X86_USER_SHADOW_STACK=y
-// GCC 8 or clang 7 or later && glibc 2.39 or later
-// Intel Tiger Lake or later || AMD Zen 3 or later
-// GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK env var
-// -fcf-protection=return (or full)
-
-/* A small bat for activating MSVC environment (For MSVC and MSVC Clang): */
-// chcp 65001
-// call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
+// For Shadow Stacks: CONFIG_X86_USER_SHADOW_STACK=y and GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
 
 // ===== OPTIMIZATION & BASE FLAGS =====
 #define FLAGS_OPTIMIZE \
@@ -40,46 +26,41 @@
 #define FLAGS_SANITIZE_COMMON \
     " -fsanitize-undefined-trap-on-error -fsanitize=undefined"
 
-// ===== COMMON FLAGS FOR GCC/Clang =====
-#define FLAGS_COMMON \
-    FLAGS_OPTIMIZE \
-    FLAGS_MEMORY \
-    FLAGS_WARNING \
-    FLAGS_SANITIZE_COMMON
-
 // ===== LINKER FLAGS =====
 #ifdef _WIN32
-    #define FLAGS_LINKER ""
+    #define FLAGS_LIN ""
 #else
-    // pie and clash-prot are not linker, but are not Win so I put them here =p
-    #define FLAGS_LINKER \
+    #define FLAGS_LIN \
         " -flto -fPIE -pie -fstack-clash-protection" \
         " -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now" \
         " -Wl,--as-needed -Wl,--no-copy-dt-needed-entries"
 #endif
 
+// ===== COMMON FLAGS FOR GCC/Clang =====
+#define FLAGS \
+    FLAGS_OPTIMIZE \
+    FLAGS_MEMORY \
+    FLAGS_WARNING \
+    FLAGS_SANITIZE_COMMON \
+    FLAGS_LIN
 
-static const char *const flags_gcc = " gcc -fanalyzer " FLAGS_COMMON FLAGS_LINKER;
-
-static const char *const flags_clang = " clang " FLAGS_COMMON FLAGS_LINKER;
-
+static const char *const flags_gcc = " gcc -fanalyzer " FLAGS;
+static const char *const flags_clang = " clang " FLAGS;
 static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror";
 
 
-#define delete_files "rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb 2>/dev/null"
-
 static void delete_artifacts(void) {
-    int discard = printf("\n===== Delete Artifacts =====\n");
-    discard = printf(delete_files); printf("\n");
-    discard = system(delete_files);
-    (void) discard;
+    (void) printf("\n===== Delete Artifacts =====\n");
+    (void) printf("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb 2>/dev/null"); 
+    printf("\n");
+    (void) system("rm *.exe *.out *.tmp *.obj *.nativecodeanalysis.xml *.ilk *.pdb 2>/dev/null");
 }
 
 int main(int argc, const char *const *argv) {
     const char * compiler = "";
     const char * filename_c = "";
     const char * flags = "";
-    int printed = 0, success = 1;
+    int success = 1;
 
     #ifdef _WIN32
         system("chcp 65001");
@@ -109,26 +90,11 @@ int main(int argc, const char *const *argv) {
     }
 
     switch (compiler[0]) {
-
-        default:
-            flags = flags_gcc;
-        break;
-
-        case 'c':case 'C':
-            flags = flags_clang;
-        break;
-
-        case 't':case 'T':
-            flags = flags_tinyc;
-        break;
-
-        case 'a':case 'A':
-            flags = "all";
-        break;
-
-        case 'd':case 'D':
-            return system(delete_files);
-        /* break; */
+        default:           flags = flags_gcc;   break;
+        case 'c':case 'C': flags = flags_clang; break;
+        case 't':case 'T': flags = flags_tinyc; break;
+        case 'a':case 'A': flags = "all";       break; //used in next switch
+        case 'd':case 'D': delete_artifacts();//break
     } 
 
     switch (flags[0]) {
@@ -140,33 +106,28 @@ int main(int argc, const char *const *argv) {
             } else {
                 printf("\n\nDone, ERROR!\n\n");
             }
-        
             return success
         ;
-
         case 'a':
-            printed = printf("\n===== GCC =====");
+            (void)printf("\n===== GCC =====");
             success = compile_run_c(filename_c, flags_gcc);
-            printed = printf("gcc=%d %s\n", success, success == 0? "success" : "error");
+            (void)printf("gcc=%d %s\n", success, success == 0? "success" : "error");
 
-            printed = printf("\n===== Clang =====");
+            (void)printf("\n===== Clang =====");
             success = compile_run_c(filename_c, flags_clang);
-            printed = printf("clang=%d %s\n", success, success == 0? "success" : "error");
+            (void)printf("clang=%d %s\n", success, success == 0? "success" : "error");
 
-            printed = printf("\n===== TCC =====");
+            (void)printf("\n===== TCC =====");
             success = compile_run_c(filename_c, flags_tinyc);
-            printed = printf("tcc=%d %s\n", success, success == 0? "success" : "error");
+            (void)printf("tcc=%d %s\n", success, success == 0? "success" : "error");
 
             delete_artifacts();
-
-            (void) printed;
 
             if (success == 0) {
                 // printf("\n\nDone, SUCCESS\n\n");
             } else {
                 printf("\n\nDone, ERROR!\n\n");
             }
-        
             return success
         ;
     }

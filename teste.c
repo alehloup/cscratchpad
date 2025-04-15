@@ -1,7 +1,4 @@
 #include "aleh/aleh.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 static void test_strings(arena a) {
     str string = S("Alessandro Stamatto");

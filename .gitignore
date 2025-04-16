@@ -62,3 +62,4 @@ measurements*.txt
 #exclude test files
 hello.txt
 hello2.txt
+saida.txt

@@ -13,8 +13,8 @@ static const unsigned int MAX_NTHREADS_ = 8192;
 #if defined(_WIN32) || defined(_WIN64)
     #if !defined(WIN32_LEAN_AND_MEAN)
         #define WIN32_LEAN_AND_MEAN
-        #include <Windows.h>
     #endif
+    #include <Windows.h>
     #include <io.h>
 #else /* assume Unix: */
     #include <unistd.h>
@@ -23,7 +23,7 @@ static const unsigned int MAX_NTHREADS_ = 8192;
 #endif
 
 
-#if defined(_WINDOWS_)
+#if defined(_WIN32)
     /* is _WINDOWS_ */
 #define THREAD_T HANDLE
 

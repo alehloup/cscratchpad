@@ -7,8 +7,8 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #if defined(_WIN32) || defined(_WIN64)
     #if !defined(WIN32_LEAN_AND_MEAN)
         #define WIN32_LEAN_AND_MEAN
-        #include <Windows.h>
     #endif
+    #include <Windows.h>
     #include <io.h>
 #else /* assume Unix: */
     #include <unistd.h>
@@ -49,18 +49,6 @@ static inline void aleh_system_buffer_append_cstrs(const size_t dst_buffer_cap, 
         aleh_system_buffer_append_cstr(dst_buffer_cap, dst_buffer, dst_buffer_len, cstrs[i]);
     }
 }
-
-#if defined(_WINDOWS_) /* if _WINDOWS_ else Unix */
-    static inline void sleep_(unsigned int seconds) {
-        assert(seconds < 60 * 60 * 24 + 1);
-        Sleep(seconds * 1000);
-    }
-#else /* Unix */
-    static inline void sleep_(unsigned int seconds) {
-        assert(seconds < 60 * 60 * 24 + 1);
-        sleep(seconds);
-    }
-#endif 
 
 static clock_t BENCHCLOCK_ = 0;
 static inline void start_benchclock(void) {
@@ -114,7 +102,6 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     };
 
     int success = compile_c(c_file_c, flags);
-    sleep_(1);
 
     aleh_system_buffer_append_cstrs(256, buffer, &buffer_len, parts, 4);
 

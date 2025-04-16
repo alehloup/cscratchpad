@@ -192,7 +192,7 @@ static inline str cat(arena *a, str head, str tail) {
 }
 static inline str sjoin(arena *a, str *arr, ssize_t len, char separator) {
     str res = {0};
-    char *psep = 0;
+    char *psep = &separator;
     if (!a or !arr) return res;
 
     if (!separator) separator = ' ';

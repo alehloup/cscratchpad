@@ -7,8 +7,8 @@ extern "C" { /* Cancels Name Mangling when compiled as C++ */
 #if defined(_WIN32) || defined(_WIN64)
     #if !defined(WIN32_LEAN_AND_MEAN)
         #define WIN32_LEAN_AND_MEAN
-        #include <Windows.h>
     #endif
+    #include <Windows.h>
     #include <io.h>
 #else /* assume Unix: */
     #include <unistd.h>

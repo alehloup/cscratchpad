@@ -1,4 +1,4 @@
-#include "aleh/system.h"
+#include "aleh/aleh.h"
 #define _ (void)
 
 // For Shadow Stacks: CONFIG_X86_USER_SHADOW_STACK=y and GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
@@ -11,7 +11,35 @@
 
 static const char *const flags_gcc = " gcc -fanalyzer @FLAGS " FLAGS_LIN;
 static const char *const flags_clang = " clang @FLAGS " FLAGS_LIN;
-static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror";
+static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror ";
+
+
+static inline int compile_run_c(const char *const c_file_c, const char *const flags) {
+    static char buffer[4096] = {0};
+    arena a = arenaarr(buffer);
+
+    head_tail_ok cuted = cut(S(c_file_c), '.');
+
+    str parts[] = {S(flags), cuted.head, S(".c -o " TMP_FOLDER), cuted.head, S(".exe")};
+    str command = catarr(&a, parts, countof(parts));
+    command.data[command.len] = '\0';
+    println(command);
+    printf("\n");
+    system(command.data);
+    printf("\n");
+
+    a = arenaarr(buffer);
+    str parts2[] = {S(TMP_FOLDER), cuted.head, S(".exe")};
+    str command2 = catarr(&a, parts2, countof(parts2));
+    command2.data[command2.len] = '\0';
+    println(command2);
+    printf("\n");
+    system(command2.data);
+    printf("\n");
+
+    return 0;
+}
+
 
 int main(int argc, const char *const *argv) {
     const char * compiler = "";

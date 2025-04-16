@@ -142,7 +142,7 @@ static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t a
 
 
 typedef struct str { char *data; ptrdiff_t len; } str;
-#define S(s) ({(str){(char *)s, countof(s)-1};})
+#define S(s) ({(str){(char *)s, cstrlen(s)};})
 
 static inline int sequal(str a, str b) {
     return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len);
@@ -165,6 +165,15 @@ static inline str cat(arena *a, str head, str tail) {
     head.len += copy(a, tail).len;
     
     return head;
+}
+static inline str catarr(arena *a, str *arr, ssize_t len) {
+    str res = {0};
+    if (!a or !arr) return res;
+
+    foreach(s, arr, len) {
+        res = cat(a, res, *s);
+    }
+    return res;
 }
 
 static inline str span(char *beg, char *end) {

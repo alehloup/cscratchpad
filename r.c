@@ -25,8 +25,10 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     command.data[command.len] = '\0';
     println(command);
     printf("\n");
-    system(command.data);
+    int err = system(command.data);
     printf("\n");
+
+    if (err) return err;
 
     a = arenaarr(buffer);
     str parts2[] = {S(TMP_FOLDER), cuted.head, S(".exe")};
@@ -34,10 +36,10 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     command2.data[command2.len] = '\0';
     println(command2);
     printf("\n");
-    system(command2.data);
+    err = system(command2.data);
     printf("\n");
 
-    return 0;
+    return err;
 }
 
 

@@ -49,11 +49,13 @@ int main(void) {
     test_equals();
     printf("\n");
 
-    str contents = filestr(&a, S(ROOTWIN "1brc_java/measurements10k.txt"));
+    str contents = file2str(&a, S(ROOTWIN "1brc_java/measurements10k.txt"));
     println(contents.len);
 
-    contents = filestr(&a, S(ROOTLIN "1brc_java/measurements10k.txt"));
+    contents = file2str(&a, S(ROOTLIN "1brc_java/measurements10k.txt"));
     println(contents.len);
+
+    str2file(S("Testando \n Woa woa\n"), S("saida.txt"));
 
     return 0;
 }

@@ -53,6 +53,15 @@
 #define MB (1024LL * 1024LL)
 #define GB (1024LL * 1024LL * 1024LL)
 
+typedef int interror;
+
+
+#ifdef _WIN32
+    #define TMP_FOLDER "%TMP%/"
+#else
+    #define TMP_FOLDER "/dev/shm/tmp/"
+#endif
+
 
 extern size_t strlen(const char *);
 static inline ssize_t cstrlen(const char *s) {
@@ -318,7 +327,7 @@ static inline size_t hash_str(str s, size_t seed) {
     return h;
 }
 
-static inline str filestr(arena * a, str filename) {
+static inline str file2str(arena * a, str filename) {
     FILE* file = fopen(filename.data, "rb");
         if (!file) return (str){0};
 
@@ -331,4 +340,13 @@ static inline str filestr(arena * a, str filename) {
     fclose(file);
 
     return r;
+}
+static inline interror str2file(str content, str filename) {
+    FILE* file = fopen(filename.data, "wb");
+        if (!file) return -1;
+
+        size_t written = fwrite(content.data, 1, (size_t)content.len, file);
+    fclose(file);
+
+    return written != (size_t)content.len;
 }

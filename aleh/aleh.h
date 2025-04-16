@@ -1,3 +1,14 @@
+/*
+      █████╗ ██╗     ███████╗
+     ██╔══██╗██║     ██╔════╝
+     ███████║██║     █████╗  
+     ██╔══██║██║     ██╔══╝  
+     ██║  ██║███████╗███████╗
+     ╚═╝  ╚═╝╚══════╝╚══════╝
+
+            A L E . h
+        · Brutalist C ·
+*/
 // Heavely inspired by:
 //  Chris Nullprogram "Examples of quick hash tables and dynamic arrays in C" 
 //      https://nullprogram.com/blog/2025/01/19/
@@ -13,9 +24,30 @@
 #include <stdint.h>
 #include <float.h>
 #include <math.h>
+#include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#if !defined(_ISO646_H) && !defined(and)
+    #define not	!
+    #define and	&&
+    #define or	||
+#endif
+#ifdef _WIN32
+    #define OSWIN_
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <windows.h>
+#elif defined(ARDUINO)
+    #define OSARD_
+    #include <Arduino.h>
+#else // assume Posix
+    #define OSLIN_
+    #include <unistd.h>
+#endif
 
+
+#define _ (void)
 
 #ifndef typeof
     #define typeof __typeof__
@@ -32,34 +64,22 @@
     #define atleast /* static */
 #endif
 
-#define _ (void)
+typedef int interror;
 
-#if defined(_WIN32) && !defined(ssize_t)
+#if defined(OSWIN_) && !defined(ssize_t)
   typedef ptrdiff_t ssize_t;
 #endif
-#define countof(x)  ((ssize_t)(sizeof(x) / sizeof(x[0])))
 
-#if !defined(_ISO646_H) && !defined(and)
-    #define not	!
-    #define and	&&
-    #define or	||
-#endif
-#define nil NULL
-#define None NULL
-#define True true
-#define False false
+#define countof(x)  ((ssize_t)(sizeof(x) / sizeof(x[0])))
 
 #define KB (1024LL)
 #define MB (1024LL * 1024LL)
 #define GB (1024LL * 1024LL * 1024LL)
 
-typedef int interror;
-
-
-#ifdef _WIN32
+#ifdef OSWIN_
     #define TMP_FOLDER "%TMP%/"
 #else
-    #define TMP_FOLDER "/dev/shm/tmp/"
+    #define TMP_FOLDER "/tmp/"
 #endif
 
 
@@ -70,19 +90,19 @@ static inline ssize_t cstrlen(const char *s) {
 
 extern int memcmp(const void *s1, const void *s2, size_t n);
 static inline int cmemcmp(const void *s1, const void *s2, ssize_t n) {
-    assert(n >= 0 and "cmemcmp: N can't be negative!");
-    return !n ? 1 : memcmp(s1, s2, (size_t)n);
+    assert(n >= 0 and "cmemcmp: n can't be negative!");
+    return !n ? 0 : memcmp(s1, s2, (size_t)n);
 }
 
 extern void * memcpy(void *dest, const void *src, size_t n);
 static inline void * cmemcpy(void *dest, const void *src, ssize_t n) {
-    assert(n >= 0 and "cmemcpy: N can't be negative!");
+    assert(n >= 0 and "cmemcpy: n can't be negative!");
     return n ? memcpy(dest, src, (size_t)n) : dest;
 }
 
 extern void * memset(void *s, int c, size_t n);
 static inline void * cmemset(void *s, int c, ssize_t n) {
-    assert(n >= 0 and "cmemset: N can't be negative!");
+    assert(n >= 0 and "cmemset: n can't be negative!");
     return n ? memset(s, c, (size_t)n) : s;
 }
 
@@ -123,11 +143,15 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
 
 typedef struct arena { char *beg; char *end; } arena;
 static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
+    assert(count >= 0 and size >= 0 and "count and size can't be negative!");
+    if (!count or !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
+
     // Nullprogram trick, quoted from his blog:
     // we can compute modulo by subtracting one and masking with AND
     // however, we want the number of bytes to advance to the next alignment, which is the inverse
     ptrdiff_t pad = (ptrdiff_t)( -(uintptr_t)a->beg & (uintptr_t)(align-1) );
-    
+
+    // Explicit Integer Overflow check in the assert
     assert( count < (a->end - a->beg - pad)/size and "arena space left is not enough" );
     ssize_t total_size = count*size;
     
@@ -137,7 +161,7 @@ static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t a
     // zero at-most 64KB to avoid mega memsets...    
     return cmemset(r, 0, min(total_size, 64*KB));
 }
-#define new(a, n, t) ((t *)(alloc(a, n, (ptrdiff_t)sizeof(t), alignof(t))))
+#define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t)sizeof(t), alignof(t))))
 #define arenaarr(arr) ({ (arena){arr, arr + countof(arr)}; })
 
 
@@ -154,7 +178,7 @@ static inline str copy(arena *a, str original) {
     cmemcpy(copied.data, original.data, copied.len);
     return copied;
 }
-
+// cat always starts by putting str head at the top of the arena
 static inline str cat(arena *a, str head, str tail) {
     // use copy as realoc if head is not at the top of arena
     if (!head.data or (head.data + head.len) != a->beg) {
@@ -166,14 +190,29 @@ static inline str cat(arena *a, str head, str tail) {
     
     return head;
 }
-static inline str catarr(arena *a, str *arr, ssize_t len) {
+static inline str sjoin(arena *a, str *arr, ssize_t len, char separator) {
     str res = {0};
+    char *psep = 0;
     if (!a or !arr) return res;
+
+    if (!separator) separator = ' ';
 
     foreach(s, arr, len) {
         res = cat(a, res, *s);
+        psep = new(a, 1, char);
+        *psep = separator;
     }
+    *psep = '\0'; //makes res.data compatible to null terminated c strings
+
     return res;
+}
+
+// Converts a str to a null-terminated char* for use with legacy C APIs
+// BEWARE: char * is only valid while the arena keeps its data!
+static inline char * str2cstr(arena *a, str original) {
+    str copied = copy(a, original);
+    *(new(a, 1, char)) = '\0';
+    return copied.data;
 }
 
 static inline str span(char *beg, char *end) {
@@ -303,15 +342,23 @@ static inline void print_size(size_t z) { printf("%zu", z); }
 static inline void print_float(float f) { printf("%.5f", (double)f); }
 static inline void print_double(double d) { printf("%.9f", d); }
 static inline void print_str(str s) { printf("%.*s", (int)s.len, s.data); }
+static inline void print_clock(clock_t stopwatch) {
+    clock_t end = clock();
+    if (end < stopwatch) {
+        printf("Clock error, end < start");
+        return;
+    }
+    printf("Executed in %.3f seconds", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
+}
 
-#define print(a) \
-    _Generic((a), \
+#define print(x) \
+    _Generic((x), \
         char: print_char, int: print_int, \
         ssize_t: print_ssize, size_t: print_size, \
         float: print_float, double: print_double, \
-        str: print_str \
-    )(a)
-#define println(a) print(a); printf("\n")
+        str: print_str, clock_t: print_clock \
+    )(x)
+#define println(x) print(x); printf("\n")
 
 static inline void scan_char(char *c) { (void)scanf(" %c", c); }
 static inline void scan_int(int *i) { (void)scanf(" %d", i); }
@@ -320,18 +367,18 @@ static inline void scan_size(size_t *z) { (void)scanf(" %zu", z); }
 static inline void scan_float(float *f) { (void)scanf(" %f", f); }
 static inline void scan_double(double *d) { (void)scanf(" %lf", d); }
 
-#define scan(a) \
-    _Generic((a), \
+#define scan(x) \
+    _Generic((x), \
         char: scan_char, int: scan_int, \
         ssize_t: scan_ssize, size_t: scan_size, \
         float: scan_float, double: scan_double \
-    )(&a)
+    )(&x)
 
 static inline size_t hash_str(str s, size_t seed) {
     size_t h = seed;
     for_i(s.len) {
         h ^= s.data[i] & 255;
-        h *= 11111111111;
+        h *= 11111111111; // intentional uint overflow to spread bits
     }
     return h;
 }
@@ -358,4 +405,26 @@ static inline interror str2file(str content, str filename) {
     fclose(file);
 
     return written != (size_t)content.len;
+}
+
+static inline interror scmd(arena *a, str command) {
+    println(command); 
+    printf("\n");
+
+    interror ret = system(str2cstr(a, command));
+    printf("\n");
+
+    return ret;
+}
+
+static inline void sleepsecs(unsigned int seconds) {
+    assert(seconds < 60 * 60 * 24 + 1);
+
+    #if defined(OSWIN_)
+        Sleep(seconds * 1000);
+    #elif defined(OSARD_)
+        delay(seconds * 1000);
+    #else // Unix
+        sleep(seconds);
+    #endif
 }

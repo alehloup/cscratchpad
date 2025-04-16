@@ -54,6 +54,8 @@ dkms.conf
 
 # vscode configurations
 .vscode/
+.vscode/*
+.vscode/settings.json
 .vscode/c_cpp_properties.json
 
 # to exclude the big files for 1brc

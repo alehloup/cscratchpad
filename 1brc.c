@@ -4,7 +4,7 @@
 
 /* Configure */
 enum { NUM_THREADS = 12 }; /* Also works for 4096 threads > : ) */
-static const char *FILEPATH = "./measurements10k.txt";
+static const char *FILEPATH = "D:/1brc_java/measurements1b.txt";
 
 /*
     I use a Perfect Hash of the 413 cities
@@ -217,7 +217,7 @@ int main(void) {
 
     start_benchclock();
     run();
-    stop_benchclock();
+    // stop_benchclock();
 
     return 0;
 }

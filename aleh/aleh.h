@@ -346,21 +346,13 @@ static inline void print_size(size_t z) { printf("%zu", z); }
 static inline void print_float(float f) { printf("%.5f", (double)f); }
 static inline void print_double(double d) { printf("%.9f", d); }
 static inline void print_str(str s) { printf("%.*s", (int)s.len, s.data); }
-static inline void print_clock(clock_t stopwatch) {
-    clock_t end = clock();
-    if (end < stopwatch) {
-        printf("Clock error, end < start");
-        return;
-    }
-    printf("Executed in %.3f seconds", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
-}
 
 #define print(x) \
     _Generic((x), \
         char: print_char, int: print_int, \
         ssize_t: print_ssize, size_t: print_size, \
         float: print_float, double: print_double, \
-        str: print_str, clock_t: print_clock \
+        str: print_str \
     )(x)
 #define println(x) print(x); printf("\n")
 
@@ -419,6 +411,15 @@ static inline interror scmd(arena *a, str command) {
     printf("\n");
 
     return ret;
+}
+
+static inline void print_stopwatch(clock_t stopwatch) {
+    clock_t end = clock();
+    if (end < stopwatch) {
+        printf("Clock error, end < start");
+        return;
+    }
+    printf("  Executed in %.3f seconds\n", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
 }
 
 static inline void sleepsecs(unsigned int seconds) {

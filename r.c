@@ -7,7 +7,7 @@
     #define TIME_CMD ""
 #else
     #define FLAGS_LIN "@LINFLAGS "
-    #define TIME_CMD = "time "
+    #define TIME_CMD "/usr/bin/time -f \"\\n  Elapsed: %E\\n  User: %U | Sys: %S\\n  MaxMem: %M KB | CPU: %P\" "
 #endif
 
 static const char *const flags_gcc = " gcc -fanalyzer @FLAGS " FLAGS_LIN;
@@ -36,7 +36,11 @@ static inline interror compile_run_c(const char *const c_file_c, const char *con
     
     stopwatch = clock();
         err = scmd(&a, scommand);
-    println(stopwatch);
+        #ifdef OSWIN_
+            print_stopwatch(stopwatch);
+        #else
+            _ stopwatch; // In Linux clock does not work since system forks 
+        #endif
     
     return err;
 }

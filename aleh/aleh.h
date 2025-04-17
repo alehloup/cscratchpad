@@ -84,23 +84,27 @@ typedef int interror;
 
 
 extern size_t strlen(const char *);
+
 static inline ssize_t cstrlen(const char *s) {
     return !s ? 0 : (ssize_t)strlen(s);
 }
 
 extern int memcmp(const void *s1, const void *s2, size_t n);
+
 static inline int cmemcmp(const void *s1, const void *s2, ssize_t n) {
     assert(n >= 0 and "cmemcmp: n can't be negative!");
     return !n ? 0 : memcmp(s1, s2, (size_t)n);
 }
 
 extern void * memcpy(void *dest, const void *src, size_t n);
+
 static inline void * cmemcpy(void *dest, const void *src, ssize_t n) {
     assert(n >= 0 and "cmemcpy: n can't be negative!");
     return n ? memcpy(dest, src, (size_t)n) : dest;
 }
 
 extern void * memset(void *s, int c, size_t n);
+
 static inline void * cmemset(void *s, int c, ssize_t n) {
     assert(n >= 0 and "cmemset: n can't be negative!");
     return n ? memset(s, c, (size_t)n) : s;

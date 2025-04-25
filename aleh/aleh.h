@@ -165,7 +165,7 @@ static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t a
     // zero at-most 64KB to avoid mega memsets...    
     return cmemset(r, 0, min(total_size, 64*KB));
 }
-#define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t)sizeof(t), alignof(t))))
+#define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t) sizeof(t), (ptrdiff_t) alignof(t))))
 #define arenaarr(arr) ({ (arena){(char *) arr, (char *) (arr + countof(arr))}; })
 
 

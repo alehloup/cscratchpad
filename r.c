@@ -16,7 +16,7 @@ static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror ";
 
 
 static inline interror compile_run_c(const char *const c_file_c, const char *const flags) {
-    static char buffer[4096] = {0};
+    static char buffer[4096] = {0}; // this buffer will be used as arena storage!
     static arena a = {0};
 
     interror err = 0;

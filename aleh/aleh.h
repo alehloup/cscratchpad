@@ -166,11 +166,11 @@ static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t a
     return cmemset(r, 0, min(total_size, 64*KB));
 }
 #define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t)sizeof(t), alignof(t))))
-#define arenaarr(arr) ({ (arena){arr, arr + countof(arr)}; })
+#define arenaarr(arr) ({ (arena){(char *) arr, (char *) (arr + countof(arr))}; })
 
 
 typedef struct str { char *data; ptrdiff_t len; } str;
-#define S(s) ({(str){(char *)s, cstrlen(s)};})
+#define S(s) ({(str){(char *) s, cstrlen(s)};})
 
 static inline int sequal(str a, str b) {
     return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len);
@@ -269,7 +269,7 @@ static inline str sadvance(str s, ssize_t i) {
 }
 
 static inline str scanword(arena *a) {
-    static char buffer[256];
+    char buffer[256];
     (void)scanf(" %255s", buffer);
 
     ssize_t len = cstrlen(buffer);
@@ -280,7 +280,7 @@ static inline str scanword(arena *a) {
     return (str){ data, len };
 }
 static inline str scanline(arena *a) {
-    static char buffer[1024];
+    char buffer[1024];
     (void)scanf(" %1023[^\n]", buffer);
 
     ssize_t len = cstrlen(buffer);
@@ -298,12 +298,13 @@ static inline int ssize_equal(ssize_t a, ssize_t b) { return a == b; }
 static inline int size_equal(size_t a, size_t b) { return a == b; }
 static inline int float_equal(float a, float b)
 {
+    const float epsilon = 1e-5f;
+	const float min_abs = 1e-8f;
+
 	float abs_a = macro_abs(a);
 	float abs_b = macro_abs(b);
 	float diff  = macro_abs(a - b);
 
-	static const float epsilon = 1e-5f;
-	static const float min_abs = 1e-8f;
 	if (abs_a < min_abs && abs_b < min_abs) {
 		// Both numbers are extremely close to 0
 		return diff < min_abs;
@@ -314,12 +315,12 @@ static inline int float_equal(float a, float b)
 }
 static inline int double_equal(double a, double b)
 {
+    const double epsilon = 1e-9;
+	const double min_abs = 1e-12;
+
 	double abs_a = macro_abs(a);
     double abs_b = macro_abs(b);
 	double diff  = macro_abs(a - b);
-
-	static const double epsilon = 1e-9;
-	static const double min_abs = 1e-12;
 
 	if (abs_a < min_abs && abs_b < min_abs) {
 		// Both numbers are extremely close to 0

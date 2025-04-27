@@ -89,6 +89,13 @@ static inline ssize_t cstrlen(const char *s) {
     return !s ? 0 : (ssize_t)strlen(s);
 }
 
+extern void * memchr(const void *s, int c, size_t n);
+
+static inline void * cmemchr(const void *s, char c, ssize_t n) {
+    assert(n >= 0 and "cmemchr: n can't be negative!");
+    return !n ? NULL : memchr(s, c & 255, (size_t)n);
+}
+
 extern int memcmp(const void *s1, const void *s2, size_t n);
 
 static inline int cmemcmp(const void *s1, const void *s2, ssize_t n) {
@@ -166,7 +173,7 @@ static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t a
     return cmemset(r, 0, min(total_size, 64*KB));
 }
 #define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t) sizeof(t), (ptrdiff_t) alignof(t))))
-#define arenaarr(arr) ({ (arena){(char *) arr, (char *) (arr + countof(arr))}; })
+#define arr2arena(arr) ({ (arena){(char *) arr, (char *) (arr + countof(arr))}; })
 
 
 typedef struct str { char *data; ptrdiff_t len; } str;
@@ -213,10 +220,13 @@ static inline str sjoin(arena *a, str *arr, ssize_t len, char separator) {
 
 // Converts a str to a null-terminated char* for use with legacy C APIs
 // BEWARE: char * is only valid while the arena keeps its data!
-static inline char * str2cstr(arena *a, str original) {
-    str copied = copy(a, original);
-    *(new(a, 1, char)) = '\0';
-    return copied.data;
+static inline char * str2cstr(arena *a, str string) {
+    if ((string.data + string.len) != a->beg) {
+        string = copy(a, string);
+    }
+    *(a->beg++) = '\0';
+
+    return string.data;
 }
 
 static inline str span(char *beg, char *end) {
@@ -229,13 +239,15 @@ static inline head_tail_ok cut(str s, char c) {
     head_tail_ok r = {0};
     if (!s.len) return r;
 
-    char *it = s.data;
     char *end = s.data + s.len;
-    for (; it < end and *it != c; ++it) {}
+
+    char *it = cmemchr(s.data, c, s.len);
+    if (!it) it = end;
 
     r.ok = it < end;
     r.head = span(s.data, it);
     r.tail = span(it + r.ok, end);
+
     return r;
 }
 
@@ -268,27 +280,13 @@ static inline str sadvance(str s, ssize_t i) {
     return s;
 }
 
-static inline str scanword(arena *a) {
-    char buffer[256];
-    (void)scanf(" %255s", buffer);
-
-    ssize_t len = cstrlen(buffer);
-    char *data = new(a, len + 1, char);
-    cmemcpy(data, buffer, len);
-    data[len] = 0;
-
-    return (str){ data, len };
-}
-static inline str scanline(arena *a) {
-    char buffer[1024];
-    (void)scanf(" %1023[^\n]", buffer);
-
-    ssize_t len = cstrlen(buffer);
-    char *data = new(a, len + 1, char);
-    cmemcpy(data, buffer, len);
-    data[len] = 0;
-
-    return (str){ data, len };
+static inline size_t hash_str(str s, size_t seed) {
+    size_t h = seed;
+    for_i(s.len) {
+        h ^= s.data[i] & 255;
+        h *= 11111111111; // intentional uint overflow to spread bits
+    }
+    return h;
 }
 
 
@@ -364,6 +362,29 @@ static inline void scan_size(size_t *z) { (void)scanf(" %zu", z); }
 static inline void scan_float(float *f) { (void)scanf(" %f", f); }
 static inline void scan_double(double *d) { (void)scanf(" %lf", d); }
 
+static inline str scanword(arena *a) {
+    char buffer[256];
+    (void)scanf(" %255s", buffer);
+
+    ssize_t len = cstrlen(buffer);
+    char *data = new(a, len + 1, char);
+    cmemcpy(data, buffer, len);
+    data[len] = 0;
+
+    return (str){ data, len };
+}
+static inline str scanline(arena *a) {
+    char buffer[1024];
+    (void)scanf(" %1023[^\n]", buffer);
+
+    ssize_t len = cstrlen(buffer);
+    char *data = new(a, len + 1, char);
+    cmemcpy(data, buffer, len);
+    data[len] = 0;
+
+    return (str){ data, len };
+}
+
 #define scan(x) \
     _Generic((x), \
         char: scan_char, int: scan_int, \
@@ -371,14 +392,6 @@ static inline void scan_double(double *d) { (void)scanf(" %lf", d); }
         float: scan_float, double: scan_double \
     )(&x)
 
-static inline size_t hash_str(str s, size_t seed) {
-    size_t h = seed;
-    for_i(s.len) {
-        h ^= s.data[i] & 255;
-        h *= 11111111111; // intentional uint overflow to spread bits
-    }
-    return h;
-}
 
 static inline str file2str(arena * a, str filename) {
     FILE* file = fopen(filename.data, "rb");

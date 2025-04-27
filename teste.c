@@ -38,6 +38,25 @@ static void test_equals() {
     print_equals("%f", da, db);
 }
 
+static void test_strings2() {
+    char arr[255] = {0};
+    arena a = arr2arena(arr);
+
+    str sa = S("Alessandro");
+    str sb = S("Stamatto");
+
+    str sc = cat(&a, sa, S(" "));
+    sc = cat(&a, sc, sb);
+
+    println(sc);
+
+    print(sa); printf(" == "); print(sb); 
+    printf(" "); println(sequal(sa, sb));
+
+    print(sa); printf(" == "); print(S("Alessandro")); 
+    printf(" "); println(sequal(sa, S("Alessandro")));
+}
+
 #define ROOTWIN "D:/"
 #define ROOTLIN "/mnt/d/"
 
@@ -46,6 +65,7 @@ int main(void) {
     arena a = {data, data + 16*GB};
     
     test_strings(a);
+    test_strings2();
     test_equals();
     printf("\n");
 
@@ -54,8 +74,6 @@ int main(void) {
 
     contents = file2str(&a, S(ROOTLIN "1brc_java/measurements10k.txt"));
     println(contents.len);
-
-    str2file(S("Testando \n Woa woa\n"), S("saida.txt"));
 
     return 0;
 }

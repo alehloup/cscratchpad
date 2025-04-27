@@ -24,14 +24,14 @@ static inline interror compile_run_c(const char *const c_file_c, const char *con
     clock_t stopwatch = {0};
 
     head_tail_ok cuted = cut(S(c_file_c), '.');
-    str compileit[] = {S(flags), cuted.head, S(".c -o " TMP_FOLDER), cuted.head, S(".exe")};
-    str runit[] = {S(TIME_CMD " " TMP_FOLDER), cuted.head, S(".exe")};
+    str compileit[5] = {S(flags), cuted.head, S(".c -o " TMP_FOLDER), cuted.head, S(".exe")};
+    str runit[3] = {S(TIME_CMD " " TMP_FOLDER), cuted.head, S(".exe")};
 
-    a = arenaarr(buffer); //clears arena
+    a = arr2arena(buffer); //clears arena
     err = scmd(&a, sjoin(&a, compileit, countof(compileit), ' '));
     if (err) return err;
 
-    a = arenaarr(buffer); //clears arena
+    a = arr2arena(buffer); //clears arena
     scommand = sjoin(&a, runit, countof(runit), ' ');
     
     stopwatch = clock();

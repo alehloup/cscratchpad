@@ -309,7 +309,7 @@ static inline size_t hash_str(str s, size_t seed) {
     size_t h = seed;
     for_i(s.len) {
         h ^= s.data[i] & 255;
-        h *= 11111111111; // intentional uint overflow to spread bits
+        h *= 1111111111111111111; // intentional uint overflow to spread bits
     }
     return h;
 }

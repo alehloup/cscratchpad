@@ -63,15 +63,12 @@ static void test_files() {
     arena a = arr2arena(arr);
 
     str contents = file2str(&a, S("cidades.txt"));
-    head_tail_ok result = {0};
+    head_tail_ok result = {.tail = contents};
 
-    do {
-        result = cut(contents, '\n');
-        contents = result.tail;
-
+    while(result.tail.len) {
+        result = cut(result.tail, '\n');
         println(result.head);
-
-    } while (result.ok);
+    }
 
 }
 

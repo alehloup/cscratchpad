@@ -135,16 +135,10 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
 
 /* SIMPLE MATH */
 
-#define macro_abs(x) ({ typeof(x) _x = (x); _x < 0 ? -_x : _x; })
 #if !defined(min) && !defined(max)
-    #define min(a,b) ({ typeof(a) _a=(a); typeof(b) _b=(b); _a<_b?_a:_b; })
-    #define max(a,b) ({ typeof(a) _a=(a); typeof(b) _b=(b); _a>_b?_a:_b; })
+    #define min(a,b) ( (a) < (b) ? (a) : (b) )
+    #define max(a,b) ( (a) > (b) ? (a) : (b) )
 #endif
-#define between(lo, n, hi) \
-    ({ typeof(n) _n = (n); typeof(lo) _lo = (lo); typeof(hi) _hi = (hi); _n >= _lo && _n <= _hi; })
-#define limit(lo, n, hi) \
-    ({ typeof(n) _n = (n); typeof(lo) _lo = (lo); typeof(hi) _hi = (hi); _n < _lo ? _lo : _n > _hi ? _hi : _n; })
-#define clamp(lo, n, hi)  limit(lo, n, hi)
 
 
 /* FOR MACROS */
@@ -196,13 +190,13 @@ static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t a
     return cmemset(r, 0, min(total_size, 64*KB));
 }
 #define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t) sizeof(t), (ptrdiff_t) alignof(t))))
-#define arr2arena(arr) ({ (arena){(char *) arr, (char *) (arr + countof(arr))}; })
+#define arr2arena(arr) ( (arena){(char *) arr, (char *) (arr + countof(arr))} )
 
 
 /* STRING */
 
 typedef struct str { char *data; ptrdiff_t len; } str;
-#define S(s) ({(str){(char *) s, cstrlen(s)};})
+#define S(s) ( (str){(char *) s, cstrlen(s)} )
 
 static inline int sequal(str a, str b) {
     return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len);
@@ -374,9 +368,10 @@ static inline int float_equal(float a, float b)
     const float epsilon = 1e-5f;
 	const float min_abs = 1e-8f;
 
-	float abs_a = macro_abs(a);
-	float abs_b = macro_abs(b);
-	float diff  = macro_abs(a - b);
+	float abs_a = a < 0? -a : a;
+	float abs_b = b < 0? -b : b;
+	float diff  = a - b;
+    diff = diff < 0? -diff: diff;
 
 	if (abs_a < min_abs && abs_b < min_abs) {
 		// Both numbers are extremely close to 0
@@ -391,9 +386,10 @@ static inline int double_equal(double a, double b)
     const double epsilon = 1e-9;
 	const double min_abs = 1e-12;
 
-	double abs_a = macro_abs(a);
-    double abs_b = macro_abs(b);
-	double diff  = macro_abs(a - b);
+	double abs_a = a < 0? -a : a;
+	double abs_b = b < 0? -b : b;
+	double diff  = a - b;
+    diff = diff < 0? -diff: diff;
 
 	if (abs_a < min_abs && abs_b < min_abs) {
 		// Both numbers are extremely close to 0

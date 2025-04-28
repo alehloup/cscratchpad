@@ -27,6 +27,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+/* OS INCLUDES */
+
 #if !defined(_ISO646_H) && !defined(and)
     #define not	!
     #define and	&&
@@ -46,8 +49,34 @@
     #include <unistd.h>
 #endif
 
+#if defined(OSWIN_) && !defined(ssize_t)
+  typedef ptrdiff_t ssize_t;
+#endif
 
+typedef int interror;
+
+
+/* CONSTANTS */
+
+#define KB (1024LL)
+#define MB (1024LL * 1024LL)
+#define GB (1024LL * 1024LL * 1024LL)
+
+#ifdef OSWIN_
+    #define TMP_FOLDER "%TMP%/"
+#else
+    #define TMP_FOLDER "/tmp/"
+#endif
+
+
+/* TYPE INFO */
+
+// Discard
 #define _ (void)
+
+#define ssizeof(x) ( (ssize_t)sizeof(x) )
+
+#define countof(x)  ( ssizeof(x) / ssizeof(x[0]) )
 
 #ifndef typeof
     #define typeof __typeof__
@@ -64,24 +93,10 @@
     #define atleast /* static */
 #endif
 
-typedef int interror;
+#define salignof(x) ( (ssize_t)alignof(x) )
 
-#if defined(OSWIN_) && !defined(ssize_t)
-  typedef ptrdiff_t ssize_t;
-#endif
 
-#define countof(x)  ((ssize_t)(sizeof(x) / sizeof(x[0])))
-
-#define KB (1024LL)
-#define MB (1024LL * 1024LL)
-#define GB (1024LL * 1024LL * 1024LL)
-
-#ifdef OSWIN_
-    #define TMP_FOLDER "%TMP%/"
-#else
-    #define TMP_FOLDER "/tmp/"
-#endif
-
+/* BUILTIN MEMORY FUNCTIONS */
 
 extern size_t strlen(const char *);
 
@@ -118,6 +133,8 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
 }
 
 
+/* SIMPLE MATH */
+
 #define macro_abs(x) ({ typeof(x) _x = (x); _x < 0 ? -_x : _x; })
 #if !defined(min) && !defined(max)
     #define min(a,b) ({ typeof(a) _a=(a); typeof(b) _b=(b); _a<_b?_a:_b; })
@@ -129,6 +146,8 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
     ({ typeof(n) _n = (n); typeof(lo) _lo = (lo); typeof(hi) _hi = (hi); _n < _lo ? _lo : _n > _hi ? _hi : _n; })
 #define clamp(lo, n, hi)  limit(lo, n, hi)
 
+
+/* FOR MACROS */
 
 #define foreach(var, array, length) \
     for (typeof((array)[0]) *var = (array), *var##_end_ = (array) + (length); var < var##_end_; ++var)
@@ -147,10 +166,14 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
 #define for_k(times) forasc(k, 0, times)
 
 
+/* SCOPE MACROS */
+
 #define with(close, var, ...) for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
 #define withfile(var, filename, mode) with(fclose, var, fopen(filename, mode))
 #define defer(...) for (bool defer_flag_##__LINE__ = 1; defer_flag_##__LINE__; defer_flag_##__LINE__ = 0, (__VA_ARGS__))
 
+
+/* ARENA */
 
 typedef struct arena { char *beg; char *end; } arena;
 static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
@@ -175,6 +198,8 @@ static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t a
 #define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t) sizeof(t), (ptrdiff_t) alignof(t))))
 #define arr2arena(arr) ({ (arena){(char *) arr, (char *) (arr + countof(arr))}; })
 
+
+/* STRING */
 
 typedef struct str { char *data; ptrdiff_t len; } str;
 #define S(s) ({(str){(char *) s, cstrlen(s)};})
@@ -290,6 +315,56 @@ static inline size_t hash_str(str s, size_t seed) {
 }
 
 
+/* HASHTRIE */
+
+#define decl_hashtriestruct(type) \
+    typedef struct hashtrie_##type hashtrie_##type; \
+    struct hashtrie_##type { \
+        hashtrie_##type *child[4]; \
+        str key; \
+        type value; \
+    };
+decl_hashtriestruct(str);
+decl_hashtriestruct(int);
+
+typedef struct hashtrienode hashtrienode;
+struct hashtrienode {
+    hashtrienode *child[4];
+    str key;
+    // T value; // value skimmed out
+};
+
+// If null is passed as arena, then it just does lookups, otherwise it creates node if necessary
+hashtrienode * lookup_skimmed(hashtrienode * *node, str key, arena *a, ptrdiff_t size, ptrdiff_t align) {
+    size_t seed = node ? (size_t)*node : 0;
+    for (size_t h = hash_str(key, seed); *node; h <<= 2) {
+        if (sequal(key, (*node)->key)) {
+            return *node;
+        }
+
+        node = &(*node)->child[h >> 62];
+    }
+    if (!a) return NULL;
+
+    *node = (hashtrienode *) alloc(a, 1, size, align);
+    (*node)->key = key;
+
+    return *node;
+}
+#define lookup(ppnode, key, parena) \
+    ({ \
+        typeof(*ppnode) htresult__ = ((typeof(*ppnode)) \
+            lookup_skimmed((hashtrienode * *)ppnode, key, parena, ssizeof(**ppnode), salignof(**ppnode))); \
+        \
+        parena != NULL \
+            ? &htresult__->value \
+            : (htresult__ ? &htresult__->value : NULL)\
+        ;\
+    })
+
+
+/* EQUAL GENERIC */
+
 static inline int char_equal(char a, char b) { return a == b; }
 static inline int int_equal(int a, int b) { return a == b; }
 static inline int ssize_equal(ssize_t a, ssize_t b) { return a == b; }
@@ -338,6 +413,9 @@ static inline int double_equal(double a, double b)
         str: sequal \
     )(a, b)
 
+
+/* PRINT GENERIC */
+
 static inline void print_char(char c) { printf("%c", c); }
 static inline void print_int(int i) { printf("%d", i); }
 static inline void print_ssize(ssize_t s) { printf("%zd", s); }
@@ -354,6 +432,9 @@ static inline void print_str(str s) { printf("%.*s", (int)s.len, s.data); }
         str: print_str \
     )(x)
 #define println(x) print(x); printf("\n")
+
+
+/* SCAN GENERIC */
 
 static inline void scan_char(char *c) { (void)scanf(" %c", c); }
 static inline void scan_int(int *i) { (void)scanf(" %d", i); }
@@ -393,6 +474,8 @@ static inline str scanline(arena *a) {
     )(&x)
 
 
+/* FILES */
+
 static inline str file2str(arena * a, str filename) {
     FILE* file = fopen(filename.data, "rb");
         if (!file) return (str){0};
@@ -416,6 +499,9 @@ static inline interror str2file(str content, str filename) {
 
     return written != (size_t)content.len;
 }
+
+
+/* OS FUNCTIONS */
 
 static inline interror scmd(arena *a, str command) {
     println(command); 

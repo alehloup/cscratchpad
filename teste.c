@@ -36,6 +36,7 @@ static void test_equals() {
     print_equals("%zu", ua, ub);
     print_equals("%f", (double) fa, (double) fb);
     print_equals("%f", da, db);
+    printf("\n");
 }
 
 static void test_strings2() {
@@ -57,6 +58,23 @@ static void test_strings2() {
     printf(" "); println(sequal(sa, S("Alessandro")));
 }
 
+static void test_files() {
+    static char arr[10*KB] = {0};
+    arena a = arr2arena(arr);
+
+    str contents = file2str(&a, S("cidades.txt"));
+    head_tail_ok result = {0};
+
+    do {
+        result = cut(contents, '\n');
+        contents = result.tail;
+
+        println(result.head);
+
+    } while (result.ok);
+
+}
+
 #define ROOTWIN "D:/"
 #define ROOTLIN "/mnt/d/"
 
@@ -67,13 +85,7 @@ int main(void) {
     test_strings(a);
     test_strings2();
     test_equals();
-    printf("\n");
-
-    str contents = file2str(&a, S(ROOTWIN "1brc_java/measurements10k.txt"));
-    println(contents.len);
-
-    contents = file2str(&a, S(ROOTLIN "1brc_java/measurements10k.txt"));
-    println(contents.len);
+    test_files();
 
     return 0;
 }

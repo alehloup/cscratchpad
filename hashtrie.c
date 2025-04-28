@@ -4,13 +4,12 @@ int main(void) {
     char arr[KB];
     arena a = arr2arena(arr);
 
-    hashtrie_int *ints = 0;
+    htint *ints = 0;
     
-    *htset(&ints, S("Alessandro"), &a) = 52;
+    htset(&ints, S("Alessandro"), 52, &a);
+    htset(&ints, S("Sarah"), 69, &a);
 
-    *htset(&ints, S("Sarah"), &a) = 69;
-
-    hashtrie_int * resint = htget(&ints, S("Alessandro"));
+    htint * resint = htget(&ints, S("Alessandro"));
     if (resint) {
         println(resint->value);
     }
@@ -20,20 +19,20 @@ int main(void) {
         println(resint->value);
     }
 
-    *htset(&ints, S("Karol"), &a) = 69;
+    htset(&ints, S("Karol"), 69, &a);
 
-    foreach(x, (hashtrie_int *)arr, (a.beg - arr)/ssizeof(hashtrie_int)) {
+    foreach(x, (htint *)arr, (a.beg - arr)/ssizeof(htint)) {
         print(x->key); printf(" "); println(x->value);
     }
 
     ssize_t base = (ssize_t)a.beg;
     
-    hashtrie_str *strings = 0;
+    htstring *strings = 0;
 
-    *htset(&strings, S("Alessandro"), &a) = S("Stamatto");
-    *htset(&strings, S("Sarah"), &a) = S("Sakamoto");
+    htset(&strings, S("Alessandro"), S("Stamatto"), &a);
+    htset(&strings, S("Sarah"), S("Sakamoto"), &a);
 
-    foreach(x, (hashtrie_str *)base, ((ptrdiff_t)a.beg - base)/ssizeof(hashtrie_str)) {
+    foreach(x, (htstring *)base, ((ptrdiff_t)a.beg - base)/ssizeof(htstring)) {
         print(x->key); printf(" "); println(x->value);
     }
 

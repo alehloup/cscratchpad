@@ -317,15 +317,16 @@ static inline size_t hash_str(str s, size_t seed) {
 
 /* HASHTRIE */
 
-#define decl_hashtriestruct(type) \
-    typedef struct hashtrie_##type hashtrie_##type; \
-    struct hashtrie_##type { \
-        hashtrie_##type *child[4]; \
+#define decl_htstruct(name, type) \
+    typedef struct name name; \
+    struct name { \
+        name *child[4]; \
         str key; \
         type value; \
     };
-decl_hashtriestruct(str);
-decl_hashtriestruct(int);
+decl_htstruct(htstring, str);
+decl_htstruct(htpointer, void*);
+decl_htstruct(htint, int);
 
 typedef struct hashtrienode hashtrienode;
 struct hashtrienode {
@@ -352,14 +353,15 @@ hashtrienode * lookup_skimmed(hashtrienode * *node, str key, arena *a, ptrdiff_t
     return *node;
 }
 #define htget(ppnode, key) \
-    ( (typeof(*ppnode)) lookup_skimmed((hashtrienode * *)ppnode, key, NULL, ssizeof(**ppnode), salignof(**ppnode)) )
-
-#define htset(ppnode, key, parena) \
+    ((typeof(*ppnode)) lookup_skimmed((hashtrienode**)ppnode, key, NULL, ssizeof(**ppnode), salignof(**ppnode)))
+#define htset(ppnode, key, value_, parena) \
 (\
-    parena != NULL \
-        ? &((typeof(*ppnode)) lookup_skimmed((hashtrienode * *)ppnode, key, parena, ssizeof(**ppnode), salignof(**ppnode)))->value \
-        : NULL \
+    (_ assert(parena != NULL and "parena can't be null when setting a hashtrie key->value!"), parena != NULL) \
+        ? ((typeof(*ppnode)) \
+            lookup_skimmed((hashtrienode**)ppnode, key, parena, ssizeof(**ppnode), salignof(**ppnode)))->value = value_ \
+        : value_ \
 )
+
 
 /* EQUAL GENERIC */
 

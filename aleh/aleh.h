@@ -81,8 +81,14 @@ typedef int interror;
 #ifndef typeof
     #define typeof __typeof__
 #endif
-#ifndef alignof
-    #define alignof __alignof__
+#if defined(_MSC_VER) && !defined(__clang__)
+    #ifndef alignof
+        #define alignof _Alignof
+    #endif
+#else
+    #ifndef alignof
+        #define alignof __alignof__
+    #endif
 #endif
 #ifndef threadlocal
     #define threadlocal _Thread_local
@@ -345,17 +351,15 @@ hashtrienode * lookup_skimmed(hashtrienode * *node, str key, arena *a, ptrdiff_t
 
     return *node;
 }
-#define lookup(ppnode, key, parena) \
-    ({ \
-        typeof(*ppnode) htresult__ = ((typeof(*ppnode)) \
-            lookup_skimmed((hashtrienode * *)ppnode, key, parena, ssizeof(**ppnode), salignof(**ppnode))); \
-        \
-        parena != NULL \
-            ? &htresult__->value \
-            : (htresult__ ? &htresult__->value : NULL)\
-        ;\
-    })
+#define htget(ppnode, key) \
+    ( (typeof(*ppnode)) lookup_skimmed((hashtrienode * *)ppnode, key, NULL, ssizeof(**ppnode), salignof(**ppnode)) )
 
+#define htset(ppnode, key, parena) \
+(\
+    parena != NULL \
+        ? &((typeof(*ppnode)) lookup_skimmed((hashtrienode * *)ppnode, key, parena, ssizeof(**ppnode), salignof(**ppnode)))->value \
+        : NULL \
+)
 
 /* EQUAL GENERIC */
 

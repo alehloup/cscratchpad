@@ -6,21 +6,21 @@ int main(void) {
 
     hashtrie_int *ints = 0;
     
-    *lookup(&ints, S("Alessandro"), &a) = 52;
+    *htset(&ints, S("Alessandro"), &a) = 52;
 
-    *lookup(&ints, S("Sarah"), &a) = 69;
+    *htset(&ints, S("Sarah"), &a) = 69;
 
-    int * resint = lookup(&ints, S("Alessandro"), 0);
+    hashtrie_int * resint = htget(&ints, S("Alessandro"));
     if (resint) {
-        println(*resint);
+        println(resint->value);
     }
 
-    resint = lookup(&ints, S("Sarah"), 0);
+    resint = htget(&ints, S("Sarah"));
     if (resint) {
-        println(*resint);
+        println(resint->value);
     }
 
-    *lookup(&ints, S("Karol"), &a) = 69;
+    *htset(&ints, S("Karol"), &a) = 69;
 
     foreach(x, (hashtrie_int *)arr, (a.beg - arr)/ssizeof(hashtrie_int)) {
         print(x->key); printf(" "); println(x->value);
@@ -30,8 +30,8 @@ int main(void) {
     
     hashtrie_str *strings = 0;
 
-    *lookup(&strings, S("Alessandro"), &a) = S("Stamatto");
-    *lookup(&strings, S("Sarah"), &a) = S("Sakamoto");
+    *htset(&strings, S("Alessandro"), &a) = S("Stamatto");
+    *htset(&strings, S("Sarah"), &a) = S("Sakamoto");
 
     foreach(x, (hashtrie_str *)base, ((ptrdiff_t)a.beg - base)/ssizeof(hashtrie_str)) {
         print(x->key); printf(" "); println(x->value);

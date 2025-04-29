@@ -13,6 +13,7 @@
 static const char *const flags_gcc = " gcc -fanalyzer @FLAGS " FLAGS_LIN;
 static const char *const flags_clang = " clang @FLAGS " FLAGS_LIN;
 static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror ";
+static const char *const flags_msvc = " cl /std:clatest /TC /W4 /wd4146 /WX /D_CRT_SECURE_NO_WARNINGS /Z7 /Fo:"TMP_FOLDER" ";
 
 
 static inline interror compile_run_c(const char *const c_file_c, const char *const flags) {
@@ -68,6 +69,7 @@ int main(int argc, const char *const *argv) {
         default:           flags = flags_gcc;   break;
         case 'c':case 'C': flags = flags_clang; break;
         case 't':case 'T': flags = flags_tinyc; break;
+        case 'm':case 'M': flags = flags_msvc; break;
         case 'a':case 'A': flags = "all"; //used in next switch
     } 
 
@@ -89,6 +91,10 @@ int main(int argc, const char *const *argv) {
             _ printf("\n===== TCC =====");
             error = compile_run_c(filename_c, flags_tinyc);
             _ printf("tcc=%d %s\n",   error, error? "error" : "success");
+
+            _ printf("\n===== MSVC =====");
+            error = compile_run_c(filename_c, flags_msvc);
+            _ printf("msvc=%d %s\n",  error, error? "error" : "success");
 
             if (error) printf("\n\nDone, ERROR!\n\n");
             return error;

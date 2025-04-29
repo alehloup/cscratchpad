@@ -6,20 +6,20 @@ int main(void) {
 
     htint *ints = 0;
     
-    htset(&ints, S("Alessandro"), 52, &a);
-    htset(&ints, S("Sarah"), 69, &a);
+    *intlookup(&ints, S("Alessandro"), &a) = 52;
+    *intlookup(&ints, S("Sarah"), &a) = 69;
 
-    htint * resint = htget(&ints, S("Alessandro"));
+    int * resint = intlookup(&ints, S("Alessandro"), 0);
     if (resint) {
-        println(resint->value);
+        println(*resint);
     }
 
-    resint = htget(&ints, S("Sarah"));
+    resint = intlookup(&ints, S("Sarah"), 0);
     if (resint) {
-        println(resint->value);
+        println(*resint);
     }
 
-    htset(&ints, S("Karol"), 69, &a);
+    *intlookup(&ints, S("Karol"), &a) = 69;
 
     foreach(x, (htint *)arr, (a.beg - arr)/ssizeof(htint)) {
         print(x->key); printf(" "); println(x->value);
@@ -27,12 +27,12 @@ int main(void) {
 
     ssize_t base = (ssize_t)a.beg;
     
-    htstring *strings = 0;
+    htstr *strings = 0;
 
-    htset(&strings, S("Alessandro"), S("Stamatto"), &a);
-    htset(&strings, S("Sarah"), S("Sakamoto"), &a);
+    *strlookup(&strings, S("Alessandro"), &a) = S("Stamatto");
+    *strlookup(&strings, S("Sarah"), &a) = S("Sakamoto");
 
-    foreach(x, (htstring *)base, ((ptrdiff_t)a.beg - base)/ssizeof(htstring)) {
+    foreach(x, (htstr *)base, ((ptrdiff_t)a.beg - base)/ssizeof(htstr)) {
         print(x->key); printf(" "); println(x->value);
     }
 

@@ -305,6 +305,8 @@ static inline str sadvance(str s, ssize_t i) {
     return s;
 }
 
+/* HASH GENERIC */
+
 static inline size_t hash_str(str s, size_t seed) {
     size_t h = seed;
     for_i(s.len) {
@@ -314,53 +316,10 @@ static inline size_t hash_str(str s, size_t seed) {
     return h;
 }
 
-
-/* HASHTRIE */
-
-#define decl_htstruct(name, type) \
-    typedef struct name name; \
-    struct name { \
-        name *child[4]; \
-        str key; \
-        type value; \
-    };
-decl_htstruct(htstring, str);
-decl_htstruct(htpointer, void*);
-decl_htstruct(htint, int);
-
-typedef struct hashtrienode hashtrienode;
-struct hashtrienode {
-    hashtrienode *child[4];
-    str key;
-    // T value; // value skimmed out
-};
-
-// If null is passed as arena, then it just does lookups, otherwise it creates node if necessary
-hashtrienode * lookup_skimmed(hashtrienode * *node, str key, arena *a, ptrdiff_t size, ptrdiff_t align) {
-    size_t seed = node ? (size_t)*node : 0;
-    for (size_t h = hash_str(key, seed); *node; h <<= 2) {
-        if (sequal(key, (*node)->key)) {
-            return *node;
-        }
-
-        node = &(*node)->child[h >> 62];
-    }
-    if (!a) return NULL;
-
-    *node = (hashtrienode *) alloc(a, 1, size, align);
-    (*node)->key = key;
-
-    return *node;
-}
-#define htget(ppnode, key) \
-    ((typeof(*ppnode)) lookup_skimmed((hashtrienode**)ppnode, key, NULL, ssizeof(**ppnode), salignof(**ppnode)))
-#define htset(ppnode, key, value_, parena) \
-(\
-    (_ assert(parena != NULL and "parena can't be null when setting a hashtrie key->value!"), parena != NULL) \
-        ? ((typeof(*ppnode)) \
-            lookup_skimmed((hashtrienode**)ppnode, key, parena, ssizeof(**ppnode), salignof(**ppnode)))->value = value_ \
-        : value_ \
-)
+#define hash64(a, seed) \
+    _Generic((a), \
+               str: hash_str \
+        )(a, seed)
 
 
 /* EQUAL GENERIC */
@@ -414,6 +373,22 @@ static inline int double_equal(double a, double b)
         float: float_equal, double: double_equal, \
         str: sequal \
     )(a, b)
+
+
+/* HASH TRIE */
+
+// hashtrie_ds.h implements:
+// |htrie_funname|lookup-function for |hashTrie|struct |htrie_keytype|key -> |htrie_valtype|val
+
+#define htrie_name htstr
+#define htrie_valtype str
+#define htrie_funname strlookup
+#include "hashtrie_ds.h"
+
+#define htrie_name htint
+#define htrie_valtype int
+#define htrie_funname intlookup
+#include "hashtrie_ds.h"
 
 
 /* PRINT GENERIC */

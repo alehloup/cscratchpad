@@ -76,8 +76,8 @@ static void test_files() {
 #define ROOTLIN "/mnt/d/"
 
 int main(void) {
-    char *data = malloc(16*GB);
-    arena a = {data, data + 16*GB};
+    char data[KB] = {0};
+    arena a = {data, data + countof(data)};
     
     test_strings(a);
     test_strings2();

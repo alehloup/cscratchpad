@@ -21,7 +21,7 @@ int main(void) {
 
     *intlookup(&ints, S("Karol"), &a) = 69;
 
-    foreach(x, (htint *)arr, (a.beg - arr)/ssizeof(htint)) {
+    forspan(x, (htint *)arr, (htint *)a.beg) {
         print(x->key); printf(" "); println(x->value);
     }
 
@@ -32,7 +32,7 @@ int main(void) {
     *strlookup(&strings, S("Alessandro"), &a) = S("Stamatto");
     *strlookup(&strings, S("Sarah"), &a) = S("Sakamoto");
 
-    foreach(x, (htstr *)base, ((ptrdiff_t)a.beg - base)/ssizeof(htstr)) {
+    forspan(x, (htstr *)base, (htstr *)a.beg) {
         print(x->key); printf(" "); println(x->value);
     }
 

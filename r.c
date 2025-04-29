@@ -16,16 +16,16 @@ static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror ";
 static const char *const flags_msvc = " cl /std:clatest /TC /W4 /wd4146 /WX /D_CRT_SECURE_NO_WARNINGS /Z7 /Fo:"TMP_FOLDER" ";
 
 
-static inline interror compile_run_c(const char *const c_file_c, const char *const flags) {
+static inline int compile_run_c(const char *const c_file_c, const char *const flags) {
     static char buffer[4096] = {0}; // this buffer will be used as arena storage!
     static arena a = {0};
 
-    interror err = 0;
+    int err = 0;
     str scommand = {0};
     clock_t stopwatch = {0};
 
-    head_tail_ok cuted = cut(S(c_file_c), '.');
-    str compileit[5] = {S(flags), cuted.head, S(".c -o " TMP_FOLDER), cuted.head, S(".exe")};
+    head_tail_ok cuted = cut(cstr2str(c_file_c), '.');
+    str compileit[5] = {cstr2str(flags), cuted.head, S(".c -o " TMP_FOLDER), cuted.head, S(".exe")};
     str runit[3] = {S(TIME_CMD " " TMP_FOLDER), cuted.head, S(".exe")};
 
     a = arr2arena(buffer); //clears arena

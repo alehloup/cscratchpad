@@ -12,7 +12,7 @@ static void test_strings(arena a) {
 
     printf("%s %zd\n", pstring->data, pstring->len);
 
-    str string2 = copy(&a, string);
+    str string2 = scopy(&a, string);
     printf("%d %s %s \n", equal(string, string2), string.data, string2.data);
     string2.data[3] = 'h';
     printf("%d %s %s \n", equal(string, string2), string.data, string2.data);

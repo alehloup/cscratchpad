@@ -21,18 +21,20 @@ int main(void) {
 
     *intlookup(&ints, S("Karol"), &a) = 69;
 
-    forspan(x, (htint *)arr, (htint *)a.beg) {
+    forspan(x, (htint *)arr, (htint *)(uintptr_t)a.beg) {
         print(x->key); printf(" "); println(x->value);
     }
 
-    ssize_t base = (ssize_t)a.beg;
+    htstr * start = (htstr *)(uintptr_t)a.beg;
     
     htstr *strings = 0;
 
     *strlookup(&strings, S("Alessandro"), &a) = S("Stamatto");
     *strlookup(&strings, S("Sarah"), &a) = S("Sakamoto");
 
-    forspan(x, (htstr *)base, (htstr *)a.beg) {
+    htstr * end = (htstr *)(uintptr_t)a.beg;
+
+    forspan(x, start, end) {
         print(x->key); printf(" "); println(x->value);
     }
 

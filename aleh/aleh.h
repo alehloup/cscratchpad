@@ -98,8 +98,10 @@
 #define forspan(var, start, end) \
     for (typeof((start)[0]) *var = (start), *var##_end_ = (end); var < var##_end_; ++var)
 
-#define with(close, var, ...) for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
-#define withfile(var, filename, mode) with(fclose, var, fopen(filename, mode))
+#define with(close, var, ...) \
+    for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
+#define withfile(var, filename, mode) \
+    with(fclose, var, fopen(filename, mode))
 
 
 /* MEMORY */
@@ -144,7 +146,7 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
 /* ARENA */
 
 typedef struct arena { char *beg; char *end; } arena;
-static inline void* alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
+static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
     assert(count >= 0 and size >= 0 and "count and size can't be negative!");
     if (!count or !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
 

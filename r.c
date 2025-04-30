@@ -13,7 +13,7 @@
 static const char *const flags_gcc = " gcc -fanalyzer @FLAGS " FLAGS_LIN;
 static const char *const flags_clang = " clang @FLAGS " FLAGS_LIN;
 static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror ";
-static const char *const flags_msvc = " cl /std:clatest /TC /W4 /wd4146 /WX /D_CRT_SECURE_NO_WARNINGS /Z7 /Fo:"TMP_FOLDER" ";
+static const char *const flags_msvc = " cl /std:clatest /TC /W4 /wd4146 /wd4189 /WX /D_CRT_SECURE_NO_WARNINGS /Z7 /Fo:"TMP_FOLDER" ";
 
 
 static inline int compile_run_c(const char *const c_file_c, const char *const flags) {

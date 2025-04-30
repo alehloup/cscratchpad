@@ -23,7 +23,7 @@ int main(void) {
     *cstrlookup(&ht, "Alessandro", &a) = "Stamatto";
     *cstrlookup(&ht, "Sarah", &a) = "Sakamoto";
 
-    forspan(cs, (htcstr *)arr, (htcstr *)a.beg) {
+    forspan(cs, (htcstr *)(uintptr_t)arr, (htcstr *)(uintptr_t)a.beg) {
         print(cs->key); print(" "); println(cs->value);
     }
 

@@ -20,9 +20,10 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <time.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 /* OS INCLUDES */
 #ifdef _WIN32

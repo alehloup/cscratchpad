@@ -100,8 +100,6 @@
 
 #define with(close, var, ...) \
     for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
-#define withfile(var, filename, mode) \
-    with(fclose, var, fopen(filename, mode))
 
 
 /* MEMORY */

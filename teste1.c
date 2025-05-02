@@ -69,7 +69,15 @@ static void test_files() {
         result = cut(result.tail, '\n');
         println(result.head);
     }
+}
 
+static void test_files_forlines() {
+    static char arr[10*KB] = {0};
+    arena a = arr2arena(arr);
+
+    forlines(line, file2str(&a, S("cidades.txt")) ) {
+        println(line);
+    }
 }
 
 #define ROOTWIN "D:/"
@@ -82,7 +90,7 @@ int main(void) {
     test_strings(a);
     test_strings2();
     test_equals();
-    test_files();
+    test_files_forlines();
 
     return 0;
 }

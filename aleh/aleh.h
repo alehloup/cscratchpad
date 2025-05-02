@@ -246,6 +246,11 @@ static inline head_tail_ok cut(str s, char c) {
 
     return r;
 }
+#define forlines(var, string) \
+    head_tail_ok var##_res = cut( (string) , '\n'); \
+    for (str var = var##_res.head; \
+         var##_res.head.len or var##_res.tail.len; \
+         var##_res = cut(var##_res.tail, '\n'), var = var##_res.head)
 
 static inline int starts(str s, str prefix) {
     return (s.len >= prefix.len) \

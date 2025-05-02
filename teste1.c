@@ -58,18 +58,18 @@ static void test_strings2() {
     printf(" "); println(sequal(sa, S("Alessandro")));
 }
 
-static void test_files() {
-    static char arr[10*KB] = {0};
-    arena a = arr2arena(arr);
+// static void test_files() {
+//     static char arr[10*KB] = {0};
+//     arena a = arr2arena(arr);
 
-    str contents = file2str(&a, S("cidades.txt"));
-    head_tail_ok result = {.tail = contents};
+//     str contents = file2str(&a, S("cidades.txt"));
+//     head_tail_ok result = {.tail = contents};
 
-    while(result.tail.len) {
-        result = cut(result.tail, '\n');
-        println(result.head);
-    }
-}
+//     while(result.tail.len) {
+//         result = cut(result.tail, '\n');
+//         println(result.head);
+//     }
+// }
 
 static void test_files_forlines() {
     static char arr[10*KB] = {0};

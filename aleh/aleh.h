@@ -196,6 +196,12 @@ static inline int sequal(str a, str b) {
     return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len);
 }
 
+static inline int scomp(str a, str b) {
+    int mincomp = cmemcmp(a.data, b.data, min(a.len, b.len));
+
+    return !mincomp ? (int)(a.len - b.len) : mincomp;
+}
+
 // cat always starts by putting str head at the top of the arena
 static inline str cat(arena *a, str head, str tail) {
     // use copy as realoc if head is not at the top of arena
@@ -280,6 +286,39 @@ static inline str sadvanced(str s, ssize_t i) {
         s.len -= i;
     }
     return s;
+}
+
+static inline int parseint(str s) {
+    unsigned int r = 0;
+    int sign = 1;
+
+    foreach(pc, s.data, s.len) {
+        switch(*pc) {
+            case '+': case '.': case ',': case '_': break;
+            case '-': sign *= -1; break;
+            default: r = 10u*r + (unsigned)(*pc - '0');
+        }
+    }
+
+    return sign * (int)r;
+}
+
+static inline float parsefloat(str s) {
+    float r = 0.0f;
+    float sign = 1.0f;
+    float exp = 0.0f;
+
+    foreach(pc, s.data, s.len) {
+        switch(*pc) {
+            case '+': case ',': case '_': break;
+            case '-': sign *= -1; break;
+            case '.': exp = 1;  break;
+            default: r = 10.0f*r + (*pc - '0'); 
+                     exp *= 0.1f;
+        }
+    }
+
+    return sign * r * (exp == 0.0f ? 1.0f : exp);
 }
 
 /* HASH GENERIC */
@@ -399,6 +438,8 @@ static inline void print_cstr(const char * cs) { printf("%s", cs); }
     )(x)
 #define println(x) print(x); printf("\n")
 
+#define printarr(arr, n) print("{ "); foreach(arr_el, arr, n) { print(*arr_el); print(" "); } println("}")
+
 
 /* SCAN GENERIC */
 
@@ -465,6 +506,14 @@ static inline int str2file(str content, str filename) {
 
     return written != (size_t)content.len;
 }
+
+
+/* MACRO ALGOS */
+
+#define decl_cmpfn(fnname, type, ... ) \
+    static inline int fnname(const void *a_, const void *b_) { const type *a = a_; const type *b = b_;  return (__VA_ARGS__); }
+
+#define sort(arr, n, cmpfn) qsort(arr, n, sizeof(arr[0]), cmpfn)
 
 
 /* OS FUNCTIONS */

@@ -310,6 +310,9 @@ static inline float parsefloat(str s) {
 
     foreach(pc, s.data, s.len) {
         switch(*pc) {
+            // exp notation unsupported
+            case 'e': case 'E': return 0.0f; break;
+
             case '+': case ',': case '_': break;
             case '-': sign *= -1; break;
             case '.': exp = 1;  break;
@@ -320,6 +323,7 @@ static inline float parsefloat(str s) {
 
     return sign * r * (exp == 0.0f ? 1.0f : exp);
 }
+
 
 /* HASH GENERIC */
 

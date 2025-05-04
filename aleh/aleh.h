@@ -310,7 +310,8 @@ static inline float parsefloat(str s) {
 
     foreach(pc, s.data, s.len) {
         switch(*pc) {
-            // exp notation unsupported
+            // exp notation unsupported, 
+            // most of times is close to zero, so it returns 0
             case 'e': case 'E': return 0.0f; break;
 
             case '+': case ',': case '_': break;

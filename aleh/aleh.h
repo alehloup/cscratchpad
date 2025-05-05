@@ -32,10 +32,13 @@
         #define WIN32_LEAN_AND_MEAN
     #endif
     #include <windows.h>
+    #include <io.h>
     typedef ptrdiff_t ssize_t;
 #else // assume Posix
     #define OSLIN_
     #include <unistd.h>
+    #include <sys/mman.h>
+    #include <sys/stat.h>
 #endif
 
 #define not	!
@@ -503,18 +506,39 @@ static inline str scanline(arena *a) {
 
 /* RESOURCES "RAII" */
 
+typedef str MMAP;
+static inline void mclose(MMAP *s) {
+    if (!s) return;
+
+    if (s->data and s->len) {
+        #ifdef OSWIN_
+            UnmapViewOfFile(s->data);
+        #else
+            munmap(s->data, (size_t)s->len);
+        #endif
+    }
+
+    free(s);
+}
+
 static inline void drop_file(FILE *file) {
     if (file) _ fclose(file);
 }
+static inline void drop_mmap(MMAP *s) {
+    mclose(s);
+}
 #define drop(x) \
     _Generic((x), \
-        FILE*: drop_file \
+        FILE*: drop_file, \
+        MMAP*: drop_mmap \
     )(x)
+
 #define with(var, ...) \
-for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; drop(var), var = NULL)
+    for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; drop(var), var = NULL)
 
 
 /* FILES */
+
 
 static inline str file2str(arena * a, str filename) {
     str r = {a->beg, 0};
@@ -540,6 +564,67 @@ static inline int str2file(str content, str filename) {
     }
 
     return written != (size_t)content.len;
+}
+
+static inline ssize_t filelen(FILE *file) {
+
+    #ifdef OSWIN_
+        ssize_t len = (ssize_t)_filelengthi64(_fileno(file));
+    #else // assume POSIX
+        struct stat file_stat;
+        int fstat_success = fstat(fileno(file), &file_stat) != -1; 
+        assert(fstat_success);
+        ssize_t len = (ssize_t)file_stat.st_size;
+    #endif 
+
+    assert(len >= 0 and "filelen must not be negative!");
+    return len;
+}
+
+static inline MMAP* mopen(const char *filename, const char *mode) {
+    int readit = mode[0] == 'r' or mode[0] == 'R';
+    MMAP *r = NULL;
+
+    with(file, fopen(filename, mode)) {
+        ssize_t len = filelen(file);
+        assert(len > 0 and "filelen can't be zero");
+
+        r = malloc(sizeof(str));
+        assert(r and "could not allocate r");
+        r->data = NULL; r->len = 0;
+
+        #ifdef OSWIN_
+            assert(cmemchr(mode, 'b', cstrlen(mode)) and "windows: mopen must be open in binary mode");
+
+            void *mhandle = CreateFileMapping(
+                (void *)(size_t)_get_osfhandle(_fileno(file)), 0, 
+                readit ? PAGE_READONLY : PAGE_READWRITE, 0, 0, 0
+            );
+                if (mhandle) {
+                    r->data = (char *)MapViewOfFile(
+                        mhandle, 
+                        FILE_MAP_READ | (readit ? 0 : FILE_MAP_WRITE),
+                        0, 0, 0
+                    );
+                    CloseHandle(mhandle);
+                }
+        #else // assume POSIX
+            r->data = (char *)mmap(
+                0, (size_t)len,
+                PROT_READ | (readit ? 0 : PROT_WRITE), 
+                MAP_SHARED, fileno(file), 0
+            );
+        #endif
+
+        if (r->data) {
+            r->len = len;
+        } else {
+            free(r);
+            r = NULL;
+        }
+    }
+
+    return r;
 }
 
 

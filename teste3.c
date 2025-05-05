@@ -28,5 +28,17 @@ int main(void) {
     ssize_t len = split(S("Alessandro,Sarah, Karol, Amanda ,Brenda"), ',', arr3, countof(arr3));
     printarr(arr3, len);
 
+    with(file, fopen("measurements10k.txt", "rb")) {
+        println((double)filelen(file) / (double)KB);
+    }
+
+    int i = 10;
+    with(content, mopen("measurements10k.txt", "rb")) {
+        forlines(line, *content) {
+            println(line);
+            if (!i--) break;
+        } 
+    }
+
     return 0;
 }

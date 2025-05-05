@@ -78,6 +78,8 @@ static void test_files_forlines() {
     forlines(line, file2str(&a, S("cidades.txt")) ) {
         println(line);
     }
+
+    str2file(S("Woa haha\n"), S("testando.txt"));
 }
 
 #define ROOTWIN "D:/"

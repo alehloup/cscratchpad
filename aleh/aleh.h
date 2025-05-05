@@ -99,7 +99,7 @@
 #define forspan(var, start, end) \
     for (typeof((start)[0]) *var = (start), *var##_end_ = (end); var < var##_end_; ++var)
 
-#define with(close, var, ...) \
+#define with_close(close, var, ...) \
     for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
 
 
@@ -486,28 +486,43 @@ static inline str scanline(arena *a) {
     )(&x)
 
 
+/* RESOURCES "RAII" */
+
+static inline void drop_file(FILE *file) {
+    if (file) _ fclose(file);
+}
+#define drop(x) \
+    _Generic((x), \
+        FILE*: drop_file \
+    )(x)
+#define with(var, ...) \
+for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; drop(var), var = NULL)
+
+
 /* FILES */
 
 static inline str file2str(arena * a, str filename) {
-    FILE* file = fopen(filename.data, "rb");
-        if (!file) return (str){0};
+    str r = {a->beg, 0};
 
-        ssize_t cap = a->end - a->beg;
-        str r = {a->beg, cap};
-        r.len = (ssize_t)fread(r.data, 1, (size_t)r.len, file);
-        assert(r.len >= 0 and r.data + r.len + 1 < a->end and "couldn't read file");
-        r.data[r.len] = 0;
+    with(file, fopen(filename.data, "rb")) {
+        r.len = (ssize_t)fread(r.data, 1, (size_t)(a->end - a->beg), file);
 
-    fclose(file);
+        if (r.len < 0 or r.data + r.len + 1 >= a->end) {
+            r.len = 0;
+        } else {
+            a->beg += r.len + 1;
+            r.data[r.len] = '\0';
+        }
+    }
 
     return r;
 }
 static inline int str2file(str content, str filename) {
-    FILE* file = fopen(filename.data, "wb");
-        if (!file) return -1;
+    size_t written = 0;
 
-        size_t written = fwrite(content.data, 1, (size_t)content.len, file);
-    fclose(file);
+    with(file, fopen(filename.data, "wb")) {
+        written = fwrite(content.data, 1, (size_t)content.len, file);
+    }
 
     return written != (size_t)content.len;
 }

@@ -24,5 +24,9 @@ int main(void) {
 
     println(parsefloat(S("52.52")));
 
+    str arr3[5] = {0};
+    ssize_t len = split(S("Alessandro,Sarah, Karol, Amanda ,Brenda"), ',', arr3, countof(arr3));
+    printarr(arr3, len);
+
     return 0;
 }

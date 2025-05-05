@@ -257,7 +257,22 @@ static inline head_tail_ok cut(str s, char c) {
     for (str var = var##_res.head; \
          var##_res.head.len or var##_res.tail.len; \
          var##_res = cut(var##_res.tail, sep), var = var##_res.head)
+
 #define forlines(var, string) forsep(var, string, '\n')
+
+// splits string into arr, returns number of elements splited into
+static inline ptrdiff_t split(str text, char sep, str arr[atleast 1], ssize_t cap) {
+    assert(cap > 0 and "cap must be atleast 1");
+
+    ssize_t len = 0;
+    forsep(part, text, sep) {
+        if (len >= cap) break;
+
+        arr[len++] = part;
+    }
+
+    return len;
+}
 
 static inline int starts(str s, str prefix) {
     return (s.len >= prefix.len) \

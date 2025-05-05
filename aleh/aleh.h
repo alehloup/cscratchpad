@@ -102,6 +102,7 @@
 #define forspan(var, start, end) \
     for (typeof((start)[0]) *var = (start), *var##_end_ = (end); var < var##_end_; ++var)
 
+// Check the macro with later in this file, which uses the _Generic drop!
 #define with_close(close, var, ...) \
     for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
 

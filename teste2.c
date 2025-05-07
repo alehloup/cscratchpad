@@ -1,9 +1,7 @@
 #include "aleh/aleh.h"
 
 typedef const char * cstr;
-#define htrie_keytype cstr
-#define htrie_valtype cstr
-#include "aleh/htrie_ds.h"
+decl_htrie(cstr, cstr, cstr);
 
 int main(void) {
     char arr[KB] = {0};

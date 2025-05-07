@@ -32,15 +32,20 @@ int main(void) {
         println((double)filelen(file) / (double)KB);
     }
 
-    int i = 10;
+    int c = 10;
     with(content, mopen("measurements10k.txt", "r")) {
         forlines(line, content) {
             println(line);
-            if (!i--) break;
+            if (!c--) break;
         } 
     }
 
-    print("mode r: "); println(ensure_binary_mode("r"));
+    size_t seed = 52;
+    unsigned int counts[21] = {0};
+    for (int i = 0; i < 1000000; ++i) {
+        counts[rando(&seed, 1, 20)] += 1;
+    }
+    printarr(counts, countof(counts));
 
     return 0;
 }

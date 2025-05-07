@@ -345,6 +345,32 @@ static inline float parsefloat(str s) {
 }
 
 
+/* RANDOM */
+
+static inline unsigned int random32(size_t *state) {
+    size_t oldstate = *state;
+    *state = oldstate * 6364136223846793005ULL + 1111111111111111111ULL;
+    unsigned int xorshifted = (unsigned int)(((oldstate >> 18u) ^ oldstate) >> 27u);
+    unsigned int rot = (unsigned int)(oldstate >> 59u);
+    return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
+}
+static inline unsigned int rando(size_t *state, unsigned int from_including, unsigned int to_including) {
+    assert(from_including <= to_including and "invalid range for random!");
+    if (to_including < from_including) return from_including;
+
+    unsigned int range = to_including - from_including + 1;
+
+    // Exclude last % range cycle to eliminate mod bias
+    unsigned int limit = UINT32_MAX - (UINT32_MAX % range);
+    unsigned int r;
+    do {
+        r = random32(state);
+    } while (r >= limit);  // Rejects if its in the last % range cycle
+
+    return (r % range) + from_including;
+}
+
+
 /* HASH GENERIC */
 
 static inline size_t hash_str(str s, size_t seed) {
@@ -358,11 +384,23 @@ static inline size_t hash_str(str s, size_t seed) {
 static inline size_t hash_cstr(const char * cs, size_t seed) {
     return hash_str(cstr2str(cs), seed);
 }
+static inline size_t hash_sizet(size_t x) {
+    x ^= x >> 30;
+    x *= 0xbf58476d1ce4e5b9U;
+    x ^= x >> 27;
+    x *= 0x94d049bb133111ebU;
+    x ^= x >> 31;
+    return x;
+}
+static inline size_t hash_ssizet(ssize_t x) {
+    return hash_sizet((size_t) x);
+}
 
 #define hash64(a, seed) \
     _Generic((a), \
-            str: hash_str, const char *: hash_cstr, \
-            char *: hash_cstr \
+            str: hash_str, \
+            const char *: hash_cstr, char *: hash_cstr, \
+            size_t: hash_sizet, ssize_t: hash_ssizet \
         )(a, seed)
 
 
@@ -427,24 +465,42 @@ static inline int cstr_equal(const char * a, const char * b) {
 
 /* HASH TRIE */
 
-/* 
-    [REQUIRED] to define htrie_valtype before including this header
-    
-    hashtrie_ds.h implements:
-    |htrie_prefix|lookup for ht|htrie_prefix|struct, |htrie_keytype|key -> |htrie_valtype|val
-*/
+// declares a ht|prefix| struct, and a |prefix|lookup function for htrie keytype -> valtype
+#define decl_htrie(prefix, keytype, valtype) \
+\
+typedef struct macrocat(ht, prefix) macrocat(ht, prefix); \
+struct macrocat(ht, prefix) { \
+    macrocat(ht, prefix) *child[4]; \
+    keytype key; \
+    valtype value; \
+}; \
+\
+static inline valtype * macrocat(prefix, lookup)(macrocat(ht, prefix) **node, keytype key, arena *a) { \
+    size_t seed = node ? (size_t)*node : 0; \
+    for (size_t h = hash64(key, seed); *node; h <<= 2) { \
+        if (equal(key, (*node)->key)) { \
+            return &(*node)->value; \
+        } \
+\
+        node = &(*node)->child[h >> 62]; \
+    } \
+    if (!a) return NULL; \
+\
+    *node =  new(a, 1, macrocat(ht, prefix)); \
+    (*node)->key = key; \
+\
+    return &(*node)->value; \
+}
 
-#define htrie_valtype str
-#include "htrie_ds.h"
-
-#define htrie_valtype int
-#include "htrie_ds.h"
+decl_htrie(str, str, str);
+decl_htrie(int, str, int);
 
 
 /* PRINT GENERIC */
 
 static inline void print_char(char c) { printf("%c", c); }
 static inline void print_int(int i) { printf("%d", i); }
+static inline void print_uint(unsigned int i) { printf("%u", i); }
 static inline void print_ssize(ssize_t s) { printf("%zd", s); }
 static inline void print_size(size_t z) { printf("%zu", z); }
 static inline void print_float(float f) { printf("%.5f", (double)f); }
@@ -454,7 +510,8 @@ static inline void print_cstr(const char * cs) { printf("%s", cs); }
 
 #define print(x) \
     _Generic((x), \
-        char: print_char, int: print_int, \
+        char: print_char, \
+        int: print_int, unsigned int: print_uint, \
         ssize_t: print_ssize, size_t: print_size, \
         float: print_float, double: print_double, \
         str: print_str, const char *: print_cstr, \

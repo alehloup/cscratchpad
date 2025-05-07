@@ -505,7 +505,29 @@ static inline str scanline(arena *a) {
     )(&x)
 
 
-/* RESOURCES "RAII" */
+/* MINI-RAII */
+
+typedef int descriptor_t;
+
+static inline int empty_descriptor(descriptor_t descriptor) {
+    return descriptor < 0; 
+}
+static inline int empty_str(str string) {
+    return !string.len or !string.data;
+}
+static inline int empty_cstr(const char * cstring) {
+    return !cstring or !cstring[0];
+}
+static inline int empty_pointer(void *pointer) {
+    return pointer == NULL;
+}
+#define empty(x) \
+    _Generic((x), \
+        descriptor_t: empty_descriptor, \
+        str: empty_str, \
+        const char *: empty_cstr, char *: empty_cstr, \
+        default: empty_pointer \
+    )(x)
 
 typedef str MMAP;
 static inline void mclose(MMAP *s) {
@@ -535,7 +557,7 @@ static inline void drop_mmap(MMAP *s) {
     )(x)
 
 #define with(var, ...) \
-    for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; drop(var), var = NULL)
+    for (typeof(__VA_ARGS__) var = __VA_ARGS__; !empty(var); drop(var), var = (typeof(var)){0})
 
 
 /* FILES */

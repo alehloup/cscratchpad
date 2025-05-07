@@ -33,12 +33,14 @@ int main(void) {
     }
 
     int i = 10;
-    with(content, mopen("measurements10k.txt", "rb")) {
-        forlines(line, *content) {
+    with(content, mopen("measurements10k.txt", "r")) {
+        forlines(line, content) {
             println(line);
             if (!i--) break;
         } 
     }
+
+    print("mode r: "); println(ensure_binary_mode("r"));
 
     return 0;
 }

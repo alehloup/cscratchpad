@@ -2,7 +2,7 @@
     [REQUIRED] to define htrie_valtype before including this header
     
     hashtrie_ds.h implements:
-    |htrie_prefix|lookup for ht|htrie_prefix|struct, |htrie_keytype|key -> |htrie_valtype|val
+    |htrie_prefix|lookup for ht|htrie_prefix| struct, |htrie_keytype| key -> |htrie_valtype| val
 */
 
 /* REQUIRED*/
@@ -47,7 +47,7 @@ struct htrie_struct {
 
 /* FUNCTIONS */
 
-// If null is passed as arena does lookup and might return null, otherwise returns value address
+// If null is passed as arena then does lookup and might return null, otherwise returns value address
 static inline htrie_valtype * htrie_lookup_fn(htrie_struct **node, htrie_keytype key, arena *a) {
     size_t seed = node ? (size_t)*node : 0;
     for (size_t h = hash64(key, seed); *node; h <<= 2) {

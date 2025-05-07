@@ -530,30 +530,26 @@ static inline int empty_pointer(void *pointer) {
     )(x)
 
 typedef str MMAP;
-static inline void mclose(MMAP *s) {
-    if (!s) return;
+static inline void mclose(MMAP s) {
+    if (empty(s)) return;
 
-    if (s->data and s->len) {
-        #ifdef OSWIN_
-            UnmapViewOfFile(s->data);
-        #else
-            munmap(s->data, (size_t)s->len);
-        #endif
-    }
-
-    free(s);
+    #ifdef OSWIN_
+        UnmapViewOfFile(s.data);
+    #else
+        munmap(s.data, (size_t)s.len);
+    #endif
 }
 
 static inline void drop_file(FILE *file) {
     if (file) _ fclose(file);
 }
-static inline void drop_mmap(MMAP *s) {
+static inline void drop_mmap(MMAP s) {
     mclose(s);
 }
 #define drop(x) \
     _Generic((x), \
         FILE*: drop_file, \
-        MMAP*: drop_mmap \
+        MMAP: drop_mmap \
     )(x)
 
 #define with(var, ...) \
@@ -562,6 +558,22 @@ static inline void drop_mmap(MMAP *s) {
 
 /* FILES */
 
+static inline const char * ensure_binary_mode(const char * cstring) {
+    ssize_t len = cstrlen(cstring);
+    assert(len > 0 and len < 4);
+
+    if (cmemchr(cstring, 'b', len)) {
+        return cstring;
+    }
+
+    // C allows returning string literals
+    switch (cstring[0]) {
+        case 'r': return (cstring[1] == '+' ? "rb+" : "rb");
+        case 'w': return (cstring[1] == '+' ? "wb+" : "wb");
+        case 'a': return (cstring[1] == '+' ? "ab+" : "ab");
+        default: return "rb";
+    }
+}
 
 static inline str file2str(arena * a, str filename) {
     str r = {a->beg, 0};
@@ -604,27 +616,21 @@ static inline ssize_t filelen(FILE *file) {
     return len;
 }
 
-static inline MMAP* mopen(const char *filename, const char *mode) {
-    int readit = mode[0] == 'r' or mode[0] == 'R';
-    MMAP *r = NULL;
+static inline MMAP mopen(const char *filename, const char *mode) {
+    int readit = mode[0] == 'r' and mode[1] != '+';
+    MMAP r = {0};
 
-    with(file, fopen(filename, mode)) {
+    with(file, fopen(filename, ensure_binary_mode(mode))) {
         ssize_t len = filelen(file);
         assert(len > 0 and "filelen can't be zero");
 
-        r = malloc(sizeof(str));
-        assert(r and "could not allocate r");
-        r->data = NULL; r->len = 0;
-
         #ifdef OSWIN_
-            assert(cmemchr(mode, 'b', cstrlen(mode)) and "windows: mopen must be open in binary mode");
-
             void *mhandle = CreateFileMapping(
                 (void *)(size_t)_get_osfhandle(_fileno(file)), 0, 
                 readit ? PAGE_READONLY : PAGE_READWRITE, 0, 0, 0
             );
                 if (mhandle) {
-                    r->data = (char *)MapViewOfFile(
+                    r.data = (char *)MapViewOfFile(
                         mhandle, 
                         FILE_MAP_READ | (readit ? 0 : FILE_MAP_WRITE),
                         0, 0, 0
@@ -632,18 +638,15 @@ static inline MMAP* mopen(const char *filename, const char *mode) {
                     CloseHandle(mhandle);
                 }
         #else // assume POSIX
-            r->data = (char *)mmap(
+            r.data = (char *)mmap(
                 0, (size_t)len,
                 PROT_READ | (readit ? 0 : PROT_WRITE), 
                 MAP_SHARED, fileno(file), 0
             );
         #endif
 
-        if (r->data) {
-            r->len = len;
-        } else {
-            free(r);
-            r = NULL;
+        if (r.data) {
+            r.len = len;
         }
     }
 

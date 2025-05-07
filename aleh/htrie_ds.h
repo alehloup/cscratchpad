@@ -10,8 +10,8 @@
 #include "aleh.h";
 
 #ifndef htrie_valtype
-    #error "htrie_ds.h requires you to define htrie_valtype before including"
     #define htrie_valtype str
+    #error "htrie_ds.h requires you to define htrie_valtype before including"
 #endif
 
 

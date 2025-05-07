@@ -7,7 +7,7 @@
 
 /* REQUIRED*/
 
-#include "aleh.h";
+#include "ale.h";
 
 #ifndef htrie_valtype
     #define htrie_valtype str

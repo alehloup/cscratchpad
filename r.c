@@ -1,6 +1,6 @@
 // For Shadow Stacks: CONFIG_X86_USER_SHADOW_STACK=y and GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
 
-#include "aleh/aleh.h"
+#include "ale.h"
 
 #ifdef OSWIN_
     #define FLAGS_LIN ""

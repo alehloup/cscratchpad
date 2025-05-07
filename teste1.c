@@ -1,4 +1,4 @@
-#include "aleh/aleh.h"
+#include "ale.h"
 
 static void test_strings(arena a) {
     str string = S("Alessandro Stamatto");

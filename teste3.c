@@ -1,4 +1,4 @@
-#include "aleh/aleh.h"
+#include "ale.h"
 
 typedef const char * cstr;
 

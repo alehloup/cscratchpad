@@ -1,4 +1,4 @@
-#include "aleh/aleh.h"
+#include "ale.h"
 
 int main(void) {
     char arr[KB];

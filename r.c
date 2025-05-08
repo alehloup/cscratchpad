@@ -40,7 +40,7 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
         #ifdef OSWIN_
             print_stopwatch(stopwatch);
         #else
-            _ stopwatch; // In Linux clock does not work since system forks 
+            discard_ stopwatch; // In Linux clock does not work since system forks 
         #endif
     
     return err;
@@ -80,21 +80,21 @@ int main(int argc, const char *const *argv) {
             return error;
         ;
         case 'a':
-            _ printf("\n===== GCC =====");
+           discard_ printf("\n===== GCC =====");
             error = compile_run_c(filename_c, flags_gcc);
-            _ printf("gcc=%d %s\n",   error, error? "error" : "success");
+           discard_ printf("gcc=%d %s\n",   error, error? "error" : "success");
 
-            _ printf("\n===== Clang =====");
+           discard_ printf("\n===== Clang =====");
             error = compile_run_c(filename_c, flags_clang);
-            _ printf("clang=%d %s\n", error, error? "error" : "success");
+           discard_ printf("clang=%d %s\n", error, error? "error" : "success");
 
-            _ printf("\n===== TCC =====");
+           discard_ printf("\n===== TCC =====");
             error = compile_run_c(filename_c, flags_tinyc);
-            _ printf("tcc=%d %s\n",   error, error? "error" : "success");
+           discard_ printf("tcc=%d %s\n",   error, error? "error" : "success");
 
-            _ printf("\n===== MSVC =====");
+           discard_ printf("\n===== MSVC =====");
             error = compile_run_c(filename_c, flags_msvc);
-            _ printf("msvc=%d %s\n",  error, error? "error" : "success");
+           discard_ printf("msvc=%d %s\n",  error, error? "error" : "success");
 
             if (error) printf("\n\nDone, ERROR!\n\n");
             return error;

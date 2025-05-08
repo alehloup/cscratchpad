@@ -1,37 +1,37 @@
-#include <stdio.h>
-#include "aleh/thread.h"
+#include "ale.h"
 
-enum { NUM_THREADS_TO_CREATE = 8001 };
-static unsigned int results[NUM_THREADS_TO_CREATE];
+enum { NUM_THREADS_TO_CREATE = 16000 };
+static ssize_t results[NUM_THREADS_TO_CREATE];
 
-static void * sum(void *thread_idx) {
-    unsigned int threadIdx = (unsigned int)(size_t)(thread_idx);
+threadfun(sum) {
+    ssize_t threadIdx = (ssize_t)(uintptr_t)(threadarg);
     results[threadIdx] = threadIdx * 10;
     return 0;
 }
 
 int main() {
-    THREAD_T threads[NUM_THREADS_TO_CREATE];
-    unsigned int totalSum = 0, correctSum = 0;
-    
-    go_threads(sum, NUM_THREADS_TO_CREATE, threads);
-    join_threads(threads, NUM_THREADS_TO_CREATE);
+    THREAD threads[NUM_THREADS_TO_CREATE] = {0};
+    ssize_t totalSum = 0, correctSum = 0;
 
-    {
-        unsigned int i;
-        for (i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
-            totalSum += results[i];
-        }
-    }
-
-    {
-        unsigned int i;
-        for (i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
-            correctSum += (i*10);
-        }
+    for(ssize_t i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
+        threads[i] = go(sum, (void *)(uintptr_t)i, 0);
     }
     
-    printf("\nTotal sum: %u %s %u \n ", totalSum, totalSum == correctSum ? "==" : "!=" ,correctSum);
+    for(int i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
+        join_thread(threads[i]);
+    }
+
+    for (int i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
+        totalSum += results[i];
+    }
+
+    for (int i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
+        correctSum += (i*10);
+    }
+    
+    printsp("\nTotal sum:"); printsp(totalSum);
+    printsp(totalSum == correctSum ? "==" : "!=");
+    printsp("Correct sum:"); printsp(correctSum);
 
     return 0;
 }

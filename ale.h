@@ -33,17 +33,44 @@
     #endif
     #include <windows.h>
     #include <io.h>
-    typedef ptrdiff_t ssize_t;
 #else // assume Posix
     #define OSLIN_
     #include <unistd.h>
     #include <sys/mman.h>
     #include <sys/stat.h>
+    #include <pthread.h>
 #endif
 
 #define not	!
 #define and	&&
 #define or	||
+
+
+/* TYPEDEFS */
+
+#ifdef _WIN32
+    typedef ptrdiff_t ssize_t;
+    typedef HANDLE THREAD;
+    typedef DWORD (WINAPI *routine_fun)(LPVOID);
+#else // assume POSIX
+    typedef pthread_t THREAD;
+    typedef void * (*routine_fun)(void *);
+#endif
+
+// for the function alloc and the macro new, and arena functions
+typedef struct arena { char *beg; char *end; } arena;
+
+// for the macros S and cstr2str, and string functions
+typedef struct str { char *data; ptrdiff_t len; } str;
+
+// for the function cut
+typedef struct {str head; str tail; int ok; int padding;} head_tail_ok;
+
+// for the empty _Generic macro that considers < 0 as false
+typedef int descriptor_t;
+
+// for a bit more clarity, since mopen saves the mapped buffer to a str struct
+typedef str MMAP;
 
 
 /* CONSTANTS */
@@ -61,8 +88,7 @@
 
 /* MACROS */
 
-// Discard anything
-#define _ (void)
+#define discard_ (void)
 #define ssizeof(x) ( (ssize_t)sizeof(x) )
 #define countof(x)  ( ssizeof(x) / ssizeof(x[0]) )
 
@@ -148,7 +174,6 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
 
 /* ARENA */
 
-typedef struct arena { char *beg; char *end; } arena;
 static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
     assert(count >= 0 and size >= 0 and "count and size can't be negative!");
     if (!count or !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
@@ -173,7 +198,6 @@ static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t 
 
 /* STRING */
 
-typedef struct str { char *data; ptrdiff_t len; } str;
 #define S(s) ( (str){(char *) s, max(ssizeof(s) - 1, 0)} )
 
 #define cstr2str(cstring) ((str){ (char *)cstring, cstrlen(cstring) })
@@ -239,7 +263,6 @@ static inline str span(char *beg, char *end) {
     return (str){beg, beg ? max(end - beg, 0) : 0};
 }
 
-typedef struct {str head; str tail; int ok; int padding;} head_tail_ok;
 // cut s at c, returns {str head; str tail; int ok;}
 static inline head_tail_ok cut(str s, char c) {
     head_tail_ok r = {0};
@@ -517,9 +540,13 @@ static inline void print_cstr(const char * cs) { printf("%s", cs); }
         str: print_str, const char *: print_cstr, \
         char *: print_cstr \
     )(x)
-#define println(x) print(x); printf("\n")
 
-#define printarr(arr, n) print("{ "); foreach(arr_el, arr, n) { print(*arr_el); print(" "); } println("}")
+#define printend(x, end) print(x); print((char)end)
+#define printsp(x) printend(x, ' ')
+#define printcomma(x) printend(x, ', ')
+#define println(x) printend(x, '\n')
+
+#define printarr(arr, n) print("{ "); foreach(arr_el, arr, n) { printsp(*arr_el); } println("}")
 
 
 /* SCAN GENERIC */
@@ -564,8 +591,6 @@ static inline str scanline(arena *a) {
 
 /* MINI-RAII */
 
-typedef int descriptor_t;
-
 static inline int empty_descriptor(descriptor_t descriptor) {
     return descriptor < 0; 
 }
@@ -586,7 +611,6 @@ static inline int empty_pointer(void *pointer) {
         default: empty_pointer \
     )(x)
 
-typedef str MMAP;
 static inline void mclose(MMAP s) {
     if (empty(s)) return;
 
@@ -598,7 +622,7 @@ static inline void mclose(MMAP s) {
 }
 
 static inline void drop_file(FILE *file) {
-    if (file) _ fclose(file);
+    if (file) discard_ fclose(file);
 }
 static inline void drop_mmap(MMAP s) {
     mclose(s);
@@ -717,6 +741,46 @@ static inline MMAP mopen(const char *filename, const char *mode) {
     static inline int fnname(const void *a_, const void *b_) { const type *a = a_; const type *b = b_;  return (__VA_ARGS__); }
 
 #define sort(arr, n, cmpfn) qsort(arr, n, sizeof(arr[0]), cmpfn)
+
+
+/* THREADS */
+
+#ifdef _WIN32
+    // Windows thread function signature, receives one void* arg as threadarg
+    #define threadfun(fname) DWORD WINAPI fname(LPVOID threadarg)
+#else // asume POSIX
+    // POSIX thread function signature, receives one void* arg as threadarg
+    #define threadfun(fname) void * fname(void * threadarg)
+#endif
+
+static inline THREAD go(routine_fun routine, void * threadarg, ssize_t thread_stack_size) { // erro no msvc, funciona no msvc-clang
+    THREAD thread;
+    thread_stack_size = max(thread_stack_size, 16*KB);
+
+    #ifdef _WIN32
+        thread = CreateThread(0, (size_t)thread_stack_size, routine, threadarg, 0, 0);
+        assert(thread and "fatal error: could not launch thread");
+    #else // assume POSIX
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setstacksize(&attr, (size_t)thread_stack_size);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+        int error = pthread_create(&thread, &attr, routine, threadarg);
+        assert(!error and "fatal error: could not launch thread");
+        pthread_attr_destroy(&attr);
+    #endif
+
+    return thread;
+}
+
+static inline void join_thread(THREAD thread) {
+    #ifdef _WIN32
+        WaitForSingleObject(thread, INFINITE);
+    #else // assume POSIX
+        pthread_join(thread, 0);
+    #endif
+}
 
 
 /* OS FUNCTIONS */

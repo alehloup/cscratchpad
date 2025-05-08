@@ -129,8 +129,12 @@ typedef str MMAP;
     for (typeof((start)[0]) *var = (start), *var##_end_ = (end); var < var##_end_; ++var)
 
 // Check the macro with later in this file, which uses the _Generic drop!
+#define with(var, ...) \
+    for (typeof(__VA_ARGS__) var = __VA_ARGS__; !empty(var); drop(var), var = (typeof(var)){0})
 #define with_close(close, var, ...) \
     for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
+#define with_scope(begin, end) \
+    for (int scope_##__LINE__ = (discard_ (begin), 1); scope_##__LINE__; scope_##__LINE__ = (discard_ (end), 0))
 
 
 /* MEMORY */
@@ -632,9 +636,6 @@ static inline void drop_mmap(MMAP s) {
         FILE*: drop_file, \
         MMAP: drop_mmap \
     )(x)
-
-#define with(var, ...) \
-    for (typeof(__VA_ARGS__) var = __VA_ARGS__; !empty(var); drop(var), var = (typeof(var)){0})
 
 
 /* FILES */

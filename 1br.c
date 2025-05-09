@@ -2,7 +2,7 @@
 
 int main(void)
 {
-    with(contents, mopen("measurements10k.txt", "rb")) {
+    for(MMAP contents = mopen("measurements10k.txt", "rb"); contents.len; mclose(contents), contents.len = 0) {
         println(contents.len);
     }
 

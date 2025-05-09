@@ -50,11 +50,17 @@
 
 #ifdef _WIN32
     typedef ptrdiff_t ssize_t;
+
     typedef HANDLE THREAD;
-    typedef DWORD (WINAPI *routine_fun)(LPVOID);
+    // Windows thread function return type
+    #define threadfun_ret DWORD WINAPI
+    typedef DWORD (WINAPI *threadfun_)(void *);
 #else // assume POSIX
+
     typedef pthread_t THREAD;
-    typedef void * (*routine_fun)(void *);
+    // POSIX thread function return type
+    #define threadfun_ret void *
+    typedef void * (*threadfun_)(void *);
 #endif
 
 // char *beg; char *end;
@@ -65,9 +71,6 @@ typedef struct str { char *data; ptrdiff_t len; } str;
 
 // str head; str tail; int ok;
 typedef struct { str head; str tail; int ok; int padding; } head_tail_ok;
-
-// for the empty _Generic macro that considers < 0 as false
-typedef int descriptor_t;
 
 // for a bit more clarity, since mopen saves the mapped buffer to a str struct
 typedef str MMAP;
@@ -127,9 +130,6 @@ typedef str MMAP;
     for (typeof((array)[0]) *var = (array), *var##_end_ = (array) + (length); var < var##_end_; ++var)
 #define forspan(var, start, end) \
     for (typeof((start)[0]) *var = (start), *var##_end_ = (end); var < var##_end_; ++var)
-
-#define with(var, ...) \
-    for (typeof(__VA_ARGS__) var = __VA_ARGS__; !empty(var); drop(var), var = (typeof(var)){0})
 
 
 /* MEMORY */
@@ -608,43 +608,6 @@ static inline str scanline(arena *a)
     )(&x)
 
 
-/* MINI-RAII */
-
-// Considers de valid descriptor of 0, stdin, as "empty" but its ok: it should not be used with stdin
-static inline int empty_int(int i) { return i <= 0; }
-static inline int empty_long(long l) { return l <= 0; }
-static inline int empty_str(str string) { return !string.len or !string.data; }
-static inline int empty_cstr(const char * cstring) { return !cstring or !cstring[0]; }
-static inline int empty_pointer(void *pointer) { return pointer == NULL; }
-
-#define empty(x) \
-    _Generic((x), \
-        int: empty_int, long: empty_long, \
-        str: empty_str, \
-        const char *: empty_cstr, char *: empty_cstr, \
-        default: empty_pointer \
-    )(x)
-
-static inline void mclose(MMAP s)
-{
-    if (empty(s)) return;
-
-    #ifdef OSWIN_
-        UnmapViewOfFile(s.data);
-    #else
-        munmap(s.data, (size_t)s.len);
-    #endif
-}
-
-static inline void drop_file(FILE *file) { if (file) discard_ fclose(file); }
-static inline void drop_mmap(MMAP s) { mclose(s); }
-#define drop(x) \
-    _Generic((x), \
-        FILE*: drop_file, \
-        MMAP: drop_mmap \
-    )(x)
-
-
 /* FILES */
 
 static inline const char * ensure_binary_mode(const char * cstring)
@@ -665,11 +628,11 @@ static inline const char * ensure_binary_mode(const char * cstring)
     }
 }
 
-static inline str file2str(arena * a, str filename)
+static inline str file2str(arena * a, const char *filename)
 {
     str r = {a->beg, 0};
 
-    with(file, fopen(filename.data, "rb")) {
+    for(FILE *file = fopen(filename, "rb"); file; fclose(file), file = NULL) {
         r.len = (ssize_t)fread(r.data, 1, (size_t)(a->end - a->beg), file);
 
         if (r.len < 0 or r.data + r.len + 1 >= a->end) {
@@ -682,11 +645,11 @@ static inline str file2str(arena * a, str filename)
 
     return r;
 }
-static inline int str2file(str content, str filename)
+static inline int str2file(str content, const char *filename)
 {
     size_t written = 0;
 
-    with(file, fopen(filename.data, "wb")) {
+    for(FILE* file = fopen(filename, "wb"); file; fclose(file), file = NULL) {
         written = fwrite(content.data, 1, (size_t)content.len, file);
     }
 
@@ -713,7 +676,7 @@ static inline MMAP mopen(const char *filename, const char *mode)
     int readit = mode[0] == 'r' and mode[1] != '+';
     MMAP r = {0};
 
-    with(file, fopen(filename, ensure_binary_mode(mode))) {
+    for(FILE *file = fopen(filename, ensure_binary_mode(mode)); file; fclose(file), file = NULL) {
         ssize_t len = filelen(file);
         assert(len > 0 and "filelen can't be zero");
 
@@ -746,6 +709,17 @@ static inline MMAP mopen(const char *filename, const char *mode)
     return r;
 }
 
+static inline void mclose(MMAP s)
+{
+    if (!s.len or !s.data) return;
+
+    #ifdef OSWIN_
+        UnmapViewOfFile(s.data);
+    #else
+        munmap(s.data, (size_t)s.len);
+    #endif
+}
+
 
 /* MACRO ALGOS */
 
@@ -757,15 +731,7 @@ static inline MMAP mopen(const char *filename, const char *mode)
 
 /* THREADS */
 
-#ifdef _WIN32
-    // Windows thread function return type
-    #define threadfun_ret DWORD WINAPI
-#else // asume POSIX
-    // POSIX thread function return type
-    #define threadfun_ret void *
-#endif
-
-static inline THREAD go(routine_fun routine, void * threadarg, ssize_t thread_stack_size) 
+static inline THREAD go(threadfun_ routine, void * threadarg, ssize_t thread_stack_size) 
 {
     THREAD thread;
     thread_stack_size = max(thread_stack_size, 16*KB);

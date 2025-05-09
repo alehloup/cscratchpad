@@ -66,11 +66,11 @@ static void test_files_forlines()
     static char arr[10*KB] = {0};
     arena a = arr2arena(arr);
 
-    forlines(line, file2str(&a, S("cidades.txt")) ) {
+    forlines(line, file2str(&a, "cidades.txt") ) {
         println(line);
     }
 
-    str2file(S("Woa haha\n"), S("testando.txt"));
+    str2file(S("Woa haha\n"), "testando.txt");
 }
 
 #define ROOTWIN "D:/"

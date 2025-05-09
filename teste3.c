@@ -29,12 +29,12 @@ int main(void)
     ssize_t len = split(S("Alessandro,Sarah, Karol, Amanda ,Brenda"), ',', arr3, countof(arr3));
     printarr(arr3, len);
 
-    with(file, fopen("measurements10k.txt", "rb")) {
+    for(FILE *file = fopen("measurements10k.txt", "rb"); file; fclose(file), file = NULL) {
         println((double)filelen(file) / (double)KB);
     }
 
     int c = 10;
-    with(content, mopen("measurements10k.txt", "r")) {
+    for(MMAP content = mopen("measurements10k.txt", "r"); content.len; mclose(content), content.len = 0) {
         forlines(line, content) {
             println(line);
             if (!c--) break;

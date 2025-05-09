@@ -57,13 +57,13 @@
     typedef void * (*routine_fun)(void *);
 #endif
 
-// for the function alloc and the macro new, and arena functions
+// char *beg; char *end;
 typedef struct arena { char *beg; char *end; } arena;
 
-// for the macros S and cstr2str, and string functions
+// char *data; ptrdiff_t len;
 typedef struct str { char *data; ptrdiff_t len; } str;
 
-// for the function cut
+// str head; str tail; int ok;
 typedef struct { str head; str tail; int ok; int padding; } head_tail_ok;
 
 // for the empty _Generic macro that considers < 0 as false
@@ -128,15 +128,10 @@ typedef str MMAP;
 #define forspan(var, start, end) \
     for (typeof((start)[0]) *var = (start), *var##_end_ = (end); var < var##_end_; ++var)
 
-// Check the macro with later in this file, which uses the _Generic drop!
 #define with(var, ...) \
     for (typeof(__VA_ARGS__) var = __VA_ARGS__; !empty(var); drop(var), var = (typeof(var)){0})
-#define with_close(close, var, ...) \
-    for (typeof(__VA_ARGS__) var = __VA_ARGS__; var; close(var), var = NULL)
-#define with_scope(begin, end) \
-    for (int scope_##__LINE__ = (discard_ (begin), 1); scope_##__LINE__; scope_##__LINE__ = (discard_ (end), 0))
 
-
+    
 /* MEMORY */
 
 extern size_t strlen(const char *);
@@ -561,6 +556,15 @@ static inline void print_cstr(const char * cs) { printf("%s", cs); }
 
 #define printarr(arr, n) print("{ "); foreach(arr_el, arr, n) { printsp(*arr_el); } println("}")
 
+static inline void print_stopwatch(clock_t stopwatch)
+{
+    clock_t end = clock();
+    if (end < stopwatch) {
+        printf("Clock error, end < start");
+        return;
+    }
+    printf("  Executed in %.3f seconds\n", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
+}
 
 /* SCAN GENERIC */
 
@@ -606,14 +610,16 @@ static inline str scanline(arena *a)
 
 /* MINI-RAII */
 
-static inline int empty_descriptor(descriptor_t descriptor) { return descriptor < 0; }
+// Considers de valid descriptor of 0, stdin, as "empty" but its ok: it should not be used with stdin
+static inline int empty_int(int i) { return i <= 0; }
+static inline int empty_long(long l) { return l <= 0; }
 static inline int empty_str(str string) { return !string.len or !string.data; }
 static inline int empty_cstr(const char * cstring) { return !cstring or !cstring[0]; }
 static inline int empty_pointer(void *pointer) { return pointer == NULL; }
 
 #define empty(x) \
     _Generic((x), \
-        descriptor_t: empty_descriptor, \
+        int: empty_int, long: empty_long, \
         str: empty_str, \
         const char *: empty_cstr, char *: empty_cstr, \
         default: empty_pointer \
@@ -802,16 +808,6 @@ static inline int scmd(arena *a, str command)
     printf("\n");
 
     return ret;
-}
-
-static inline void print_stopwatch(clock_t stopwatch)
-{
-    clock_t end = clock();
-    if (end < stopwatch) {
-        printf("Clock error, end < start");
-        return;
-    }
-    printf("  Executed in %.3f seconds\n", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
 }
 
 static inline void sleepsecs(unsigned int seconds)

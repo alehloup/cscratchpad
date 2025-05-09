@@ -5,9 +5,6 @@ typedef const char * cstr;
 decl_cmpfn(comp, int, *a - *b)
 decl_cmpfn(comp2, cstr, cstrcmp(*a, *b))
 
-void begindraw(void) { println("START DRAWING!"); }
-void enddraw(void) { println("END DRAWING!"); }
-
 int main(void)
 {
     int arr[] = { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
@@ -50,10 +47,6 @@ int main(void)
         counts[rando(&seed, 1, 20)] += 1;
     }
     printarr(counts, countof(counts));
-
-    with_scope(begindraw(), enddraw()) {
-        println("in the middle!");
-    }
 
     return 0;
 }

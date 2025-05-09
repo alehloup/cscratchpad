@@ -82,12 +82,6 @@ typedef str MMAP;
 #define MB (1024LL * 1024LL)
 #define GB (1024LL * 1024LL * 1024LL)
 
-#ifdef OSWIN_
-    #define TMP_FOLDER "%TMP%/"
-#else
-    #define TMP_FOLDER "/tmp/"
-#endif
-
 
 /* MACROS */
 
@@ -731,13 +725,13 @@ static inline void mclose(MMAP s)
 
 /* THREADS */
 
-static inline THREAD go(threadfun_ routine, void * threadarg, ssize_t thread_stack_size) 
+static inline THREAD go(threadfun_ threadfun, void * threadarg, ssize_t thread_stack_size) 
 {
     THREAD thread;
     thread_stack_size = max(thread_stack_size, 16*KB);
 
     #ifdef _WIN32
-        thread = CreateThread(0, (size_t)thread_stack_size, routine, threadarg, 0, 0);
+        thread = CreateThread(0, (size_t)thread_stack_size, threadfun, threadarg, 0, 0);
         assert(thread and "fatal error: could not launch thread");
     #else // assume POSIX
         pthread_attr_t attr;
@@ -745,7 +739,7 @@ static inline THREAD go(threadfun_ routine, void * threadarg, ssize_t thread_sta
         pthread_attr_setstacksize(&attr, (size_t)thread_stack_size);
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-        int error = pthread_create(&thread, &attr, routine, threadarg);
+        int error = pthread_create(&thread, &attr, threadfun, threadarg);
         assert(!error and "fatal error: could not launch thread");
         pthread_attr_destroy(&attr);
     #endif

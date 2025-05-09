@@ -3,12 +3,15 @@
 #include "ale.h"
 
 #ifdef OSWIN_
+    #define TMP_FOLDER "%TMP%/"
     #define FLAGS_LIN ""
     #define TIME_CMD ""
 #else
+    #define TMP_FOLDER "/tmp/"
     #define FLAGS_LIN "@LINFLAGS "
     #define TIME_CMD "/usr/bin/time -f \"\\n  Elapsed: %E\\n  User: %U | Sys: %S\\n  MaxMem: %M KB | CPU: %P\" "
 #endif
+
 
 static const char *const flags_gcc = " gcc -fanalyzer @FLAGS " FLAGS_LIN;
 static const char *const flags_clang = " clang @FLAGS " FLAGS_LIN;

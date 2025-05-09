@@ -25,43 +25,36 @@
 #include <stdlib.h>
 #include <time.h>
 
-/* OS INCLUDES */
+/* OS INCLUDES & COMPAT */
 #ifdef _WIN32
-    #define OSWIN_
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
     #include <windows.h>
     #include <io.h>
-#else // assume Posix
-    #define OSLIN_
-    #include <unistd.h>
-    #include <sys/mman.h>
-    #include <sys/stat.h>
-    #include <pthread.h>
-#endif
-
-#define not	!
-#define and	&&
-#define or	||
-
-
-/* TYPEDEFS */
-
-#ifdef _WIN32
     typedef ptrdiff_t ssize_t;
 
     typedef HANDLE THREAD;
     // Windows thread function return type
     #define threadfun_ret DWORD WINAPI
     typedef DWORD (WINAPI *threadfun_)(void *);
-#else // assume POSIX
+#else // assume Posix
+    #include <unistd.h>
+    #include <sys/mman.h>
+    #include <sys/stat.h>
+    #include <pthread.h>
 
     typedef pthread_t THREAD;
     // POSIX thread function return type
     #define threadfun_ret void *
     typedef void * (*threadfun_)(void *);
 #endif
+
+#define and	&&
+#define or	||
+
+
+/* STRUCTS */
 
 // char *beg; char *end;
 typedef struct arena { char *beg; char *end; } arena;
@@ -287,7 +280,7 @@ static inline head_tail_ok cut(str s, char c)
 #define forlines(var, string) forsep(var, string, '\n')
 
 // splits string into arr, returns number of elements splited into
-static inline ptrdiff_t split(str text, char sep, str arr[atleast 1], ssize_t cap)
+static inline ssize_t split(str text, char sep, str arr[atleast 1], ssize_t cap)
 {
     assert(cap > 0 and "cap must be atleast 1");
 
@@ -652,7 +645,7 @@ static inline int str2file(str content, const char *filename)
 
 static inline ssize_t filelen(FILE *file)
 {
-    #ifdef OSWIN_
+    #ifdef _WIN32
         ssize_t len = (ssize_t)_filelengthi64(_fileno(file));
     #else // assume POSIX
         struct stat file_stat;
@@ -674,7 +667,7 @@ static inline MMAP mopen(const char *filename, const char *mode)
         ssize_t len = filelen(file);
         assert(len > 0 and "filelen can't be zero");
 
-        #ifdef OSWIN_
+        #ifdef _WIN32
             void *mhandle = CreateFileMapping(
                 (void *)(size_t)_get_osfhandle(_fileno(file)), 0, 
                 readit ? PAGE_READONLY : PAGE_READWRITE, 0, 0, 0
@@ -707,7 +700,7 @@ static inline void mclose(MMAP s)
 {
     if (!s.len or !s.data) return;
 
-    #ifdef OSWIN_
+    #ifdef _WIN32
         UnmapViewOfFile(s.data);
     #else
         munmap(s.data, (size_t)s.len);
@@ -774,7 +767,7 @@ static inline void sleepsecs(unsigned int seconds)
 {
     assert(seconds < 60 * 60 * 24 + 1);
 
-    #if defined(OSWIN_)
+    #if defined(_WIN32)
         Sleep(seconds * 1000);
     #else // Unix
         sleep(seconds);

@@ -2,7 +2,7 @@
 
 #include "ale.h"
 
-#ifdef OSWIN_
+#ifdef _WIN32
     #define TMP_FOLDER "%TMP%/"
     #define FLAGS_LIN ""
     #define TIME_CMD ""
@@ -41,7 +41,7 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
     
     stopwatch = clock();
         err = scmd(&a, scommand);
-        #ifdef OSWIN_
+        #ifdef _WIN32
             print_stopwatch(stopwatch);
         #else
             discard_ stopwatch; // In Linux clock does not work since system forks 
@@ -58,7 +58,7 @@ int main(int argc, const char *const *argv)
     const char * flags = "";
     int error = 1;
 
-    #ifdef OSWIN_
+    #ifdef _WIN32
         system("chcp 65001");
     #endif 
 

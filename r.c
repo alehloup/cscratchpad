@@ -16,7 +16,8 @@ static const char *const flags_tinyc = " tcc -std=c11 -Wall -Werror ";
 static const char *const flags_msvc = " cl /std:clatest /TC /W4 /wd4146 /wd4189 /wd4090 /WX /D_CRT_SECURE_NO_WARNINGS /Z7 /Fo:"TMP_FOLDER" ";
 
 
-static inline int compile_run_c(const char *const c_file_c, const char *const flags) {
+static inline int compile_run_c(const char *const c_file_c, const char *const flags)
+{
     static char buffer[4096] = {0}; // this buffer will be used as arena storage!
     static arena a = {0};
 
@@ -47,7 +48,8 @@ static inline int compile_run_c(const char *const c_file_c, const char *const fl
 }
 
 
-int main(int argc, const char *const *argv) {
+int main(int argc, const char *const *argv)
+{
     const char * compiler = "";
     const char * filename_c = "";
     const char * flags = "";

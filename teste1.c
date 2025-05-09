@@ -1,6 +1,7 @@
 #include "ale.h"
 
-static void test_strings(arena a) {
+static void test_strings(arena a)
+{
     str string = S("Alessandro Stamatto");
     printf("%s %zd \n", string.data, string.len);
     printf("%d \n", equal(S("Alessandro Stamatt"), string));
@@ -22,7 +23,8 @@ static void test_strings(arena a) {
     printf(format " == " format " (%d)\n", a, b, equal(a, b)); \
     printf(format " == " format " (%d)\n", a, b+1, equal(a, b+1))
 
-static void test_equals() {
+static void test_equals()
+{
     char ca = 'a', cb = 'a';
     int ia = 5, ib = 5;
     ssize_t sa = -52, sb = -52;
@@ -39,7 +41,8 @@ static void test_equals() {
     printf("\n");
 }
 
-static void test_strings2() {
+static void test_strings2()
+{
     char arr[255] = {0};
     arena a = arr2arena(arr);
 
@@ -58,20 +61,8 @@ static void test_strings2() {
     printf(" "); println(sequal(sa, S("Alessandro")));
 }
 
-// static void test_files() {
-//     static char arr[10*KB] = {0};
-//     arena a = arr2arena(arr);
-
-//     str contents = file2str(&a, S("cidades.txt"));
-//     head_tail_ok result = {.tail = contents};
-
-//     while(result.tail.len) {
-//         result = cut(result.tail, '\n');
-//         println(result.head);
-//     }
-// }
-
-static void test_files_forlines() {
+static void test_files_forlines()
+{
     static char arr[10*KB] = {0};
     arena a = arr2arena(arr);
 
@@ -85,7 +76,8 @@ static void test_files_forlines() {
 #define ROOTWIN "D:/"
 #define ROOTLIN "/mnt/d/"
 
-int main(void) {
+int main(void)
+{
     char data[KB] = {0};
     arena a = {data, data + countof(data)};
     

@@ -3,7 +3,8 @@
 typedef const char * cstr;
 decl_htrie(cstr, cstr, cstr);
 
-int main(void) {
+int main(void) 
+{
     char arr[KB] = {0};
     arena a = arr2arena(arr);
 

@@ -3,13 +3,15 @@
 enum { NUM_THREADS_TO_CREATE = 16000 };
 static ssize_t results[NUM_THREADS_TO_CREATE];
 
-threadfun(sum) {
+threadfun_ret sum(void * threadarg) 
+{
     ssize_t threadIdx = (ssize_t)(uintptr_t)(threadarg);
     results[threadIdx] = threadIdx * 10;
     return 0;
 }
 
-int main() {
+int main() 
+{
     THREAD threads[NUM_THREADS_TO_CREATE] = {0};
     ssize_t totalSum = 0, correctSum = 0;
 

@@ -5,14 +5,11 @@ typedef const char * cstr;
 decl_cmpfn(comp, int, *a - *b)
 decl_cmpfn(comp2, cstr, cstrcmp(*a, *b))
 
-void begindraw(void) {
-    println("START DRAWING!");
-}
-void enddraw(void) {
-    println("END DRAWING!");
-}
+void begindraw(void) { println("START DRAWING!"); }
+void enddraw(void) { println("END DRAWING!"); }
 
-int main(void) {
+int main(void)
+{
     int arr[] = { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 
     println("Testando 3");

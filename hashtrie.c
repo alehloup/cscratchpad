@@ -1,6 +1,7 @@
 #include "ale.h"
 
-int main(void) {
+int main(void)
+{
     char arr[KB];
     arena a = arr2arena(arr);
 

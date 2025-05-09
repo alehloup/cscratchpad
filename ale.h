@@ -64,7 +64,7 @@ typedef struct arena { char *beg; char *end; } arena;
 typedef struct str { char *data; ptrdiff_t len; } str;
 
 // for the function cut
-typedef struct {str head; str tail; int ok; int padding;} head_tail_ok;
+typedef struct { str head; str tail; int ok; int padding; } head_tail_ok;
 
 // for the empty _Generic macro that considers < 0 as false
 typedef int descriptor_t;
@@ -88,8 +88,8 @@ typedef str MMAP;
 
 /* MACROS */
 
-#define discard_ (void)
-#define ssizeof(x) ( (ssize_t)sizeof(x) )
+#define discard_    (void)
+#define ssizeof(x)  ( (ssize_t)sizeof(x) )
 #define countof(x)  ( ssizeof(x) / ssizeof(x[0]) )
 
 #ifndef typeof
@@ -140,37 +140,41 @@ typedef str MMAP;
 /* MEMORY */
 
 extern size_t strlen(const char *);
-static inline ssize_t cstrlen(const char *s) {
-    return !s ? 0 : (ssize_t)strlen(s);
-}
+static inline ssize_t cstrlen(const char *s) { return !s ? 0 : (ssize_t)strlen(s); }
 
 extern int strcmp(const char *s1, const char *s2);
-static inline int cstrcmp(const char *s1, const char *s2) {
-    if (!s1 or !s2) return !(s1 == NULL and s2 == NULL);
+static inline int cstrcmp(const char *s1, const char *s2)
+{
+    if (!s1 or !s2) 
+        return !(s1 == NULL and s2 == NULL);
 
     return strcmp(s1, s2);
 }
 
 extern void * memchr(const void *s, int c, size_t n);
-static inline void * cmemchr(const void *s, char c, ssize_t n) {
+static inline void * cmemchr(const void *s, char c, ssize_t n)
+{
     assert(n >= 0 and "cmemchr: n can't be negative!");
     return !n ? NULL : memchr(s, c & 255, (size_t)n);
 }
 
 extern int memcmp(const void *s1, const void *s2, size_t n);
-static inline int cmemcmp(const void *s1, const void *s2, ssize_t n) {
+static inline int cmemcmp(const void *s1, const void *s2, ssize_t n)
+{
     assert(n >= 0 and "cmemcmp: n can't be negative!");
     return !n ? 0 : memcmp(s1, s2, (size_t)n);
 }
 
 extern void * memcpy(void *dest, const void *src, size_t n);
-static inline void * cmemcpy(void *dest, const void *src, ssize_t n) {
+static inline void * cmemcpy(void *dest, const void *src, ssize_t n)
+{
     assert(n >= 0 and "cmemcpy: n can't be negative!");
     return n ? memcpy(dest, src, (size_t)n) : dest;
 }
 
 extern void * memset(void *s, int c, size_t n);
-static inline void * cmemset(void *s, int c, ssize_t n) {
+static inline void * cmemset(void *s, int c, ssize_t n)
+{
     assert(n >= 0 and "cmemset: n can't be negative!");
     return n ? memset(s, c, (size_t)n) : s;
 }
@@ -178,7 +182,8 @@ static inline void * cmemset(void *s, int c, ssize_t n) {
 
 /* ARENA */
 
-static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align) {
+static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align)
+{
     assert(count >= 0 and size >= 0 and "count and size can't be negative!");
     if (!count or !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
 
@@ -202,11 +207,12 @@ static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t 
 
 /* STRING */
 
-#define S(s) ( (str){(char *) s, max(ssizeof(s) - 1, 0)} )
+#define S(s) ( (str){ (char *) s, max(ssizeof(s) - 1, 0) } )
 
 #define cstr2str(cstring) ((str){ (char *)cstring, cstrlen(cstring) })
 
-static inline str scopy(arena *a, str original) {
+static inline str scopy(arena *a, str original)
+{
     str copied = original;
     copied.data = new(a, copied.len, char);
     cmemcpy(copied.data, original.data, copied.len);
@@ -215,27 +221,27 @@ static inline str scopy(arena *a, str original) {
 
 // Converts a str to a null-terminated char* for use with legacy C APIs
 // BEWARE: char * is only valid while the arena keeps its data!
-static inline char * str2cstr(arena *a, str string) {
-    if ((string.data + string.len) != a->beg) {
+static inline char * str2cstr(arena *a, str string)
+{
+    if ((string.data + string.len) != a->beg)
         string = scopy(a, string);
-    }
+
     *(a->beg++) = '\0';
 
     return string.data;
 }
 
-static inline int sequal(str a, str b) {
-    return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len);
-}
+static inline int sequal(str a, str b) { return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len); }
 
-static inline int scomp(str a, str b) {
+static inline int scomp(str a, str b)
+{
     int mincomp = cmemcmp(a.data, b.data, min(a.len, b.len));
-
     return !mincomp ? (int)(a.len - b.len) : mincomp;
 }
 
 // cat always starts by putting str head at the top of the arena
-static inline str cat(arena *a, str head, str tail) {
+static inline str cat(arena *a, str head, str tail)
+{
     // use copy as realoc if head is not at the top of arena
     if (!head.data or (head.data + head.len) != a->beg) {
         head = scopy(a, head);
@@ -246,7 +252,8 @@ static inline str cat(arena *a, str head, str tail) {
     
     return head;
 }
-static inline str sjoin(arena *a, str *arr, ssize_t len, char separator) {
+static inline str sjoin(arena *a, str *arr, ssize_t len, char separator)
+{
     str res = {0};
     char *psep = &separator;
     if (!a or !arr) return res;
@@ -263,12 +270,11 @@ static inline str sjoin(arena *a, str *arr, ssize_t len, char separator) {
     return res;
 }
 
-static inline str span(char *beg, char *end) {
-    return (str){beg, beg ? max(end - beg, 0) : 0};
-}
+static inline str span(char *beg, char *end) { return (str){ beg, beg ? max(end - beg, 0) : 0 }; }
 
 // cut s at c, returns {str head; str tail; int ok;}
-static inline head_tail_ok cut(str s, char c) {
+static inline head_tail_ok cut(str s, char c)
+{
     head_tail_ok r = {0};
     if (!s.len) return r;
 
@@ -292,7 +298,8 @@ static inline head_tail_ok cut(str s, char c) {
 #define forlines(var, string) forsep(var, string, '\n')
 
 // splits string into arr, returns number of elements splited into
-static inline ptrdiff_t split(str text, char sep, str arr[atleast 1], ssize_t cap) {
+static inline ptrdiff_t split(str text, char sep, str arr[atleast 1], ssize_t cap)
+{
     assert(cap > 0 and "cap must be atleast 1");
 
     ssize_t len = 0;
@@ -305,28 +312,31 @@ static inline ptrdiff_t split(str text, char sep, str arr[atleast 1], ssize_t ca
     return len;
 }
 
-static inline int starts(str s, str prefix) {
+static inline int starts(str s, str prefix)
+{
     return (s.len >= prefix.len) \
         and sequal(span(s.data, s.data + prefix.len), prefix);
 }
-static inline int ends(str s, str suffix) {
+static inline int ends(str s, str suffix)
+{
     return (s.len >= suffix.len) \
         and sequal(span(s.data + s.len - suffix.len, s.data + s.len), suffix);
 }
 
-static inline str trimleft(str s) {
+static inline str trimleft(str s)
+{
     for (; s.len and (unsigned char)*s.data <= ' '; ++s.data, --s.len);
     return s;
 }
-static inline str trimright(str s) {
+static inline str trimright(str s)
+{
     for (; s.len and (unsigned char)s.data[s.len-1] <= ' '; --s.len);
     return s;
 }
-static inline str trim(str s) {
-    return trimleft(trimright(s));
-}
+static inline str trim(str s) { return trimleft(trimright(s)); }
 
-static inline str sadvanced(str s, ssize_t i) {
+static inline str sadvanced(str s, ssize_t i)
+{
     if (i > 0) {
         s.data += i;
         s.len -= i;
@@ -334,7 +344,8 @@ static inline str sadvanced(str s, ssize_t i) {
     return s;
 }
 
-static inline int parseint(str s) {
+static inline int parseint(str s)
+{
     unsigned int r = 0;
     int sign = 1;
 
@@ -348,8 +359,8 @@ static inline int parseint(str s) {
 
     return sign * (int)r;
 }
-
-static inline float parsefloat(str s) {
+static inline float parsefloat(str s)
+{
     float r = 0.0f;
     float sign = 1.0f;
     float exp = 0.0f;
@@ -374,14 +385,16 @@ static inline float parsefloat(str s) {
 
 /* RANDOM */
 
-static inline unsigned int random32(size_t *state) {
+static inline unsigned int random32(size_t *state)
+{
     size_t oldstate = *state;
     *state = oldstate * 6364136223846793005ULL + 1111111111111111111ULL;
     unsigned int xorshifted = (unsigned int)(((oldstate >> 18u) ^ oldstate) >> 27u);
     unsigned int rot = (unsigned int)(oldstate >> 59u);
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
-static inline unsigned int rando(size_t *state, unsigned int from_including, unsigned int to_including) {
+static inline unsigned int rando(size_t *state, unsigned int from_including, unsigned int to_including)
+{
     assert(from_including <= to_including and "invalid range for random!");
     if (to_including < from_including) return from_including;
 
@@ -400,7 +413,8 @@ static inline unsigned int rando(size_t *state, unsigned int from_including, uns
 
 /* HASH GENERIC */
 
-static inline size_t hash_str(str s, size_t seed) {
+static inline size_t hash_str(str s, size_t seed)
+{
     size_t h = seed;
     for(int i = 0; i < s.len; ++i) {
         h ^= s.data[i] & 255;
@@ -408,10 +422,10 @@ static inline size_t hash_str(str s, size_t seed) {
     }
     return h;
 }
-static inline size_t hash_cstr(const char * cs, size_t seed) {
-    return hash_str(cstr2str(cs), seed);
-}
-static inline size_t hash_sizet(size_t x) {
+static inline size_t hash_cstr(const char * cs, size_t seed) { return hash_str(cstr2str(cs), seed); }
+
+static inline size_t hash_sizet(size_t x)
+{
     x ^= x >> 30;
     x *= 0xbf58476d1ce4e5b9U;
     x ^= x >> 27;
@@ -419,9 +433,7 @@ static inline size_t hash_sizet(size_t x) {
     x ^= x >> 31;
     return x;
 }
-static inline size_t hash_ssizet(ssize_t x) {
-    return hash_sizet((size_t) x);
-}
+static inline size_t hash_ssizet(ssize_t x) { return hash_sizet((size_t) x); }
 
 #define hash64(a, seed) \
     _Generic((a), \
@@ -473,12 +485,8 @@ static inline int double_equal(double a, double b)
 	// Use relative comparison
 	return diff <= epsilon * max(abs_a, abs_b);
 }
-static inline int str_equal(str a, str b) {
-    return sequal(a, b);
-}
-static inline int cstr_equal(const char * a, const char * b) {
-    return !cstrcmp(a, b);
-}
+static inline int str_equal(str a, str b) { return sequal(a, b); }
+static inline int cstr_equal(const char * a, const char * b) { return !cstrcmp(a, b); }
 
 #define equal(a, b) \
     _Generic((a), \
@@ -502,7 +510,8 @@ struct macrocat(ht, prefix) { \
     valtype value; \
 }; \
 \
-static inline valtype * macrocat(prefix, lookup)(macrocat(ht, prefix) **node, keytype key, arena *a) { \
+static inline valtype * macrocat(prefix, lookup)(macrocat(ht, prefix) **node, keytype key, arena *a) \
+{ \
     size_t seed = node ? (size_t)*node : 0; \
     for (size_t h = hash64(key, seed); *node; h <<= 2) { \
         if (equal(key, (*node)->key)) { \
@@ -562,7 +571,8 @@ static inline void scan_size(size_t *z) { (void)scanf(" %zu", z); }
 static inline void scan_float(float *f) { (void)scanf(" %f", f); }
 static inline void scan_double(double *d) { (void)scanf(" %lf", d); }
 
-static inline str scanword(arena *a) {
+static inline str scanword(arena *a)
+{
     char buffer[256];
     (void)scanf(" %255s", buffer);
 
@@ -573,7 +583,8 @@ static inline str scanword(arena *a) {
 
     return (str){ data, len };
 }
-static inline str scanline(arena *a) {
+static inline str scanline(arena *a)
+{
     char buffer[1024];
     (void)scanf(" %1023[^\n]", buffer);
 
@@ -595,18 +606,11 @@ static inline str scanline(arena *a) {
 
 /* MINI-RAII */
 
-static inline int empty_descriptor(descriptor_t descriptor) {
-    return descriptor < 0; 
-}
-static inline int empty_str(str string) {
-    return !string.len or !string.data;
-}
-static inline int empty_cstr(const char * cstring) {
-    return !cstring or !cstring[0];
-}
-static inline int empty_pointer(void *pointer) {
-    return pointer == NULL;
-}
+static inline int empty_descriptor(descriptor_t descriptor) { return descriptor < 0; }
+static inline int empty_str(str string) { return !string.len or !string.data; }
+static inline int empty_cstr(const char * cstring) { return !cstring or !cstring[0]; }
+static inline int empty_pointer(void *pointer) { return pointer == NULL; }
+
 #define empty(x) \
     _Generic((x), \
         descriptor_t: empty_descriptor, \
@@ -615,7 +619,8 @@ static inline int empty_pointer(void *pointer) {
         default: empty_pointer \
     )(x)
 
-static inline void mclose(MMAP s) {
+static inline void mclose(MMAP s)
+{
     if (empty(s)) return;
 
     #ifdef OSWIN_
@@ -625,12 +630,8 @@ static inline void mclose(MMAP s) {
     #endif
 }
 
-static inline void drop_file(FILE *file) {
-    if (file) discard_ fclose(file);
-}
-static inline void drop_mmap(MMAP s) {
-    mclose(s);
-}
+static inline void drop_file(FILE *file) { if (file) discard_ fclose(file); }
+static inline void drop_mmap(MMAP s) { mclose(s); }
 #define drop(x) \
     _Generic((x), \
         FILE*: drop_file, \
@@ -640,7 +641,8 @@ static inline void drop_mmap(MMAP s) {
 
 /* FILES */
 
-static inline const char * ensure_binary_mode(const char * cstring) {
+static inline const char * ensure_binary_mode(const char * cstring)
+{
     ssize_t len = cstrlen(cstring);
     assert(len > 0 and len < 4);
 
@@ -657,7 +659,8 @@ static inline const char * ensure_binary_mode(const char * cstring) {
     }
 }
 
-static inline str file2str(arena * a, str filename) {
+static inline str file2str(arena * a, str filename)
+{
     str r = {a->beg, 0};
 
     with(file, fopen(filename.data, "rb")) {
@@ -673,7 +676,8 @@ static inline str file2str(arena * a, str filename) {
 
     return r;
 }
-static inline int str2file(str content, str filename) {
+static inline int str2file(str content, str filename)
+{
     size_t written = 0;
 
     with(file, fopen(filename.data, "wb")) {
@@ -683,8 +687,8 @@ static inline int str2file(str content, str filename) {
     return written != (size_t)content.len;
 }
 
-static inline ssize_t filelen(FILE *file) {
-
+static inline ssize_t filelen(FILE *file)
+{
     #ifdef OSWIN_
         ssize_t len = (ssize_t)_filelengthi64(_fileno(file));
     #else // assume POSIX
@@ -698,7 +702,8 @@ static inline ssize_t filelen(FILE *file) {
     return len;
 }
 
-static inline MMAP mopen(const char *filename, const char *mode) {
+static inline MMAP mopen(const char *filename, const char *mode)
+{
     int readit = mode[0] == 'r' and mode[1] != '+';
     MMAP r = {0};
 
@@ -747,14 +752,15 @@ static inline MMAP mopen(const char *filename, const char *mode) {
 /* THREADS */
 
 #ifdef _WIN32
-    // Windows thread function signature, receives one void* arg as threadarg
-    #define threadfun(fname) DWORD WINAPI fname(LPVOID threadarg)
+    // Windows thread function return type
+    #define threadfun_ret DWORD WINAPI
 #else // asume POSIX
-    // POSIX thread function signature, receives one void* arg as threadarg
-    #define threadfun(fname) void * fname(void * threadarg)
+    // POSIX thread function return type
+    #define threadfun_ret void *
 #endif
 
-static inline THREAD go(routine_fun routine, void * threadarg, ssize_t thread_stack_size) { // erro no msvc, funciona no msvc-clang
+static inline THREAD go(routine_fun routine, void * threadarg, ssize_t thread_stack_size) 
+{
     THREAD thread;
     thread_stack_size = max(thread_stack_size, 16*KB);
 
@@ -775,7 +781,8 @@ static inline THREAD go(routine_fun routine, void * threadarg, ssize_t thread_st
     return thread;
 }
 
-static inline void join_thread(THREAD thread) {
+static inline void join_thread(THREAD thread)
+{
     #ifdef _WIN32
         WaitForSingleObject(thread, INFINITE);
     #else // assume POSIX
@@ -786,7 +793,8 @@ static inline void join_thread(THREAD thread) {
 
 /* OS FUNCTIONS */
 
-static inline int scmd(arena *a, str command) {
+static inline int scmd(arena *a, str command)
+{
     println(command); 
     printf("\n");
 
@@ -796,7 +804,8 @@ static inline int scmd(arena *a, str command) {
     return ret;
 }
 
-static inline void print_stopwatch(clock_t stopwatch) {
+static inline void print_stopwatch(clock_t stopwatch)
+{
     clock_t end = clock();
     if (end < stopwatch) {
         printf("Clock error, end < start");
@@ -805,7 +814,8 @@ static inline void print_stopwatch(clock_t stopwatch) {
     printf("  Executed in %.3f seconds\n", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
 }
 
-static inline void sleepsecs(unsigned int seconds) {
+static inline void sleepsecs(unsigned int seconds)
+{
     assert(seconds < 60 * 60 * 24 + 1);
 
     #if defined(OSWIN_)

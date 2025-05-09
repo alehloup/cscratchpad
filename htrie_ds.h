@@ -41,7 +41,8 @@
 /* STRUCTS */
 
 typedef struct htrie_struct htrie_struct;
-struct htrie_struct {
+struct htrie_struct
+{
     htrie_struct *child[4];
     htrie_keytype key;
     htrie_valtype value;
@@ -51,7 +52,8 @@ struct htrie_struct {
 /* FUNCTIONS */
 
 // If null is passed as arena does lookup and might return null, otherwise returns value address
-static inline htrie_valtype * htrie_lookup_fn(htrie_struct **node, htrie_keytype key, arena *a) {
+static inline htrie_valtype * htrie_lookup_fn(htrie_struct **node, htrie_keytype key, arena *a)
+{
     size_t seed = node ? (size_t)*node : 0;
     for (size_t h = hash64(key, seed); *node; h <<= 2) {
         if (equal(key, (*node)->key)) {

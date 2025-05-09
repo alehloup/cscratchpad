@@ -131,7 +131,7 @@ typedef str MMAP;
 #define with(var, ...) \
     for (typeof(__VA_ARGS__) var = __VA_ARGS__; !empty(var); drop(var), var = (typeof(var)){0})
 
-    
+
 /* MEMORY */
 
 extern size_t strlen(const char *);

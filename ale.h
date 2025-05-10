@@ -100,9 +100,6 @@ typedef str MMAP;
 
 #define countof(x)  ( (ptrdiff_t)sizeof(x) / (ptrdiff_t)sizeof(x[0]) )
 
-#define foreach(var, array, length) \
-    for (typeof((array)[0]) *var = (array), *var##_end_ = (array) + (length); var < var##_end_; ++var)
-
 
 /* MEMORY */
 
@@ -227,7 +224,7 @@ static inline str sjoin(arena *a, str *arr, ptrdiff_t len, char separator)
 
     if (!separator) separator = ' ';
 
-    foreach(s, arr, len) {
+    for (str *s = arr; s < arr + len; ++s) {
         res = cat(a, res, *s);
         psep = new(a, 1, char);
         *psep = separator;
@@ -316,7 +313,7 @@ static inline int parseint(str s)
     unsigned int r = 0;
     int sign = 1;
 
-    foreach(pc, s.data, s.len) {
+    for(char *pc = s.data; pc < s.data + s.len; ++pc) {
         switch(*pc) {
             case '+': case '.': case ',': case '_': break;
             case '-': sign *= -1; break;
@@ -332,7 +329,7 @@ static inline float parsefloat(str s)
     float sign = 1.0f;
     float exp = 0.0f;
 
-    foreach(pc, s.data, s.len) {
+    for(char *pc = s.data; pc < s.data + s.len; ++pc) {
         switch(*pc) {
             // exp notation unsupported, 
             // most of times is close to zero, so it returns 0
@@ -459,7 +456,7 @@ static inline void print_cstr(const char * cs) { printf("%s", cs); }
 #define printcomma(x) printend(x, ', ')
 #define println(x) printend(x, '\n')
 
-#define printarr(arr, n) print("{ "); foreach(arr_el, arr, n) { printsp(*arr_el); } println("}")
+#define printarr(arr, n) print("{ "); for(int i = 0; i < n; ++i) { printsp(arr[i]); } println("}")
 
 static inline void print_stopwatch(clock_t stopwatch)
 {

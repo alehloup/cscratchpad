@@ -32,10 +32,8 @@
     #endif
     #include <windows.h>
     #include <io.h>
-    typedef ptrdiff_t ssize_t;
 
     typedef HANDLE THREAD;
-    // Windows thread function return type
     #define threadfun_ret DWORD WINAPI
     typedef DWORD (WINAPI *threadfun_)(void *);
 #else // assume Posix
@@ -45,13 +43,9 @@
     #include <pthread.h>
 
     typedef pthread_t THREAD;
-    // POSIX thread function return type
     #define threadfun_ret void *
     typedef void * (*threadfun_)(void *);
 #endif
-
-#define and	&&
-#define or	||
 
 
 /* STRUCTS */
@@ -63,7 +57,12 @@ typedef struct arena { char *beg; char *end; } arena;
 typedef struct str { char *data; ptrdiff_t len; } str;
 
 // str head; str tail; int ok;
-typedef struct { str head; str tail; int ok; int padding; } head_tail_ok;
+typedef struct head_tail_ok { str head; str tail; int ok; int padding; } head_tail_ok;
+
+enum { MSIEXP = 11 }; // configure hash table size, 2^11 = 2048
+
+// const char * keys[2<<MSIEXP]; int idxs[2<<MSIEXP];
+typedef struct htindex { const char * keys[2<<MSIEXP]; int idxs[2<<MSIEXP]; } htindex;
 
 // for a bit more clarity, since mopen saves the mapped buffer to a str struct
 typedef str MMAP;
@@ -77,10 +76,6 @@ typedef str MMAP;
 
 
 /* MACROS */
-
-#define discard_    (void)
-#define ssizeof(x)  ( (ssize_t)sizeof(x) )
-#define countof(x)  ( ssizeof(x) / ssizeof(x[0]) )
 
 #ifndef typeof
     #define typeof __typeof__
@@ -97,67 +92,57 @@ typedef str MMAP;
 #ifndef threadlocal
     #define threadlocal _Thread_local
 #endif
-#if defined(__clang__) || defined(__GNUC__)
-    #define atleast static
-#else
-    #define atleast /* static */
-#endif
-
-#define salignof(x) ( (ssize_t)alignof(x) )
-
-#define macrocat_(a, b) a##b
-#define macrocat(a, b) macrocat_(a, b)
 
 #if !defined(min) && !defined(max)
     #define min(a,b) ( (a) < (b) ? (a) : (b) )
     #define max(a,b) ( (a) > (b) ? (a) : (b) )
 #endif
 
+#define countof(x)  ( (ptrdiff_t)sizeof(x) / (ptrdiff_t)sizeof(x[0]) )
+
 #define foreach(var, array, length) \
     for (typeof((array)[0]) *var = (array), *var##_end_ = (array) + (length); var < var##_end_; ++var)
-#define forspan(var, start, end) \
-    for (typeof((start)[0]) *var = (start), *var##_end_ = (end); var < var##_end_; ++var)
 
 
 /* MEMORY */
 
 extern size_t strlen(const char *);
-static inline ssize_t cstrlen(const char *s) { return !s ? 0 : (ssize_t)strlen(s); }
+static inline ptrdiff_t cstrlen(const char *s) { return !s ? 0 : (ptrdiff_t)strlen(s); }
 
 extern int strcmp(const char *s1, const char *s2);
 static inline int cstrcmp(const char *s1, const char *s2)
 {
-    if (!s1 or !s2) 
-        return !(s1 == NULL and s2 == NULL);
+    if (!s1 || !s2) 
+        return !(s1 == NULL && s2 == NULL);
 
     return strcmp(s1, s2);
 }
 
 extern void * memchr(const void *s, int c, size_t n);
-static inline void * cmemchr(const void *s, char c, ssize_t n)
+static inline void * cmemchr(const void *s, char c, ptrdiff_t n)
 {
-    assert(n >= 0 and "cmemchr: n can't be negative!");
+    assert(n >= 0 && "cmemchr: n can't be negative!");
     return !n ? NULL : memchr(s, c & 255, (size_t)n);
 }
 
 extern int memcmp(const void *s1, const void *s2, size_t n);
-static inline int cmemcmp(const void *s1, const void *s2, ssize_t n)
+static inline int cmemcmp(const void *s1, const void *s2, ptrdiff_t n)
 {
-    assert(n >= 0 and "cmemcmp: n can't be negative!");
+    assert(n >= 0 && "cmemcmp: n can't be negative!");
     return !n ? 0 : memcmp(s1, s2, (size_t)n);
 }
 
 extern void * memcpy(void *dest, const void *src, size_t n);
-static inline void * cmemcpy(void *dest, const void *src, ssize_t n)
+static inline void * cmemcpy(void *dest, const void *src, ptrdiff_t n)
 {
-    assert(n >= 0 and "cmemcpy: n can't be negative!");
+    assert(n >= 0 && "cmemcpy: n can't be negative!");
     return n ? memcpy(dest, src, (size_t)n) : dest;
 }
 
 extern void * memset(void *s, int c, size_t n);
-static inline void * cmemset(void *s, int c, ssize_t n)
+static inline void * cmemset(void *s, int c, ptrdiff_t n)
 {
-    assert(n >= 0 and "cmemset: n can't be negative!");
+    assert(n >= 0 && "cmemset: n can't be negative!");
     return n ? memset(s, c, (size_t)n) : s;
 }
 
@@ -166,8 +151,8 @@ static inline void * cmemset(void *s, int c, ssize_t n)
 
 static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align)
 {
-    assert(count >= 0 and size >= 0 and "count and size can't be negative!");
-    if (!count or !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
+    assert(count >= 0 &&  size >= 0 && "count and size can't be negative!");
+    if (!count || !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
 
     // Nullprogram trick, quoted from his blog:
     // we can compute modulo by subtracting one and masking with AND
@@ -175,8 +160,8 @@ static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t 
     ptrdiff_t pad = (ptrdiff_t)( -(uintptr_t)a->beg & (uintptr_t)(align-1) );
 
     // Explicit Integer Overflow check in the assert
-    assert( count < (a->end - a->beg - pad)/size and "arena space left is not enough" );
-    ssize_t total_size = count*size;
+    assert( count < (a->end - a->beg - pad)/size && "arena space left is not enough" );
+    ptrdiff_t total_size = count*size;
     
     void *r = a->beg + pad;
     a->beg += pad + total_size;
@@ -189,7 +174,7 @@ static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t 
 
 /* STRING */
 
-#define S(s) ( (str){ (char *) s, max(ssizeof(s) - 1, 0) } )
+#define S(s) ( (str){ (char *) s, max(((ptrdiff_t)sizeof(s)) - 1, 0) } )
 
 #define cstr2str(cstring) ((str){ (char *)cstring, cstrlen(cstring) })
 
@@ -225,7 +210,7 @@ static inline int scomp(str a, str b)
 static inline str cat(arena *a, str head, str tail)
 {
     // use copy as realoc if head is not at the top of arena
-    if (!head.data or (head.data + head.len) != a->beg) {
+    if (!head.data || (head.data + head.len) != a->beg) {
         head = scopy(a, head);
     }
     
@@ -234,11 +219,11 @@ static inline str cat(arena *a, str head, str tail)
     
     return head;
 }
-static inline str sjoin(arena *a, str *arr, ssize_t len, char separator)
+static inline str sjoin(arena *a, str *arr, ptrdiff_t len, char separator)
 {
     str res = {0};
     char *psep = &separator;
-    if (!a or !arr) return res;
+    if (!a || !arr) return res;
 
     if (!separator) separator = ' ';
 
@@ -274,17 +259,17 @@ static inline head_tail_ok cut(str s, char c)
 #define forsep(var, string, sep) \
     head_tail_ok var##_res = cut( (string) , sep); \
     for (str var = var##_res.head; \
-         var##_res.head.len or var##_res.tail.len; \
+         var##_res.head.len || var##_res.tail.len; \
          var##_res = cut(var##_res.tail, sep), var = var##_res.head)
 
 #define forlines(var, string) forsep(var, string, '\n')
 
 // splits string into arr, returns number of elements splited into
-static inline ssize_t split(str text, char sep, str arr[atleast 1], ssize_t cap)
+static inline ptrdiff_t split(str text, char sep, str arr[1], ptrdiff_t cap)
 {
-    assert(cap > 0 and "cap must be atleast 1");
+    assert(cap > 0 && "cap must be atleast 1");
 
-    ssize_t len = 0;
+    ptrdiff_t len = 0;
     forsep(part, text, sep) {
         if (len >= cap) break;
 
@@ -297,27 +282,27 @@ static inline ssize_t split(str text, char sep, str arr[atleast 1], ssize_t cap)
 static inline int starts(str s, str prefix)
 {
     return (s.len >= prefix.len) \
-        and sequal(span(s.data, s.data + prefix.len), prefix);
+       &&  sequal(span(s.data, s.data + prefix.len), prefix);
 }
 static inline int ends(str s, str suffix)
 {
     return (s.len >= suffix.len) \
-        and sequal(span(s.data + s.len - suffix.len, s.data + s.len), suffix);
+       &&  sequal(span(s.data + s.len - suffix.len, s.data + s.len), suffix);
 }
 
 static inline str trimleft(str s)
 {
-    for (; s.len and (unsigned char)*s.data <= ' '; ++s.data, --s.len);
+    for (; s.len && (unsigned char)*s.data <= ' '; ++s.data, --s.len);
     return s;
 }
 static inline str trimright(str s)
 {
-    for (; s.len and (unsigned char)s.data[s.len-1] <= ' '; --s.len);
+    for (; s.len && (unsigned char)s.data[s.len-1] <= ' '; --s.len);
     return s;
 }
 static inline str trim(str s) { return trimleft(trimright(s)); }
 
-static inline str sadvanced(str s, ssize_t i)
+static inline str sadvanced(str s, ptrdiff_t i)
 {
     if (i > 0) {
         s.data += i;
@@ -377,7 +362,7 @@ static inline unsigned int random32(size_t *state)
 }
 static inline unsigned int rando(size_t *state, unsigned int from_including, unsigned int to_including)
 {
-    assert(from_including <= to_including and "invalid range for random!");
+    assert(from_including <= to_including && "invalid range for random!");
     if (to_including < from_including) return from_including;
 
     unsigned int range = to_including - from_including + 1;
@@ -393,125 +378,58 @@ static inline unsigned int rando(size_t *state, unsigned int from_including, uns
 }
 
 
-/* HASH GENERIC */
+/* HASH */
 
-static inline size_t hash_str(str s, size_t seed)
+static inline size_t hash_cstr(const char * s, size_t seed)
 {
     size_t h = seed;
-    for(int i = 0; i < s.len; ++i) {
-        h ^= s.data[i] & 255;
+    for(int i = 0; s[i]; ++i) {
+        h ^= s[i] & 255;
         h *= 1111111111111111111; // intentional uint overflow to spread bits
     }
+
+    h += !h;
     return h;
 }
-static inline size_t hash_cstr(const char * cs, size_t seed) { return hash_str(cstr2str(cs), seed); }
-
-static inline size_t hash_sizet(size_t x)
+static inline size_t hash_num(size_t x)
 {
     x ^= x >> 30;
     x *= 0xbf58476d1ce4e5b9U;
     x ^= x >> 27;
     x *= 0x94d049bb133111ebU;
     x ^= x >> 31;
+
+    x += !x;
     return x;
 }
-static inline size_t hash_ssizet(ssize_t x) { return hash_sizet((size_t) x); }
-
-#define hash64(a, seed) \
-    _Generic((a), \
-            str: hash_str, \
-            const char *: hash_cstr, char *: hash_cstr, \
-            size_t: hash_sizet, ssize_t: hash_ssizet \
-        )(a, seed)
 
 
-/* EQUAL GENERIC */
+/* HASHTABLE INDEX */
 
-static inline int char_equal(char a, char b) { return a == b; }
-static inline int int_equal(int a, int b) { return a == b; }
-static inline int ssize_equal(ssize_t a, ssize_t b) { return a == b; }
-static inline int size_equal(size_t a, size_t b) { return a == b; }
-static inline int float_equal(float a, float b)
+
+static inline int lookup(const char *key, htindex *table, int create_if_not_found)
 {
-    const float epsilon = 1e-5f;
-	const float min_abs = 1e-8f;
+    size_t hash = hash_cstr(key, (uintptr_t) table);
+    
+    unsigned int mask = (1<<MSIEXP) - 1;
+    unsigned int step = (unsigned int) ( (hash >> ( (sizeof(size_t)*8) - MSIEXP ) ) | 1 );
+    unsigned int i = (unsigned int)hash;
 
-	float abs_a = a < 0? -a : a;
-	float abs_b = b < 0? -b : b;
-	float diff  = a - b;
-    diff = diff < 0? -diff: diff;
+    for(i = (i + step) & mask; /* forever */ ; i = (i + step) & mask) {
+        const char *k = table->keys[i];
 
-	if (abs_a < min_abs && abs_b < min_abs) {
-		// Both numbers are extremely close to 0
-		return diff < min_abs;
-	}
-
-	// Use relative comparison
-	return diff <= epsilon * max(abs_a, abs_b);
+        if (!k) {
+            if (create_if_not_found) {
+                table->keys[i] = key;
+                return table->idxs[i] = ++table->idxs[0];
+            } else {
+                return 0;
+            }
+        } else if (!cstrcmp(key, k)) {
+            return (int)i;
+        }
+    }
 }
-static inline int double_equal(double a, double b)
-{
-    const double epsilon = 1e-9;
-	const double min_abs = 1e-12;
-
-	double abs_a = a < 0? -a : a;
-	double abs_b = b < 0? -b : b;
-	double diff  = a - b;
-    diff = diff < 0? -diff: diff;
-
-	if (abs_a < min_abs && abs_b < min_abs) {
-		// Both numbers are extremely close to 0
-		return diff < min_abs;
-	}
-
-	// Use relative comparison
-	return diff <= epsilon * max(abs_a, abs_b);
-}
-static inline int str_equal(str a, str b) { return sequal(a, b); }
-static inline int cstr_equal(const char * a, const char * b) { return !cstrcmp(a, b); }
-
-#define equal(a, b) \
-    _Generic((a), \
-        char: char_equal, int: int_equal, \
-        ssize_t: ssize_equal, size_t: size_equal, \
-        float: float_equal, double: double_equal, \
-        str: str_equal, const char *: cstr_equal,  \
-        char *: cstr_equal \
-    )(a, b)
-
-
-/* HASH TRIE */
-
-// declares a ht|prefix| struct, and a |prefix|lookup function for htrie keytype -> valtype
-#define decl_htrie(prefix, keytype, valtype) \
-\
-typedef struct macrocat(ht, prefix) macrocat(ht, prefix); \
-struct macrocat(ht, prefix) { \
-    macrocat(ht, prefix) *child[4]; \
-    keytype key; \
-    valtype value; \
-}; \
-\
-static inline valtype * macrocat(prefix, lookup)(macrocat(ht, prefix) **node, keytype key, arena *a) \
-{ \
-    size_t seed = node ? (size_t)*node : 0; \
-    for (size_t h = hash64(key, seed); *node; h <<= 2) { \
-        if (equal(key, (*node)->key)) { \
-            return &(*node)->value; \
-        } \
-\
-        node = &(*node)->child[h >> 62]; \
-    } \
-    if (!a) return NULL; \
-\
-    *node =  new(a, 1, macrocat(ht, prefix)); \
-    (*node)->key = key; \
-\
-    return &(*node)->value; \
-}
-
-decl_htrie(str, str, str);
-decl_htrie(int, str, int);
 
 
 /* PRINT GENERIC */
@@ -519,7 +437,7 @@ decl_htrie(int, str, int);
 static inline void print_char(char c) { printf("%c", c); }
 static inline void print_int(int i) { printf("%d", i); }
 static inline void print_uint(unsigned int i) { printf("%u", i); }
-static inline void print_ssize(ssize_t s) { printf("%zd", s); }
+static inline void print_ssize(ptrdiff_t s) { printf("%zd", s); }
 static inline void print_size(size_t z) { printf("%zu", z); }
 static inline void print_float(float f) { printf("%.5f", (double)f); }
 static inline void print_double(double d) { printf("%.9f", d); }
@@ -530,7 +448,7 @@ static inline void print_cstr(const char * cs) { printf("%s", cs); }
     _Generic((x), \
         char: print_char, \
         int: print_int, unsigned int: print_uint, \
-        ssize_t: print_ssize, size_t: print_size, \
+        ptrdiff_t: print_ssize, size_t: print_size, \
         float: print_float, double: print_double, \
         str: print_str, const char *: print_cstr, \
         char *: print_cstr \
@@ -557,7 +475,7 @@ static inline void print_stopwatch(clock_t stopwatch)
 
 static inline void scan_char(char *c) { (void)scanf(" %c", c); }
 static inline void scan_int(int *i) { (void)scanf(" %d", i); }
-static inline void scan_ssize(ssize_t *s) { (void)scanf(" %zd", s); }
+static inline void scan_ssize(ptrdiff_t *s) { (void)scanf(" %zd", s); }
 static inline void scan_size(size_t *z) { (void)scanf(" %zu", z); }
 static inline void scan_float(float *f) { (void)scanf(" %f", f); }
 static inline void scan_double(double *d) { (void)scanf(" %lf", d); }
@@ -567,7 +485,7 @@ static inline str scanword(arena *a)
     char buffer[256];
     (void)scanf(" %255s", buffer);
 
-    ssize_t len = cstrlen(buffer);
+    ptrdiff_t len = cstrlen(buffer);
     char *data = new(a, len + 1, char);
     cmemcpy(data, buffer, len);
     data[len] = 0;
@@ -579,7 +497,7 @@ static inline str scanline(arena *a)
     char buffer[1024];
     (void)scanf(" %1023[^\n]", buffer);
 
-    ssize_t len = cstrlen(buffer);
+    ptrdiff_t len = cstrlen(buffer);
     char *data = new(a, len + 1, char);
     cmemcpy(data, buffer, len);
     data[len] = 0;
@@ -590,17 +508,25 @@ static inline str scanline(arena *a)
 #define scan(x) \
     _Generic((x), \
         char: scan_char, int: scan_int, \
-        ssize_t: scan_ssize, size_t: scan_size, \
+        ptrdiff_t: scan_ssize, size_t: scan_size, \
         float: scan_float, double: scan_double \
     )(&x)
+
+
+/* MACRO ALGOS */
+
+#define decl_cmpfn(fnname, type, ... ) \
+    static inline int fnname(const void *a_, const void *b_) { const type *a = a_; const type *b = b_;  return (__VA_ARGS__); }
+
+#define sort(arr, n, cmpfn) qsort(arr, n, sizeof(arr[0]), cmpfn)
 
 
 /* FILES */
 
 static inline const char * ensure_binary_mode(const char * cstring)
 {
-    ssize_t len = cstrlen(cstring);
-    assert(len > 0 and len < 4);
+    ptrdiff_t len = cstrlen(cstring);
+    assert(len > 0 && len < 4);
 
     if (cmemchr(cstring, 'b', len)) {
         return cstring;
@@ -620,9 +546,9 @@ static inline str file2str(arena * a, const char *filename)
     str r = {a->beg, 0};
 
     for(FILE *file = fopen(filename, "rb"); file; fclose(file), file = NULL) {
-        r.len = (ssize_t)fread(r.data, 1, (size_t)(a->end - a->beg), file);
+        r.len = (ptrdiff_t)fread(r.data, 1, (size_t)(a->end - a->beg), file);
 
-        if (r.len < 0 or r.data + r.len + 1 >= a->end) {
+        if (r.len < 0 || r.data + r.len + 1 >= a->end) {
             r.len = 0;
         } else {
             a->beg += r.len + 1;
@@ -643,29 +569,29 @@ static inline int str2file(str content, const char *filename)
     return written != (size_t)content.len;
 }
 
-static inline ssize_t filelen(FILE *file)
+static inline ptrdiff_t filelen(FILE *file)
 {
     #ifdef _WIN32
-        ssize_t len = (ssize_t)_filelengthi64(_fileno(file));
+        ptrdiff_t len = (ptrdiff_t)_filelengthi64(_fileno(file));
     #else // assume POSIX
         struct stat file_stat;
         int fstat_success = fstat(fileno(file), &file_stat) != -1; 
         assert(fstat_success);
-        ssize_t len = (ssize_t)file_stat.st_size;
+        ptrdiff_t len = (ptrdiff_t)file_stat.st_size;
     #endif 
 
-    assert(len >= 0 and "filelen must not be negative!");
+    assert(len >= 0 && "filelen must not be negative!");
     return len;
 }
 
 static inline MMAP mopen(const char *filename, const char *mode)
 {
-    int readit = mode[0] == 'r' and mode[1] != '+';
+    int readit = mode[0] == 'r' && mode[1] != '+';
     MMAP r = {0};
 
     for(FILE *file = fopen(filename, ensure_binary_mode(mode)); file; fclose(file), file = NULL) {
-        ssize_t len = filelen(file);
-        assert(len > 0 and "filelen can't be zero");
+        ptrdiff_t len = filelen(file);
+        assert(len > 0 && "filelen can't be zero");
 
         #ifdef _WIN32
             void *mhandle = CreateFileMapping(
@@ -698,7 +624,7 @@ static inline MMAP mopen(const char *filename, const char *mode)
 
 static inline void mclose(MMAP s)
 {
-    if (!s.len or !s.data) return;
+    if (!s.len || !s.data) return;
 
     #ifdef _WIN32
         UnmapViewOfFile(s.data);
@@ -708,24 +634,16 @@ static inline void mclose(MMAP s)
 }
 
 
-/* MACRO ALGOS */
-
-#define decl_cmpfn(fnname, type, ... ) \
-    static inline int fnname(const void *a_, const void *b_) { const type *a = a_; const type *b = b_;  return (__VA_ARGS__); }
-
-#define sort(arr, n, cmpfn) qsort(arr, n, sizeof(arr[0]), cmpfn)
-
-
 /* THREADS */
 
-static inline THREAD go(threadfun_ threadfun, void * threadarg, ssize_t thread_stack_size) 
+static inline THREAD go(threadfun_ threadfun, void * threadarg, ptrdiff_t thread_stack_size) 
 {
     THREAD thread;
     thread_stack_size = max(thread_stack_size, 16*KB);
 
     #ifdef _WIN32
         thread = CreateThread(0, (size_t)thread_stack_size, threadfun, threadarg, 0, 0);
-        assert(thread and "fatal error: could not launch thread");
+        assert(thread && "fatal error: could not launch thread");
     #else // assume POSIX
         pthread_attr_t attr;
         pthread_attr_init(&attr);
@@ -733,7 +651,7 @@ static inline THREAD go(threadfun_ threadfun, void * threadarg, ssize_t thread_s
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
         int error = pthread_create(&thread, &attr, threadfun, threadarg);
-        assert(!error and "fatal error: could not launch thread");
+        assert(!error && "fatal error: could not launch thread");
         pthread_attr_destroy(&attr);
     #endif
 

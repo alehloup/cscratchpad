@@ -423,9 +423,12 @@ static inline int lookup(const char *key, htindex *table, int create_if_not_foun
                 return 0;
             }
         } else if (!cstrcmp(key, k)) {
-            return (int)i;
+            return table->idxs[i];
         }
     }
+}
+static inline int htablelen(htindex *table) {
+    return table->idxs[0];
 }
 
 

@@ -60,7 +60,6 @@ typedef struct str { char *data; ptrdiff_t len; } str;
 typedef struct head_tail_ok { str head; str tail; int ok; int padding; } head_tail_ok;
 
 enum { MSIEXP = 11 }; // configure hash table size, 2^11 = 2048
-
 // const char * keys[2<<MSIEXP]; int idxs[2<<MSIEXP];
 typedef struct htindex { const char * keys[2<<MSIEXP]; int idxs[2<<MSIEXP]; } htindex;
 

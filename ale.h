@@ -412,6 +412,8 @@ static inline int lookup(const char *key, htindex *table, int create_if_not_foun
     unsigned int i = (unsigned int)hash;
 
     for(i = (i + step) & mask; /* forever */ ; i = (i + step) & mask) {
+        if (i == 0) continue;
+
         const char *k = table->keys[i];
 
         if (!k) {

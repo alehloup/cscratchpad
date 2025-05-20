@@ -255,8 +255,8 @@ static inline head_tail_ok cut(str s, char c)
 #define forsep(var, string, sep) \
     head_tail_ok var##_res = cut( (string) , sep); \
     for (str var = var##_res.head; \
-         var##_res.head.len || var##_res.tail.len; \
-         var##_res = cut(var##_res.tail, sep), var = var##_res.head)
+        var##_res.head.len || var##_res.tail.len; \
+        var##_res = cut(var##_res.tail, sep), var = var##_res.head)
 
 #define forlines(var, string) forsep(var, string, '\n')
 
@@ -431,6 +431,12 @@ static inline int lookup(const char *key, htindex *table, int create_if_not_foun
 static inline int htablelen(htindex *table) {
     return table->idxs[0];
 }
+
+// gets idx or return 0 if not found
+#define msiget(key, table) (lookup(key, table, 0))
+
+// create key if not exists, always return idx
+#define msiins(key, table) (lookup(key, table, 1))
 
 
 /* PRINT GENERIC */

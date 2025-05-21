@@ -242,7 +242,10 @@ static inline str sjoin(arena *a, str *arr, ptrdiff_t len, char separator)
     return res;
 }
 
-static inline str span(char *beg, char *end) { return (str){ beg, beg ? max(end - beg, 0) : 0 }; }
+static inline str span(char *beg, char *end) {
+    str s = { beg, beg ? max(end - beg, 0) : 0 };
+    return s;
+}
 
 // cut s at c, returns {str head; str tail; int ok;}
 static inline head_tail_ok cut(str s, char c)
@@ -494,12 +497,14 @@ static inline str scanword(arena *a)
 
     ptrdiff_t len = ((void)assert(scanres == 1), cstrlen(buffer));
     char *data = new(a, len + 1, char);
+    str s = { data, len };
+    
     cmemcpy(data, buffer, len);
     data[len] = 0;
 
     (void) scanres;
 
-    return (str){ data, len };
+    return s;
 }
 static inline str scanline(arena *a)
 {
@@ -508,12 +513,14 @@ static inline str scanline(arena *a)
 
     ptrdiff_t len = ((void)assert(scanres == 1), cstrlen(buffer));
     char *data = new(a, len + 1, char);
+    str s = { data, len };
+
     cmemcpy(data, buffer, len);
     data[len] = 0;
 
     (void)scanres;
 
-    return (str){ data, len };
+    return s;
 }
 
 

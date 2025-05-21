@@ -497,6 +497,8 @@ static inline str scanword(arena *a)
     cmemcpy(data, buffer, len);
     data[len] = 0;
 
+    (void) scanres;
+
     return (str){ data, len };
 }
 static inline str scanline(arena *a)
@@ -508,6 +510,8 @@ static inline str scanline(arena *a)
     char *data = new(a, len + 1, char);
     cmemcpy(data, buffer, len);
     data[len] = 0;
+
+    (void)scanres;
 
     return (str){ data, len };
 }
@@ -575,8 +579,10 @@ static inline ptrdiff_t filelen(FILE *file)
         ptrdiff_t len = (ptrdiff_t)_filelengthi64(_fileno(file));
     #else // assume POSIX
         struct stat file_stat;
-        int fstat_success = fstat(fileno(file), &file_stat) != -1; 
+        int fstat_success = fstat(fileno(file), &file_stat) != -1;
         ptrdiff_t len = ((void)assert(fstat_success), (ptrdiff_t)file_stat.st_size);
+
+        (void) fstat_success;
     #endif 
 
     assert(len >= 0 && "filelen must not be negative!");
@@ -639,7 +645,7 @@ static inline THREAD go(threadfun_ threadfun, void * threadarg, ptrdiff_t thread
 {
     THREAD thread;
     size_t thread_stack_size_adjusted = (size_t)max(thread_stack_size, 16*KB);
-    int error = 0; (void) error;
+    int error = 0;
 
     #ifdef _WIN32
         thread = CreateThread(0, thread_stack_size_adjusted, threadfun, threadarg, 0, 0);
@@ -654,6 +660,8 @@ static inline THREAD go(threadfun_ threadfun, void * threadarg, ptrdiff_t thread
         assert(!error && "fatal error: could not launch thread");
         pthread_attr_destroy(&attr);
     #endif
+
+    (void) error;
 
     return thread;
 }

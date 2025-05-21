@@ -153,19 +153,22 @@ static inline void * cmemset(void *s, int c, ptrdiff_t n)
 
 static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align)
 {
+    ptrdiff_t pad = 0, total_size = 0;
+    void *r = 0;
+    
     assert(count >= 0 &&  size >= 0 && "count and size can't be negative!");
     if (!count || !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
 
     // Nullprogram trick, quoted from his blog:
     // we can compute modulo by subtracting one and masking with AND
     // however, we want the number of bytes to advance to the next alignment, which is the inverse
-    ptrdiff_t pad = (ptrdiff_t)( -(uintptr_t)a->beg & (uintptr_t)(align-1) );
+    pad = (ptrdiff_t)( -(uintptr_t)a->beg & (uintptr_t)(align-1) );
 
     // Explicit Integer Overflow check in the assert
     assert( count < (a->end - a->beg - pad)/size && "arena space left is not enough" );
-    ptrdiff_t total_size = count*size;
+    total_size = count*size;
     
-    void *r = a->beg + pad;
+    r = a->beg + pad;
     a->beg += pad + total_size;
 
     return cmemset(r, 0, total_size);
@@ -176,7 +179,7 @@ static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t 
 
 /* STRING */
 
-#define S(s) ( (str){ (char *) s, max(((ptrdiff_t)sizeof(s)) - 1, 0) } )
+#define S(s) ( (str){ (char *)(uintptr_t) s, max(((ptrdiff_t)sizeof(s)) - 1, 0) } )
 
 #define cstr2str(cstring) ((str){ (char *)cstring, cstrlen(cstring) })
 
@@ -245,11 +248,13 @@ static inline str span(char *beg, char *end) { return (str){ beg, beg ? max(end 
 static inline head_tail_ok cut(str s, char c)
 {
     head_tail_ok r = {0};
+    char *end = 0, *it = 0;
+
     if (!s.len) return r;
 
-    char *end = s.data + s.len;
+    end = s.data + s.len;
 
-    char *it = cmemchr(s.data, c, s.len);
+    it = cmemchr(s.data, c, s.len);
     if (!it) it = end;
 
     r.ok = it < end;
@@ -269,9 +274,8 @@ static inline head_tail_ok cut(str s, char c)
 // splits string into arr, returns number of elements splited into
 static inline ptrdiff_t split(str text, char sep, str arr[1], ptrdiff_t cap)
 {
-    assert(cap > 0 && "cap must be atleast 1");
-
     ptrdiff_t len = 0;
+
     forsep(part, text, sep) {
         if (len >= cap) break;
 
@@ -356,22 +360,26 @@ static inline float parsefloat(str s)
 
 static inline unsigned int random32(size_t *state)
 {
+    unsigned int xorshifted = 0, rot = 0;
     size_t oldstate = *state;
     *state = oldstate * 6364136223846793005ULL + 1111111111111111111ULL;
-    unsigned int xorshifted = (unsigned int)(((oldstate >> 18u) ^ oldstate) >> 27u);
-    unsigned int rot = (unsigned int)(oldstate >> 59u);
+    
+    xorshifted = (unsigned int)(((oldstate >> 18u) ^ oldstate) >> 27u);
+    rot = (unsigned int)(oldstate >> 59u);
+    
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
 static inline unsigned int rando(size_t *state, unsigned int from_including, unsigned int to_including)
 {
-    assert(from_including <= to_including && "invalid range for random!");
-    if (to_including < from_including) return from_including;
-
     unsigned int range = to_including - from_including + 1;
 
     // Exclude last % range cycle to eliminate mod bias
     unsigned int limit = UINT32_MAX - (UINT32_MAX % range);
     unsigned int r;
+
+    assert(from_including <= to_including && "invalid range for random!");
+    if (to_including < from_including) return from_including;
+
     do {
         r = random32(state);
     } while (r >= limit);  // Rejects if its in the last % range cycle
@@ -418,9 +426,8 @@ static inline int lookup(const char *key, htindex *table, int create_if_not_foun
     unsigned int i = (unsigned int)hash;
 
     for(i = (i + step) & mask; /* forever */ ; i = (i + step) & mask) {
-        if (i == 0) continue;
-
         const char *k = table->keys[i];
+        if (i == 0) continue;
 
         if (!k) {
             if (create_if_not_found) {
@@ -483,9 +490,9 @@ static inline void scan_double(double *d) { (void)scanf(" %lf", d); }
 static inline str scanword(arena *a)
 {
     char buffer[256];
-    (void)scanf(" %255s", buffer);
+    int scanres = scanf(" %255s", buffer);
 
-    ptrdiff_t len = cstrlen(buffer);
+    ptrdiff_t len = ((void)assert(scanres == 1), cstrlen(buffer));
     char *data = new(a, len + 1, char);
     cmemcpy(data, buffer, len);
     data[len] = 0;
@@ -495,9 +502,9 @@ static inline str scanword(arena *a)
 static inline str scanline(arena *a)
 {
     char buffer[1024];
-    (void)scanf(" %1023[^\n]", buffer);
+    int scanres = scanf(" %1023[^\n]", buffer);
 
-    ptrdiff_t len = cstrlen(buffer);
+    ptrdiff_t len = ((void)assert(scanres == 1), cstrlen(buffer));
     char *data = new(a, len + 1, char);
     cmemcpy(data, buffer, len);
     data[len] = 0;
@@ -569,8 +576,7 @@ static inline ptrdiff_t filelen(FILE *file)
     #else // assume POSIX
         struct stat file_stat;
         int fstat_success = fstat(fileno(file), &file_stat) != -1; 
-        assert(fstat_success);
-        ptrdiff_t len = (ptrdiff_t)file_stat.st_size;
+        ptrdiff_t len = ((void)assert(fstat_success), (ptrdiff_t)file_stat.st_size);
     #endif 
 
     assert(len >= 0 && "filelen must not be negative!");
@@ -632,18 +638,19 @@ static inline void mclose(MMAP s)
 static inline THREAD go(threadfun_ threadfun, void * threadarg, ptrdiff_t thread_stack_size) 
 {
     THREAD thread;
-    thread_stack_size = max(thread_stack_size, 16*KB);
+    size_t thread_stack_size_adjusted = (size_t)max(thread_stack_size, 16*KB);
+    int error = 0; (void) error;
 
     #ifdef _WIN32
-        thread = CreateThread(0, (size_t)thread_stack_size, threadfun, threadarg, 0, 0);
+        thread = CreateThread(0, thread_stack_size_adjusted, threadfun, threadarg, 0, 0);
         assert(thread && "fatal error: could not launch thread");
     #else // assume POSIX
         pthread_attr_t attr;
         pthread_attr_init(&attr);
-        pthread_attr_setstacksize(&attr, (size_t)thread_stack_size);
+        pthread_attr_setstacksize(&attr, thread_stack_size_adjusted);
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-        int error = pthread_create(&thread, &attr, threadfun, threadarg);
+        error = pthread_create(&thread, &attr, threadfun, threadarg);
         assert(!error && "fatal error: could not launch thread");
         pthread_attr_destroy(&attr);
     #endif
@@ -665,12 +672,12 @@ static inline void join_thread(THREAD thread)
 
 static inline int scmd(arena *a, str command)
 {
-    print_str(command); 
-    printf("\n");
-
     const char *cstr_command = str2cstr(a, command);
-    int ret = system(cstr_command);
-    printf("\n");
+    int ret = 0;
+
+    print_str(command); printf("\n");
+
+    ret = system(cstr_command); printf("\n");
 
     return ret;
 }

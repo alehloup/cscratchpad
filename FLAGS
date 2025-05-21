@@ -18,7 +18,7 @@
 -Wformat=2
 -Wswitch-default -Wswitch-enum
 
--fno-common -Wno-cast-qual -Wno-declaration-after-statement
+-fno-common 
 
 -fsanitize-undefined-trap-on-error -fsanitize=undefined -fsanitize=bounds
 

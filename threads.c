@@ -3,7 +3,7 @@
 enum { NUM_THREADS_TO_CREATE = 16000 };
 static ptrdiff_t results[NUM_THREADS_TO_CREATE];
 
-threadfun_ret sum(void * threadarg) 
+static inline threadfun_ret sum(void * threadarg) 
 {
     ptrdiff_t threadIdx = (ptrdiff_t)(uintptr_t)(threadarg);
     results[threadIdx] = threadIdx * 10;
@@ -31,9 +31,9 @@ int main()
         correctSum += (i*10);
     }
     
-    printsp("\nTotal sum:"); printsp(totalSum);
-    printsp(totalSum == correctSum ? "==" : "!=");
-    printsp("Correct sum:"); printsp(correctSum);
+    printf("\nTotal sum: "); print_ssize(totalSum);
+    printf(totalSum == correctSum ? "== " : "!= ");
+    printf("Correct sum: "); print_ssize(correctSum);
 
     return 0;
 }

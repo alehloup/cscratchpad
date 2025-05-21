@@ -13,30 +13,30 @@ int main(void)
 
     sort(arr, countof(arr), comp);
 
-    printarr(arr, countof(arr));
+    printarr("%d", arr, countof(arr));
 
     cstr arr2[4] = { "Sarah", "Alessandro", "Karol", "Amanda" };
     
     sort(arr2, countof(arr2), comp2);
 
-    printarr(arr2, countof(arr2));
+    printarr("%s", arr2, countof(arr2));
 
-    println(parseint(S("12345")));
+    print_int(parseint(S("12345"))); printf("\n");
 
-    println(parsefloat(S("52.52")));
+    print_float(parsefloat(S("52.52"))); printf("\n");
 
     str arr3[5] = {0};
     ptrdiff_t len = split(S("Alessandro,Sarah, Karol, Amanda ,Brenda"), ',', arr3, countof(arr3));
-    printarr(arr3, len);
+    printstrarr(arr3, len);
 
     for(FILE *file = fopen("measurements10k.txt", "rb"); file; fclose(file), file = NULL) {
-        println((double)filelen(file) / (double)KB);
+        print_ssize(filelen(file) / KB); printf("KBs \n");
     }
 
     int c = 10;
     for(MMAP content = mopen("measurements10k.txt", "r"); content.len; mclose(content), content.len = 0) {
         forlines(line, content) {
-            println(line);
+            print_str(line); printf("\n");
             if (!c--) break;
         } 
     }
@@ -46,7 +46,7 @@ int main(void)
     for (int i = 0; i < 1000000; ++i) {
         counts[rando(&seed, 1, 20)] += 1;
     }
-    printarr(counts, countof(counts));
+    printarr("%u", counts, countof(counts));
 
     return 0;
 }

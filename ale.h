@@ -30,7 +30,7 @@
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
-    #include <windows.h>
+    #include <Windows.h>
     #include <io.h>
 
     typedef HANDLE THREAD;
@@ -45,6 +45,12 @@
     typedef pthread_t THREAD;
     #define threadfun_ret void *
     typedef void * (*threadfun_)(void *);
+#endif
+
+// Clang -wEverything bans C Arrays and Pointers, which is insane. disabling that:
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 #endif
 
 
@@ -439,34 +445,21 @@ static inline int htablelen(htindex *table) {
 #define msiins(key, table) (lookup(key, table, 1))
 
 
-/* PRINT GENERIC */
+/* PRINT */
 
-static inline void print_char(char c) { printf("%c", c); }
-static inline void print_int(int i) { printf("%d", i); }
-static inline void print_uint(unsigned int i) { printf("%u", i); }
-static inline void print_ssize(ptrdiff_t s) { printf("%zd", s); }
-static inline void print_size(size_t z) { printf("%zu", z); }
-static inline void print_float(float f) { printf("%.5f", (double)f); }
-static inline void print_double(double d) { printf("%.9f", d); }
-static inline void print_str(str s) { printf("%.*s", (int)s.len, s.data); }
-static inline void print_cstr(const char * cs) { printf("%s", cs); }
+static inline void print_char(char c) { printf("%c ", c); }
+static inline void print_int(int i) { printf("%d ", i); }
+static inline void print_uint(unsigned int i) { printf("%u ", i); }
+static inline void print_ssize(ptrdiff_t s) { printf("%zd ", s); }
+static inline void print_size(size_t z) { printf("%zu ", z); }
+static inline void print_float(float f) { printf("%.5f ", (double)f); }
+static inline void print_double(double d) { printf("%.9f ", d); }
+static inline void print_str(str s) { printf("%.*s ", (int)s.len, s.data); }
+static inline void print_cstr(const char * cs) { printf("%s ", cs); }
 
-#define print(x) \
-    _Generic((x), \
-        char: print_char, \
-        int: print_int, unsigned int: print_uint, \
-        ptrdiff_t: print_ssize, size_t: print_size, \
-        float: print_float, double: print_double, \
-        str: print_str, const char *: print_cstr, \
-        char *: print_cstr \
-    )(x)
-
-#define printend(x, end) print(x); print((char)end)
-#define printsp(x) printend(x, ' ')
-#define printcomma(x) printend(x, ', ')
-#define println(x) printend(x, '\n')
-
-#define printarr(arr, n) print("{ "); for(int i = 0; i < n; ++i) { printsp(arr[i]); } println("}")
+#define println(...) printf(__VA_ARGS__); printf("\n")
+#define printarr(format_specifier, arr, n) printf("{ "); for(int i = 0; i < n; ++i) { printf(format_specifier " ", arr[i]); } println("}")
+#define printstrarr(arr, n) printf("{ "); for(int i = 0; i < n; ++i) { print_str(arr[i]); } println("}")
 
 static inline void print_stopwatch(clock_t stopwatch)
 {
@@ -478,7 +471,7 @@ static inline void print_stopwatch(clock_t stopwatch)
     printf("  Executed in %.3f seconds\n", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
 }
 
-/* SCAN GENERIC */
+/* SCAN */
 
 static inline void scan_char(char *c) { (void)scanf(" %c", c); }
 static inline void scan_int(int *i) { (void)scanf(" %d", i); }
@@ -511,13 +504,6 @@ static inline str scanline(arena *a)
 
     return (str){ data, len };
 }
-
-#define scan(x) \
-    _Generic((x), \
-        char: scan_char, int: scan_int, \
-        ptrdiff_t: scan_ssize, size_t: scan_size, \
-        float: scan_float, double: scan_double \
-    )(&x)
 
 
 /* MACRO ALGOS */
@@ -679,10 +665,11 @@ static inline void join_thread(THREAD thread)
 
 static inline int scmd(arena *a, str command)
 {
-    println(command); 
+    print_str(command); 
     printf("\n");
 
-    int ret = system(str2cstr(a, command));
+    const char *cstr_command = str2cstr(a, command);
+    int ret = system(cstr_command);
     printf("\n");
 
     return ret;

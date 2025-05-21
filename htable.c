@@ -8,8 +8,8 @@ int main(void) {
     values[msiins("Alessandro", &table)] = "Stamatto";
     values[msiins("Sarah", &table)] = "Sakamoto";
 
-    printsp(values[msiget("Alessandro", &table)]);
-    printsp(values[msiget("Sarah", &table)]);
+    print_cstr(values[msiget("Alessandro", &table)]);
+    print_cstr(values[msiget("Sarah", &table)]);
 
     return 0;
 }

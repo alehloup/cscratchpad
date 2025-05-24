@@ -82,9 +82,6 @@ typedef str MMAP;
 
 /* MACROS */
 
-#ifndef typeof
-    #define typeof __typeof__
-#endif
 #if defined(_MSC_VER) && !defined(__clang__)
     #ifndef alignof
         #define alignof _Alignof
@@ -93,9 +90,6 @@ typedef str MMAP;
     #ifndef alignof
         #define alignof __alignof__
     #endif
-#endif
-#ifndef threadlocal
-    #define threadlocal _Thread_local
 #endif
 
 #if !defined(min) && !defined(max)
@@ -310,15 +304,6 @@ static inline str trimright(str s)
     return s;
 }
 static inline str trim(str s) { return trimleft(trimright(s)); }
-
-static inline str sadvanced(str s, ptrdiff_t i)
-{
-    if (i > 0) {
-        s.data += i;
-        s.len -= i;
-    }
-    return s;
-}
 
 static inline int parseint(str s)
 {

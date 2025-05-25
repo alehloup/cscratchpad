@@ -9,11 +9,6 @@
             A L E . h
         · Brutalist C ·
 */
-// Heavely inspired by:
-//  Chris Nullprogram Essays, like "Examples of quick hash tables and dynamic arrays in C" 
-//      https://nullprogram.com/blog/2025/01/19/
-//  Aartaka Essays, like "C Until its no Longer C"
-//      https://aartaka.me/c-not-c
 
 
 #pragma once

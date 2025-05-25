@@ -1,11 +1,11 @@
 #include "ale.h"
 
 enum { NUM_THREADS_TO_CREATE = 16000 };
-static ptrdiff_t results[NUM_THREADS_TO_CREATE];
+static size_t results[NUM_THREADS_TO_CREATE];
 
 static inline threadfun_ret sum(void * threadarg) 
 {
-    ptrdiff_t threadIdx = (ptrdiff_t)(uintptr_t)(threadarg);
+    size_t threadIdx = (size_t)(uintptr_t)(threadarg);
     results[threadIdx] = threadIdx * 10;
     return 0;
 }
@@ -13,9 +13,9 @@ static inline threadfun_ret sum(void * threadarg)
 int main() 
 {
     THREAD threads[NUM_THREADS_TO_CREATE] = {0};
-    ptrdiff_t totalSum = 0, correctSum = 0;
+    size_t totalSum = 0, correctSum = 0;
 
-    for(ptrdiff_t i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
+    for(size_t i = 0; i < NUM_THREADS_TO_CREATE; ++i) {
         threads[i] = go(sum, (void *)(uintptr_t)i, 0);
     }
     

@@ -11,7 +11,7 @@ int main(void)
     cstr arr2[4] = { "Sarah", "Alessandro", "Karol", "Amanda" };
 
     str arr3[5] = {0};
-    ptrdiff_t len = split(S("Alessandro,Sarah, Karol, Amanda ,Brenda"), ',', arr3, countof(arr3));
+    size_t len = split(S("Alessandro,Sarah, Karol, Amanda ,Brenda"), ',', arr3, countof(arr3));
 
     int c = 10;
 
@@ -38,7 +38,7 @@ int main(void)
         print_ssize(filelen(file) / KB); printf("KBs \n");
     }
 
-    for(MMAP content = mopen("measurements10k.txt", "r"); content.len; mclose(content), content.len = 0) {
+    for(str content = mopen("measurements10k.txt", "r"); content.len; mclose(content), content.len = 0) {
         forlines(line, content) {
             print_str(line); printf("\n");
             if (!c--) break;

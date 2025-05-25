@@ -56,11 +56,8 @@
 
 /* STRUCTS */
 
-// char *beg; char *end;
-typedef struct arena { char *beg; char *end; } arena;
-
-// char *data; ptrdiff_t len;
-typedef struct str { char *data; ptrdiff_t len; } str;
+// char *data; size_t len;
+typedef struct str { char *data; size_t len; } str;
 
 // str head; str tail; int ok;
 typedef struct head_tail_ok { str head; str tail; int ok; int padding; } head_tail_ok;
@@ -69,176 +66,118 @@ enum { MSIEXP = 11 }; // configure hash table size, 2^11 = 2048
 // const char * keys[2<<MSIEXP]; int idxs[2<<MSIEXP];
 typedef struct htindex { const char * keys[2<<MSIEXP]; int idxs[2<<MSIEXP]; } htindex;
 
-// for a bit more clarity, since mopen saves the mapped buffer to a str struct
-typedef str MMAP;
-
-
-/* CONSTANTS */
-
-#define KB (1024LL)
-#define MB (1024LL * 1024LL)
-#define GB (1024LL * 1024LL * 1024LL)
-
 
 /* MACROS */
-
-#if defined(_MSC_VER) && !defined(__clang__)
-    #ifndef alignof
-        #define alignof _Alignof
-    #endif
-#else
-    #ifndef alignof
-        #define alignof __alignof__
-    #endif
-#endif
 
 #if !defined(min) && !defined(max)
     #define min(a,b) ( (a) < (b) ? (a) : (b) )
     #define max(a,b) ( (a) > (b) ? (a) : (b) )
 #endif
 
-#define countof(x)  ( (ptrdiff_t)sizeof(x) / (ptrdiff_t)sizeof(x[0]) )
+#define countof(x)  ( sizeof(x) / sizeof(x[0]) )
 
 
 /* MEMORY */
 
-extern size_t strlen(const char *);
-static inline ptrdiff_t cstrlen(const char *s) { return !s ? 0 : (ptrdiff_t)strlen(s); }
-
-extern int strcmp(const char *s1, const char *s2);
-static inline int cstrcmp(const char *s1, const char *s2)
-{
-    if (!s1 || !s2) 
-        return !(s1 == NULL && s2 == NULL);
-
-    return strcmp(s1, s2);
+static inline size_t cstrlen(const char *s) {
+    const char *p = s;
+    while (*p) ++p;
+    return (size_t)(p - s);
 }
 
-extern void * memchr(const void *s, int c, size_t n);
-static inline void * cmemchr(const void *s, char c, ptrdiff_t n)
-{
-    assert(n >= 0 && "cmemchr: n can't be negative!");
-    return !n ? NULL : memchr(s, c & 255, (size_t)n);
+static inline int cstrcmp(const char *s1, const char *s2) {
+    while (*s1 && (*s1 == *s2)) {
+        ++s1;
+        ++s2;
+    }
+    return (unsigned char)(*s1) - (unsigned char)(*s2);
 }
 
-extern int memcmp(const void *s1, const void *s2, size_t n);
-static inline int cmemcmp(const void *s1, const void *s2, ptrdiff_t n)
-{
-    assert(n >= 0 && "cmemcmp: n can't be negative!");
-    return !n ? 0 : memcmp(s1, s2, (size_t)n);
+static inline void *cmemchar(const void *s, int c, size_t n) {
+    const unsigned char *p = (const unsigned char *)s;
+    unsigned char uc = (unsigned char)c;
+
+    for (size_t i = 0; i < n; ++i) {
+        if (p[i] == uc)
+            return (void *)(p + i);
+    }
+    return NULL;
 }
 
-extern void * memcpy(void *dest, const void *src, size_t n);
-static inline void * cmemcpy(void *dest, const void *src, ptrdiff_t n)
-{
-    assert(n >= 0 && "cmemcpy: n can't be negative!");
-    return n ? memcpy(dest, src, (size_t)n) : dest;
+static inline int cmemcmp(const void *s1, const void *s2, size_t n) {
+    const unsigned char *p1 = (const unsigned char *)s1;
+    const unsigned char *p2 = (const unsigned char *)s2;
+
+    for (size_t i = 0; i < n; ++i) {
+        if (p1[i] != p2[i])
+            return (int)p1[i] - (int)p2[i];
+    }
+    return 0;
 }
 
-extern void * memset(void *s, int c, size_t n);
-static inline void * cmemset(void *s, int c, ptrdiff_t n)
-{
-    assert(n >= 0 && "cmemset: n can't be negative!");
-    return n ? memset(s, c, (size_t)n) : s;
+static inline void *cmemcpy(void *dst, const void *src, size_t n) {
+    unsigned char *d = (unsigned char *)dst;
+    const unsigned char *s = (const unsigned char *)src;
+
+    for (size_t i = 0; i < n; ++i)
+        d[i] = s[i];
+
+    return dst;
 }
 
+static inline void *cmemset(void *s, int c, size_t n) {
+    unsigned char *p = (unsigned char *)s;
+    unsigned char uc = (unsigned char)c;
 
-/* ARENA */
+    for (size_t i = 0; i < n; ++i)
+        p[i] = uc;
 
-static inline void * alloc(arena *a, ptrdiff_t count, ptrdiff_t size, ptrdiff_t align)
-{
-    ptrdiff_t pad = 0, total_size = 0;
-    void *r = 0;
-    
-    assert(count >= 0 &&  size >= 0 && "count and size can't be negative!");
-    if (!count || !size) return a->beg; // alloc 0 elements or n elements of size 0 is a no-op
-
-    // Nullprogram trick, quoted from his blog:
-    // we can compute modulo by subtracting one and masking with AND
-    // however, we want the number of bytes to advance to the next alignment, which is the inverse
-    pad = (ptrdiff_t)( -(uintptr_t)a->beg & (uintptr_t)(align-1) );
-
-    // Explicit Integer Overflow check in the assert
-    assert( count < (a->end - a->beg - pad)/size && "arena space left is not enough" );
-    total_size = count*size;
-    
-    r = a->beg + pad;
-    a->beg += pad + total_size;
-
-    return cmemset(r, 0, total_size);
+    return s;
 }
-#define new(parena, n, t) ((t *)(alloc(parena, n, (ptrdiff_t) sizeof(t), (ptrdiff_t) alignof(t))))
-#define arr2arena(arr) ( (arena){(char *) arr, (char *) (arr + countof(arr))} )
 
 
 /* STRING */
 
-#define S(s) ( (str){ (char *)(uintptr_t) s, max(((ptrdiff_t)sizeof(s)) - 1, 0) } )
-
-#define cstr2str(cstring) ((str){ (char *)cstring, cstrlen(cstring) })
-
-static inline str scopy(arena *a, str original)
-{
-    str copied = original;
-    copied.data = new(a, copied.len, char);
-    cmemcpy(copied.data, original.data, copied.len);
-    return copied;
-}
-
-// Converts a str to a null-terminated char* for use with legacy C APIs
-// BEWARE: char * is only valid while the arena keeps its data!
-static inline char * str2cstr(arena *a, str string)
-{
-    if ((string.data + string.len) != a->beg)
-        string = scopy(a, string);
-
-    *(a->beg++) = '\0';
-
-    return string.data;
-}
-
-static inline int sequal(str a, str b) { return (a.len != b.len) ? 0 : !cmemcmp(a.data, b.data, a.len); }
-
-static inline int scomp(str a, str b)
-{
-    int mincomp = cmemcmp(a.data, b.data, min(a.len, b.len));
-    return !mincomp ? (int)(a.len - b.len) : mincomp;
-}
-
-// cat always starts by putting str head at the top of the arena
-static inline str cat(arena *a, str head, str tail)
-{
-    // use copy as realoc if head is not at the top of arena
-    if (!head.data || (head.data + head.len) != a->beg) {
-        head = scopy(a, head);
-    }
-    
-    // since head is always at the top of arena, copy extends it
-    head.len += scopy(a, tail).len;
-    
-    return head;
-}
-static inline str sjoin(arena *a, str *arr, ptrdiff_t len, char separator)
-{
-    str res = {0};
-    char *psep = &separator;
-    if (!a || !arr) return res;
-
-    if (!separator) separator = ' ';
-
-    for (str *s = arr; s < arr + len; ++s) {
-        res = cat(a, res, *s);
-        psep = new(a, 1, char);
-        *psep = separator;
-    }
-    *psep = '\0'; //makes res.data compatible to null terminated c strings
-
-    return res;
-}
-
-static inline str span(char *beg, char *end) {
-    str s = { beg, beg ? max(end - beg, 0) : 0 };
+// creates a str { data: s, len: cstrlen(s) }
+static inline S(const char * s) {
+    str s = { (char *)(uintptr_t) s, cstrlen(s) };
     return s;
+}
+
+// creates a str { data: beg, len: (end - beg) }
+static inline str span(const char *beg, const char *end) {
+    str s = { (char *)(uintptr_t) beg, beg && end > beg ? end - beg : 0 };
+    return s;
+}
+
+// appends src from len onwards into dst, does not add \0 to allow repeatedly appends
+static inline void cstrappend(char * dst, size_t *len, const size_t cap, const char * src)
+{
+    unsigned char *d = (unsigned char *)dst;
+    const unsigned char *s = (const unsigned char *)src;
+
+    size_t i = *len;
+    for (; i < cap && s[i]; ++i)
+        d[i] = s[i];
+    *len = i;
+}
+
+// glues the strings in srcs into dst, adding the string separator between them
+static inline size_t cstrjoin(char * dst, const size_t dst_cap, const char * srcs[2], size_t srcs_len, const char * separator)
+{
+    size_t dst_len = 0;
+    srcs_len = srcs_len > 0 ? srcs_len - 1 : srcs_len;  
+
+    for(int i = 0; i < srcs_len; ++i) {
+        cstrappend(dst, srcs[i], &dst_len, dst_cap);
+        cstrappend(dst, separator, &dst_len, dst_cap);
+    }
+    cstrappend(dst, srcs[i], &dst_len, dst_cap);
+
+    assert(dst_len < dst_cap);
+    dst[dst_len++] = '\0';
+
+    return dst_len;
 }
 
 // cut s at c, returns {str head; str tail; int ok;}
@@ -269,9 +208,9 @@ static inline head_tail_ok cut(str s, char c)
 #define forlines(var, string) forsep(var, string, '\n')
 
 // splits string into arr, returns number of elements splited into
-static inline ptrdiff_t split(str text, char sep, str arr[1], ptrdiff_t cap)
+static inline size_t split(str text, char sep, str arr[1], size_t cap)
 {
-    ptrdiff_t len = 0;
+    size_t len = 0;
 
     forsep(part, text, sep) {
         if (len >= cap) break;
@@ -282,28 +221,6 @@ static inline ptrdiff_t split(str text, char sep, str arr[1], ptrdiff_t cap)
     return len;
 }
 
-static inline int starts(str s, str prefix)
-{
-    return (s.len >= prefix.len) \
-       &&  sequal(span(s.data, s.data + prefix.len), prefix);
-}
-static inline int ends(str s, str suffix)
-{
-    return (s.len >= suffix.len) \
-       &&  sequal(span(s.data + s.len - suffix.len, s.data + s.len), suffix);
-}
-
-static inline str trimleft(str s)
-{
-    for (; s.len && (unsigned char)*s.data <= ' '; ++s.data, --s.len);
-    return s;
-}
-static inline str trimright(str s)
-{
-    for (; s.len && (unsigned char)s.data[s.len-1] <= ' '; --s.len);
-    return s;
-}
-static inline str trim(str s) { return trimleft(trimright(s)); }
 
 static inline int parseint(str s)
 {
@@ -429,32 +346,27 @@ static inline int lookup(const char *key, htindex *table, int create_if_not_foun
         }
     }
 }
+
+// return htindex table len, always stored at table->idxs[0]
 static inline int htablelen(htindex *table) {
     return table->idxs[0];
 }
 
 // gets idx or return 0 if not found
-#define msiget(key, table) (lookup(key, table, 0))
+static inline int msiget(const char *key, htindex *table) {
+    return lookup(key, table, 0);
+}
 
 // create key if not exists, always return idx
-#define msiins(key, table) (lookup(key, table, 1))
+static inline msiins(const char *key, htindex *table) {
+    return lookup(key, table, 1);
+}
 
 
 /* PRINT */
 
-static inline void print_char(char c) { printf("%c ", c); }
-static inline void print_int(int i) { printf("%d ", i); }
-static inline void print_uint(unsigned int i) { printf("%u ", i); }
-static inline void print_ssize(ptrdiff_t s) { printf("%zd ", s); }
-static inline void print_size(size_t z) { printf("%zu ", z); }
-static inline void print_float(float f) { printf("%.5f ", (double)f); }
-static inline void print_double(double d) { printf("%.9f ", d); }
-static inline void print_str(str s) { printf("%.*s ", (int)s.len, s.data); }
-static inline void print_cstr(const char * cs) { printf("%s ", cs); }
-
 #define println(...) printf(__VA_ARGS__); printf("\n")
 #define printarr(format_specifier, arr, n) printf("{ "); for(int i = 0; i < n; ++i) { printf(format_specifier " ", arr[i]); } println("}")
-#define printstrarr(arr, n) printf("{ "); for(int i = 0; i < n; ++i) { print_str(arr[i]); } println("}")
 
 static inline void print_stopwatch(clock_t stopwatch)
 {
@@ -466,50 +378,7 @@ static inline void print_stopwatch(clock_t stopwatch)
     printf("  Executed in %.3f seconds\n", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC);
 }
 
-/* SCAN */
-
-static inline void scan_char(char *c) { (void)scanf(" %c", c); }
-static inline void scan_int(int *i) { (void)scanf(" %d", i); }
-static inline void scan_ssize(ptrdiff_t *s) { (void)scanf(" %zd", s); }
-static inline void scan_size(size_t *z) { (void)scanf(" %zu", z); }
-static inline void scan_float(float *f) { (void)scanf(" %f", f); }
-static inline void scan_double(double *d) { (void)scanf(" %lf", d); }
-
-static inline str scanword(arena *a)
-{
-    char buffer[256];
-    int scanres = scanf(" %255s", buffer);
-
-    ptrdiff_t len = ((void)assert(scanres == 1), cstrlen(buffer));
-    char *data = new(a, len + 1, char);
-    str s = { data, len };
-    
-    cmemcpy(data, buffer, len);
-    data[len] = 0;
-
-    (void) scanres;
-
-    return s;
-}
-static inline str scanline(arena *a)
-{
-    char buffer[1024];
-    int scanres = scanf(" %1023[^\n]", buffer);
-
-    ptrdiff_t len = ((void)assert(scanres == 1), cstrlen(buffer));
-    char *data = new(a, len + 1, char);
-    str s = { data, len };
-
-    cmemcpy(data, buffer, len);
-    data[len] = 0;
-
-    (void)scanres;
-
-    return s;
-}
-
-
-/* MACRO ALGOS */
+/* LIBC SORT */
 
 #define decl_cmpfn(fnname, type, ... ) \
     static inline int fnname(const void *a_, const void *b_) { const type *a = a_; const type *b = b_;  return (__VA_ARGS__); }
@@ -521,7 +390,7 @@ static inline str scanline(arena *a)
 
 static inline const char * ensure_binary_mode(const char * cstring)
 {
-    ptrdiff_t len = cstrlen(cstring);
+    size_t len = cstrlen(cstring);
     assert(len > 0 && len < 4);
 
     if (cmemchr(cstring, 'b', len)) {
@@ -542,7 +411,7 @@ static inline str file2str(arena * a, const char *filename)
     str r = {a->beg, 0};
 
     for(FILE *file = fopen(filename, "rb"); file; fclose(file), file = NULL) {
-        r.len = (ptrdiff_t)fread(r.data, 1, (size_t)(a->end - a->beg), file);
+        r.len = (size_t)fread(r.data, 1, (size_t)(a->end - a->beg), file);
 
         if (r.len < 0 || r.data + r.len + 1 >= a->end) {
             r.len = 0;
@@ -565,14 +434,14 @@ static inline int str2file(str content, const char *filename)
     return written != (size_t)content.len;
 }
 
-static inline ptrdiff_t filelen(FILE *file)
+static inline size_t filelen(FILE *file)
 {
     #ifdef _WIN32
-        ptrdiff_t len = (ptrdiff_t)_filelengthi64(_fileno(file));
+        size_t len = (size_t)_filelengthi64(_fileno(file));
     #else // assume POSIX
         struct stat file_stat;
         int fstat_success = fstat(fileno(file), &file_stat) != -1;
-        ptrdiff_t len = ((void)assert(fstat_success), (ptrdiff_t)file_stat.st_size);
+        size_t len = ((void)assert(fstat_success), (size_t)file_stat.st_size);
 
         (void) fstat_success;
     #endif 
@@ -581,14 +450,13 @@ static inline ptrdiff_t filelen(FILE *file)
     return len;
 }
 
-static inline MMAP mopen(const char *filename, const char *mode)
+static inline str mopen(const char *filename, const char *mode)
 {
     int readit = mode[0] == 'r' && mode[1] != '+';
-    MMAP r = {0};
+    str r = {0};
 
     for(FILE *file = fopen(filename, ensure_binary_mode(mode)); file; fclose(file), file = NULL) {
-        ptrdiff_t len = filelen(file);
-        assert(len > 0 && "filelen can't be zero");
+        size_t len = filelen(file);
 
         #ifdef _WIN32
             void *mhandle = CreateFileMapping(
@@ -604,7 +472,7 @@ static inline MMAP mopen(const char *filename, const char *mode)
                     CloseHandle(mhandle);
                 }
         #else // assume POSIX
-            r.data = (char *)mmap(
+            r.data = (char *)str(
                 0, (size_t)len,
                 PROT_READ | (readit ? 0 : PROT_WRITE), 
                 MAP_SHARED, fileno(file), 0
@@ -619,7 +487,7 @@ static inline MMAP mopen(const char *filename, const char *mode)
     return r;
 }
 
-static inline void mclose(MMAP s)
+static inline void mclose(str s)
 {
     if (!s.len || !s.data) return;
 
@@ -633,7 +501,7 @@ static inline void mclose(MMAP s)
 
 /* THREADS */
 
-static inline THREAD go(threadfun_ threadfun, void * threadarg, ptrdiff_t thread_stack_size) 
+static inline THREAD go(threadfun_ threadfun, void * threadarg, size_t thread_stack_size) 
 {
     THREAD thread;
     size_t thread_stack_size_adjusted = (size_t)max(thread_stack_size, 16*KB);

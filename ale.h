@@ -161,13 +161,20 @@ static inline void cstrappend(char * dst, size_t *len, const size_t cap, const c
 static inline size_t cstrjoin(char * dst, const size_t dst_cap, const char * srcs[2], size_t srcs_len, const char * separator)
 {
     size_t dst_len = 0;
-    srcs_len = srcs_len > 0 ? srcs_len - 1 : srcs_len;  
+
+    assert(srcs_len > 0);
+    if (srcs_len == 0) 
+        srcs_len = 1;
+
+    --srcs_len; // to take out the last iteration
 
     for(int i = 0; i < srcs_len; ++i) {
         cstrappend(dst, srcs[i], &dst_len, dst_cap);
         cstrappend(dst, separator, &dst_len, dst_cap);
     }
+    
     cstrappend(dst, srcs[i], &dst_len, dst_cap);
+    // no separator after last iteration
 
     assert(dst_len < dst_cap);
     if (dst_len < dst_cap)

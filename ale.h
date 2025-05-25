@@ -170,7 +170,8 @@ static inline size_t cstrjoin(char * dst, const size_t dst_cap, const char * src
     cstrappend(dst, srcs[i], &dst_len, dst_cap);
 
     assert(dst_len < dst_cap);
-    dst[dst_len++] = '\0';
+    if (dst_len < dst_cap)
+        dst[dst_len++] = '\0';
 
     return dst_len;
 }
@@ -277,8 +278,9 @@ static inline unsigned int rando(size_t *state, unsigned int from_including, uns
     unsigned int limit = UINT32_MAX - (UINT32_MAX % range);
     unsigned int r;
 
-    assert(from_including <= to_including && "invalid range for random!");
-    if (to_including < from_including) return from_including;
+    assert(from_including <= to_including);
+    if (to_including < from_including) 
+        return from_including;
 
     do {
         r = random32(state);
@@ -383,10 +385,14 @@ static inline void print_stopwatch(clock_t stopwatch)
 
 /* FILES */
 
+// converts a file-mode cstr to have 'b'inary if it does not already have it
 static inline const char * ensure_binary_mode(const char * cstring)
 {
     size_t len = cstrlen(cstring);
+    
     assert(len > 0 && len < 4);
+    if (len == 0 || len > 3)
+        return "rb";
 
     if (cmemchr(cstring, 'b', len)) {
         return cstring;
@@ -441,7 +447,6 @@ static inline size_t filelen(FILE *file)
         (void) fstat_success;
     #endif 
 
-    assert(len >= 0 && "filelen must not be negative!");
     return len;
 }
 
@@ -548,6 +553,8 @@ static inline int scmd(arena *a, str command)
 static inline void sleepsecs(unsigned int seconds)
 {
     assert(seconds < 60 * 60 * 24 + 1);
+    if (seconds > 60 * 60 * 24)
+        seconds = 1;
 
     #if defined(_WIN32)
         Sleep(seconds * 1000);

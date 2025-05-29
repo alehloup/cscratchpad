@@ -175,6 +175,7 @@ static inline head_tail_ok cut(str s, char c)
 
     return r;
 }
+
 #define forsep(var, string, sep) \
     head_tail_ok var##_res = cut( (string) , sep); \
     for (str var = var##_res.head; \
@@ -213,6 +214,7 @@ static inline int parseint(str s)
 
     return sign * (int)r;
 }
+
 static inline float parsefloat(str s)
 {
     float r = 0.0f;
@@ -240,6 +242,7 @@ static inline float parsefloat(str s)
 /* RANDOM */
 
 static unsigned int random32_max_uint = ((1U << (sizeof(unsigned int) * 8)) - 1);
+
 static ulong random32_state = 1111111111111111111;
 
 static inline unsigned int random32()
@@ -253,6 +256,7 @@ static inline unsigned int random32()
     
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
+
 static inline unsigned int rando(unsigned int from_including, unsigned int to_including)
 {
     unsigned int range = to_including - from_including + 1;
@@ -289,6 +293,7 @@ static inline ulong hash_cstr(const char * s, ulong seed)
     h += !h;
     return h;
 }
+
 static inline ulong hash_num(ulong x)
 {
     x ^= x >> 30;
@@ -353,6 +358,7 @@ static inline msiins(const char *key, htindex *table) {
 
 #define print_stopwatch(stopwatch) \
     printf("  Executed in %.3f seconds\n", (double)(clock() - stopwatch) / (double)CLOCKS_PER_SEC)
+
 
 /* LIBC SORT */
 

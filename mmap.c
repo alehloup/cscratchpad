@@ -34,7 +34,7 @@ int main(void)
 
     printstrarr(arr3, len);
 
-    for(FILE *file = fopen("measurements10k.txt", "rb"); file; fclose(file), file = NULL) {
+    for(FILE *file = fopen("measurements10k.txt", "rb"); file; fclose(file), file = 0) {
         print_ssize(filelen(file) / KB); printf("KBs \n");
     }
 
